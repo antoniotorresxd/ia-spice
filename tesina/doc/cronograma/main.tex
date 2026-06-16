@@ -1,0 +1,298 @@
+\documentclass[12pt,letterpaper,oneside]{report}
+
+% --- SISTEMA MULTILINGÜE Y TIPOGRAFÍA ACADÉMICA ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish, es-tabla, es-nodecimaldot]{babel}
+\usepackage{csquotes}
+
+% Tipografía Serif Profesional
+\usepackage{mathptmx}
+\usepackage{microtype}
+
+% --- ESPACIADO Y PÁRRAFOS ---
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0pt}
+
+% --- MÁRGENES ESTRICTOS DE TESIS IPN ---
+\usepackage{geometry}
+\geometry{
+  letterpaper,
+  left=3.5cm,
+  right=2.5cm,
+  top=2.5cm,
+  bottom=2.5cm,
+  headheight=14.5pt,
+  headsep=0.7cm,
+  footskip=1.2cm
+}
+
+% --- DISEÑO, IMÁGENES Y TABLAS ---
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{array}
+\usepackage{booktabs}   
+\usepackage{xltabular}
+
+\setlist[itemize]{noitemsep, topsep=3pt}
+\setlist[enumerate]{noitemsep, topsep=3pt}
+
+% --- COLORES INSTITUCIONALES (IPN Y ESIME) ---
+\definecolor{guinda}{RGB}{108, 19, 43}
+\definecolor{esimegreen}{RGB}{0, 103, 56}
+\definecolor{rowgray}{HTML}{F8F9FA}
+
+% --- CAPTIONS ---
+\captionsetup[figure]{labelfont={bf}, name={Figura}, labelsep=period}
+\captionsetup[table]{labelfont={bf}, name={Tabla}, labelsep=period, position=top}
+
+% --- CONTROL DE VIUDAS Y HUÉRFANAS ---
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+
+% --- HIPERVÍNCULOS ---
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue,
+  pdftitle={Plan de Trabajo y Cronograma de Desarrollo - SPICE},
+  pdfauthor={Antonio Torres, Diego Gutierrez}
+}
+
+% --- ENCABEZADOS Y PIES ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% --- FORMATO DE TÍTULOS DE CAPÍTULO ---
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{guinda}}{\chaptertitlename\ \thechapter}{18pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{-10pt}{20pt}
+
+% =======================================================================
+\begin{document}
+% =======================================================================
+
+\pagenumbering{roman}
+
+% -----------------------------------------------------------------------
+% PORTADA
+% -----------------------------------------------------------------------
+\begin{titlepage}
+  \begin{tikzpicture}[remember picture, overlay]
+
+    \coordinate (topleft)    at ($(current page.north west) + (2.5cm, -2cm)$);
+    \coordinate (bottomleft) at ($(current page.south west) + (2.5cm, 2.5cm)$);
+
+    % Logo IPN
+    \node[anchor=north, inner sep=0pt] at (topleft) {
+      \includegraphics[width=4cm]{../src/logos/ipn_logo.png}
+    };
+
+    % Logo ESIME
+    \node[anchor=south, inner sep=0pt] at (bottomleft) {
+      \includegraphics[width=3cm]{../src/logos/esime_logo.jpg}
+    };
+
+    % Líneas verticales decorativas
+    \draw[esimegreen, line width=2pt]
+      ($(topleft) + (0, -3.2cm)$) -- ($(bottomleft) + (0, 3.8cm)$);
+    \draw[esimegreen, line width=1pt]
+      ($(topleft) + (0.15cm, -3.2cm)$) -- ($(bottomleft) + (0.15cm, 3.8cm)$);
+
+    % Encabezado institucional
+    \node[anchor=north] at ($(current page.north) + (1cm, -2.5cm)$) {
+      \begin{minipage}{14cm}
+        \centering
+        \large\textbf{INSTITUTO POLITÉCNICO NACIONAL}\\[0.4cm]
+        {\color{esimegreen}\hrule height 2pt}
+        \vspace{0.1cm}
+        {\color{esimegreen}\hrule height 1pt}
+        \vspace{0.4cm}
+        \large\textbf{ESCUELA SUPERIOR DE INGENIERÍA MECÁNICA Y ELÉCTRICA}\\
+        \textbf{UNIDAD CULHUACÁN}
+      \end{minipage}
+    };
+
+  \end{tikzpicture}
+
+  \vspace*{5.5cm}
+  \centering
+
+  {\LARGE \textbf{Planificación de Proyecto y Cronograma de Actividades}}\\[0.8cm]
+  {\Large \textbf{ECOSISTEMA MULTIAGENTE PARA LA GENERACIÓN DE CIRCUITOS ANALÓGICOS CA/CD }}\\[2cm]
+
+  \large ALUMNOS:\\[0.3cm]
+  \textbf{ANTONIO DE JESUS TORRES MARTÍNEZ}\\[0.1cm]
+  \textbf{DIEGO JESUS GUTIERREZ DELGADO}\\[2.2cm]
+
+  \large ASESOR:\\[0.3cm]
+  \textbf{RICARDO ISRAEL CALZADA SALAS}\\[1.5cm]
+
+\end{titlepage}
+\clearpage
+
+% -----------------------------------------------------------------------
+% CONTENIDO PRINCIPAL
+% -----------------------------------------------------------------------
+\pagenumbering{arabic}
+
+
+
+\chapter{Planificación Temporal del Proyecto (Scrum)}
+
+\section{Estructura del Ciclo de Sprints}
+La implementación de la plataforma \textbf{SPICE} está estructurada bajo el marco de trabajo ágil Scrum, con una duración total de 16 semanas distribuidas en 8 Sprints de dos semanas cada uno. La Tabla~\ref{tab:sprints_definicion} delimita los periodos temporales, hitos académicos y objetivos técnicos correspondientes a cada ciclo de desarrollo.
+
+\begin{table}[h!]
+\centering
+\small
+\caption{Cronograma de Fases e Hitos de Entrega por Sprint.}
+\label{tab:sprints_definicion}
+\vspace{0.3cm}
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\renewcommand{\arraystretch}{1.4}
+\arrayrulecolor{guinda}
+\rowcolors{1}{white}{rowgray}
+\begin{tabularx}{\textwidth}{l p{3.8cm} >{\raggedright\arraybackslash}X}
+\toprule
+\rowcolor{guinda}
+\textcolor{white}{\textbf{Fase}} & \textcolor{white}{\textbf{Periodo}} & \textcolor{white}{\textbf{Objetivo y Entregable Técnico Clave}} \\
+\midrule
+\textbf{Sprint 1} & 08 Jun -- 22 Jun, 2026 & Estructura base del proyecto Python y el grafo de estados con LangGraph. \\
+\textbf{Sprint 2} & 22 Jun -- 06 Jul, 2026 & Módulo Shell Agent, interfaces con ngspice y auto-corrección sintáctica. \\
+\textbf{Sprint 3} & 06 Jul -- 20 Jul, 2026 & Agente Orquestador, parser de requerimientos y extracción JSON. \\
+\textbf{Sprint 4} & 20 Jul -- 03 Ago, 2026 & Agente de Cálculo de Componentes con arquitectura MapReduce paralela. \\
+\textbf{Sprint 5} & 03 Ago -- 17 Ago, 2026 & Agente Curador con aprendizaje por refuerzo y generador de reportes. \\
+\textbf{Sprint 6} & 17 Ago -- 31 Ago, 2026 & Interfaz web del cliente, control de workspaces y Better Auth. \\
+\textbf{Sprint 7} & 31 Ago -- 14 Sep, 2026 & Despliegue en contenedor Docker y orquestación tolerante a fallos. \\
+\textbf{Sprint 8} & 14 Sep -- 28 Sep, 2026 & Evaluación empírica con 20 circuitos de prueba y análisis estadístico. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Matriz de Planificación Gantt}
+A fin de asegurar la correspondencia entre los componentes del software (Epics) y las fases de tiempo, la Tabla~\ref{tab:gantt_academico} presenta el mapa de distribución de las 7 Epics a lo largo de los 8 Sprints. Las celdas marcadas representan los periodos activos de trabajo para cada módulo del sistema.
+
+\begin{table}[h!]
+\centering
+\small
+\caption{Matriz Gantt de Distribución de Módulos (Epics) por Sprint.}
+\label{tab:gantt_academico}
+\vspace{0.3cm}
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\renewcommand{\arraystretch}{1.8}
+\arrayrulecolor{guinda}
+
+\begin{tabularx}{\textwidth}{l X cccccccc}
+\toprule
+\rowcolor{guinda}
+\textcolor{white}{\textbf{Clave}} & \textcolor{white}{\textbf{Módulo del Sistema (Epic)}} & \textcolor{white}{\textbf{S1}} & \textcolor{white}{\textbf{S2}} & \textcolor{white}{\textbf{S3}} & \textcolor{white}{\textbf{S4}} & \textcolor{white}{\textbf{S5}} & \textcolor{white}{\textbf{S6}} & \textcolor{white}{\textbf{S7}} & \textcolor{white}{\textbf{S8}} \\
+\midrule
+\textbf{SCRUM-5} & Epic 1: Infraestructura y Despliegue & \cellcolor{esimegreen!25}\textbf{X} & & & & & & \cellcolor{esimegreen!25}\textbf{X} & \\
+\textbf{SCRUM-6} & Epic 2: Subsistema Cliente y UI Web & & & & & & \cellcolor{esimegreen!25}\textbf{X} & & \\
+\textbf{SCRUM-7} & Epic 3: Agente Orquestador (LangGraph) & \cellcolor{esimegreen!25}\textbf{X} & & \cellcolor{esimegreen!25}\textbf{X} & \cellcolor{esimegreen!25}\textbf{X} & & & & \\
+\textbf{SCRUM-8} & Epic 4: Agente Shell y Enlace ngspice & & \cellcolor{esimegreen!25}\textbf{X} & & & & & & \\
+\textbf{SCRUM-9} & Epic 5: Agente de Cálculo (MapReduce) & & & & \cellcolor{esimegreen!25}\textbf{X} & & & & \\
+\textbf{SCRUM-10} & Epic 6: Agente Curador y de Escritura & & \cellcolor{esimegreen!25}\textbf{X} & & & \cellcolor{esimegreen!25}\textbf{X} & & & \\
+\textbf{SCRUM-11} & Epic 7: Integración y Verificación Final & & & & & & & & \cellcolor{esimegreen!25}\textbf{X} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\clearpage
+
+\chapter{Catálogo Técnico de Tareas de Ingeniería}
+
+Para facilitar la auditoría y el seguimiento del desarrollo de software por el cuerpo docente, se presenta a continuación el catálogo estructurado de las historias de usuario de prioridad alta correspondientes a la planificación del proyecto, detalladas de acuerdo al archivo \textit{spice\_2026-06-03\_12.37am.csv}.
+
+\begin{xltabular}{\textwidth}{l p{2.8cm} >{\raggedright\arraybackslash}X c}
+\caption{Desglose de Historias de Usuario por Módulo y Fase.} \label{tab:catalogo_historias} \\
+\toprule
+\rowcolor{guinda}
+\textcolor{white}{\textbf{Clave}} & \textcolor{white}{\textbf{Módulo (Epic)}} & \textcolor{white}{\textbf{Descripción de Tareas Técnicas y Funcionales}} & \textcolor{white}{\textbf{Sprint}} \\
+\endfirsthead
+\toprule
+\rowcolor{guinda}
+\textcolor{white}{\textbf{Clave}} & \textcolor{white}{\textbf{Módulo (Epic)}} & \textcolor{white}{\textbf{Descripción de Tareas Técnicas y Funcionales}} & \textcolor{white}{\textbf{Sprint}} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+\midrule
+\rowcolor{rowgray}
+\textbf{SCRUM-12} & Epic 1: Infra. & Arquitectura del repositorio, modularización de agentes y dependencias de simulación. & Sprint 1 \\
+\textbf{SCRUM-13} & Epic 3: Orquest. & Definición matemática del grafo LangGraph y el esquema de estados mutables. & Sprint 1 \\
+\rowcolor{rowgray}
+\textbf{SCRUM-14} & Epic 1: Infra. & Módulo de conexión con la API LLM empleando esquemas estructurados JSON. & Sprint 1 \\
+\textbf{SCRUM-15} & Epic 1: Infra. & Esquema de parametrización por medio de archivos de configuración YAML estables. & Sprint 1 \\
+
+\rowcolor{rowgray}
+\textbf{SCRUM-19} & Epic 4: Shell & Aislamiento de ejecución para PySpice en un proceso secundario con límites de tiempo. & Sprint 2 \\
+\textbf{SCRUM-20} & Epic 4: Shell & Enlace de ngspice, lectura de archivos .raw y formateo científico de señales. & Sprint 2 \\
+\rowcolor{rowgray}
+\textbf{SCRUM-17} & Epic 6: Curador & Diseñador de código PySpice acoplado a las ecuaciones estructurales. & Sprint 2 \\
+\textbf{SCRUM-22} & Epic 6: Curador & Bucle de auto-corrección sintáctica ante fallos de simulación ($\le 3$ reintentos). & Sprint 2 \\
+
+\rowcolor{rowgray}
+\textbf{SCRUM-23} & Epic 3: Orquest. & Intérprete y normalizador de texto libre a especificaciones funcionales eléctricas. & Sprint 3 \\
+\textbf{SCRUM-24} & Epic 3: Orquest. & Extracción paramétrica a JSON tipado mediante plantillas de ingeniería. & Sprint 3 \\
+\rowcolor{rowgray}
+\textbf{SCRUM-25} & Epic 3: Orquest. & Algoritmo de control de paradas del ciclo de sintonía para prevenir recursividad. & Sprint 3 \\
+\textbf{SCRUM-26} & Epic 3: Orquest. & Manejador de fallas de convergencia física y timeouts del simulador ngspice. & Sprint 3 \\
+
+\rowcolor{rowgray}
+\textbf{SCRUM-28} & Epic 3: Orquest. & Orquestación en paralelo de subprocesos evaluadores por bloques topológicos. & Sprint 4 \\
+\textbf{SCRUM-29} & Epic 5: Cálculo & Nodo maestro de paralelización: división de optimización por Map. & Sprint 4 \\
+\rowcolor{rowgray}
+\textbf{SCRUM-30} & Epic 5: Cálculo & Nodo evaluador: cálculo parametrizado por ecuaciones físicas del componente. & Sprint 4 \\
+\textbf{SCRUM-32} & Epic 5: Cálculo & Nodo recopilador (Reduce): fusión de resultados y verificación de la malla general. & Sprint 4 \\
+
+\rowcolor{rowgray}
+\textbf{SCRUM-34} & Epic 6: Curador & Módulo de Reinforcement Learning para evaluación de funciones de recompensa ($R$). & Sprint 5 \\
+\textbf{SCRUM-35} & Epic 6: Curador & Autómata lógico de decisiones operativas (ACEPTAR / AJUSTAR / RECHAZAR). & Sprint 5 \\
+\rowcolor{rowgray}
+\textbf{SCRUM-36} & Epic 6: Curador & Agente Curador: recomendación de sintonía matemática para topologías fallidas. & Sprint 5 \\
+\textbf{SCRUM-39} & Epic 6: Curador & Generador automatizado de reportes interactivos en HTML con curvas y curvas de error. & Sprint 5 \\
+
+\rowcolor{rowgray}
+\textbf{SCRUM-40} & Epic 2: Cliente & Gestión del registro de ingenieros y sesiones con el estándar Better Auth. & Sprint 6 \\
+\textbf{SCRUM-44} & Epic 2: Cliente & Interfaz gráfica web de entrada para el ingreso de prompts descriptivos. & Sprint 6 \\
+\rowcolor{rowgray}
+\textbf{SCRUM-45} & Epic 2: Cliente & Visualizador web interactivo de netlists de circuitos y gráficas de convergencia. & Sprint 6 \\
+
+\rowcolor{rowgray}
+\textbf{SCRUM-46} & Epic 1: Infra. & Generación de imágenes Docker independientes para la UI cliente y servidor. & Sprint 7 \\
+\textbf{SCRUM-47} & Epic 1: Infra. & Configuración de endpoints stateless para dar soporte a simulación distribuida. & Sprint 7 \\
+\rowcolor{rowgray}
+\textbf{SCRUM-48} & Epic 1: Infra. & Pipeline automatizado de integración y despliegue (CI/CD) en la nube de Railway. & Sprint 7 \\
+\textbf{SCRUM-50} & Epic 1: Infra. & Implementación de balanceador de cargas y redundancia activa de instancias. & Sprint 7 \\
+
+\rowcolor{rowgray}
+\textbf{SCRUM-53} & Epic 7: Integr. & Banco de 20 circuitos patrón estándar de prueba analógica para calibración. & Sprint 8 \\
+\textbf{SCRUM-54} & Epic 7: Integr. & Línea de base comparativa estocástica basada en un algoritmo Best-of-N. & Sprint 8 \\
+\rowcolor{rowgray}
+\textbf{SCRUM-57} & Epic 7: Integr. & Métricas de convergencia estadística y análisis de desviación absoluta (MAE). & Sprint 8 \\
+\textbf{SCRUM-58} & Epic 7: Integr. & Suite integradora y validación contra criterios de aceptación CA-01 a CA-07. & Sprint 8 \\
+
+\end{xltabular}
+
+\end{document}

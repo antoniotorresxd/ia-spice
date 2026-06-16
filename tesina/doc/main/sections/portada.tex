@@ -1,0 +1,66 @@
+% Contenido de la portada
+\begin{titlepage}
+    \begin{tikzpicture}[remember picture, overlay]
+    
+        \coordinate (topleft) at ($(current page.north west) + (2.5cm, -2cm)$);
+        \coordinate (bottomleft) at ($(current page.south west) + (2.5cm, 2.5cm)$);
+        
+        % 1. LOGO IPN (Arriba Izquierda)
+        \node[anchor=north, inner sep=0pt] at (topleft) {
+            \includegraphics[width=4cm]{../src/logos/ipn_logo.png}
+        };
+        
+        % 2. LOGO ESIME (Abajo Izquierda)
+        \node[anchor=south, inner sep=0pt] at (bottomleft) {
+            \includegraphics[width=3cm]{../src/logos/esime_logo.jpg}
+        };
+        
+        % 3. LÍNEAS VERTICALES LATERALES
+        % Línea gruesa
+        \draw[esimegreen, line width=2pt] 
+            ($(topleft) + (0, -3.2cm)$) -- ($(bottomleft) + (0, 3.8cm)$);
+        % Línea delgada paralela
+        \draw[esimegreen, line width=1pt] 
+            ($(topleft) + (0.15cm, -3.2cm)$) -- ($(bottomleft) + (0.15cm, 3.8cm)$);
+            
+        % 4. ENCABEZADO SUPERIOR
+        \node[anchor=north] at ($(current page.north) + (1cm, -2.5cm)$) {
+            \begin{minipage}{14cm}
+                \centering
+                \large\textbf{INSTITUTO POLITÉCNICO NACIONAL}\\[0.4cm]
+                
+                % Líneas horizontales verdes
+                {\color{esimegreen}\hrule height 2pt}
+                \vspace{0.1cm}
+                {\color{esimegreen}\hrule height 1pt}
+                \vspace{0.4cm}
+                
+                \large\textbf{ESCUELA SUPERIOR DE INGENIERÍA MECÁNICA Y ELÉCTRICA}\\
+                \textbf{UNIDAD CULHUACÁN}
+            \end{minipage}
+        };
+    \end{tikzpicture}
+
+    % --- CONTENIDO DE TEXTO CENTRAL ---
+    \vspace*{5cm} 
+    \centering
+    
+    {\LARGE \textbf{TESINA}}\\[0.8cm]
+    
+    {\Large \textit{Ecosistema multiagente basado en LLM y aprendizaje por refuerzo para la generación y validación de circuitos analógicos CA/CD a partir de lenguaje natural}}\\[1.5cm]
+    
+    \large QUE PARA OBTENER EL TÍTULO DE:\\[0.3cm]
+    \textbf{INGENIERO EN COMPUTACIÓN}\\[1.5cm] 
+    
+    \large PRESENTA:\\[0.3cm]
+    \textbf{ANTONIO DE JESUS TORRES MARTÍNEZ}\\[0.3cm]
+     \textbf{DIEGO JESUS GUTIERREZ DELGADO}\\[1.5cm]
+    
+    \large ASESOR:\\[0.3cm]
+    \textbf{RICARDO ISRAEL CALZADA SALAS}\\[1.5cm]
+
+    \vfill
+    
+    \normalsize Ciudad de México \today
+    
+\end{titlepage}

@@ -1,0 +1,525 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global/global}
+    \entry{analogagent}{online}{}{}
+      \name{author}{8}{}{%
+        {{hash=bf317c3bcc9fc7cc54df7b759d661dfe}{%
+           family={Bao},
+           familyi={B\bibinitperiod},
+           given={Zhixuan},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=006f57ddb2c4923193946bd44e5f51eb}{%
+           family={Lin},
+           familyi={L\bibinitperiod},
+           given={Zhuoyi},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=c1ac75b063dbc09dca5d8cf06b4b165e}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Jiageng},
+           giveni={J\bibinitperiod}}}%
+        {{hash=d4ea4b22d67f6b8c31f82f254c7d08e6}{%
+           family={Hu},
+           familyi={H\bibinitperiod},
+           given={Jinhai},
+           giveni={J\bibinitperiod}}}%
+        {{hash=a85dcf731e772b177341998a236d587a}{%
+           family={Gao},
+           familyi={G\bibinitperiod},
+           given={Yuan},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=2f5425d8e4ec1a9e03fb97bc3acaade3}{%
+           family={Wu},
+           familyi={W\bibinitperiod},
+           given={Yaoxin},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=852cf7810e768fd04fb98c724c4500dc}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Xiaoli},
+           giveni={X\bibinitperiod}}}%
+        {{hash=43e8043d875498aa78c40bbb8623fb5b}{%
+           family={Xu},
+           familyi={X\bibinitperiod},
+           given={Xun},
+           giveni={X\bibinitperiod}}}%
+      }
+      \strng{namehash}{5b3b7f89424b71bbf47d8d5b4cd1845d}
+      \strng{fullhash}{b9d07bd5a23f553d39ffc9910dbb86c6}
+      \strng{fullhashraw}{b9d07bd5a23f553d39ffc9910dbb86c6}
+      \strng{bibnamehash}{5b3b7f89424b71bbf47d8d5b4cd1845d}
+      \strng{authorbibnamehash}{5b3b7f89424b71bbf47d8d5b4cd1845d}
+      \strng{authornamehash}{5b3b7f89424b71bbf47d8d5b4cd1845d}
+      \strng{authorfullhash}{b9d07bd5a23f553d39ffc9910dbb86c6}
+      \strng{authorfullhashraw}{b9d07bd5a23f553d39ffc9910dbb86c6}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{cs.AI}
+      \field{eprinttype}{arXiv}
+      \field{title}{AnalogAgent: Self-Improving Analog Circuit Design Automation with LLM Agents}
+      \field{year}{2026}
+      \verb{eprint}
+      \verb 2603.23910
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2603.23910
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2603.23910
+      \endverb
+    \endentry
+    \entry{pcbschemagen}{online}{}{}
+      \name{author}{4}{}{%
+        {{hash=4c3191d76ea5fdad20e26a1a813613bb}{%
+           family={Zou},
+           familyi={Z\bibinitperiod},
+           given={Huanghaohe},
+           giveni={H\bibinitperiod}}}%
+        {{hash=efabce83d51f901abb6780d60175c755}{%
+           family={Han},
+           familyi={H\bibinitperiod},
+           given={Peng},
+           giveni={P\bibinitperiod}}}%
+        {{hash=22afa56f9235abc0cb87a5c6b295a47f}{%
+           family={Nazerian},
+           familyi={N\bibinitperiod},
+           given={Emad},
+           giveni={E\bibinitperiod}}}%
+        {{hash=09a39827f2dedcd73b65820f467d8e6d}{%
+           family={Huang},
+           familyi={H\bibinitperiod},
+           given={Alex\bibnamedelima Q.},
+           giveni={A\bibinitperiod\bibinitdelim Q\bibinitperiod}}}%
+      }
+      \strng{namehash}{84a146c9168fefa3a7c104a4f7c86278}
+      \strng{fullhash}{a31f4b7a560141e697ee9c847b50f364}
+      \strng{fullhashraw}{a31f4b7a560141e697ee9c847b50f364}
+      \strng{bibnamehash}{a31f4b7a560141e697ee9c847b50f364}
+      \strng{authorbibnamehash}{a31f4b7a560141e697ee9c847b50f364}
+      \strng{authornamehash}{84a146c9168fefa3a7c104a4f7c86278}
+      \strng{authorfullhash}{a31f4b7a560141e697ee9c847b50f364}
+      \strng{authorfullhashraw}{a31f4b7a560141e697ee9c847b50f364}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{cs.SE}
+      \field{eprinttype}{arXiv}
+      \field{title}{PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards}
+      \field{year}{2026}
+      \verb{eprint}
+      \verb 2602.00510
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2602.00510
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2602.00510
+      \endverb
+    \endentry
+    \entry{circuitlm}{online}{}{}
+      \name{author}{4}{}{%
+        {{hash=65716cce486e3ca6ed146ec168d5ca90}{%
+           family={Al\bibnamedelima Hasan},
+           familyi={A\bibinitperiod\bibinitdelim H\bibinitperiod},
+           given={Khandakar\bibnamedelima Shakib},
+           giveni={K\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+        {{hash=113f662205d5edb2cd7f87690045697a}{%
+           family={Raiyan},
+           familyi={R\bibinitperiod},
+           given={Syed\bibnamedelima Rifat},
+           giveni={S\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=433b378ee09d119c2aeca2b428e30801}{%
+           family={Alvee},
+           familyi={A\bibinitperiod},
+           given={Hasin\bibnamedelima Mahtab},
+           giveni={H\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=884267f3052b7d92c1fd3faef5aa8875}{%
+           family={Sadik},
+           familyi={S\bibinitperiod},
+           given={Wahid},
+           giveni={W\bibinitperiod}}}%
+      }
+      \strng{namehash}{b44efd234796632f681bda79a2ce50ca}
+      \strng{fullhash}{734e32e87b11a9ed65bae4113063d60e}
+      \strng{fullhashraw}{734e32e87b11a9ed65bae4113063d60e}
+      \strng{bibnamehash}{734e32e87b11a9ed65bae4113063d60e}
+      \strng{authorbibnamehash}{734e32e87b11a9ed65bae4113063d60e}
+      \strng{authornamehash}{b44efd234796632f681bda79a2ce50ca}
+      \strng{authorfullhash}{734e32e87b11a9ed65bae4113063d60e}
+      \strng{authorfullhashraw}{734e32e87b11a9ed65bae4113063d60e}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{cs.SE}
+      \field{eprinttype}{arXiv}
+      \field{title}{CircuitLM: A Multi-Agent LLM-Aided Design Framework for Generating Circuit Schematics from Natural Language Prompts}
+      \field{year}{2026}
+      \verb{eprint}
+      \verb 2601.04505
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2601.04505
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2601.04505
+      \endverb
+    \endentry
+    \entry{analogcoder}{inproceedings}{}{}
+      \name{author}{7}{}{%
+        {{hash=10a34a50f019435bdde4a94bf287f40b}{%
+           family={Lai},
+           familyi={L\bibinitperiod},
+           given={Yao},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=13f4661b9173b2153aaa7862c5d12606}{%
+           family={Lee},
+           familyi={L\bibinitperiod},
+           given={Sungyoung},
+           giveni={S\bibinitperiod}}}%
+        {{hash=badd7b737f2200eade7ffa766d141e6e}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={Guojin},
+           giveni={G\bibinitperiod}}}%
+        {{hash=0536ba54ecacc7a88f554d0f561e82e4}{%
+           family={Poddar},
+           familyi={P\bibinitperiod},
+           given={Souradip},
+           giveni={S\bibinitperiod}}}%
+        {{hash=3f6990a9234a58d99debf638139111bb}{%
+           family={Hu},
+           familyi={H\bibinitperiod},
+           given={Mengkang},
+           giveni={M\bibinitperiod}}}%
+        {{hash=fe3ff3e0189ebb1651ab0a237ea3064c}{%
+           family={Pan},
+           familyi={P\bibinitperiod},
+           given={David\bibnamedelima Z.},
+           giveni={D\bibinitperiod\bibinitdelim Z\bibinitperiod}}}%
+        {{hash=e85079235b2a8c88ee9360e55b37523a}{%
+           family={Luo},
+           familyi={L\bibinitperiod},
+           given={Ping},
+           giveni={P\bibinitperiod}}}%
+      }
+      \strng{namehash}{82b7dd44521dcac3550678f92a4eed37}
+      \strng{fullhash}{8fdf09d00a002a725cc775046c28cd14}
+      \strng{fullhashraw}{8fdf09d00a002a725cc775046c28cd14}
+      \strng{bibnamehash}{82b7dd44521dcac3550678f92a4eed37}
+      \strng{authorbibnamehash}{82b7dd44521dcac3550678f92a4eed37}
+      \strng{authornamehash}{82b7dd44521dcac3550678f92a4eed37}
+      \strng{authorfullhash}{8fdf09d00a002a725cc775046c28cd14}
+      \strng{authorfullhashraw}{8fdf09d00a002a725cc775046c28cd14}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of the Thirty-Ninth AAAI Conference on Artificial Intelligence (AAAI-25)}
+      \field{title}{AnalogCoder: Analog Circuit Design via Training-Free Code Generation}
+      \field{year}{2025}
+    \endentry
+    \entry{analogsage}{online}{}{}
+      \name{author}{5}{}{%
+        {{hash=a914f3d3369aad6ec78023f4698c45a2}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Zining},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=677116b54b0b8c8374557d0c26741645}{%
+           family={Gao},
+           familyi={G\bibinitperiod},
+           given={Jian},
+           giveni={J\bibinitperiod}}}%
+        {{hash=20f05b3a9389467296e96cbf680973e9}{%
+           family={Fu},
+           familyi={F\bibinitperiod},
+           given={Weimin},
+           giveni={W\bibinitperiod}}}%
+        {{hash=eab1070e1875de244f3a12e4d8231710}{%
+           family={Guo},
+           familyi={G\bibinitperiod},
+           given={Xiaolong},
+           giveni={X\bibinitperiod}}}%
+        {{hash=2c65dc0155fc0f151c939cd8fa10040e}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Xuan},
+           giveni={X\bibinitperiod}}}%
+      }
+      \strng{namehash}{69c861f5029b6a743896ff771ef6f8af}
+      \strng{fullhash}{60d64101228d27ea7f055b3efa87aa0d}
+      \strng{fullhashraw}{60d64101228d27ea7f055b3efa87aa0d}
+      \strng{bibnamehash}{60d64101228d27ea7f055b3efa87aa0d}
+      \strng{authorbibnamehash}{60d64101228d27ea7f055b3efa87aa0d}
+      \strng{authornamehash}{69c861f5029b6a743896ff771ef6f8af}
+      \strng{authorfullhash}{60d64101228d27ea7f055b3efa87aa0d}
+      \strng{authorfullhashraw}{60d64101228d27ea7f055b3efa87aa0d}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{cs.AR}
+      \field{eprinttype}{arXiv}
+      \field{title}{AnalogSAGE: Self-evolving Analog Design Multi-Agents with Stratified Memory and Grounded Experience}
+      \field{year}{2025}
+      \verb{eprint}
+      \verb 2512.22435
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2512.22435
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2512.22435
+      \endverb
+    \endentry
+    \entry{hwebench}{online}{}{}
+      \name{author}{3}{}{%
+        {{hash=6733d5eb55078b9e5ad7e58c9b55b41d}{%
+           family={Qiu},
+           familyi={Q\bibinitperiod},
+           given={Weibo},
+           giveni={W\bibinitperiod}}}%
+        {{hash=c54496da1915597997844395064a3c01}{%
+           family={Xiao},
+           familyi={X\bibinitperiod},
+           given={Yinhao},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=80b8e7808dc757c0f1d6a597f38b9647}{%
+           family={Pan},
+           familyi={P\bibinitperiod},
+           given={Runyu},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{17f4fc3da1017e534b008a99bc932585}
+      \strng{fullhash}{51bd421d84d836aec7189cc02fa2cee4}
+      \strng{fullhashraw}{51bd421d84d836aec7189cc02fa2cee4}
+      \strng{bibnamehash}{51bd421d84d836aec7189cc02fa2cee4}
+      \strng{authorbibnamehash}{51bd421d84d836aec7189cc02fa2cee4}
+      \strng{authornamehash}{17f4fc3da1017e534b008a99bc932585}
+      \strng{authorfullhash}{51bd421d84d836aec7189cc02fa2cee4}
+      \strng{authorfullhashraw}{51bd421d84d836aec7189cc02fa2cee4}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{cs.SE}
+      \field{eprinttype}{arXiv}
+      \field{title}{HWE-Bench: Can Language Models Perform Board-level Schematic Designs?}
+      \field{year}{2026}
+      \verb{eprint}
+      \verb 2603.18102
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2603.18102
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2603.18102
+      \endverb
+    \endentry
+    \entry{ngspice_manual}{manual}{}{}
+      \name{author}{1}{}{%
+        {{hash=127c04584906445d1bb3a09d6ac3d370}{%
+           family={{Ngspice Development Team}},
+           familyi={N\bibinitperiod}}}%
+      }
+      \strng{namehash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{fullhash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{fullhashraw}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{bibnamehash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{authorbibnamehash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{authornamehash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{authorfullhash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{authorfullhashraw}{127c04584906445d1bb3a09d6ac3d370}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Version 44}
+      \field{title}{Ngspice User's Manual}
+      \verb{urlraw}
+      \verb https://ngspice.sourceforge.io/docs/ngspice-manual.pdf
+      \endverb
+      \verb{url}
+      \verb https://ngspice.sourceforge.io/docs/ngspice-manual.pdf
+      \endverb
+    \endentry
+    \entry{langgraph}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=8de59538e5206b848891f2b0e1898dfb}{%
+           family={{LangChain}},
+           familyi={L\bibinitperiod}}}%
+      }
+      \strng{namehash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{fullhash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{fullhashraw}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{bibnamehash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{authorbibnamehash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{authornamehash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{authorfullhash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{authorfullhashraw}{8de59538e5206b848891f2b0e1898dfb}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{LangGraph: Building stateful, multi-actor applications with LLMs}
+      \field{year}{2024}
+      \verb{urlraw}
+      \verb https://github.com/langchain-ai/langgraph
+      \endverb
+      \verb{url}
+      \verb https://github.com/langchain-ai/langgraph
+      \endverb
+    \endentry
+    \entry{pyspice}{misc}{}{}
+      \name{author}{1}{}{%
+        {{hash=ba384781d3a38282fb7da900949dd77c}{%
+           family={Salvaire},
+           familyi={S\bibinitperiod},
+           given={Fabrice},
+           giveni={F\bibinitperiod}}}%
+      }
+      \strng{namehash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{fullhash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{fullhashraw}{ba384781d3a38282fb7da900949dd77c}
+      \strng{bibnamehash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{authorbibnamehash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{authornamehash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{authorfullhash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{authorfullhashraw}{ba384781d3a38282fb7da900949dd77c}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{PySpice: Simulate electronic circuit using Python and the Ngspice/Xyce simulators}
+      \field{year}{2021}
+      \verb{urlraw}
+      \verb https://github.com/PySpice-org/PySpice
+      \endverb
+      \verb{url}
+      \verb https://github.com/PySpice-org/PySpice
+      \endverb
+    \endentry
+    \entry{adollm}{online}{}{}
+      \name{author}{4}{}{%
+        {{hash=40092fbe5df3ce34be43155a90c97780}{%
+           family={Yin},
+           familyi={Y\bibinitperiod},
+           given={Yuxuan},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=b2eccb185095fccfeb40fdffd8b2105f}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Yu},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=8bbe59438e171600528be7484a1e385f}{%
+           family={Xu},
+           familyi={X\bibinitperiod},
+           given={Boxun},
+           giveni={B\bibinitperiod}}}%
+        {{hash=24bece773e8873ff8f03d9a3eced56df}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Peng},
+           giveni={P\bibinitperiod}}}%
+      }
+      \strng{namehash}{ecd47f587accee2b8fdf311e869d83fd}
+      \strng{fullhash}{76688d15cd20eaa418b6c611026ba6d9}
+      \strng{fullhashraw}{76688d15cd20eaa418b6c611026ba6d9}
+      \strng{bibnamehash}{76688d15cd20eaa418b6c611026ba6d9}
+      \strng{authorbibnamehash}{76688d15cd20eaa418b6c611026ba6d9}
+      \strng{authornamehash}{ecd47f587accee2b8fdf311e869d83fd}
+      \strng{authorfullhash}{76688d15cd20eaa418b6c611026ba6d9}
+      \strng{authorfullhashraw}{76688d15cd20eaa418b6c611026ba6d9}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{cs.SE}
+      \field{eprinttype}{arXiv}
+      \field{title}{ADO-LLM: Analog Design Bayesian Optimization with In-Context Learning of Large Language Models}
+      \field{year}{2024}
+      \verb{eprint}
+      \verb 2406.18770
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2406.18770
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2406.18770
+      \endverb
+    \endentry
+    \entry{spicepilot}{online}{}{}
+      \name{author}{4}{}{%
+        {{hash=1c1df2b814480561f3df353fd2c9b7c6}{%
+           family={Vungarala},
+           familyi={V\bibinitperiod},
+           given={Deepak},
+           giveni={D\bibinitperiod}}}%
+        {{hash=d2022423a81b806c56d5208174701b94}{%
+           family={Alam},
+           familyi={A\bibinitperiod},
+           given={Sakila},
+           giveni={S\bibinitperiod}}}%
+        {{hash=81cd7444650e27aaa2f88bb2d1ea2aa2}{%
+           family={Ghosh},
+           familyi={G\bibinitperiod},
+           given={Arnob},
+           giveni={A\bibinitperiod}}}%
+        {{hash=805bdd47cb127a894f6bc550125affb3}{%
+           family={Angizi},
+           familyi={A\bibinitperiod},
+           given={Shaahin},
+           giveni={S\bibinitperiod}}}%
+      }
+      \strng{namehash}{8aec2ff1dfd216e2c841fc806147a9bc}
+      \strng{fullhash}{dcc6a80b1c74178655ced57e907c5e02}
+      \strng{fullhashraw}{dcc6a80b1c74178655ced57e907c5e02}
+      \strng{bibnamehash}{dcc6a80b1c74178655ced57e907c5e02}
+      \strng{authorbibnamehash}{dcc6a80b1c74178655ced57e907c5e02}
+      \strng{authornamehash}{8aec2ff1dfd216e2c841fc806147a9bc}
+      \strng{authorfullhash}{dcc6a80b1c74178655ced57e907c5e02}
+      \strng{authorfullhashraw}{dcc6a80b1c74178655ced57e907c5e02}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{cs.SE}
+      \field{eprinttype}{arXiv}
+      \field{title}{SPICEPilot: Navigating SPICE Code Generation and Simulation with AI Guidance}
+      \field{year}{2024}
+      \verb{eprint}
+      \verb 2410.20553
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2410.20553
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2410.20553
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

@@ -1,0 +1,27 @@
+\section*{Justificación}
+\addcontentsline{toc}{section}{Justificación}
+
+Automatizar el diseño de circuitos analógicos tiene valor práctico porque su ciclo de propuesta, simulación y ajuste descansa en el conocimiento experto y no puede seguirse como un procedimiento mecánico. Los modelos de lenguaje que generan diseños a partir de lenguaje natural simplifican la entrada al proceso, pero producen diseños eléctricamente inconsistentes que requieren corrección manual o, cuando los sistemas verifican internamente, lo hacen a nivel de transistor o mediante reglas eléctricas, no mediante simulación SPICE dentro del lazo de diseño.
+
+En la práctica, a partir de una descripción en lenguaje natural el sistema genera un netlist con componentes comerciales, lo simula en ngspice \cite{ngspice_manual}, extrae sus métricas eléctricas y ajusta los valores de los componentes de forma iterativa hasta que el diseño cumpla las metas especificadas. El ciclo de ajuste lo ejecuta el propio ecosistema; el usuario recibe el netlist simulado junto con las métricas y el historial de iteraciones.
+
+Los destinatarios directos son ingenieros y estudiantes que trabajen con circuitos analógicos CA/CD construidos a partir de componentes comerciales con modelo SPICE disponible ---resistores, capacitores, inductores, fuentes, diodos, transistores y amplificadores operacionales de catálogo--- y que requieran una herramienta que no solo genere sino que también valide mediante simulación, sin depender de un nodo tecnológico propietario ni de herramientas de licencia costosa.
+
+La ventaja frente a otros proyectos del área está en el punto que ocupa: trabajar con componentes comerciales y, a la vez, usar la simulación SPICE como señal de ajuste dentro del lazo de diseño, coordinado por varios agentes con un curador. Ninguno de los trabajos revisados reúne esa combinación; el estado del arte desarrolla la comparación en detalle.
+
+El proyecto es factible dentro del plazo de una tesina porque se apoya en herramientas de uso libre ---LangGraph \cite{langgraph}, PySpice \cite{pyspice} y ngspice \cite{ngspice_manual}---, desplegables en la nube y sin dependencia de licencias. Desde la ingeniería en computación, su aportación consiste en integrar técnicas de varios dominios ---arquitectura de software, sistemas multiagente, simulación de circuitos y aprendizaje por refuerzo--- en un sistema funcional y en evaluarlo de forma empírica frente a una línea base.
+
+La Figura \ref{fig:justificacion} resume este desplazamiento: del flujo manual guiado por el experto y de la generación sin validación de los modelos de lazo abierto, hacia un lazo de validación y ajuste automático.
+
+\begin{figure}[htbp]
+    \centering
+    \makebox[\textwidth][c]{%
+        \hspace*{-1cm}
+        \includegraphics[width=1.2\textwidth, trim=0cm 0cm 0cm 0cm, clip]{../src/diagrams/justificacion.png}%
+    }
+    
+    \caption{Diagrama de justificación del ecosistema multiagente.}
+    \label{fig:justificacion}
+    
+    \vspace{0.3cm} 
+\end{figure}

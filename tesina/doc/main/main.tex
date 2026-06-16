@@ -1,0 +1,210 @@
+\documentclass[12pt,letterpaper,oneside]{report}
+
+% -----------------------------------------------------------------------
+% IDIOMA Y CODIFICACIÓN
+% -----------------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+\usepackage{csquotes}
+
+% -----------------------------------------------------------------------
+% TIPOGRAFÍA (Times-like) Y MICROTIPOGRAFÍA
+% -----------------------------------------------------------------------
+\usepackage{mathptmx} % Times (texto + matemáticas)
+\usepackage{microtype} % mejor justificación y cortes de palabra
+
+% -----------------------------------------------------------------------
+% ESPACIADO (IPN: 1.5) + PÁRRAFOS
+% -----------------------------------------------------------------------
+\usepackage{setspace}
+\onehalfspacing
+
+% Sangría estándar y separación controlada (no cambia tu contenido)
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0pt}
+
+% -----------------------------------------------------------------------
+% MÁRGENES (encuadernación) Y HEADER/FOOTER
+% -----------------------------------------------------------------------
+\usepackage{geometry}
+\geometry{
+  letterpaper,
+  left=3.5cm,
+  right=2.5cm,
+  top=2.5cm,
+  bottom=2.5cm,
+  headheight=14.5pt,
+  headsep=0.7cm,
+  footskip=1.2cm
+}
+
+% -----------------------------------------------------------------------
+% PAQUETES MATEMÁTICOS
+% -----------------------------------------------------------------------
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+% -----------------------------------------------------------------------
+% ALGORITMOS Y PSEUDOCÓDIGO
+% -----------------------------------------------------------------------
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\floatname{algorithm}{Algoritmo}
+\renewcommand{\listalgorithmname}{Lista de Algoritmos}
+\algrenewcommand\algorithmicrequire{\textbf{Entrada:}}
+\algrenewcommand\algorithmicensure{\textbf{Salida:}}
+
+% -----------------------------------------------------------------------
+% DISEÑO, IMÁGENES Y TABLAS
+% -----------------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{calc, shapes, arrows, positioning, automata, bending, arrows.meta, babel}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{array}
+\usepackage{booktabs} % tablas más formales (no afecta si no lo usas)
+\usepackage{pdflscape} % Permite rotar hojas individuales en el PDF
+\usepackage{svg}
+\usepackage{pgfplots}
+\usepackage{tabularx}
+\usepackage{xltabular}
+\usepackage{colortbl}
+\usepackage{worldflags}
+\flagsdefault[width=0.45cm]
+
+% Listas más limpias (sin tocar texto: solo formato)
+\setlist[itemize]{noitemsep, topsep=3pt}
+\setlist[enumerate]{noitemsep, topsep=3pt}
+
+% Colores (portada)
+\definecolor{guinda}{RGB}{108, 19, 43}
+\definecolor{esimegreen}{RGB}{0, 103, 56}
+\definecolor{rowgray}{HTML}{F8F9FA}
+
+% Figuras y tablas
+\captionsetup[figure]{labelfont={bf}, name={Figura}, labelsep=period}
+\captionsetup[table]{labelfont={bf}, name={Tabla}, labelsep=period}
+
+% -----------------------------------------------------------------------
+% CONTROL DE VIUDAS/HUÉRFANAS (estándar tesis/tesina)
+% -----------------------------------------------------------------------
+\clubpenalty=10000      % evita viudas (primera línea sola)
+\widowpenalty=10000     % evita huérfanas (última línea sola)
+\displaywidowpenalty=10000
+
+% -----------------------------------------------------------------------
+% HIPERVÍNCULOS (PDF) - compatible con biblatex
+% -----------------------------------------------------------------------
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue,
+  pdftitle={Tesina},
+  pdfauthor={Antonio Torres}
+}
+
+% -----------------------------------------------------------------------
+% BIBLIOGRAFÍA [IEEE] CON BIBLATEX (mantienes biber)
+% -----------------------------------------------------------------------
+\usepackage[backend=biber,style=ieee]{biblatex}
+\addbibresource{./lib/referencias.bib}
+
+% -----------------------------------------------------------------------
+% ENCABEZADOS Y PIES (formato de tesina: limpio y formal)
+% -----------------------------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % limpia todo
+\fancyfoot[C]{\thepage} % número al centro abajo (común en tesinas)
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% -----------------------------------------------------------------------
+% FORMATO DE TÍTULOS DE CAPÍTULO (sin invadir márgenes)
+% -----------------------------------------------------------------------
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{18pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{-10pt}{30pt}
+
+% -----------------------------------------------------------------------
+% DATOS DEL DOCUMENTO
+% -----------------------------------------------------------------------
+\title{Ecosistema multiagente basado en LLM y aprendizaje por refuerzo para la generación y validación de circuitos analógicos CA/CD a partir de lenguaje natural}
+\author{Antonio Torres}
+\date{\today}
+
+\begin{document}
+
+  % ---------------------------------------------------------------------
+  % PRELIMINARES
+  % ---------------------------------------------------------------------
+  \pagenumbering{roman}
+
+  % 1. PORTADA
+  \input{sections/portada}
+  \clearpage
+
+  % 2. RESUMEN Y ABSTRACT
+%   \input{sections/resumen}
+  \clearpage
+
+  % 3. ÍNDICES
+  \tableofcontents
+  \clearpage
+  \listoffigures
+  \clearpage
+
+  % ---------------------------------------------------------------------
+  % CONTENIDO PRINCIPAL
+  % ---------------------------------------------------------------------
+  \pagenumbering{arabic}
+
+  % CAPÍTULO 1: INTRODUCCIÓN
+  \chapter{Introducción}
+  \input{sections/problema}
+  \input{sections/objetivos}
+  \input{sections/justificacion}
+  \input{sections/limites_alcances}
+
+  % CAPÍTULO 2: MARCO TEÓRICO
+  \chapter{Marco Teórico}
+  \input{sections/marco_teorico}
+
+  % CAPÍTULO 3: ESTADO DEL ARTE
+  \chapter{Estado del Arte}
+  \input{sections/estado_arte}
+
+  % CAPÍTULO 4: DISEÑO E IMPLEMENTACIÓN DE LA SOLUCIÓN
+  \chapter{Diseño e Implementación de la Solución}
+  \input{sections/propuesta_solucion}
+
+  % CAPÍTULO 5: PRUEBAS Y ANÁLISIS DE RESULTADOS
+  \chapter{Pruebas y Análisis de Resultados}
+  \input{sections/pruebas}
+
+  % CAPÍTULO 6: CONCLUSIONES Y TRABAJO FUTURO
+  \chapter{Conclusiones y Trabajo Futuro}
+  \input{sections/conclusiones}
+
+  % ---------------------------------------------------------------------
+  % BIBLIOGRAFÍA
+  % ---------------------------------------------------------------------
+  \clearpage
+  \printbibliography[heading=bibintoc,title={Referencias}]
+
+  % ---------------------------------------------------------------------
+  % APÉNDICES
+  % ---------------------------------------------------------------------
+  \appendix
+  % \input{sections/anexos}
+
+\end{document}

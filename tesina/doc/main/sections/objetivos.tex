@@ -1,0 +1,15 @@
+\section*{Objetivos}
+\addcontentsline{toc}{section}{Objetivos}
+
+\subsection*{Objetivo General}
+Desarrollar un ecosistema multiagente basado en LLM y aprendizaje por refuerzo para la generación y validación de circuitos analógicos CA/CD con componentes comerciales a partir de descripciones en lenguaje natural, empleando la simulación en ngspice como mecanismo de validación.
+
+\subsection*{Objetivos Específicos}
+\begin{enumerate}
+    \item \textbf{Diseñar} la arquitectura del sistema en dos subsistemas independientes: un cliente que gestiona el acceso de los usuarios y un servidor sin estado que aloja a los agentes, condición que habilita su escalado horizontal.
+    \item \textbf{Desarrollar} el agente orquestador y el patrón Master-Worker que descompone un circuito de varias etapas en sub-bloques y reparte su cálculo entre varios trabajadores.
+    \item \textbf{Implementar} el agente de cálculo, que obtiene los valores de los componentes de cada sub-bloque a partir de las ecuaciones de diseño correspondientes.
+    \item \textbf{Desarrollar} el agente curador, basado en aprendizaje por refuerzo, que decide si una propuesta de circuito se acepta, se ajusta o se rechaza con base en las métricas devueltas por la simulación.
+    \item \textbf{Implementar} la integración con ngspice mediante PySpice, cerrando el lazo de realimentación que permite ajustar los valores de los componentes de forma iterativa.
+    \item \textbf{Evaluar} el desempeño del sistema sobre un conjunto de circuitos de prueba con solución de referencia, mediante el error porcentual absoluto medio (MAPE) y la tasa de circuitos que cumplen las metas, y contrastarlo con el de un enfoque de un solo modelo que repite el intento varias veces (\textit{best-of-N}).
+\end{enumerate}

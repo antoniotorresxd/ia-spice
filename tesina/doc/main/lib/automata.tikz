@@ -1,0 +1,89 @@
+\begin{tikzpicture}[
+    every state/.style={
+        circle,
+        minimum size=1.2cm,
+        line width=0.7pt,
+        font=\scriptsize
+    },
+    ->,
+    >=stealth,
+    shorten >=2pt,
+    shorten <=2pt,
+    node distance=2.2cm
+]
+
+% ── Nodos ──────────────────────────────────────────────────────
+\node[state, initial, fill=gray!20, draw=gray!60]
+    (qinit) {$q_{init}$};
+
+\node[state, fill=violet!15, draw=violet!70, right=of qinit]
+    (qsint) {$q_{sint}$};
+
+\node[state, fill=teal!15, draw=teal!60, right=of qsint]
+    (qver) {$q_{ver}$};
+
+\node[state, fill=blue!10, draw=blue!60, right=of qver]
+    (qsim) {$q_{sim}$};
+
+\node[state, accepting, fill=orange!10, draw=orange!80,
+      line width=1.0pt, right=of qsim]
+    (qopt) {$q_{opt}$};
+
+% ── Etiquetas de nombre completo ────────────────────────────────
+\node[font=\tiny, gray,      below=0.2cm of qinit] {Inicialización};
+\node[font=\tiny, violet!80, below=0.2cm of qsint] {Síntesis};
+\node[font=\tiny, teal!80,   below=0.2cm of qver]  {Verificación};
+\node[font=\tiny, blue!70,   below=0.2cm of qsim]  {Simulación};
+\node[font=\tiny, orange!80, below=0.2cm of qopt]  {Optimización $\in F$};
+
+% ── Flujo principal ─────────────────────────────────────────────
+\draw (qinit) edge
+    node[above, font=\tiny, align=center]
+        {Specs válidas\\ (Gain, BW, PM)}
+    (qsint);
+
+\draw (qsint) edge
+    node[above, font=\tiny, align=center]
+        {Netlist\\ generado}
+    (qver);
+
+\draw (qver) edge
+    node[above, font=\tiny, align=center]
+        {Estructura\\ válida}
+    (qsim);
+
+\draw (qsim) edge
+    node[above, font=\tiny, align=center]
+        {Simulación\\ convergente}
+    (qopt);
+
+% Auto-lazo en F
+\draw (qopt) edge[loop above]
+    node[above, font=\tiny, color=orange!80, align=center]
+        {$\Delta S \leq \varepsilon$ (Fin)}
+    (qopt);
+
+% ── Lazos de retroalimentación ──────────────────────────────────
+
+% Error léxico: q_ver → q_sint
+\draw[red!70, dashed, line width=0.7pt]
+    (qver) edge[bend left=40]
+    node[above, font=\tiny, color=red!70, align=center]
+        {Error léxico\\ (self-healing)}
+    (qsint);
+
+% Divergencia N-R: q_sim → q_sint
+\draw[orange!70, dashed, line width=0.7pt]
+    (qsim) edge[bend left=30]
+    node[above, font=\tiny, color=orange!70, align=center]
+        {Divergencia N-R}
+    (qsint);
+
+% Sizing: q_opt → q_sint
+\draw[blue!70, dashed, line width=0.7pt]
+    (qopt) edge[bend right=30]
+    node[below, font=\tiny, color=blue!70, align=center]
+        {$\Delta S > \varepsilon$ (Sizing)}
+    (qsint);
+
+\end{tikzpicture}

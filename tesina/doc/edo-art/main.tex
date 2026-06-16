@@ -1,0 +1,249 @@
+\documentclass[12pt,letterpaper,oneside]{report}
+
+% -----------------------------------------------------------------------
+% IDIOMA Y CODIFICACIÓN
+% -----------------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+\usepackage{csquotes}
+
+% -----------------------------------------------------------------------
+% TIPOGRAFÍA Y MICROTIPOGRAFÍA
+% -----------------------------------------------------------------------
+\usepackage{mathptmx}
+\usepackage{microtype}
+
+% -----------------------------------------------------------------------
+% ESPACIADO Y PÁRRAFOS
+% -----------------------------------------------------------------------
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0pt}
+
+% -----------------------------------------------------------------------
+% MÁRGENES
+% -----------------------------------------------------------------------
+\usepackage{geometry}
+\geometry{
+  letterpaper,
+  left=3.5cm,
+  right=2.5cm,
+  top=2.5cm,
+  bottom=2.5cm,
+  headheight=14.5pt,
+  headsep=0.7cm,
+  footskip=1.2cm
+}
+
+% -----------------------------------------------------------------------
+% DISEÑO, IMÁGENES Y TABLAS 
+% -----------------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{array}
+\usepackage{booktabs}   % Líneas profesionales para tesis
+\usepackage{longtable}
+\usepackage{tabularx}  % Control exacto del ancho de columnas
+
+% El paquete definitivo y más estable para banderas vectoriales nativas en LaTeX
+\usepackage{worldflags}
+\flagsdefault[width=0.45cm]
+
+\setlist[itemize]{noitemsep, topsep=3pt}
+\setlist[enumerate]{noitemsep, topsep=3pt}
+
+% -----------------------------------------------------------------------
+% COLORES INSTITUCIONALES
+% -----------------------------------------------------------------------
+\definecolor{guinda}{RGB}{108, 19, 43}
+\definecolor{esimegreen}{RGB}{0, 103, 56}
+\definecolor{rowgray}{HTML}{F8F9FA}
+
+% -----------------------------------------------------------------------
+% CAPTIONS
+% -----------------------------------------------------------------------
+\captionsetup[figure]{labelfont={bf}, name={Figura}, labelsep=period}
+\captionsetup[table]{labelfont={bf}, name={Tabla}, labelsep=period, position=top}
+
+% -----------------------------------------------------------------------
+% CONTROL DE VIUDAS/HUÉRFANAS
+% -----------------------------------------------------------------------
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+
+% -----------------------------------------------------------------------
+% HIPERVÍNCULOS
+% -----------------------------------------------------------------------
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue,
+  pdftitle={Reporte de Casos de Estudio - Proyectos de Ingeniería},
+  pdfauthor={Antonio Torres}
+}
+
+% -----------------------------------------------------------------------
+% ENCABEZADOS Y PIES
+% -----------------------------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% -----------------------------------------------------------------------
+% FORMATO DE TÍTULOS DE CAPÍTULO
+% -----------------------------------------------------------------------
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{18pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{-10pt}{30pt}
+
+% =======================================================================
+\begin{document}
+% =======================================================================
+
+\pagenumbering{roman}
+
+% -----------------------------------------------------------------------
+% PORTADA
+% -----------------------------------------------------------------------
+\begin{titlepage}
+  \begin{tikzpicture}[remember picture, overlay]
+
+    \coordinate (topleft)    at ($(current page.north west) + (2.5cm, -2cm)$);
+    \coordinate (bottomleft) at ($(current page.south west) + (2.5cm, 2.5cm)$);
+
+    % Logo IPN
+    \node[anchor=north, inner sep=0pt] at (topleft) {
+      \includegraphics[width=4cm]{../src/logos/ipn_logo.png}
+    };
+
+    % Logo ESIME
+    \node[anchor=south, inner sep=0pt] at (bottomleft) {
+      \includegraphics[width=3cm]{../src/logos/esime_logo.jpg}
+    };
+
+    % Líneas verticales decorativas
+    \draw[esimegreen, line width=2pt]
+      ($(topleft) + (0, -3.2cm)$) -- ($(bottomleft) + (0, 3.8cm)$);
+    \draw[esimegreen, line width=1pt]
+      ($(topleft) + (0.15cm, -3.2cm)$) -- ($(bottomleft) + (0.15cm, 3.8cm)$);
+
+    % Encabezado institucional
+    \node[anchor=north] at ($(current page.north) + (1cm, -2.5cm)$) {
+      \begin{minipage}{14cm}
+        \centering
+        \large\textbf{INSTITUTO POLITÉCNICO NACIONAL}\\[0.4cm]
+        {\color{esimegreen}\hrule height 2pt}
+        \vspace{0.1cm}
+        {\color{esimegreen}\hrule height 1pt}
+        \vspace{0.4cm}
+        \large\textbf{ESCUELA SUPERIOR DE INGENIERÍA MECÁNICA Y ELÉCTRICA}\\
+        \textbf{UNIDAD CULHUACÁN}
+      \end{minipage}
+    };
+
+  \end{tikzpicture}
+
+  \vspace*{5cm}
+  \centering
+
+  {\LARGE \textbf{Estado del arte - IA with Spice}}\\[2cm]
+
+  \large ALUMNO:\\[0.3cm]
+  \textbf{ANTONIO DE JESUS TORRES MARTÍNEZ}\\[0.3cm]
+  \textbf{DIEGO JESUS GUTIERREZ DELGADO}\\[3cm]
+
+  \large ASESOR:\\[0.3cm]
+  \textbf{RICARDO ISARAEL CALZADA SALAS}\\[1.5cm]
+
+\end{titlepage}
+\clearpage
+
+% -----------------------------------------------------------------------
+% CONTENIDO PRINCIPAL
+% -----------------------------------------------------------------------
+\pagenumbering{arabic}
+
+\begin{table}[h!]
+\centering
+\small
+\caption{Estado del Arte en Diseño de Circuitos Analógicos asistido por IA.}
+\label{tab:estado_del_arte}
+\vspace{0.3cm}
+
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\renewcommand{\arraystretch}{1.5}
+\setlength{\extrarowheight}{5pt}
+\arrayrulecolor{guinda}
+\rowcolors{1}{white}{rowgray}
+
+% Estructura rígida basada en tabularx con alineación vertical al centro
+\begin{tabularx}{\textwidth}{
+  >{\centering\arraybackslash}m{2.6cm} 
+  >{\centering\arraybackslash}m{2.4cm} 
+  >{\raggedright\arraybackslash}X 
+  >{\centering\arraybackslash}m{1.5cm}
+}
+\toprule
+\rowcolor{guinda}
+\textcolor{white}{\textbf{Nombre del Paper}} & 
+\textcolor{white}{\textbf{Origen}} & 
+\textcolor{white}{\textbf{Descripción}} & 
+\textcolor{white}{\textbf{Enlace}} \\ 
+\midrule
+
+AnalogCoder & 
+\worldflag{HK} \worldflag{US} \newline \footnotesize HK / EE. UU. & 
+Primer agente LLM sin entrenamiento para diseño de circuitos analógicos mediante generación de código Python y bibliotecas de subcircuitos. & 
+\href{https://arxiv.org/abs/2405.14918}{\textbf{[Link]}} \\
+
+INSIGHT & 
+\worldflag{US} \newline \footnotesize EE. UU. & 
+Simulador neuronal universal para circuitos analógicos que aprovecha modelos \textit{Transformer} autorregresivos para predicción de métricas. & 
+\href{https://arxiv.org/abs/2407.07346}{\textbf{[Link]}} \\
+
+SPICEPilot & 
+\worldflag{US} \newline \footnotesize EE. UU. & 
+Framework y dataset basado en PySpice diseñado para guiar y validar la generación de código SPICE con asistencia de IA. & 
+\href{https://arxiv.org/abs/2410.20553}{\textbf{[Link]}} \\
+
+AnalogXpert & 
+\worldflag{CN} \newline \footnotesize China & 
+Automatiza la síntesis de topologías incorporando experiencia humana de diseño y un sistema de revisión iterativo. & 
+\href{https://arxiv.org/abs/2412.19824}{\textbf{[Link]}} \\
+
+Evaluating LLM Workflows & 
+\worldflag{DE} \newline \footnotesize Alemania & 
+Evalúa flujos de trabajo que combinan LLMs, RAG y SPICE para el diseño específico de fuentes de alimentación conmutadas en PCBs. & 
+\href{https://arxiv.org/abs/2507.10639}{\textbf{[Link]}} \\
+
+AnalogCoder-Pro & 
+\worldflag{HK} \worldflag{US} \newline \footnotesize HK / EE. UU. & 
+Framework multimodal que utiliza imágenes de formas de onda para depurar errores y optimización bayesiana. & 
+\href{https://arxiv.org/abs/2508.02518}{\textbf{[Link]}} \\
+
+AnalogAgent & 
+\worldflag{SG} \newline \footnotesize Singapur & 
+Arquitectura multi-agente con memoria auto-evolutiva que aprende de los fallos de simulación sin depender de bibliotecas externas. & 
+\href{https://arxiv.org/abs/2603.23910}{\textbf{[Link]}} \\ 
+
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\end{document}
