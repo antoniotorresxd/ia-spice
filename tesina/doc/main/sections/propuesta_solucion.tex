@@ -42,17 +42,14 @@ El sistema ofrece un conjunto acotado de funciones que se desprenden directament
 
 El diagrama funcional organiza estas funciones según el subsistema responsable y el flujo de datos que las relaciona, lo que permite ver la propuesta como un encadenamiento de transformaciones sobre la descripción del circuito, desde el lenguaje natural hasta el netlist validado.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \hspace*{-1cm}
-        \includegraphics[width=1.2\textwidth, trim=0cm 0cm 0cm 0cm, clip]{../src/diagrams/diagrama_funcional.png}%
+        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/diagrama_funcional.png}%
     }
 
     \caption{Diagrama funcional del sistema.}
     \label{fig:diagrama-funcional}
-
-    \vspace{0.3cm}
 \end{figure}
 
 \subsection{Modelo de casos de uso}
@@ -61,17 +58,14 @@ Los casos de uso describen las interacciones que los actores ejecutan sobre el s
 
 Los casos de uso principales del usuario incluyen: registrarse e iniciar sesión, gestionar espacios de trabajo, emitir y revocar API keys, y enviar una solicitud de generación de circuito junto con su descripción en lenguaje natural. El caso de uso central —\textit{generar circuito}— desencadena el flujo del subsistema servidor, que se detalla en su comportamiento dinámico en (\S 4.5).
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \hspace*{-1cm}
-        \includegraphics[width=1.2\textwidth, trim=0cm 0cm 0cm 0cm, clip]{../src/diagrams/casos_uso_generacion.png}%
+        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/casos_uso_generacion.png}%
     }
 
     \caption{Diagrama de casos de uso.}
     \label{fig:casos-uso}
-
-    \vspace{0.3cm}
 \end{figure}
 
 \section{Arquitectura del sistema (modelo C4)}
@@ -80,51 +74,42 @@ Los casos de uso principales del usuario incluyen: registrarse e iniciar sesión
 
 El nivel de contexto sitúa el sistema frente a sus actores y sistemas externos. Muestra al usuario interactuando con el sistema, y al sistema consumiendo dos servicios externos: la API del LLM y el motor de simulación ngspice. Este nivel deja claro que el sistema es una unidad que media entre la intención del usuario, expresada en lenguaje natural, y dos capacidades externas: el razonamiento del LLM y la simulación física del circuito.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \hspace*{-1cm}
-        \includegraphics[width=1.2\textwidth, trim=0cm 0cm 0cm 0cm, clip]{../src/diagrams/c4_l1_v4.png}%
+        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/c4_l1_v4.png}%
     }
 
     \caption{C4 Nivel 1: Diagrama de contexto.}
     \label{fig:c4-nivel1}
-
-    \vspace{0.3cm}
 \end{figure}
 
 \subsection{Nivel 2 — Contenedores}
 
 El nivel de contenedores descompone el sistema en sus unidades desplegables. Hace explícita la separación cliente/servidor: el subsistema cliente (autenticación, sesiones, espacios de trabajo, API keys) y el subsistema servidor (el ecosistema de agentes), junto con la base de datos de persistencia y la frontera con los servicios externos. Este nivel justifica la premisa de despliegue independiente (\S 4.2.2) y muestra el camino de una solicitud autenticada desde el cliente hacia el servidor.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \hspace*{-1cm}
-        \includegraphics[width=1.2\textwidth, trim=0cm 0cm 0cm 0cm, clip]{../src/diagrams/c4_l2_v4.png}%
+        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/c4_l2_v4.png}%
     }
 
     \caption{C4 Nivel 2: Diagrama de contenedores.}
     \label{fig:c4-nivel2}
-
-    \vspace{0.3cm}
 \end{figure}
 
 \subsection{Nivel 3 — Componentes}
 
 El nivel de componentes abre el subsistema servidor y muestra el ecosistema de agentes: el agente Orquestador (entrada del servidor y coordinador del estado compartido), el agente de Cálculo (Master-Worker), el agente Curador (RL, lazo de validación iterativa), el agente de Shell (ejecución de ngspice) y el agente de Escritura (generación del netlist con PySpice), todos coordinados sobre el grafo de orquestación con persistencia en base de datos. Este nivel materializa la premisa de modularidad de agentes (\S 4.2.2) y prepara el terreno para la descripción del comportamiento dinámico.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \hspace*{-1cm}
-        \includegraphics[width=1.2\textwidth, trim=0cm 0cm 0cm 0cm, clip]{../src/diagrams/c4_l3_v4.png}%
+        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/c4_l3_v4.png}%
     }
 
     \caption{C4 Nivel 3: Diagrama de componentes.}
     \label{fig:c4-nivel3}
-
-    \vspace{0.3cm}
 \end{figure}
 
 \section{Comportamiento dinámico: flujo de generación}
@@ -135,17 +120,14 @@ El flujo principal procede así: el orquestador recibe la solicitud autenticada 
 
 El comportamiento de persistencia se modela de forma explícita: el estado de cada iteración se conserva mediante el \textit{checkpointer}, lo que se representa como un fragmento de referencia en el diagrama, de modo que la naturaleza con estado del sistema quede formalmente reflejada y no como una observación accesoria.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \hspace*{-1cm}
-        \includegraphics[width=1.2\textwidth, trim=0cm 0cm 0cm 0cm, clip]{../src/diagrams/secuencia_flujo_principal.png}%
+        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/secuencia_flujo_principal.png}%
     }
 
     \caption{Diagrama de secuencia del flujo de generación.}
     \label{fig:secuencia-generacion}
-
-    \vspace{0.3cm}
 \end{figure}
 
 \section{Criterios de aceptación de la propuesta}
