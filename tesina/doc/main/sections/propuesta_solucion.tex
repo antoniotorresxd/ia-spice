@@ -1,15 +1,18 @@
 % Capítulo 4: Propuesta de solución
 \section{Introducción}
+\label{sec:prop-intro}
 
 En el capítulo anterior se revisó el estado del arte de los sistemas multiagente basados en LLM para el diseño de circuitos analógicos, y se identificó que los trabajos reportados operan a nivel de transistor sobre un nodo tecnológico (PDK), mientras que la generación y validación de circuitos a nivel de componentes comerciales (COTS) con simulación SPICE dentro del lazo de diseño permanece como una brecha abierta. Este capítulo presenta la propuesta de solución que atiende esa brecha.
 
 El propósito del capítulo es exponer el diseño del sistema antes de su construcción: las premisas que lo fundamentan, su descomposición funcional, su arquitectura estructural y su comportamiento en ejecución. Las decisiones de diseño se justifican a partir de la naturaleza del problema, de los principios de la ingeniería de software y de los hallazgos del estado del arte; los artefactos de análisis y diseño elaborados a lo largo del proyecto —la Especificación de Requisitos de Software (SRS), el modelo de casos de uso, el diagrama funcional, el modelo arquitectónico C4 de tres niveles y el diagrama de secuencia— registran y representan esas decisiones, de modo que cada una quede expresada en un artefacto verificable.
 
-La exposición sigue un orden de lo abstracto a lo concreto. Primero se establecen el problema que el diseño debe resolver, las premisas que lo orientan y el papel del SRS como registro de los requisitos (\S 4.2). A continuación se describe \textit{qué} hace el sistema mediante su descomposición funcional y sus casos de uso (\S 4.3). Después se describe \textit{cómo} se estructura, mediante el modelo C4 en sus tres niveles (\S 4.4). Enseguida se describe \textit{cómo se comporta} en ejecución, mediante el diagrama de secuencia del flujo principal de generación (\S 4.5). Finalmente se enuncian los criterios de aceptación que la propuesta deberá satisfacer (\S 4.6) y se cierra con una síntesis del diseño y su conexión con la evaluación del sistema (\S 4.7).
+La exposición sigue un orden de lo abstracto a lo concreto. Primero se establecen el problema que el diseño debe resolver, las premisas que lo orientan y el papel del SRS como registro de los requisitos (sección~\ref{sec:prop-premisas}). A continuación se describe \textit{qué} hace el sistema mediante su descomposición funcional y sus casos de uso (sección~\ref{sec:prop-funcional}). Después se describe \textit{cómo} se estructura, mediante el modelo C4 en sus tres niveles (sección~\ref{sec:prop-c4}). Enseguida se describe \textit{cómo se comporta} en ejecución, mediante el diagrama de secuencia del flujo principal de generación (sección~\ref{sec:prop-dinamico}). Finalmente se enuncian los criterios de aceptación que la propuesta deberá satisfacer (sección~\ref{sec:prop-criterios}) y se cierra con una síntesis del diseño y su conexión con la evaluación del sistema (sección~\ref{sec:prop-sintesis}).
 
 \section{Premisas y fundamento de diseño}
+\label{sec:prop-premisas}
 
 \subsection{El problema de diseño y el papel del SRS}
+\label{subsec:prop-problema}
 
 El diseño responde a un problema concreto: transformar la descripción de un circuito analógico CA/CD, expresada en lenguaje natural, en un netlist que haya sido simulado y validado, empleando componentes comerciales en lugar de dispositivos a nivel de transistor. Este problema impone por sí mismo varias exigencias al diseño —la interpretación de lenguaje natural, el cálculo de valores de componentes, la simulación física y el ajuste del circuito hasta cumplir una meta— que son las que, en última instancia, justifican la forma del sistema. Las decisiones de diseño de este capítulo se fundamentan en esas exigencias del problema, en los principios de la ingeniería de software y en los hallazgos del estado del arte, y no en la conformidad con un documento interno.
 
@@ -18,6 +21,7 @@ La Especificación de Requisitos de Software (SRS) en su versión 1.0 cumple un 
 El alcance del sistema comprende recibir la descripción de un circuito analógico en lenguaje natural, dividir circuitos de varias etapas en sub-bloques, calcular los valores de los componentes, generar el código PySpice y el netlist, simular en ngspice, ajustar iterativamente los valores mediante un agente curador, y entregar al usuario el netlist final junto con las métricas y el historial de iteraciones. Quedan fuera del alcance el diseño de \textit{layout} físico (PCB), la síntesis a nivel de transistor para un nodo tecnológico y la generación de esquemáticos gráficos.
 
 \subsection{Premisas de diseño}
+\label{subsec:prop-premisas-disenio}
 
 A partir del problema descrito, y guiado por principios reconocidos de la ingeniería de software, el diseño adopta un conjunto de premisas que orientan las decisiones arquitectónicas de las secciones siguientes. Para cada una se expone primero su fundamento y, después, el requisito del SRS que queda cubierto.
 
@@ -29,14 +33,16 @@ A esta modularidad se suma la concurrencia en el cálculo, que no es una decisi�
 
 El rasgo que distingue la propuesta frente a los enfoques revisados en el estado del arte es la validación dentro del lazo de diseño. Los sistemas multiagente reportados para diseño analógico tienden a emplear la simulación como comprobación posterior a la generación; la propuesta, en cambio, la incorpora como parte del proceso de ajuste: el agente curador compara las métricas obtenidas de ngspice con las metas y decide si el circuito se acepta o se vuelve a ajustar, hasta cumplir la meta o alcanzar un número máximo de iteraciones. Esta integración de la simulación en el lazo es la traducción, al nivel de componentes comerciales, del cierre de realimentación que la literatura sobre diseño asistido por LLM ha mostrado eficaz al nivel de transistor, y constituye la aportación central de la propuesta; en el SRS se recoge como el control del ciclo de ajuste (RF-01.4).
 
-Sostener ese lazo exige conservar el estado entre iteraciones, por lo que el diseño conserva de forma explícita el estado de la generación mediante un mecanismo de \textit{checkpointer} sobre una base de datos, de modo que una solicitud en proceso mantenga su estado disponible para todos los agentes a lo largo de las iteraciones. Esta persistencia se modela de manera explícita en el comportamiento dinámico del sistema (\S 4.5) por ser una propiedad esencial del lazo, y no una nota accesoria. Finalmente, y en línea con el principio de configurabilidad sin recompilación, los parámetros del agente curador —los pesos, factores y umbrales del cálculo de recompensa, junto con el número máximo de iteraciones— se mantienen en un archivo de configuración externo, de modo que puedan ajustarse durante la experimentación sin modificar el código (RNF-04.2).
+Sostener ese lazo exige conservar el estado entre iteraciones, por lo que el diseño conserva de forma explícita el estado de la generación mediante un mecanismo de \textit{checkpointer} sobre una base de datos, de modo que una solicitud en proceso mantenga su estado disponible para todos los agentes a lo largo de las iteraciones. Esta persistencia se modela de manera explícita en el comportamiento dinámico del sistema (sección~\ref{sec:prop-dinamico}) por ser una propiedad esencial del lazo, y no una nota accesoria. Finalmente, y en línea con el principio de configurabilidad sin recompilación, los parámetros del agente curador —los pesos, factores y umbrales del cálculo de recompensa, junto con el número máximo de iteraciones— se mantienen en un archivo de configuración externo, de modo que puedan ajustarse durante la experimentación sin modificar el código (RNF-04.2).
 
 % FIGURA 4.1 — Mapa de cobertura: decisiones de diseño ↔ requisitos.
 % (referencia pendiente: añadir `mapa_cobertura.png` en src/diagrams si procede)
 
 \section{Descomposición funcional y casos de uso}
+\label{sec:prop-funcional}
 
 \subsection{Vista funcional}
+\label{subsec:prop-vista-funcional}
 
 El sistema ofrece un conjunto acotado de funciones que se desprenden directamente del problema y quedan registradas en el SRS: dar acceso a los usuarios y gestionar sus sesiones, espacios de trabajo y API keys (cliente); leer una descripción de circuito en lenguaje natural y extraer de ella los parámetros eléctricos; dividir un circuito de varias etapas en sub-bloques; calcular los valores de los componentes de cada sub-bloque; generar el código PySpice y el netlist; simular el netlist en ngspice y leer las métricas; comparar las métricas con las metas y decidir si el circuito se acepta o se ajusta; y entregar al usuario el netlist final junto con las métricas y el historial de iteraciones.
 
@@ -47,30 +53,31 @@ El diagrama funcional organiza estas funciones según el subsistema responsable 
     \makebox[\textwidth][c]{%
         \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/diagrama_funcional.png}%
     }
-
     \caption{Diagrama funcional del sistema.}
     \label{fig:diagrama-funcional}
 \end{figure}
 
 \subsection{Modelo de casos de uso}
+\label{subsec:prop-casos-uso}
 
 Los casos de uso describen las interacciones que los actores ejecutan sobre el sistema. Se identifican dos clases de actor: el \textbf{usuario}, que interactúa con el subsistema cliente, y los \textbf{servicios externos} (la API del LLM y el motor ngspice), que el subsistema servidor consume durante la generación.
 
-Los casos de uso principales del usuario incluyen: registrarse e iniciar sesión, gestionar espacios de trabajo, emitir y revocar API keys, y enviar una solicitud de generación de circuito junto con su descripción en lenguaje natural. El caso de uso central —\textit{generar circuito}— desencadena el flujo del subsistema servidor, que se detalla en su comportamiento dinámico en (\S 4.5).
+Los casos de uso principales del usuario incluyen: registrarse e iniciar sesión, gestionar espacios de trabajo, emitir y revocar API keys, y enviar una solicitud de generación de circuito junto con su descripción en lenguaje natural. El caso de uso central —\textit{generar circuito}— desencadena el flujo del subsistema servidor, que se detalla en su comportamiento dinámico en (sección~\ref{sec:prop-dinamico}).
 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
         \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/casos_uso_generacion.png}%
     }
-
     \caption{Diagrama de casos de uso.}
     \label{fig:casos-uso}
 \end{figure}
 
 \section{Arquitectura del sistema (modelo C4)}
+\label{sec:prop-c4}
 
 \subsection{Nivel 1 — Contexto}
+\label{subsec:prop-c4-nivel1}
 
 El nivel de contexto sitúa el sistema frente a sus actores y sistemas externos. Muestra al usuario interactuando con el sistema, y al sistema consumiendo dos servicios externos: la API del LLM y el motor de simulación ngspice. Este nivel deja claro que el sistema es una unidad que media entre la intención del usuario, expresada en lenguaje natural, y dos capacidades externas: el razonamiento del LLM y la simulación física del circuito.
 
@@ -79,40 +86,40 @@ El nivel de contexto sitúa el sistema frente a sus actores y sistemas externos.
     \makebox[\textwidth][c]{%
         \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/c4_l1_v4.png}%
     }
-
     \caption{C4 Nivel 1: Diagrama de contexto.}
     \label{fig:c4-nivel1}
 \end{figure}
 
 \subsection{Nivel 2 — Contenedores}
+\label{subsec:prop-c4-nivel2}
 
-El nivel de contenedores descompone el sistema en sus unidades desplegables. Hace explícita la separación cliente/servidor: el subsistema cliente (autenticación, sesiones, espacios de trabajo, API keys) y el subsistema servidor (el ecosistema de agentes), junto con la base de datos de persistencia y la frontera con los servicios externos. Este nivel justifica la premisa de despliegue independiente (\S 4.2.2) y muestra el camino de una solicitud autenticada desde el cliente hacia el servidor.
+El nivel de contenedores descompone el sistema en sus unidades desplegables. Hace explícita la separación cliente/servidor: el subsistema cliente (autenticación, sesiones, espacios de trabajo, API keys) y el subsistema servidor (el ecosistema de agentes), junto con la base de datos de persistencia y la frontera con los servicios externos. Este nivel justifica la premisa de despliegue independiente (sección~\ref{subsec:prop-premisas-disenio}) y muestra el camino de una solicitud autenticada desde el cliente hacia el servidor.
 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
         \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/c4_l2_v4.png}%
     }
-
     \caption{C4 Nivel 2: Diagrama de contenedores.}
     \label{fig:c4-nivel2}
 \end{figure}
 
 \subsection{Nivel 3 — Componentes}
+\label{subsec:prop-c4-nivel3}
 
-El nivel de componentes abre el subsistema servidor y muestra el ecosistema de agentes: el agente Orquestador (entrada del servidor y coordinador del estado compartido), el agente de Cálculo (Master-Worker), el agente Curador (RL, lazo de validación iterativa), el agente de Shell (ejecución de ngspice) y el agente de Escritura (generación del netlist con PySpice), todos coordinados sobre el grafo de orquestación con persistencia en base de datos. Este nivel materializa la premisa de modularidad de agentes (\S 4.2.2) y prepara el terreno para la descripción del comportamiento dinámico.
+El nivel de componentes abre el subsistema servidor y muestra el ecosistema de agentes: el agente Orquestador (entrada del servidor y coordinador del estado compartido), el agente de Cálculo (Master-Worker), el agente Curador (RL, lazo de validación iterativa), el agente de Shell (ejecución de ngspice) y el agente de Escritura (generación del netlist con PySpice), todos coordinados sobre el grafo de orquestación con persistencia en base de datos. Este nivel materializa la premisa de modularidad de agentes (sección~\ref{subsec:prop-premisas-disenio}) y prepara el terreno para la descripción del comportamiento dinámico.
 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
         \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/c4_l3_v4.png}%
     }
-
     \caption{C4 Nivel 3: Diagrama de componentes.}
     \label{fig:c4-nivel3}
 \end{figure}
 
 \section{Comportamiento dinámico: flujo de generación}
+\label{sec:prop-dinamico}
 
 Las secciones anteriores describen la estructura estática del sistema. Esta sección describe su comportamiento en ejecución: cómo colaboran los agentes en el tiempo para transformar una descripción en lenguaje natural en un netlist validado. El diagrama de secuencia integra las vistas anteriores en una línea temporal.
 
@@ -125,32 +132,20 @@ El comportamiento de persistencia se modela de forma explícita: el estado de ca
     \makebox[\textwidth][c]{%
         \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/secuencia_flujo_principal.png}%
     }
-
     \caption{Diagrama de secuencia del flujo de generación.}
     \label{fig:secuencia-generacion}
 \end{figure}
 
 \section{Criterios de aceptación de la propuesta}
+\label{sec:prop-criterios}
 
 La propuesta de solución se considerará satisfactoria si el sistema construido cumple un conjunto de criterios de aceptación objetivos y comprobables de forma independiente. Estos criterios están enunciados en el SRS junto con su procedimiento de verificación, lo que permite contrastarlos con mediciones reales en lugar de con el juicio del diseñador. No se evalúan en este capítulo —su comprobación empírica corresponde al capítulo de experimentos y resultados— pero se enuncian aquí como cierre del diseño, para dejar explícito qué deberá medirse y bajo qué condición se dará por cumplido.
 
 Entre los criterios relevantes figuran: que el sistema acepte una descripción en lenguaje natural y extraiga de ella correctamente los parámetros eléctricos; que ejecute sub-bloques independientes en paralelo; que el lazo de ajuste itere hasta cumplir la meta o alcanzar el máximo de iteraciones; que produzca un netlist simulado en ngspice; y que la salida sea repetible con la temperatura del LLM fijada, para permitir la comparación de resultados durante la evaluación.
 
 \section{Síntesis del diseño}
+\label{sec:prop-sintesis}
 
-La propuesta de solución descrita en este capítulo da forma concreta a la brecha identificada en el estado del arte: un sistema que genera y valida circuitos analógicos CA/CD a nivel de componentes comerciales, con la simulación SPICE incorporada dentro del lazo de diseño. El diseño se articula en tres planos que se sostienen entre sí. La descomposición funcional y los casos de uso (\S 4.3) establecen qué hace el sistema y quién interactúa con él. El modelo C4 en sus tres niveles (\S 4.4) establece cómo se estructura: la separación en subsistema cliente y subsistema servidor, y la organización del servidor como un ecosistema de agentes modulares —Orquestador, Cálculo, Curador, Shell y Escritura— coordinados sobre un grafo con estado y persistencia. El diagrama de secuencia (\S 4.5) establece cómo se comportan esos elementos en el tiempo, integrando el lazo de ajuste iterativo que distingue a la propuesta.
+La propuesta de solución descrita en este capítulo da forma concreta a la brecha identificada en el estado del arte: un sistema que genera y valida circuitos analógicos CA/CD a nivel de componentes comerciales, con la simulación SPICE incorporada dentro del lazo de diseño. El diseño se articula en tres planos que se sostienen entre sí. La descomposición funcional y los casos de uso (sección~\ref{sec:prop-funcional}) establecen qué hace el sistema y quién interactúa con él. El modelo C4 en sus tres niveles (sección~\ref{sec:prop-c4}) establece cómo se estructura: la separación en subsistema cliente y subsistema servidor, y la organización del servidor como un ecosistema de agentes modulares —Orquestador, Cálculo, Curador, Shell y Escritura— coordinados sobre un grafo con estado y persistencia. El diagrama de secuencia (sección~\ref{sec:prop-dinamico}) establece cómo se comportan esos elementos en el tiempo, integrando el lazo de ajuste iterativo que distingue a la propuesta.
 
-Los criterios de aceptación enunciados en (\S 4.6) fijan la condición que el sistema construido deberá cumplir. Su comprobación —la medición del comportamiento del sistema frente a esos criterios sobre un conjunto de circuitos de prueba— constituye la evaluación del sistema y se desarrolla en el capítulo siguiente, que toma este diseño como objeto de medida.
-
-\section{Pendientes de redacción / verificación}
-
-\begin{itemize}
-  \item Numerar el capítulo según la posición real en el documento (sustituir «X").
-  \item Confirmar la denominación exacta de cada agente para que coincida 1:1 con el SRS y con los diagramas (Orquestador, Cálculo/Calculation Master, Curador RL, Shell, Escritura).
-  \item Decidir si el diagrama funcional (Fig. 4.2) y el de casos de uso (Fig. 4.3) van en este orden o si conviene fusionarlos en una sola sub-sección.
-  \item Verificar que ninguna afirmación contenga lenguaje de validación/marketing ni cifras sin fuente (revisar especialmente (\S 4.6)).
-  \item Sustituir el marcador [Pressman] (\S 4.2.2) por la cita IEEE correcta a la \textit{Ingeniería del Software} de Pressman, ya presente en las referencias del SRS. Verificar que los principios invocados (separación de intereses, cohesión/acoplamiento, configurabilidad) tengan respaldo en la fuente citada.
-  \item Confirmar que la afirmación de (\S 4.2.2) sobre el cierre de realimentación «al nivel de transistor» en el estado del arte esté respaldada por las fuentes ya citadas en ese capítulo (AnalogAgent, AnalogSAGE), y citarlas aquí.
-  \item Reconciliar cualquier mención de «servidor sin estado» con la naturaleza con estado del grafo de orquestación (coherencia con (\S 4.5)).
-  \item Confirmar con el coautor el alcance del ajuste del lazo (valores / estructura) y redactarlo en (\S 4.5) como decisión tomada.
-\end{itemize}
+Los criterios de aceptación enunciados en (sección~\ref{sec:prop-criterios}) fijan la condición que el sistema construido deberá cumplir. Su comprobación —la medición del comportamiento del sistema frente a esos criterios sobre un conjunto de circuitos de prueba— constituye la evaluación del sistema y se desarrolla en el capítulo siguiente, que toma este diseño como objeto de medida.

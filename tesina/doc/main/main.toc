@@ -15,15 +15,14 @@
 \contentsline {subsection}{\numberline {4.2.2}Premisas de diseño}{10}{subsection.4.2.2}%
 \contentsline {section}{\numberline {4.3}Descomposición funcional y casos de uso}{12}{section.4.3}%
 \contentsline {subsection}{\numberline {4.3.1}Vista funcional}{12}{subsection.4.3.1}%
-\contentsline {subsection}{\numberline {4.3.2}Modelo de casos de uso}{12}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.2}Modelo de casos de uso}{13}{subsection.4.3.2}%
 \contentsline {section}{\numberline {4.4}Arquitectura del sistema (modelo C4)}{14}{section.4.4}%
 \contentsline {subsection}{\numberline {4.4.1}Nivel 1 — Contexto}{14}{subsection.4.4.1}%
-\contentsline {subsection}{\numberline {4.4.2}Nivel 2 — Contenedores}{14}{subsection.4.4.2}%
-\contentsline {subsection}{\numberline {4.4.3}Nivel 3 — Componentes}{15}{subsection.4.4.3}%
-\contentsline {section}{\numberline {4.5}Comportamiento dinámico: flujo de generación}{15}{section.4.5}%
-\contentsline {section}{\numberline {4.6}Criterios de aceptación de la propuesta}{18}{section.4.6}%
-\contentsline {section}{\numberline {4.7}Síntesis del diseño}{18}{section.4.7}%
-\contentsline {section}{\numberline {4.8}Pendientes de redacción / verificación}{20}{section.4.8}%
+\contentsline {subsection}{\numberline {4.4.2}Nivel 2 — Contenedores}{15}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Nivel 3 — Componentes}{16}{subsection.4.4.3}%
+\contentsline {section}{\numberline {4.5}Comportamiento dinámico: flujo de generación}{17}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Criterios de aceptación de la propuesta}{20}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Síntesis del diseño}{20}{section.4.7}%
 \contentsline {chapter}{\numberline {5}Pruebas y Análisis de Resultados}{21}{chapter.5}%
 \contentsline {chapter}{\numberline {6}Conclusiones y Trabajo Futuro}{22}{chapter.6}%
 \contentsline {chapter}{Referencias}{23}{chapter*.13}%

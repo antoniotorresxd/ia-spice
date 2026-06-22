@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2026.1.24)  15 JUN 2026 23:32
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2026.1.24)  21 JUN 2026 20:32
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1273,12 +1273,12 @@ Package biblatex Warning: The following entry could not be found
 Package biblatex Info: Reference section=0 on input line 145.
 Package biblatex Info: Reference segment=0 on input line 145.
  (./sections/portada.tex
-<../src/logos/ipn_logo.png, id=142, 268.00125pt x 189.70876pt>
+<../src/logos/ipn_logo.png, id=138, 268.00125pt x 189.70876pt>
 File: ../src/logos/ipn_logo.png Graphic file (type png)
 <use ../src/logos/ipn_logo.png>
 Package pdftex.def Info: ../src/logos/ipn_logo.png  used on input line 10.
 (pdftex.def)             Requested size: 113.81102pt x 80.56291pt.
-<../src/logos/esime_logo.jpg, id=143, 585.8688pt x 524.1984pt>
+<../src/logos/esime_logo.jpg, id=139, 585.8688pt x 524.1984pt>
 File: ../src/logos/esime_logo.jpg Graphic file (type jpg)
 <use ../src/logos/esime_logo.jpg>
 Package pdftex.def Info: ../src/logos/esime_logo.jpg  used on input line 15.
@@ -1325,24 +1325,22 @@ File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 LaTeX Info: Redefining \sptext on input line 1.
 LaTeX Info: Redefining \. on input line 1.
 LaTeX Info: Redefining \% on input line 1.
+)
+\tf@toc=\write6
+\openout6 = `main.toc'.
+
 
 
 
 pdfTeX warning (ext4): destination with the same identifier (name{page.I}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.29 ...ne {chapter}{Referencias}{23}{chapter*.13}
-                                                  % [1
+l.162   \clearpage
+                   [1
 
 
 
-])
-\tf@toc=\write6
-\openout6 = `main.toc'.
-
-
-
-[2] (./main.lof
+] (./main.lof
 LaTeX Info: Redefining \sptext on input line 1.
 LaTeX Info: Redefining \. on input line 1.
 LaTeX Info: Redefining \% on input line 1.
@@ -1352,7 +1350,7 @@ LaTeX Info: Redefining \% on input line 1.
 
 
 
-[3
+[2
 
 
 ]
@@ -1370,7 +1368,7 @@ Package hyperref Warning: The anchor of a bookmark and its parent's must not
 ]) (./sections/objetivos.tex
 
 [2]) (./sections/justificacion.tex
-<../src/diagrams/justificacion.png, id=243, 2890.8pt x 999.735pt>
+<../src/diagrams/justificacion.png, id=234, 2890.8pt x 999.735pt>
 File: ../src/diagrams/justificacion.png Graphic file (type png)
 <use ../src/diagrams/justificacion.png>
 Package pdftex.def Info: ../src/diagrams/justificacion.png  used on input line 21.
@@ -1392,7 +1390,7 @@ Cap\'{\i }tulo 3.
 [6
 
 ]
-<../src/diagrams/edo_arte.png, id=271, 2890.8pt x 1692.3225pt>
+<../src/diagrams/edo_arte.png, id=262, 2890.8pt x 1692.3225pt>
 File: ../src/diagrams/edo_arte.png Graphic file (type png)
 <use ../src/diagrams/edo_arte.png>
 Package pdftex.def Info: ../src/diagrams/edo_arte.png  used on input line 18.
@@ -1424,57 +1422,59 @@ Cap\'{\i }tulo 4.
 
 ]
 
-LaTeX Warning: Citation 'Pressman' on page 10 undefined on input line 24.
+LaTeX Warning: Citation 'Pressman' on page 10 undefined on input line 28.
 
 
 
 [10]
 
 [11]
-<../src/diagrams/diagrama_funcional.png, id=314, 4456.65pt x 2890.8pt>
+<../src/diagrams/diagrama_funcional.png, id=312, 4456.65pt x 2890.8pt>
 File: ../src/diagrams/diagrama_funcional.png Graphic file (type png)
 <use ../src/diagrams/diagrama_funcional.png>
-Package pdftex.def Info: ../src/diagrams/diagrama_funcional.png  used on input line 50.
+Package pdftex.def Info: ../src/diagrams/diagrama_funcional.png  used on input line 56.
 (pdftex.def)             Requested size: 532.29282pt x 345.24896pt.
-<../src/diagrams/casos_uso_generacion.png, id=316, 3794.175pt x 1746.525pt>
-File: ../src/diagrams/casos_uso_generacion.png Graphic file (type png)
-<use ../src/diagrams/casos_uso_generacion.png>
-Package pdftex.def Info: ../src/diagrams/casos_uso_generacion.png  used on input line 69.
-(pdftex.def)             Requested size: 532.29282pt x 245.01817pt.
 
 
 [12]
+<../src/diagrams/casos_uso_generacion.png, id=320, 3794.175pt x 1746.525pt>
+File: ../src/diagrams/casos_uso_generacion.png Graphic file (type png)
+<use ../src/diagrams/casos_uso_generacion.png>
+Package pdftex.def Info: ../src/diagrams/casos_uso_generacion.png  used on input line 73.
+(pdftex.def)             Requested size: 532.29282pt x 245.01817pt.
+
 
 [13 <../src/diagrams/diagrama_funcional.png>]
-<../src/diagrams/c4_l1_v4.png, id=329, 3312.375pt x 1565.85pt>
+<../src/diagrams/c4_l1_v4.png, id=328, 3312.375pt x 1565.85pt>
 File: ../src/diagrams/c4_l1_v4.png Graphic file (type png)
 <use ../src/diagrams/c4_l1_v4.png>
-Package pdftex.def Info: ../src/diagrams/c4_l1_v4.png  used on input line 88.
+Package pdftex.def Info: ../src/diagrams/c4_l1_v4.png  used on input line 91.
 (pdftex.def)             Requested size: 532.29282pt x 251.6163pt.
-<../src/diagrams/c4_l2_v4.png, id=331, 3312.375pt x 2499.3375pt>
-File: ../src/diagrams/c4_l2_v4.png Graphic file (type png)
-<use ../src/diagrams/c4_l2_v4.png>
-Package pdftex.def Info: ../src/diagrams/c4_l2_v4.png  used on input line 105.
-(pdftex.def)             Requested size: 532.29282pt x 401.61833pt.
 
 
 [14 <../src/diagrams/casos_uso_generacion.png>]
-<../src/diagrams/c4_l3_v4.png, id=339, 3312.375pt x 2649.9pt>
-File: ../src/diagrams/c4_l3_v4.png Graphic file (type png)
-<use ../src/diagrams/c4_l3_v4.png>
-Package pdftex.def Info: ../src/diagrams/c4_l3_v4.png  used on input line 122.
-(pdftex.def)             Requested size: 532.29282pt x 425.81221pt.
+<../src/diagrams/c4_l2_v4.png, id=337, 3312.375pt x 2499.3375pt>
+File: ../src/diagrams/c4_l2_v4.png Graphic file (type png)
+<use ../src/diagrams/c4_l2_v4.png>
+Package pdftex.def Info: ../src/diagrams/c4_l2_v4.png  used on input line 106.
+(pdftex.def)             Requested size: 532.29282pt x 401.61833pt.
 
 
 [15 <../src/diagrams/c4_l1_v4.png>]
+<../src/diagrams/c4_l3_v4.png, id=346, 3312.375pt x 2649.9pt>
+File: ../src/diagrams/c4_l3_v4.png Graphic file (type png)
+<use ../src/diagrams/c4_l3_v4.png>
+Package pdftex.def Info: ../src/diagrams/c4_l3_v4.png  used on input line 121.
+(pdftex.def)             Requested size: 532.29282pt x 425.81221pt.
+
 
 [16 <../src/diagrams/c4_l2_v4.png>]
 
 [17 <../src/diagrams/c4_l3_v4.png>]
-<../src/diagrams/secuencia_flujo_principal.png, id=360, 3794.175pt x 3914.625pt>
+<../src/diagrams/secuencia_flujo_principal.png, id=361, 3794.175pt x 3914.625pt>
 File: ../src/diagrams/secuencia_flujo_principal.png Graphic file (type png)
 <use ../src/diagrams/secuencia_flujo_principal.png>
-Package pdftex.def Info: ../src/diagrams/secuencia_flujo_principal.png  used on input line 143.
+Package pdftex.def Info: ../src/diagrams/secuencia_flujo_principal.png  used on input line 140.
 (pdftex.def)             Requested size: 532.29282pt x 549.17868pt.
 
 
@@ -1521,24 +1521,24 @@ LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 2E39880DD157257CC173D58B10D8C3C6;5201.
+(rerunfilecheck)             Checksum: B2866A93270920A817932CD47ABAF461;4938.
 Package logreq Info: Writing requests to 'main.run.xml'.
 \openout1 = `main.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 51630 strings out of 473197
- 1155401 string characters out of 5718605
- 2136242 words of memory out of 5000000
- 73582 multiletter control sequences out of 15000+600000
- 636976 words of font info for 317 fonts, out of 8000000 for 9000
+ 51631 strings out of 473197
+ 1155504 string characters out of 5718605
+ 2136074 words of memory out of 5000000
+ 73588 multiletter control sequences out of 15000+600000
+ 636656 words of font info for 315 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 94i,15n,93p,1520b,2374s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 94i,15n,93p,1520b,1924s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texmf/fonts/type1/public/cm-super/sftt1200.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (28 pages, 2466777 bytes).
+Output written on main.pdf (27 pages, 2464740 bytes).
 PDF statistics:
- 458 PDF objects out of 1000 (max. 8388607)
- 367 compressed objects within 4 object streams
- 81 named destinations out of 1000 (max. 500000)
- 87983 words of extra memory for PDF output out of 89155 (max. 10000000)
+ 463 PDF objects out of 1000 (max. 8388607)
+ 373 compressed objects within 4 object streams
+ 79 named destinations out of 1000 (max. 500000)
+ 87975 words of extra memory for PDF output out of 89155 (max. 10000000)
 
