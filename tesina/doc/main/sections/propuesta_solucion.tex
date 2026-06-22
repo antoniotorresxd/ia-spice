@@ -51,7 +51,7 @@ El diagrama funcional organiza estas funciones según el subsistema responsable 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/diagrama_funcional.png}%
+        \hspace*{-0.5cm}\includegraphics[width=1.3\textwidth, keepaspectratio]{../src/diagrams/diagrama_funcional.png}%
     }
     \caption{Diagrama funcional del sistema.}
     \label{fig:diagrama-funcional}
@@ -62,15 +62,15 @@ El diagrama funcional organiza estas funciones según el subsistema responsable 
 
 Los casos de uso describen las interacciones que los actores ejecutan sobre el sistema. Se identifican dos clases de actor: el \textbf{usuario}, que interactúa con el subsistema cliente, y los \textbf{servicios externos} (la API del LLM y el motor ngspice), que el subsistema servidor consume durante la generación.
 
-Los casos de uso principales del usuario incluyen: registrarse e iniciar sesión, gestionar espacios de trabajo, emitir y revocar API keys, y enviar una solicitud de generación de circuito junto con su descripción en lenguaje natural. El caso de uso central —\textit{generar circuito}— desencadena el flujo del subsistema servidor, que se detalla en su comportamiento dinámico en (sección~\ref{sec:prop-dinamico}).
+Los casos de uso principales del usuario incluyen: registrarse e iniciar sesión, gestionar espacios de trabajo, emitir y revocar API keys, y enviar una solicitud de generación de circuito junto con su descripción en lenguaje natural. El caso de uso central —\textit{generar circuito}— desencadena el flujo del subsistema servidor, que se detalla en su comportamiento dinámico en (sección~\ref{sec:prop-dinamico}). Los diagramas de casos de uso restantes (acceso, generación y decisión) se incluyen en el apéndice~\ref{apend:casos-uso}.
 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/casos_uso_generacion.png}%
+        \hspace*{-0.5cm}\includegraphics[width=1.3\textwidth, keepaspectratio]{../src/diagrams/casos_uso_simulacion.png}%
     }
-    \caption{Diagrama de casos de uso.}
-    \label{fig:casos-uso}
+    \caption{Diagrama de casos de uso: flujo de simulación y validación.}
+    \label{fig:casos-uso-simulacion}
 \end{figure}
 
 \section{Arquitectura del sistema (modelo C4)}
@@ -84,7 +84,7 @@ El nivel de contexto sitúa el sistema frente a sus actores y sistemas externos.
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/c4_l1_v4.png}%
+        \hspace*{-0.5cm}\includegraphics[width=1.3\textwidth, keepaspectratio]{../src/diagrams/c4_l1_v4.png}%
     }
     \caption{C4 Nivel 1: Diagrama de contexto.}
     \label{fig:c4-nivel1}
@@ -98,7 +98,7 @@ El nivel de contenedores descompone el sistema en sus unidades desplegables. Hac
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/c4_l2_v4.png}%
+        \hspace*{-0.5cm}\includegraphics[width=1.3\textwidth, keepaspectratio]{../src/diagrams/c4_l2_v4.png}%
     }
     \caption{C4 Nivel 2: Diagrama de contenedores.}
     \label{fig:c4-nivel2}
@@ -112,7 +112,7 @@ El nivel de componentes abre el subsistema servidor y muestra el ecosistema de a
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/c4_l3_v4.png}%
+        \hspace*{-0.5cm}\includegraphics[width=1.3\textwidth, keepaspectratio]{../src/diagrams/c4_l3_v4.png}%
     }
     \caption{C4 Nivel 3: Diagrama de componentes.}
     \label{fig:c4-nivel3}
@@ -130,7 +130,7 @@ El comportamiento de persistencia se modela de forma explícita: el estado de ca
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{%
-        \includegraphics[width=1\textwidth, keepaspectratio]{../src/diagrams/secuencia_flujo_principal.png}%
+        \hspace*{-0.5cm}\includegraphics[width=1.3\textwidth, keepaspectratio]{../src/diagrams/secuencia_flujo_principal.png}%
     }
     \caption{Diagrama de secuencia del flujo de generación.}
     \label{fig:secuencia-generacion}

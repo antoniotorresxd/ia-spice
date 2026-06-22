@@ -1,16 +1,19 @@
 # Fdb version 4
-["biber main"] 1781587452.20656 "main.bcf" "main.bbl" "main" 1782095545.04197 0
+["biber main"] 1781587452.20656 "main.bcf" "main.bbl" "main" 1782096176.28279 0
   "./lib/referencias.bib" 1780984347.91253 5422 b7af00543f37818a373dd30c7809520f ""
-  "main.bcf" 1782095544.94381 109190 e9fdbb3d43c79b2178124d11310f93e2 "pdflatex"
+  "main.bcf" 1782096176.17437 109190 e9fdbb3d43c79b2178124d11310f93e2 "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1782095540.45693 "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" "main.pdf" "main" 1782095545.04222 0
+["pdflatex"] 1782096170.8539 "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" "main.pdf" "main" 1782096176.28305 0
   "../src/diagrams/c4_l1_v4.png" 1781587247.73669 416435 fed0c5cdd43cbc1ca807bf020b7a258c ""
   "../src/diagrams/c4_l2_v4.png" 1781587247.82469 716545 52398934ce80488959d5a5868e83b76d ""
   "../src/diagrams/c4_l3_v4.png" 1781587248.00869 749967 ad76a54919aa71e8d58fb10e411dd9bf ""
+  "../src/diagrams/casos_uso_acceso.png" 1781586329.50471 391215 5c55981eb16925221984945c1756bd39 ""
+  "../src/diagrams/casos_uso_decision.png" 1781586329.34071 387617 1fb881bd5c6fcd725ec55a0963404242 ""
   "../src/diagrams/casos_uso_generacion.png" 1781586329.46471 459647 ca10a98b63c7e30909656b9e65f19233 ""
+  "../src/diagrams/casos_uso_simulacion.png" 1781586329.20071 595752 c8367c26970e23b88b6534eb1233d2d3 ""
   "../src/diagrams/diagrama_funcional.png" 1781586921.23669 663157 1b887d928c3868965917eb004522a958 ""
   "../src/diagrams/edo_arte.png" 1780979715.12108 279372 a563a80ee4b0b3a0a7b1d78dd3458efa ""
   "../src/diagrams/justificacion.png" 1780983550.01663 214417 797445a65539a2ae8b8b3c13f7de0d25 ""
@@ -18,7 +21,7 @@
   "../src/logos/esime_logo.jpg" 1778908775.7716 99718 c0459235c173c03573498faf68e774d6 ""
   "../src/logos/ipn_logo.png" 1778908775.8396 7330 be42df2384edc1ba7d3a79662d468a05 ""
   "/etc/texmf/web2c/texmf.cnf" 1769274164.80754 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" 1782095540.26287 7224 a9b0325d5bb2b5186ceed8b462fd05c2 ""
+  "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" 1782096170.66861 7225 7b018feca3dfedf5b139d8dad19ca074 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/times/ptmb7t.tfm" 1136768653 2172 fd0c924230362ff848a33632ed45dc23 ""
@@ -323,13 +326,14 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1741904018 41538 c016915c1d51223b6dbbfe27341748a8 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1769274180 5467255 9a64d1b40e0b893fc5588ecce9d8accf ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1769274199 3349532 fbed41e341f01964829f3646eccd5e10 ""
-  "main.aux" 1782095544.94033 10362 bed766854f2103c1f3539b4902a28c5b "pdflatex"
+  "main.aux" 1782096176.16637 11622 e43358baf5517a648cad9b4e2f5fd7de "pdflatex"
   "main.bbl" 1781587453.08868 20472 4c7e424846ff4a93c88926e753a6a1de "biber main"
-  "main.lof" 1782095544.94773 1119 79a3fe51fb85972ec47702ddf3e3ac4b "pdflatex"
-  "main.out" 1782095544.94033 4938 b2866a93270920a817932cd47abaf461 "pdflatex"
-  "main.run.xml" 1782095544.94773 2409 046fe2279f185af2dca0cfbed2298fd7 "pdflatex"
-  "main.tex" 1782095540.26287 7224 a9b0325d5bb2b5186ceed8b462fd05c2 ""
-  "main.toc" 1782095544.94773 2291 d134858ce16ec7aa6677c4924ab55908 "pdflatex"
+  "main.lof" 1782096176.17841 1582 60435f3f0738d252d3f9836d8432d198 "pdflatex"
+  "main.out" 1782096176.17037 5124 400c3fb7c8f918e4acee0b64b8f18a73 "pdflatex"
+  "main.run.xml" 1782096176.17841 2409 046fe2279f185af2dca0cfbed2298fd7 "pdflatex"
+  "main.tex" 1782096170.66861 7225 7b018feca3dfedf5b139d8dad19ca074 ""
+  "main.toc" 1782096176.17841 2378 bd685577ed46006e71e2474af4324dc4 "pdflatex"
+  "sections/apendices.tex" 1782095897.79589 1165 266dd00467fd99bbf6d009bd102968a6 ""
   "sections/conclusiones.tex" 1780981187.05291 0 d41d8cd98f00b204e9800998ecf8427e ""
   "sections/estado_arte.tex" 1780984145.96856 7466 23c1cdcba3d85660639276c57196e3af ""
   "sections/justificacion.tex" 1780983870.84459 3061 d273005c62dd19eeed7feb2e76860aa8 ""
@@ -338,7 +342,7 @@
   "sections/objetivos.tex" 1780983755.4046 1782 162b0096eafecbd1affe7431b1c033ad ""
   "sections/portada.tex" 1780979090.34515 2415 be33d99446873700f39104128d76578a ""
   "sections/problema.tex" 1780983703.07661 3363 a21571c9ea5f1261eef75adddf8bfe32 ""
-  "sections/propuesta_solucion.tex" 1782095526.59168 18559 8a3da65c15b51c055280a817e973d394 ""
+  "sections/propuesta_solucion.tex" 1782096164.73837 18623 7759666973132e5b1dd5d9eba0a62b13 ""
   "sections/pruebas.tex" 1780981138.44091 0 d41d8cd98f00b204e9800998ecf8427e ""
   (generated)
   "main.aux"
