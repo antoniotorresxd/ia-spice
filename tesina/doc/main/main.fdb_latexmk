@@ -1,12 +1,12 @@
 # Fdb version 4
-["biber main"] 1781587452.20656 "main.bcf" "main.bbl" "main" 1782096176.28279 0
+["biber main"] 1782148660.24484 "main.bcf" "main.bbl" "main" 1782148672.1869 0
   "./lib/referencias.bib" 1780984347.91253 5422 b7af00543f37818a373dd30c7809520f ""
-  "main.bcf" 1782096176.17437 109190 e9fdbb3d43c79b2178124d11310f93e2 "pdflatex"
+  "main.bcf" 1782148672.09503 109126 b57c9049026ed12a6e5bc41a421c64cd "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1782096170.8539 "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" "main.pdf" "main" 1782096176.28305 0
+["pdflatex"] 1782148666.69631 "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" "main.pdf" "main" 1782148672.18714 0
   "../src/diagrams/c4_l1_v4.png" 1781587247.73669 416435 fed0c5cdd43cbc1ca807bf020b7a258c ""
   "../src/diagrams/c4_l2_v4.png" 1781587247.82469 716545 52398934ce80488959d5a5868e83b76d ""
   "../src/diagrams/c4_l3_v4.png" 1781587248.00869 749967 ad76a54919aa71e8d58fb10e411dd9bf ""
@@ -21,7 +21,7 @@
   "../src/logos/esime_logo.jpg" 1778908775.7716 99718 c0459235c173c03573498faf68e774d6 ""
   "../src/logos/ipn_logo.png" 1778908775.8396 7330 be42df2384edc1ba7d3a79662d468a05 ""
   "/etc/texmf/web2c/texmf.cnf" 1769274164.80754 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" 1782096170.66861 7225 7b018feca3dfedf5b139d8dad19ca074 ""
+  "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" 1782148653.71184 7225 7b018feca3dfedf5b139d8dad19ca074 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/times/ptmb7t.tfm" 1136768653 2172 fd0c924230362ff848a33632ed45dc23 ""
@@ -326,13 +326,13 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1741904018 41538 c016915c1d51223b6dbbfe27341748a8 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1769274180 5467255 9a64d1b40e0b893fc5588ecce9d8accf ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1769274199 3349532 fbed41e341f01964829f3646eccd5e10 ""
-  "main.aux" 1782096176.16637 11622 e43358baf5517a648cad9b4e2f5fd7de "pdflatex"
-  "main.bbl" 1781587453.08868 20472 4c7e424846ff4a93c88926e753a6a1de "biber main"
-  "main.lof" 1782096176.17841 1582 60435f3f0738d252d3f9836d8432d198 "pdflatex"
-  "main.out" 1782096176.17037 5124 400c3fb7c8f918e4acee0b64b8f18a73 "pdflatex"
-  "main.run.xml" 1782096176.17841 2409 046fe2279f185af2dca0cfbed2298fd7 "pdflatex"
-  "main.tex" 1782096170.66861 7225 7b018feca3dfedf5b139d8dad19ca074 ""
-  "main.toc" 1782096176.17841 2378 bd685577ed46006e71e2474af4324dc4 "pdflatex"
+  "main.aux" 1782148672.0866 11565 b890d79be5cc771d1d17835db6be7606 "pdflatex"
+  "main.bbl" 1782148661.13485 20451 77254fa9c25be739bd003f901408dec8 "biber main"
+  "main.lof" 1782148672.09831 1582 60435f3f0738d252d3f9836d8432d198 "pdflatex"
+  "main.out" 1782148672.0906 5124 400c3fb7c8f918e4acee0b64b8f18a73 "pdflatex"
+  "main.run.xml" 1782148672.09831 2409 046fe2279f185af2dca0cfbed2298fd7 "pdflatex"
+  "main.tex" 1782148653.71184 7225 7b018feca3dfedf5b139d8dad19ca074 ""
+  "main.toc" 1782148672.09831 2378 bd685577ed46006e71e2474af4324dc4 "pdflatex"
   "sections/apendices.tex" 1782095897.79589 1165 266dd00467fd99bbf6d009bd102968a6 ""
   "sections/conclusiones.tex" 1780981187.05291 0 d41d8cd98f00b204e9800998ecf8427e ""
   "sections/estado_arte.tex" 1780984145.96856 7466 23c1cdcba3d85660639276c57196e3af ""
@@ -342,7 +342,7 @@
   "sections/objetivos.tex" 1780983755.4046 1782 162b0096eafecbd1affe7431b1c033ad ""
   "sections/portada.tex" 1780979090.34515 2415 be33d99446873700f39104128d76578a ""
   "sections/problema.tex" 1780983703.07661 3363 a21571c9ea5f1261eef75adddf8bfe32 ""
-  "sections/propuesta_solucion.tex" 1782096164.73837 18623 7759666973132e5b1dd5d9eba0a62b13 ""
+  "sections/propuesta_solucion.tex" 1782148644.67605 18607 56547a9b4fd4852db6dee89edcb33030 ""
   "sections/pruebas.tex" 1780981138.44091 0 d41d8cd98f00b204e9800998ecf8427e ""
   (generated)
   "main.aux"
