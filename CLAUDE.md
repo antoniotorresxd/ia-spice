@@ -47,11 +47,12 @@ A separate **Python 3.12** project managed with **uv** — unrelated to the Bun/
 ```
 uv sync
 uv run pytest
+uv run pytest tests/test_graph.py::test_graph_runs_escritura_then_shell_for_voltage_divider -v   # single test
 ```
 
-Requires the `ngspice` binary on `PATH` (a system dependency, not installed via `uv`) — the `shell` node shells out to it directly.
+Requires the `ngspice` binary on `PATH` (a system dependency, not installed via `uv`) — the `shell` node shells out to it directly. Tests exercise the real `ngspice` binary end-to-end; there are no mocks of ngspice execution anywhere in this project.
 
-Architecture: a LangGraph `StateGraph` (`src/agents/graph.py`, `build_graph()`) with two nodes over a shared `CircuitState` (`src/agents/state.py`) — `escritura` generates a PySpice-based netlist from a circuit spec, and `shell` runs it through the real `ngspice` binary as a subprocess and parses simulated metrics from its output. The graph is compiled with a `MemorySaver` checkpointer. Code lives under `src/agents/` (`escritura/`, `shell/`, `graph.py`, `state.py`), with tests in `tests/`.
+Architecture: a LangGraph `StateGraph` (`src/agents/graph.py`, `build_graph()`) wires two nodes — `escritura` and `shell` — in sequence (`escritura → shell → END`) over a shared `CircuitState` TypedDict (`src/agents/state.py`: `circuit_spec`, `netlist_path`, `netlist_text`, `raw_output_path`, `metrics`, `sim_error`). `escritura` builds a PySpice netlist from `circuit_spec` and writes it to a temp file; `shell` runs it through the real `ngspice` binary as a subprocess (batch mode, `wrdata` output) and parses simulated metrics — on any failure it sets `sim_error` instead of raising, so the graph always reaches `END`. The graph is compiled with a `MemorySaver` checkpointer (no DB persistence yet). Code lives under `src/agents/` (`escritura/`, `shell/`, `graph.py`, `state.py`), with tests in `tests/`. This is the first of several planned slices (see `docs/superpowers/specs/` and `docs/superpowers/plans/` for the full multi-agent design — LLM-based orchestration and an RL curator agent are not implemented yet; `circuit_spec` is currently supplied by the caller, not extracted from natural language).
 
 ## Server architecture
 
