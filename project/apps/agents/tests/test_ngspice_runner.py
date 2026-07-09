@@ -112,3 +112,39 @@ def test_shell_node_sets_sim_error_for_broken_netlist():
 
     assert result["metrics"] is None
     assert result["sim_error"] is not None
+
+
+def test_shell_node_sets_sim_error_for_malformed_output_file(monkeypatch):
+    # run_ngspice can legitimately exit 0 and produce an output.txt that is
+    # empty or malformed (e.g. an analysis with zero data rows), which would
+    # otherwise cause parse_wrdata_scalar to raise ValueError uncaught inside
+    # shell_node. To isolate that error-handling path deterministically
+    # (rather than hunting for a specific ngspice netlist that reliably
+    # produces a malformed-but-exit-0 output.txt), this test stubs
+    # run_ngspice's return value to point at a malformed file we write
+    # ourselves; ngspice itself is never mocked or invoked by this test.
+    tmp_dir = tempfile.mkdtemp(prefix="agents-shell-node-test-")
+    netlist_path = _write_netlist(tmp_dir, VOLTAGE_DIVIDER_NETLIST)
+    malformed_output_path = os.path.join(tmp_dir, "output.txt")
+    with open(malformed_output_path, "w"):
+        pass  # empty file -> parse_wrdata_scalar raises ValueError
+
+    monkeypatch.setattr(
+        "agents.shell.node.run_ngspice",
+        lambda netlist_path: (malformed_output_path, None),
+    )
+
+    state = {
+        "circuit_spec": {"v_in": 5.0, "r1": 1000, "r2": 2000},
+        "netlist_path": netlist_path,
+        "netlist_text": VOLTAGE_DIVIDER_NETLIST,
+        "raw_output_path": None,
+        "metrics": None,
+        "sim_error": None,
+    }
+
+    result = shell_node(state)
+
+    assert result["metrics"] is None
+    assert result["sim_error"] is not None
+    assert result["raw_output_path"] == malformed_output_path

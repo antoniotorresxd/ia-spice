@@ -8,7 +8,15 @@ def shell_node(state: CircuitState) -> dict:
     if error is not None:
         return {"raw_output_path": None, "metrics": None, "sim_error": error}
 
-    v_out = parse_wrdata_scalar(raw_output_path)
+    try:
+        v_out = parse_wrdata_scalar(raw_output_path)
+    except ValueError as exc:
+        return {
+            "raw_output_path": raw_output_path,
+            "metrics": None,
+            "sim_error": str(exc),
+        }
+
     return {
         "raw_output_path": raw_output_path,
         "metrics": {"v_out": v_out},
