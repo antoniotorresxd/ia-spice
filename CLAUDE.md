@@ -6,12 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repo has two unrelated parts:
 
-- `project/apps/` — the actual software: a `server` (Hono API) and a `client` (Vite/React app). There is no root `package.json` or workspace config — each app is managed independently with its own lockfile.
+- `project/apps/` — the actual software: a `server` (Hono API), a `client` (Vite/React app), and `agents` (a Python/LangGraph agent pipeline). There is no root `package.json`/workspace config — each app is managed independently with its own lockfile.
 - `tesina/` — a LaTeX thesis (Spanish-language academic document, "cronograma", "edo-art", "main"). Unrelated to the app code; only touch it when asked about the thesis.
 
 ## Commands
 
-All commands are run from within `project/apps/server` or `project/apps/client` respectively — there is no root script that runs both.
+All commands are run from within `project/apps/server`, `project/apps/client`, or `project/apps/agents` respectively — there is no root script that runs any of them together.
 
 ### Server (`project/apps/server`)
 Uses **Bun** as the runtime and package manager (a `pnpm-lock.yaml` also exists but is stale/unused — use `bun`, not `pnpm`, here).
@@ -40,6 +40,18 @@ npm run preview   # vite preview
 ```
 
 No test script is defined. The client is currently the unmodified Vite React-TS template (default counter demo in `App.tsx`) and is **not yet wired to the server** — no proxy config in `vite.config.ts`, no `VITE_API_*` env vars, no auth client calls exist yet.
+
+### Agents (`project/apps/agents`)
+A separate **Python 3.12** project managed with **uv** — unrelated to the Bun/Hono server or the Vite client, and not wired to either yet.
+
+```
+uv sync
+uv run pytest
+```
+
+Requires the `ngspice` binary on `PATH` (a system dependency, not installed via `uv`) — the `shell` node shells out to it directly.
+
+Architecture: a LangGraph `StateGraph` (`src/agents/graph.py`, `build_graph()`) with two nodes over a shared `CircuitState` (`src/agents/state.py`) — `escritura` generates a PySpice-based netlist from a circuit spec, and `shell` runs it through the real `ngspice` binary as a subprocess and parses simulated metrics from its output. The graph is compiled with a `MemorySaver` checkpointer. Code lives under `src/agents/` (`escritura/`, `shell/`, `graph.py`, `state.py`), with tests in `tests/`.
 
 ## Server architecture
 

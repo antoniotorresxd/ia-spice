@@ -9,16 +9,20 @@ def run_ngspice(netlist_path: str) -> tuple[str | None, str | None]:
     raw_output_path points at output.txt, written by the netlist's own
     `wrdata` line into the same directory as netlist_path.
     """
+    netlist_path = os.path.abspath(netlist_path)
     work_dir = os.path.dirname(netlist_path)
     output_path = os.path.join(work_dir, "output.txt")
 
-    result = subprocess.run(
-        ["ngspice", "-b", netlist_path],
-        cwd=work_dir,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
+    try:
+        result = subprocess.run(
+            ["ngspice", "-b", netlist_path],
+            cwd=work_dir,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        return None, "ngspice timed out after 30s"
 
     if result.returncode != 0:
         return None, result.stderr.strip() or "ngspice exited with non-zero status"
