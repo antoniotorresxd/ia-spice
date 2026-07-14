@@ -79,6 +79,7 @@ export class SolutionAutomaton extends Component<
     this.intervalId = undefined
   }
 
+
   render() {
     const currentStep = AUTOMATON_TIMELINE[this.state.timelineIndex]
     const titleId = `${this.idPrefix}-title`
@@ -90,7 +91,7 @@ export class SolutionAutomaton extends Component<
           aria-labelledby={`${titleId} ${descriptionId}`}
           className={styles.canvas}
           role="img"
-          viewBox="0 0 820 420"
+          viewBox="10 68 790 310"
         >
           <title id={titleId}>Autómata del proceso de solución</title>
           <desc id={descriptionId}>
@@ -101,29 +102,29 @@ export class SolutionAutomaton extends Component<
           <defs>
             <marker
               id={`${this.idPrefix}-arrow-track`}
-              markerHeight="8"
-              markerUnits="strokeWidth"
-              markerWidth="8"
+              markerHeight="10"
+              markerUnits="userSpaceOnUse"
+              markerWidth="10"
               orient="auto"
-              refX="7"
-              refY="4"
-              viewBox="0 0 8 8"
+              refX="8"
+              refY="5"
+              viewBox="0 0 10 10"
             >
-              <path className={styles.trackArrow} d="M 0 0 L 8 4 L 0 8 z" />
+              <path className={styles.trackArrow} d="M 0 0 L 10 5 L 0 10 z" />
             </marker>
             {AUTOMATON_TONES.map((tone) => (
               <marker
                 id={`${this.idPrefix}-arrow-${tone}`}
                 key={tone}
-                markerHeight="8"
-                markerUnits="strokeWidth"
-                markerWidth="8"
+                markerHeight="10"
+                markerUnits="userSpaceOnUse"
+                markerWidth="10"
                 orient="auto"
-                refX="7"
-                refY="4"
-                viewBox="0 0 8 8"
+                refX="8"
+                refY="5"
+                viewBox="0 0 10 10"
               >
-                <path className={toneClasses[tone]} d="M 0 0 L 8 4 L 0 8 z" />
+                <path className={toneClasses[tone]} d="M 0 0 L 10 5 L 0 10 z" />
               </marker>
             ))}
           </defs>

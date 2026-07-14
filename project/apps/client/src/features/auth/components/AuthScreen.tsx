@@ -27,9 +27,9 @@ export function AuthScreen({ service }: AuthScreenProps) {
         <aside className={styles.story}>
           <div className={styles.brand}>
             <span aria-hidden="true" className={styles.brandMark}>
-              S
+              TS
             </span>
-            <span>SPICE</span>
+            <span>Ecosistema Multiagente</span>
           </div>
 
           <header className={styles.storyHeader}>

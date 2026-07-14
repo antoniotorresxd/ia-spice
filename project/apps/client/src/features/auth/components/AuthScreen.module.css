@@ -6,10 +6,10 @@
   place-items: center;
   overflow: hidden;
   padding:
-    calc(clamp(1.25rem, 4vw, 3rem) + env(safe-area-inset-top))
-    calc(clamp(1.25rem, 4vw, 3rem) + env(safe-area-inset-right))
-    calc(clamp(1.25rem, 4vw, 3rem) + env(safe-area-inset-bottom))
-    calc(clamp(1.25rem, 4vw, 3rem) + env(safe-area-inset-left));
+    calc(clamp(0.5rem, 1.5vw, 1.25rem) + env(safe-area-inset-top))
+    calc(clamp(0.5rem, 1.5vw, 1.25rem) + env(safe-area-inset-right))
+    calc(clamp(0.5rem, 1.5vw, 1.25rem) + env(safe-area-inset-bottom))
+    calc(clamp(0.5rem, 1.5vw, 1.25rem) + env(safe-area-inset-left));
   background:
     radial-gradient(circle at 50% 0%, rgb(255 255 255 / 4%), transparent 38%),
     linear-gradient(145deg, #090a0e 0%, var(--color-bg) 58%, #07080a 100%);
@@ -64,9 +64,9 @@
   position: relative;
   z-index: 1;
   display: grid;
-  width: min(100%, 75rem);
-  min-height: min(45rem, calc(100dvh - 3rem));
-  grid-template-columns: minmax(0, 1.08fr) minmax(22rem, 0.92fr);
+  width: min(100%, 96rem);
+  min-height: min(52rem, calc(100dvh - 2rem));
+  grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.6fr);
   overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);

@@ -1,4 +1,5 @@
 import app from "@/app";
+export type { AppType } from "@/app";
 import env from "@/lib/env";
 
 const server = Bun.serve({
