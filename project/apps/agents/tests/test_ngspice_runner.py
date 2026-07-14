@@ -77,74 +77,79 @@ def test_parse_wrdata_scalar_raises_on_empty_file():
 from agents.shell.node import shell_node
 
 
-def test_shell_node_sets_metrics_for_valid_netlist():
-    tmp_dir = tempfile.mkdtemp(prefix="agents-shell-node-test-")
-    netlist_path = _write_netlist(tmp_dir, VOLTAGE_DIVIDER_NETLIST)
-    state = {
-        "circuit_spec": {"v_in": 5.0, "r1": 1000, "r2": 2000},
-        "netlist_path": netlist_path,
-        "netlist_text": VOLTAGE_DIVIDER_NETLIST,
-        "raw_output_path": None,
-        "metrics": None,
-        "sim_error": None,
+def _pipeline_state(netlists, pending):
+    return {
+        "circuit_spec": {},
+        "normalized_spec": {
+            "blocks": [
+                {
+                    "id": "div1",
+                    "type": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
+                },
+                {
+                    "id": "bad1",
+                    "type": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
+                },
+            ],
+            "max_iterations": 5,
+        },
+        "pending_blocks": pending,
+        "component_values": {},
+        "netlists": netlists,
+        "sim_results": {},
+        "iteration": 0,
+        "history": [],
+        "verdict": None,
     }
 
-    result = shell_node(state)
 
-    assert result["sim_error"] is None
-    assert result["metrics"]["v_out"] == pytest.approx(3.3333333, rel=1e-5)
-    assert os.path.exists(result["raw_output_path"])
-
-
-def test_shell_node_sets_sim_error_for_broken_netlist():
+def test_shell_node_simulates_each_pending_block():
     tmp_dir = tempfile.mkdtemp(prefix="agents-shell-node-test-")
-    netlist_path = _write_netlist(tmp_dir, BROKEN_NETLIST)
-    state = {
-        "circuit_spec": {"v_in": 5.0, "r1": 1000, "r2": 2000},
-        "netlist_path": netlist_path,
-        "netlist_text": BROKEN_NETLIST,
-        "raw_output_path": None,
-        "metrics": None,
-        "sim_error": None,
-    }
+    good = _write_netlist(tmp_dir, VOLTAGE_DIVIDER_NETLIST)
 
-    result = shell_node(state)
-
-    assert result["metrics"] is None
-    assert result["sim_error"] is not None
-
-
-def test_shell_node_sets_sim_error_for_malformed_output_file(monkeypatch):
-    # run_ngspice can legitimately exit 0 and produce an output.txt that is
-    # empty or malformed (e.g. an analysis with zero data rows), which would
-    # otherwise cause parse_wrdata_scalar to raise ValueError uncaught inside
-    # shell_node. To isolate that error-handling path deterministically
-    # (rather than hunting for a specific ngspice netlist that reliably
-    # produces a malformed-but-exit-0 output.txt), this test stubs
-    # run_ngspice's return value to point at a malformed file we write
-    # ourselves; ngspice itself is never mocked or invoked by this test.
-    tmp_dir = tempfile.mkdtemp(prefix="agents-shell-node-test-")
-    netlist_path = _write_netlist(tmp_dir, VOLTAGE_DIVIDER_NETLIST)
-    malformed_output_path = os.path.join(tmp_dir, "output.txt")
-    with open(malformed_output_path, "w"):
-        pass  # empty file -> parse_wrdata_scalar raises ValueError
-
-    monkeypatch.setattr(
-        "agents.shell.node.run_ngspice",
-        lambda netlist_path: (malformed_output_path, None),
+    state = _pipeline_state(
+        netlists={"div1": {"path": good, "text": VOLTAGE_DIVIDER_NETLIST}},
+        pending=["div1"],
     )
-
-    state = {
-        "circuit_spec": {"v_in": 5.0, "r1": 1000, "r2": 2000},
-        "netlist_path": netlist_path,
-        "netlist_text": VOLTAGE_DIVIDER_NETLIST,
-        "raw_output_path": None,
-        "metrics": None,
-        "sim_error": None,
-    }
-
     result = shell_node(state)
 
-    assert result["metrics"] is None
-    assert result["sim_error"] is not None
-    assert result["raw_output_path"] == malformed_output_path
+    div = result["sim_results"]["div1"]
+    assert div["sim_error"] is None
+    assert div["metrics"]["v_out"] == pytest.approx(3.3333333, rel=1e-5)
+
+
+def test_shell_node_isolates_errors_per_block():
+    good_dir = tempfile.mkdtemp(prefix="agents-shell-node-test-")
+    bad_dir = tempfile.mkdtemp(prefix="agents-shell-node-test-")
+    good = _write_netlist(good_dir, VOLTAGE_DIVIDER_NETLIST)
+    bad = _write_netlist(bad_dir, BROKEN_NETLIST)
+
+    state = _pipeline_state(
+        netlists={
+            "div1": {"path": good, "text": VOLTAGE_DIVIDER_NETLIST},
+            "bad1": {"path": bad, "text": BROKEN_NETLIST},
+        },
+        pending=["div1", "bad1"],
+    )
+    result = shell_node(state)
+
+    assert result["sim_results"]["div1"]["sim_error"] is None
+    assert result["sim_results"]["bad1"]["sim_error"] is not None
+    assert result["sim_results"]["bad1"]["metrics"] is None
+
+
+def test_shell_node_skips_non_pending_blocks():
+    tmp_dir = tempfile.mkdtemp(prefix="agents-shell-node-test-")
+    good = _write_netlist(tmp_dir, VOLTAGE_DIVIDER_NETLIST)
+
+    state = _pipeline_state(
+        netlists={"div1": {"path": good, "text": VOLTAGE_DIVIDER_NETLIST}},
+        pending=[],
+    )
+    result = shell_node(state)
+
+    assert result["sim_results"] == {}

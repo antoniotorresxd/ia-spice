@@ -3,22 +3,24 @@ from agents.state import CircuitState
 
 
 def shell_node(state: CircuitState) -> dict:
-    raw_output_path, error = run_ngspice(state["netlist_path"])
+    goals = {b["id"]: b["goal"] for b in state["normalized_spec"]["blocks"]}
 
-    if error is not None:
-        return {"raw_output_path": None, "metrics": None, "sim_error": error}
+    sim_results = {}
+    for block_id in state["pending_blocks"]:
+        netlist_path = state["netlists"][block_id]["path"]
+        raw_output_path, error = run_ngspice(netlist_path)
 
-    try:
-        v_out = parse_wrdata_scalar(raw_output_path)
-    except ValueError as exc:
-        return {
-            "raw_output_path": raw_output_path,
-            "metrics": None,
-            "sim_error": str(exc),
-        }
+        if error is not None:
+            sim_results[block_id] = {"metrics": None, "sim_error": error}
+            continue
 
-    return {
-        "raw_output_path": raw_output_path,
-        "metrics": {"v_out": v_out},
-        "sim_error": None,
-    }
+        try:
+            value = parse_wrdata_scalar(raw_output_path)
+        except ValueError as exc:
+            sim_results[block_id] = {"metrics": None, "sim_error": str(exc)}
+            continue
+
+        metric = goals[block_id]["metric"]
+        sim_results[block_id] = {"metrics": {metric: value}, "sim_error": None}
+
+    return {"sim_results": sim_results}
