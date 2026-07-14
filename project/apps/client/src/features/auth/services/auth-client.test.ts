@@ -17,6 +17,9 @@ describe('auth client configuration', () => {
 
     expect(createAuthClient).toHaveBeenCalledWith({
       baseURL: 'https://server.example.com',
+      fetchOptions: {
+        credentials: 'include',
+      },
     })
   })
 })
