@@ -8,6 +8,7 @@
     "dev:server": "bun run --cwd apps/server dev",
     "dev:client": "bun run --cwd apps/client dev",
     "dev": "concurrently \"bun run dev:server\" \"bun run dev:client\"",
+    "start:client": "bun run --cwd apps/client preview --host 0.0.0.0 --port $PORT",
     "typecheck:server": "bun run --cwd apps/server typecheck",
     "build:server-types": "bun run --cwd apps/server build:types",
     "build:client": "bun run --cwd apps/client build",
