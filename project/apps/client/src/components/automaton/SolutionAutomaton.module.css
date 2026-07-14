@@ -1,0 +1,179 @@
+.viewport {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 64% 35%, rgb(132 94 247 / 11%), transparent 32%),
+    linear-gradient(145deg, #0e151c, #080d13 72%);
+  scrollbar-color: rgb(113 231 195 / 35%) transparent;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  min-width: 720px;
+  height: auto;
+  color: #71808d;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.edge {
+  color: #71808d;
+}
+
+.edgeTrack,
+.edgePulse {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.edgeTrack {
+  stroke: #4b5863;
+  stroke-width: 2;
+}
+
+.trackArrow {
+  fill: #4b5863;
+}
+
+.edgePulse {
+  opacity: 0;
+  stroke: currentcolor;
+  stroke-width: 3;
+  stroke-dasharray: 0.14 0.86;
+  transition: opacity 180ms ease;
+}
+
+.edge[data-active='true'] .edgePulse {
+  opacity: 1;
+  animation: travel 900ms linear infinite;
+}
+
+.edge[data-active='true'].main,
+.edge[data-active='true'].terminal {
+  color: #71e7c3;
+}
+
+.edge[data-active='true'].violet {
+  color: #a78bfa;
+}
+
+.edge[data-active='true'].muted {
+  color: #9aa6af;
+}
+
+.edgeLabel {
+  fill: #93a0aa;
+  stroke: #0a1016;
+  stroke-width: 5px;
+  paint-order: stroke fill;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  transition: fill 180ms ease;
+}
+
+.edge[data-active='true'] .edgeLabel {
+  fill: currentcolor;
+}
+
+.state {
+  color: #71808d;
+}
+
+.stateBody,
+.terminalRing {
+  fill: #111b23;
+  stroke: #5d6a75;
+  stroke-width: 1.5;
+  transition:
+    fill 220ms ease,
+    filter 220ms ease,
+    stroke 220ms ease;
+}
+
+.terminalRing {
+  fill: none;
+  stroke: #66747f;
+}
+
+.state[data-active='true'].main .stateBody,
+.state[data-active='true'].terminal .stateBody,
+.state[data-active='true'].terminal .terminalRing {
+  fill: #102a26;
+  stroke: #71e7c3;
+  filter: drop-shadow(0 0 9px rgb(113 231 195 / 42%));
+}
+
+.state[data-active='true'].violet .stateBody {
+  fill: #211b38;
+  stroke: #a78bfa;
+  filter: drop-shadow(0 0 9px rgb(167 139 250 / 42%));
+}
+
+.state[data-active='true'].muted .stateBody {
+  fill: #1b2329;
+  stroke: #9aa6af;
+  filter: drop-shadow(0 0 7px rgb(154 166 175 / 30%));
+}
+
+.stateLabel,
+.stateCaption {
+  pointer-events: none;
+  text-anchor: middle;
+}
+
+.stateLabel {
+  fill: #e8eef2;
+  font-size: 15px;
+  font-weight: 720;
+}
+
+.stateCaption {
+  fill: #8e9ba5;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+}
+
+.main {
+  color: #71e7c3;
+  fill: #71e7c3;
+}
+
+.violet {
+  color: #a78bfa;
+  fill: #a78bfa;
+}
+
+.terminal {
+  color: #71e7c3;
+  fill: #71e7c3;
+}
+
+.muted {
+  color: #87949e;
+  fill: #87949e;
+}
+
+@keyframes travel {
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edgePulse,
+  .edgeLabel,
+  .stateBody,
+  .terminalRing {
+    transition: none;
+  }
+
+  .edge[data-active='true'] .edgePulse {
+    animation: none;
+    stroke-dasharray: none;
+  }
+}
