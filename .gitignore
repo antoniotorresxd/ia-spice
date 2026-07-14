@@ -1,0 +1,7 @@
+.agents
+.superpowers
+
+project/node_modules/*  
+
+temp/*
+.turbo/*
