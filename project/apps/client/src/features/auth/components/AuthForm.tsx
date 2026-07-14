@@ -9,6 +9,7 @@ import {
   type SocialProvider,
 } from '../model/auth-types'
 import { validateAuthInput } from '../model/auth-validation'
+import styles from './AuthForm.module.css'
 import { SocialAuthButtons } from './SocialAuthButtons'
 
 type AuthFormProps = {
@@ -86,16 +87,28 @@ export function AuthForm({ service }: AuthFormProps) {
   const describedBy = (field: FieldName) => (errors[field] ? `${field}-error` : undefined)
 
   return (
-    <section aria-labelledby="auth-title">
-      <h2 id="auth-title">{mode === 'sign-in' ? 'Inicia sesión' : 'Crea tu cuenta'}</h2>
+    <section aria-labelledby="auth-title" className={styles.root}>
+      <h2 className={styles.title} id="auth-title">
+        {mode === 'sign-in' ? 'Inicia sesión' : 'Crea tu cuenta'}
+      </h2>
+      <p className={styles.subtitle}>
+        {mode === 'sign-in'
+          ? 'Continúa diseñando con tu equipo de agentes.'
+          : 'Crea tu espacio para diseñar y validar circuitos.'}
+      </p>
 
       <SocialAuthButtons disabled={pending} onProvider={submitProvider} />
 
-      <form noValidate onSubmit={submit}>
+      <div className={styles.divider}>o continúa con tu correo</div>
+
+      <form className={styles.form} noValidate onSubmit={submit}>
         {mode === 'sign-up' && (
-          <div>
-            <label htmlFor="name">Nombre</label>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="name">
+              Nombre
+            </label>
             <input
+              className={styles.input}
               id="name"
               name="name"
               autoComplete="name"
@@ -104,13 +117,20 @@ export function AuthForm({ service }: AuthFormProps) {
               aria-invalid={Boolean(errors.name)}
               aria-describedby={describedBy('name')}
             />
-            {errors.name && <p id="name-error">{errors.name}</p>}
+            {errors.name && (
+              <p className={styles.fieldError} id="name-error">
+                {errors.name}
+              </p>
+            )}
           </div>
         )}
 
-        <div>
-          <label htmlFor="email">Correo electrónico</label>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="email">
+            Correo electrónico
+          </label>
           <input
+            className={styles.input}
             id="email"
             name="email"
             type="email"
@@ -120,36 +140,53 @@ export function AuthForm({ service }: AuthFormProps) {
             aria-invalid={Boolean(errors.email)}
             aria-describedby={describedBy('email')}
           />
-          {errors.email && <p id="email-error">{errors.email}</p>}
+          {errors.email && (
+            <p className={styles.fieldError} id="email-error">
+              {errors.email}
+            </p>
+          )}
         </div>
 
-        <div>
-          <label htmlFor="password">Contraseña</label>
-          <input
-            id="password"
-            name="password"
-            type={passwordVisible ? 'text' : 'password'}
-            autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
-            value={values.password}
-            onChange={updateField('password')}
-            aria-invalid={Boolean(errors.password)}
-            aria-describedby={describedBy('password')}
-          />
-          <button
-            type="button"
-            aria-label={passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-            aria-pressed={passwordVisible}
-            onClick={() => setPasswordVisible((visible) => !visible)}
-          >
-            {passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-          </button>
-          {errors.password && <p id="password-error">{errors.password}</p>}
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="password">
+            Contraseña
+          </label>
+          <div className={styles.passwordControl}>
+            <input
+              className={styles.input}
+              id="password"
+              name="password"
+              type={passwordVisible ? 'text' : 'password'}
+              autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+              value={values.password}
+              onChange={updateField('password')}
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={describedBy('password')}
+            />
+            <button
+              className={styles.passwordToggle}
+              type="button"
+              aria-label={passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              aria-pressed={passwordVisible}
+              onClick={() => setPasswordVisible((visible) => !visible)}
+            >
+              {passwordVisible ? 'Ocultar' : 'Mostrar'}
+            </button>
+          </div>
+          {errors.password && (
+            <p className={styles.fieldError} id="password-error">
+              {errors.password}
+            </p>
+          )}
         </div>
 
         {mode === 'sign-up' && (
-          <div>
-            <label htmlFor="confirmPassword">Confirmar contraseña</label>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="confirmPassword">
+              Confirmar contraseña
+            </label>
             <input
+              className={styles.input}
               id="confirmPassword"
               name="confirmPassword"
               type={passwordVisible ? 'text' : 'password'}
@@ -160,31 +197,46 @@ export function AuthForm({ service }: AuthFormProps) {
               aria-describedby={describedBy('confirmPassword')}
             />
             {errors.confirmPassword && (
-              <p id="confirmPassword-error">{errors.confirmPassword}</p>
+              <p className={styles.fieldError} id="confirmPassword-error">
+                {errors.confirmPassword}
+              </p>
             )}
           </div>
         )}
 
-        <button type="submit" disabled={pending}>
+        <button className={styles.submit} type="submit" disabled={pending}>
           {mode === 'sign-in' ? 'Iniciar sesión' : 'Crear cuenta'}
         </button>
       </form>
 
       {formError && (
-        <p role="status" aria-live="polite">
+        <p className={styles.status} role="status" aria-live="polite">
           {formError}
         </p>
       )}
 
-      {mode === 'sign-in' ? (
-        <button type="button" disabled={pending} onClick={() => switchMode('sign-up')}>
-          Crear una cuenta
-        </button>
-      ) : (
-        <button type="button" disabled={pending} onClick={() => switchMode('sign-in')}>
-          Ya tengo una cuenta
-        </button>
-      )}
+      <div className={styles.modeSwitch}>
+        <span>{mode === 'sign-in' ? '¿Aún no tienes cuenta?' : '¿Ya tienes cuenta?'}</span>
+        {mode === 'sign-in' ? (
+          <button
+            className={styles.modeButton}
+            type="button"
+            disabled={pending}
+            onClick={() => switchMode('sign-up')}
+          >
+            Crear una cuenta
+          </button>
+        ) : (
+          <button
+            className={styles.modeButton}
+            type="button"
+            disabled={pending}
+            onClick={() => switchMode('sign-in')}
+          >
+            Ya tengo una cuenta
+          </button>
+        )}
+      </div>
     </section>
   )
 }

@@ -1,4 +1,5 @@
 import type { SocialProvider } from '../model/auth-types'
+import styles from './AuthForm.module.css'
 import { ProviderIcon } from './ProviderIcon'
 
 type SocialAuthButtonsProps = {
@@ -14,16 +15,18 @@ const PROVIDERS: { provider: SocialProvider; label: string }[] = [
 
 export function SocialAuthButtons({ disabled, onProvider }: SocialAuthButtonsProps) {
   return (
-    <div>
+    <div className={styles.socialButtons}>
       {PROVIDERS.map(({ provider, label }) => (
         <button
+          aria-label={`Continuar con ${label}`}
+          className={styles.providerButton}
           key={provider}
           type="button"
           disabled={disabled}
           onClick={() => void onProvider(provider)}
         >
           <ProviderIcon provider={provider} />
-          Continuar con {label}
+          <span className={styles.providerName}>Continuar con {label}</span>
         </button>
       ))}
     </div>
