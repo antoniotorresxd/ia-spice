@@ -34,3 +34,44 @@ def test_led_resistor_values_ohms_law():
 def test_led_resistor_clamps_minimum_resistance():
     values = FORMULAS["led_resistor"]({"v_in": 2.0, "v_f": 2.0, "i_led": 0.02})
     assert values["r"] == 1.0
+
+
+from agents.calculo.graph import build_calculo_graph
+
+
+def test_calculo_subgraph_fans_out_one_worker_per_block():
+    graph = build_calculo_graph()
+    state = {
+        "circuit_spec": {},
+        "normalized_spec": {
+            "blocks": [
+                {
+                    "id": "div1",
+                    "type": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
+                },
+                {
+                    "id": "rc1",
+                    "type": "rc_lowpass",
+                    "params": {"f_c": 1000.0},
+                    "goal": {"metric": "f_c", "target": 1000.0, "tolerance": 0.05},
+                },
+            ],
+            "max_iterations": 5,
+        },
+        "pending_blocks": ["div1", "rc1"],
+        "component_values": {},
+        "netlists": {},
+        "sim_results": {},
+        "iteration": 0,
+        "history": [],
+        "verdict": None,
+    }
+
+    final_state = graph.invoke(state)
+
+    values = final_state["component_values"]
+    assert set(values.keys()) == {"div1", "rc1"}
+    assert values["div1"]["r1"] == 1000.0
+    assert "c" in values["rc1"]
