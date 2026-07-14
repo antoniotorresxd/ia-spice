@@ -13,7 +13,9 @@
     "build:server-types": "bun run --cwd apps/server build:types",
     "build:client": "bun run --cwd apps/client build",
     "test:client": "bun run --cwd apps/client test",
-    "lint:client": "bun run --cwd apps/client lint"
+    "lint:client": "bun run --cwd apps/client lint",
+    "build:server": "bun run --cwd apps/server build",
+    "start:server": "bun run --cwd apps/server preview --host 0.0.0.0 --port $PORT"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
