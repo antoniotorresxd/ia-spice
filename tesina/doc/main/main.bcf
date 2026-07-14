@@ -2386,14 +2386,37 @@
     <bcf:citekey order="8" intorder="1">langgraph</bcf:citekey>
     <bcf:citekey order="9" intorder="1">pyspice</bcf:citekey>
     <bcf:citekey order="10" intorder="1">ngspice_manual</bcf:citekey>
-    <bcf:citekey order="11" intorder="1">analogcoder</bcf:citekey>
-    <bcf:citekey order="12" intorder="1">analogagent</bcf:citekey>
-    <bcf:citekey order="13" intorder="1">circuitlm</bcf:citekey>
-    <bcf:citekey order="14" intorder="1">analogsage</bcf:citekey>
-    <bcf:citekey order="15" intorder="1">pcbschemagen</bcf:citekey>
-    <bcf:citekey order="16" intorder="1">hwebench</bcf:citekey>
-    <bcf:citekey order="17" intorder="1">adollm</bcf:citekey>
-    <bcf:citekey order="18" intorder="1">spicepilot</bcf:citekey>
+    <bcf:citekey order="11" intorder="1">sedra2015microelectronic</bcf:citekey>
+    <bcf:citekey order="12" intorder="1">skywater_pdk</bcf:citekey>
+    <bcf:citekey order="13" intorder="1">vaswani2017attention</bcf:citekey>
+    <bcf:citekey order="14" intorder="1">brown2020language</bcf:citekey>
+    <bcf:citekey order="15" intorder="1">ji2023survey</bcf:citekey>
+    <bcf:citekey order="16" intorder="1">analogcoder</bcf:citekey>
+    <bcf:citekey order="16" intorder="2">analogagent</bcf:citekey>
+    <bcf:citekey order="17" intorder="1">chen2021evaluating</bcf:citekey>
+    <bcf:citekey order="18" intorder="1">wooldridge2009introduction</bcf:citekey>
+    <bcf:citekey order="19" intorder="1">dean2008mapreduce</bcf:citekey>
+    <bcf:citekey order="20" intorder="1">sutton2018reinforcement</bcf:citekey>
+    <bcf:citekey order="21" intorder="1">spice_foundations</bcf:citekey>
+    <bcf:citekey order="22" intorder="1">ho1975modified</bcf:citekey>
+    <bcf:citekey order="23" intorder="1">boyle1974macromodeling</bcf:citekey>
+    <bcf:citekey order="24" intorder="1">ngspice_manual</bcf:citekey>
+    <bcf:citekey order="25" intorder="1">pyspice</bcf:citekey>
+    <bcf:citekey order="26" intorder="1">pressman2010software</bcf:citekey>
+    <bcf:citekey order="27" intorder="1">fielding2000architectural</bcf:citekey>
+    <bcf:citekey order="28" intorder="1">langgraph</bcf:citekey>
+    <bcf:citekey order="29" intorder="1">analogcoder</bcf:citekey>
+    <bcf:citekey order="30" intorder="1">analogagent</bcf:citekey>
+    <bcf:citekey order="31" intorder="1">circuitlm</bcf:citekey>
+    <bcf:citekey order="32" intorder="1">analogsage</bcf:citekey>
+    <bcf:citekey order="33" intorder="1">pcbschemagen</bcf:citekey>
+    <bcf:citekey order="34" intorder="1">hwebench</bcf:citekey>
+    <bcf:citekey order="35" intorder="1">adollm</bcf:citekey>
+    <bcf:citekey order="36" intorder="1">spicepilot</bcf:citekey>
+    <bcf:citekey order="37" intorder="1">iso_25010</bcf:citekey>
+    <bcf:citekey order="38" intorder="1">stallings2018computer</bcf:citekey>
+    <bcf:citekey order="39" intorder="1">betterauth</bcf:citekey>
+    <bcf:citekey order="40" intorder="1">owasp_top10</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">

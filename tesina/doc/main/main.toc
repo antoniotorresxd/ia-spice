@@ -5,25 +5,34 @@
 \contentsline {section}{Justificación}{3}{Item.6}%
 \contentsline {section}{Límites y Alcances}{4}{figure.caption.4}%
 \contentsline {chapter}{\numberline {2}Marco Teórico}{5}{chapter.2}%
-\contentsline {chapter}{\numberline {3}Estado del Arte}{6}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Antecedentes Relevantes}{6}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Ubicación de este Proyecto}{7}{section.3.2}%
-\contentsline {chapter}{\numberline {4}Diseño e Implementación de la Solución}{9}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Introducción}{9}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Premisas y fundamento de diseño}{10}{section.4.2}%
-\contentsline {subsection}{\numberline {4.2.1}El problema de diseño y el papel del SRS}{10}{subsection.4.2.1}%
-\contentsline {subsection}{\numberline {4.2.2}Premisas de diseño}{10}{subsection.4.2.2}%
-\contentsline {section}{\numberline {4.3}Descomposición funcional y casos de uso}{12}{section.4.3}%
-\contentsline {subsection}{\numberline {4.3.1}Vista funcional}{12}{subsection.4.3.1}%
-\contentsline {subsection}{\numberline {4.3.2}Modelo de casos de uso}{13}{subsection.4.3.2}%
-\contentsline {section}{\numberline {4.4}Arquitectura del sistema (modelo C4)}{14}{section.4.4}%
-\contentsline {subsection}{\numberline {4.4.1}Nivel 1 — Contexto}{14}{subsection.4.4.1}%
-\contentsline {subsection}{\numberline {4.4.2}Nivel 2 — Contenedores}{15}{subsection.4.4.2}%
-\contentsline {subsection}{\numberline {4.4.3}Nivel 3 — Componentes}{16}{subsection.4.4.3}%
-\contentsline {section}{\numberline {4.5}Comportamiento dinámico: flujo de generación}{17}{section.4.5}%
-\contentsline {section}{\numberline {4.6}Criterios de aceptación de la propuesta}{20}{section.4.6}%
-\contentsline {section}{\numberline {4.7}Síntesis del diseño}{20}{section.4.7}%
-\contentsline {chapter}{\numberline {5}Pruebas y Análisis de Resultados}{21}{chapter.5}%
-\contentsline {chapter}{\numberline {6}Conclusiones y Trabajo Futuro}{22}{chapter.6}%
-\contentsline {chapter}{Referencias}{23}{chapter*.13}%
-\contentsline {chapter}{\numberline {A}Diagramas de casos de uso}{25}{appendix.Alph1}%
+\contentsline {section}{\numberline {2.1}El diseño de circuitos analógicos como proceso iterativo}{5}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Modelos de lenguaje grande}{6}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Sistemas multiagente y orquestación}{7}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Aprendizaje por refuerzo y el problema de decisión}{8}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Simulación de circuitos con SPICE}{9}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Arquitectura de software: principios y patrones de coordinación}{10}{section.2.6}%
+\contentsline {section}{\numberline {2.7}Síntesis del marco teórico}{10}{section.2.7}%
+\contentsline {chapter}{\numberline {3}Estado del Arte}{12}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Antecedentes Relevantes}{12}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Ubicación de este Proyecto}{13}{section.3.2}%
+\contentsline {chapter}{\numberline {4}Diseño e Implementación de la Solución}{15}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Introducción}{15}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Premisas y fundamento de diseño}{16}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}El problema de diseño y el papel del SRS}{16}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Premisas de diseño}{16}{subsection.4.2.2}%
+\contentsline {section}{\numberline {4.3}Descomposición funcional y casos de uso}{18}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Vista funcional}{18}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Modelo de casos de uso}{19}{subsection.4.3.2}%
+\contentsline {section}{\numberline {4.4}Arquitectura del sistema (modelo C4)}{20}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Nivel 1 — Contexto}{20}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Nivel 2 — Contenedores}{21}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Nivel 3 — Componentes}{22}{subsection.4.4.3}%
+\contentsline {section}{\numberline {4.5}Comportamiento dinámico: flujo de generación}{23}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Calidad de la solución}{26}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Seguridad de la solución}{28}{section.4.7}%
+\contentsline {section}{\numberline {4.8}Criterios de aceptación de la propuesta}{30}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Síntesis del diseño}{31}{section.4.9}%
+\contentsline {chapter}{\numberline {5}Pruebas y Análisis de Resultados}{32}{chapter.5}%
+\contentsline {chapter}{\numberline {6}Conclusiones y Trabajo Futuro}{33}{chapter.6}%
+\contentsline {chapter}{Referencias}{34}{chapter*.14}%
+\contentsline {chapter}{\numberline {A}Diagramas de casos de uso}{37}{appendix.Alph1}%

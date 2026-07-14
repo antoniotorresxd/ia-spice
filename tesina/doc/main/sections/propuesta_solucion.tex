@@ -6,7 +6,7 @@ En el capítulo anterior se revisó el estado del arte de los sistemas multiagen
 
 El propósito del capítulo es exponer el diseño del sistema antes de su construcción: las premisas que lo fundamentan, su descomposición funcional, su arquitectura estructural y su comportamiento en ejecución. Las decisiones de diseño se justifican a partir de la naturaleza del problema, de los principios de la ingeniería de software y de los hallazgos del estado del arte; los artefactos de análisis y diseño elaborados a lo largo del proyecto —la Especificación de Requisitos de Software (SRS), el modelo de casos de uso, el diagrama funcional, el modelo arquitectónico C4 de tres niveles y el diagrama de secuencia— registran y representan esas decisiones, de modo que cada una quede expresada en un artefacto verificable.
 
-La exposición sigue un orden de lo abstracto a lo concreto. Primero se establecen el problema que el diseño debe resolver, las premisas que lo orientan y el papel del SRS como registro de los requisitos (sección~\ref{sec:prop-premisas}). A continuación se describe \textit{qué} hace el sistema mediante su descomposición funcional y sus casos de uso (sección~\ref{sec:prop-funcional}). Después se describe \textit{cómo} se estructura, mediante el modelo C4 en sus tres niveles (sección~\ref{sec:prop-c4}). Enseguida se describe \textit{cómo se comporta} en ejecución, mediante el diagrama de secuencia del flujo principal de generación (sección~\ref{sec:prop-dinamico}). Finalmente se enuncian los criterios de aceptación que la propuesta deberá satisfacer (sección~\ref{sec:prop-criterios}) y se cierra con una síntesis del diseño y su conexión con la evaluación del sistema (sección~\ref{sec:prop-sintesis}).
+La exposición sigue un orden de lo abstracto a lo concreto. Primero se establecen el problema que el diseño debe resolver, las premisas que lo orientan y el papel del SRS como registro de los requisitos (sección~\ref{sec:prop-premisas}). A continuación se describe \textit{qué} hace el sistema mediante su descomposición funcional y sus casos de uso (sección~\ref{sec:prop-funcional}). Después se describe \textit{cómo} se estructura, mediante el modelo C4 en sus tres niveles (sección~\ref{sec:prop-c4}). Enseguida se describe \textit{cómo se comporta} en ejecución, mediante el diagrama de secuencia del flujo principal de generación (sección~\ref{sec:prop-dinamico}). Finalmente se explican los atributos de calidad y seguridad que se desprenden del diseño (secciones~\ref{sec:prop-calidad} y~\ref{sec:prop-seguridad}), se enuncian los criterios de aceptación que la propuesta deberá satisfacer (sección~\ref{sec:prop-criterios}) y se cierra con una síntesis del diseño y su conexión con la evaluación del sistema (sección~\ref{sec:prop-sintesis}).
 
 \section{Premisas y fundamento de diseño}
 \label{sec:prop-premisas}
@@ -135,6 +135,69 @@ El comportamiento de persistencia se modela de forma explícita: el estado de ca
     \caption{Diagrama de secuencia del flujo de generación.}
     \label{fig:secuencia-generacion}
 \end{figure}
+
+\section{Calidad de la solución}
+\label{sec:prop-calidad}
+
+La calidad de la solución se entiende aquí como el grado en que el sistema satisface las necesidades para las que se diseña, evaluado sobre características observables y no sobre el juicio del diseñador. El modelo de calidad del producto de la norma ISO/IEC 25010 organiza esas características y ofrece un vocabulario común para nombrarlas \cite{iso_25010}. Se adopta el modelo de calidad del producto ---y no el de calidad en uso, centrado en la experiencia del usuario final--- porque el sistema se evalúa como un artefacto técnico operado mediante una interfaz de programación. De las características que define la norma, el diseño atiende de forma directa cinco: idoneidad funcional, fiabilidad, eficiencia de desempeño, mantenibilidad y seguridad. A ellas se suma la trazabilidad de la generación, que el SRS recoge como requisito no funcional. Cada atributo se apoya en una decisión de diseño ya expuesta y su comprobación se registra como criterio de aceptación o como requisito no funcional, cuya medición corresponde al capítulo de pruebas.
+
+La idoneidad funcional expresa si el sistema hace lo que debe: generar, a partir de una descripción en lenguaje natural, un circuito analógico CA/CD cuyos parámetros se acercan a las metas. Esta característica es la razón de ser del sistema y se concreta en métricas que la hacen medible ---la tasa de resolución y el error porcentual absoluto medio---, contrastadas además frente a una línea base \textit{best-of-N}. El lazo de ajuste guiado por el curador es el mecanismo que la persigue: itera hasta acercar las métricas a las metas o hasta agotar el número de iteraciones.
+
+La fiabilidad se refiere a que el sistema se comporte de forma estable ante las condiciones esperadas y ante el fallo. El diseño la atiende por tres vías. El lazo de ajuste está acotado por un número máximo de iteraciones, lo que impide que el proceso se prolongue de forma indefinida ante un circuito que no converge. El curador dispone de una decisión determinista por reglas como respaldo de su política, de modo que el sistema produce siempre una decisión aunque la política aprendida no resulte aplicable. Y el \textit{checkpointer} aporta recuperabilidad: al persistir el estado de la generación tras cada paso, una ejecución interrumpida puede retomarse desde el último punto guardado en lugar de reiniciarse, propiedad que el SRS recoge como tolerancia a fallos (RNF-03.2). La convergencia de la simulación se registra como una métrica y forma parte del estado que el curador evalúa, lo que evita que un netlist no convergente se acepte como válido.
+
+La eficiencia de desempeño atañe al tiempo y a los recursos que el sistema consume para producir un resultado. El diseño la aborda mediante el cálculo concurrente de los sub-bloques independientes, que reduce la latencia frente a un cálculo secuencial, y mediante un límite de tiempo para el ciclo completo. El carácter sin estado del subsistema servidor habilita además su réplica detrás de un balanceador de cargas, lo que permite atender más solicitudes en paralelo sin rediseñar el sistema; esta capacidad de crecer mediante réplicas es lo que el SRS registra como escalabilidad y que el modelo de la norma sitúa dentro de la eficiencia de desempeño.
+
+La mantenibilidad se fundamentó ya entre las premisas de diseño (sección~\ref{subsec:prop-premisas-disenio}): la modularidad de los agentes materializa la alta cohesión y el bajo acoplamiento, y la configuración externa de los pesos, los factores y los umbrales del curador permite ajustar el comportamiento del sistema sin tocar el código. Se retoma aquí para situarla dentro del modelo de calidad, no para repetir su justificación.
+
+A la mantenibilidad se vincula la trazabilidad de la generación. El sistema conserva el historial de iteraciones y la recompensa que el curador calcula en cada ciclo, de modo que el camino que llevó a un netlist queda registrado y es posible reconstruirlo. En términos del modelo de la norma, esta propiedad se aproxima a la analizabilidad, una faceta de la mantenibilidad, pues facilita diagnosticar el comportamiento del sistema tras una ejecución. El mismo registro constituye la traza en la que se apoya el control de seguridad descrito en la sección~\ref{sec:prop-seguridad}, lo que enlaza la calidad y la seguridad sobre un único mecanismo.
+
+La seguridad es, en el modelo ISO/IEC 25010, una característica de calidad más. Por su peso en un sistema que gestiona credenciales y claves de acceso, se trata de forma separada en la sección siguiente.
+
+La correspondencia entre cada característica, la decisión de diseño que la atiende y el lugar donde se registra o se mide se resume a continuación.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Correspondencia entre atributos de calidad, decisiones de diseño y evidencia de evaluación.}
+\label{tab:calidad-solucion}
+\vspace{0.3cm}
+\renewcommand{\arraystretch}{1.35}
+\rowcolors{2}{white}{rowgray}
+\begin{tabularx}{\textwidth}{p{3.1cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+\rowcolor{guinda}
+\textcolor{white}{\textbf{Característica}} &
+\textcolor{white}{\textbf{Decisión de diseño que la atiende}} &
+\textcolor{white}{\textbf{Dónde se registra o mide}} \\
+\midrule
+Idoneidad funcional & Lazo de ajuste guiado por el curador & Tasa de resolución y MAPE; comparación con \textit{best-of-N} \\
+Fiabilidad & Límite de iteraciones; respaldo determinista del curador; recuperabilidad por \textit{checkpointer}; registro de convergencia & CA-04, CA-05; RNF-03.2 \\
+Eficiencia de desempeño & Cálculo concurrente; límite de tiempo; servidor sin estado replicable & RNF-01.1, RNF-01.2; CA-05, CA-06 \\
+Mantenibilidad & Modularidad de los agentes; configuración externa & RNF-04.1 \\
+Trazabilidad (analizabilidad) & Registro del historial de iteraciones y de la recompensa & CA-03; RNF de trazabilidad \\
+Seguridad & Controles descritos en la sección~\ref{sec:prop-seguridad} & RF-06, RIMP-11 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Conviene precisar el alcance de esta evaluación de calidad. La idoneidad funcional, la fiabilidad y la eficiencia de desempeño se contrastan contra umbrales numéricos en el capítulo de pruebas. La mantenibilidad, la trazabilidad y la seguridad, en cambio, se evidencian de forma estructural ---por las propiedades del diseño y por la revisión del código y del repositorio--- y no mediante una métrica cuantitativa, lo que constituye un límite reconocido de la evaluación. Quedan fuera del foco de calidad de esta versión la usabilidad ---el sistema se opera mediante una interfaz de programación, no mediante una interfaz gráfica para usuarios finales--- y la portabilidad más allá del despliegue reproducible en contenedores.
+
+\section{Seguridad de la solución}
+\label{sec:prop-seguridad}
+
+La seguridad del sistema se aborda en proporción a su naturaleza de prototipo académico: el objetivo no es una auditoría completa, sino controles razonables sobre los activos que el sistema maneja. Esos activos son las credenciales de los usuarios, las API keys con las que se autentican las solicitudes, los secretos del propio sistema ---la clave de la API del LLM, las credenciales de la base de datos y los secretos de Better Auth---, las descripciones y netlists de cada usuario y la integridad del estado que el servidor persiste durante la generación. El análisis se ordena con los tres principios clásicos de la seguridad informática: confidencialidad, integridad y disponibilidad \cite{stallings2018computer}.
+
+Bajo confidencialidad se agrupan los secretos y las credenciales, que no deben quedar expuestos. A esta categoría pertenece también la descripción del circuito que el usuario envía, que el sistema transmite a un proveedor de LLM externo para su procesamiento; la confidencialidad de esos datos depende en parte de ese proveedor, dependencia que se reconoce como límite al final de la sección. La integridad se refiere a que el estado de una generación y el netlist resultante no se alteren de forma indebida entre iteraciones. La disponibilidad ---que el servicio responda a las solicitudes legítimas--- se apoya en el diseño sin estado del servidor, que admite réplicas y reduce el impacto de la caída de una instancia.
+
+El diseño incorpora un conjunto de controles proporcionados a esos activos. La autenticación de los usuarios se delega en Better Auth \cite{betterauth}, que concentra el registro, el inicio de sesión y la gestión de sesiones en un componente especializado en lugar de implementarlos desde cero. La autorización de las solicitudes al servidor se realiza mediante API keys que el usuario emite y puede revocar, de modo que cada solicitud que llega al servidor viaja autenticada. Las API keys y los circuitos de cada usuario quedan acotados a su espacio de trabajo, por lo que la autorización no se limita a comprobar que una solicitud esté autenticada, sino a que cada usuario acceda solo a sus propios recursos. La separación entre subsistema cliente y subsistema servidor actúa como frontera de confianza: el servidor no expone la lógica de diseño a solicitudes no autenticadas y el cliente no ejecuta esa lógica. Los secretos del sistema se leen de variables de entorno y no se escriben en el código ni se versionan en el repositorio, control que el SRS recoge como requisito de manejo de secretos (RIMP-11).
+
+Un riesgo propio de un sistema que recibe lenguaje natural y lo entrega a agentes basados en LLM es que la entrada del usuario contenga instrucciones que desvíen el comportamiento de los agentes. Para acotarlo, la descripción se valida y se restringe a los parámetros eléctricos que el orquestador necesita antes de incorporarla al proceso, y la salida del modelo se exige en un formato estructurado, lo que reduce el margen para respuestas fuera de lo previsto.
+
+Un control específico de este sistema atiende la ejecución de artefactos producidos por el modelo. El agente de escritura genera código PySpice y un netlist, y el agente de shell los ejecuta para obtener las métricas; ejecutar código generado por un LLM es una superficie que conviene contener. El diseño la acota al ejecutar esos artefactos dentro del entorno contenedorizado del servidor, cuyo despliegue reproducible recoge el SRS (RIMP-10), de modo que la ejecución queda aislada del entorno anfitrión. El endurecimiento de ese aislamiento más allá de la contención por contenedor queda fuera del alcance de esta versión. El registro de la actividad ---entre otros, la recompensa que el curador calcula en cada iteración--- deja una traza que permite revisar el comportamiento del sistema tras una ejecución.
+
+Los controles anteriores se corresponden con varias de las categorías de riesgo que recopila el proyecto OWASP en su lista de los diez riesgos más críticos para aplicaciones web \cite{owasp_top10}. El control de acceso por API key y el aislamiento entre espacios de trabajo atienden el riesgo de control de acceso roto; la delegación en Better Auth, el de fallos de identificación y autenticación; el manejo de secretos fuera del repositorio, el de configuración de seguridad deficiente y exposición de datos sensibles; la validación de la entrada, el de inyección; y la contención de la ejecución de artefactos generados, el de fallos de integridad del software y de los datos. La lista de OWASP se emplea como catálogo de referencia para situar los controles, no como una verificación exhaustiva de conformidad.
+
+El alcance de seguridad de esta versión tiene límites explícitos. La comunicación entre el usuario y el sistema se realiza sobre HTTPS, pero el diseño no incorpora cifrado de los datos en reposo más allá del que provea la base de datos, ni monitoreo de seguridad especializado, ni pruebas de penetración formales, ni un modelado de amenazas exhaustivo. A ello se añaden dos límites particulares: el sistema no aplica un control de tasa sobre las solicitudes, por lo que el uso intensivo de un usuario autenticado puede consumir recursos de cómputo y llamadas al LLM sin freno; y la confidencialidad de los datos enviados al proveedor de LLM externo escapa al control directo del sistema. Todos ellos exceden el alcance de un prototipo de tesina y se señalan para delimitar con honestidad qué protege el sistema y qué no.
 
 \section{Criterios de aceptación de la propuesta}
 \label{sec:prop-criterios}
