@@ -8,10 +8,8 @@ configureOpenAPI(app);
 
 app.get("/", (c) => c.text("Hello Hono!"));
 
-const routes = [authRouter] as const;
+const routes = app.route("/", authRouter);
 
-routes.forEach((route) => {
-  app.route("/", route);
-});
+export type AppType = typeof routes;
 
 export default app;

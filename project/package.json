@@ -1,0 +1,15 @@
+{
+  "name": "spice",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:server": "cd apps/server && bun run dev",
+    "dev:client": "cd apps/client && npm run dev",
+    "dev": "concurrently \"bun run dev:server\" \"bun run dev:client\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
