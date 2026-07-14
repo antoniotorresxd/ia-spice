@@ -1,1 +1,108 @@
-/* App-level feature styles are colocated with their components. */
+.app-session-gate {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at 50% 0%, rgb(114 226 198 / 8%), transparent 36rem),
+    var(--color-bg);
+}
+
+.app-session-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.app-session-pulse {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--color-mint);
+  box-shadow: 0 0 1rem rgb(114 226 198 / 70%);
+  animation: app-session-pulse 1.3s ease-in-out infinite alternate;
+}
+
+.app-session-card {
+  width: min(100%, 27rem);
+  padding: clamp(2rem, 6vw, 3.5rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: rgb(18 20 24 / 90%);
+  box-shadow: var(--shadow-panel);
+  text-align: center;
+}
+
+.app-session-eyebrow {
+  margin: 0 0 1.25rem;
+  color: var(--color-mint);
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.18em;
+}
+
+.app-session-card h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(2rem, 8vw, 3rem);
+  letter-spacing: -0.045em;
+}
+
+.app-session-copy,
+.app-session-user {
+  color: var(--color-text-muted);
+}
+
+.app-session-copy {
+  margin: 0.75rem 0 2rem;
+}
+
+.app-session-user {
+  margin: 0 0 1rem;
+  color: var(--color-text);
+  font-weight: 650;
+}
+
+.app-session-button {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid rgb(114 226 198 / 40%);
+  border-radius: 0.75rem;
+  background: rgb(114 226 198 / 10%);
+  color: var(--color-mint);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 680;
+}
+
+.app-session-button:focus-visible {
+  outline: 2px solid var(--color-mint);
+  outline-offset: 3px;
+}
+
+.app-session-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.app-session-error {
+  margin: 1rem 0 0;
+  color: #ffaaa4;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+@keyframes app-session-pulse {
+  to {
+    opacity: 0.35;
+    transform: scale(0.78);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-session-pulse {
+    animation: none;
+  }
+}
