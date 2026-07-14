@@ -53,7 +53,11 @@ export function createAuthService(client: BetterAuthClientPort): AuthService {
       runAuthOperation(() => client.signUp.email(input), FAILURE_MESSAGES.signUp),
     signInWithProvider: (provider) =>
       runAuthOperation(
-        () => client.signIn.social({ provider, callbackURL: '/' }),
+        () =>
+          client.signIn.social({
+            provider,
+            callbackURL: `${window.location.origin}/`,
+          }),
         FAILURE_MESSAGES.social,
       ),
     signOut: () => runAuthOperation(() => client.signOut(), FAILURE_MESSAGES.signOut),

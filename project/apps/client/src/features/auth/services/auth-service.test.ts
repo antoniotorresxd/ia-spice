@@ -68,7 +68,7 @@ describe('createAuthService', () => {
 
     expect(client.signIn.social).toHaveBeenCalledWith({
       provider: 'github',
-      callbackURL: '/',
+      callbackURL: `${window.location.origin}/`,
     })
     expect(result).toEqual({ ok: true })
   })
