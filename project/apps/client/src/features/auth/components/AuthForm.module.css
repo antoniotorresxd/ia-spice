@@ -73,7 +73,7 @@
   align-items: center;
   gap: 0.75rem;
   margin: 1.5rem 0;
-  color: #686e70;
+  color: var(--color-text-muted);
   font-size: 0.68rem;
   letter-spacing: 0.04em;
 }
@@ -147,7 +147,7 @@
   position: absolute;
   top: 50%;
   right: 0.45rem;
-  min-height: 2rem;
+  min-height: 44px;
   padding: 0 0.45rem;
   border-radius: 0.35rem;
   background: transparent;
@@ -227,7 +227,10 @@
 }
 
 .modeButton {
-  padding: 0.2rem 0.25rem;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 0.5rem;
   border-radius: 0.3rem;
   background: transparent;
   color: var(--color-mint);

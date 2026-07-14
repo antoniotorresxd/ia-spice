@@ -5,7 +5,11 @@
   min-height: 100dvh;
   place-items: center;
   overflow: hidden;
-  padding: clamp(1.25rem, 4vw, 3rem);
+  padding:
+    calc(clamp(1.25rem, 4vw, 3rem) + env(safe-area-inset-top))
+    calc(clamp(1.25rem, 4vw, 3rem) + env(safe-area-inset-right))
+    calc(clamp(1.25rem, 4vw, 3rem) + env(safe-area-inset-bottom))
+    calc(clamp(1.25rem, 4vw, 3rem) + env(safe-area-inset-left));
   background:
     radial-gradient(circle at 50% 0%, rgb(255 255 255 / 4%), transparent 38%),
     linear-gradient(145deg, #090a0e 0%, var(--color-bg) 58%, #07080a 100%);
@@ -193,7 +197,7 @@
 
 .legal {
   margin: 1.75rem 0 0;
-  color: #686e70;
+  color: var(--color-text-muted);
   font-size: 0.68rem;
   line-height: 1.55;
   text-align: center;
@@ -263,7 +267,11 @@
 
 @media (max-width: 560px) {
   .page {
-    padding: 0.75rem;
+    padding:
+      calc(0.75rem + env(safe-area-inset-top))
+      calc(0.75rem + env(safe-area-inset-right))
+      calc(0.75rem + env(safe-area-inset-bottom))
+      calc(0.75rem + env(safe-area-inset-left));
   }
 
   .surface {
@@ -299,7 +307,11 @@
 
 @media (max-width: 360px) {
   .page {
-    padding: 0.5rem;
+    padding:
+      calc(0.5rem + env(safe-area-inset-top))
+      calc(0.5rem + env(safe-area-inset-right))
+      calc(0.5rem + env(safe-area-inset-bottom))
+      calc(0.5rem + env(safe-area-inset-left));
   }
 
   .surface {
