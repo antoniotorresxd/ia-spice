@@ -5,9 +5,14 @@
     "apps/*"
   ],
   "scripts": {
-    "dev:server": "cd apps/server && bun run dev",
-    "dev:client": "cd apps/client && npm run dev",
-    "dev": "concurrently \"bun run dev:server\" \"bun run dev:client\""
+    "dev:server": "bun run --cwd apps/server dev",
+    "dev:client": "bun run --cwd apps/client dev",
+    "dev": "concurrently \"bun run dev:server\" \"bun run dev:client\"",
+    "typecheck:server": "bun run --cwd apps/server typecheck",
+    "build:server-types": "bun run --cwd apps/server build:types",
+    "build:client": "bun run --cwd apps/client build",
+    "test:client": "bun run --cwd apps/client test",
+    "lint:client": "bun run --cwd apps/client lint"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

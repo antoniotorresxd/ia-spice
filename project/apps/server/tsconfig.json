@@ -6,6 +6,8 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "bundler",
+    "types": ["bun"],
+    "skipLibCheck": true,
     "paths": {
       "@/*": [
         "./src/*"

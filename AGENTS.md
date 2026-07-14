@@ -6,19 +6,34 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 This repo has two unrelated parts:
 
-- `project/apps/` — the actual software: a `server` (Hono API), a `client` (Vite/React app), and `agents` (a Python/LangGraph agent pipeline). There is no root `package.json`/workspace config — each app is managed independently with its own lockfile.
+- `project/` — the actual software. Its root is a Bun workspace for `apps/server` (Hono API) and `apps/client` (Vite/React); `apps/agents` remains a separate Python/LangGraph project managed with `uv`.
 - `tesina/` — a LaTeX thesis (Spanish-language academic document, "cronograma", "edo-art", "main"). Unrelated to the app code; only touch it when asked about the thesis.
 
 ## Commands
 
-All commands are run from within `project/apps/server`, `project/apps/client`, or `project/apps/agents` respectively — there is no root script that runs any of them together.
+Install JavaScript dependencies once from `project/` with `bun install`. Root scripts run the server and client workspace commands; Python commands still run from `project/apps/agents`.
 
-### Server (`project/apps/server`)
-Uses **Bun** as the runtime and package manager (a `pnpm-lock.yaml` also exists but is stale/unused — use `bun`, not `pnpm`, here).
+### Bun workspace (`project`)
 
 ```
 bun install
+bun run dev                 # server + client
+bun run dev:server
+bun run dev:client
+bun run typecheck:server
+bun run build:server-types
+bun run build:client
+bun run test:client
+bun run lint:client
+```
+
+### Server (`project/apps/server`)
+Uses **Bun** as the runtime. Dependency installation is managed by the canonical `project/bun.lock` workspace lockfile.
+
+```
 bun run dev          # bun run --hot src/index.ts
+bun run typecheck
+bun run build:types  # emit the Hono RPC declaration consumed by the client
 bun run db:generate   # drizzle-kit generate — after editing any *.model.ts
 bun run db:migrate    # drizzle-kit migrate
 bun run db:push       # drizzle-kit push (schema push without migration files)
@@ -29,17 +44,17 @@ bun run db:drop       # drizzle-kit drop
 No lint/test scripts are defined for the server.
 
 ### Client (`project/apps/client`)
-Standard Vite/React/TypeScript app (npm-based).
+Vite/React/TypeScript app, managed by the root Bun workspace.
 
 ```
-npm install
-npm run dev       # vite
-npm run build     # tsc -b && vite build
-npm run lint      # eslint .
-npm run preview   # vite preview
+bun run dev       # vite
+bun run build     # server RPC declarations, then tsc -b && vite build
+bun run test      # vitest run
+bun run lint      # eslint .
+bun run preview   # vite preview
 ```
 
-No test script is defined. The client is currently the unmodified Vite React-TS template (default counter demo in `App.tsx`) and is **not yet wired to the server** — no proxy config in `vite.config.ts`, no `VITE_API_*` env vars, no auth client calls exist yet.
+The client consumes the server's generated Hono RPC type declaration and proxies `/api` to the local Hono server during development.
 
 ### Agents (`project/apps/agents`)
 A separate **Python 3.12** project managed with **uv** — unrelated to the Bun/Hono server or the Vite client, and not wired to either yet.
