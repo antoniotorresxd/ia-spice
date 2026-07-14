@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "langchain>=1.3.12",
     "langgraph>=1.2.8",
+    "pydantic>=2.13.4",
     "pyspice>=1.5",
 ]
 
