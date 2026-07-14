@@ -1,6 +1,6 @@
 [build]
 builder = "RAILPACK"
-buildCommand = "bun run build:server"
+buildCommand = "bun run typecheck:server"
 
 [deploy]
-startCommand = "bun run start:server"
+startCommand = "bun run --cwd apps/server src/index.ts"
