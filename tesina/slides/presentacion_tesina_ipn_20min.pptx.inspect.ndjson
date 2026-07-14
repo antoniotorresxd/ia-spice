@@ -1,0 +1,287 @@
+{"kind":"deck","id":"pr/po6l4b","name":"Deck"}
+{"kind":"layout","layoutId":"/ppt/slideMasters/slideMaster1.xml","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout1.xml","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/2x4nap4r","slide":1,"title":"INSTITUTO POLITÉCNICO NACIONAL","textShapes":7}
+{"kind":"shape","id":"sh/udg7adsj","slide":1,"name":"Rectangle 3","bbox":[1200,0,80,720]}
+{"kind":"shape","id":"sh/cvixczed","slide":1,"name":"Rectangle 1","bbox":[58,170,7,455]}
+{"kind":"shape","id":"sh/5gbq1ory","slide":1,"name":"Rectangle 2","bbox":[78,170,4,455]}
+{"kind":"textbox","id":"sh/cj6tovah","slide":1,"name":"Rectangle 5","text":"INSTITUTO POLITÉCNICO NACIONAL\nESCUELA SUPERIOR DE INGENIERÍA MECÁNICA Y ELÉCTRICA\nUNIDAD CULHUACÁN","textPreview":"INSTITUTO POLITÉCNICO NACIONAL | ESCUELA SUPERIOR DE INGENIERÍA MECÁNICA Y ELÉCTRICA | UNIDAD CULHUACÁN","textChars":99,"textLines":3,"bbox":[205,38,780,90]}
+{"kind":"textbox","id":"sh/54zidony","slide":1,"name":"Rectangle 6","text":"TESINA","textPreview":"TESINA","textChars":6,"textLines":1,"bbox":[210,182,210,38]}
+{"kind":"textbox","id":"sh/u9knih4b","slide":1,"name":"Rectangle 7","text":"Ecosistema multiagente basado en LLM y aprendizaje por refuerzo para la generación y validación de circuitos analógicos CA/CD a partir de lenguaje natural","textPreview":"Ecosistema multiagente basado en LLM y aprendizaje por refuerzo para la generación y validación de circuitos analógicos CA/CD a partir de...","textChars":154,"textLines":1,"bbox":[210,230,800,115]}
+{"kind":"textbox","id":"sh/judg7ads","slide":1,"name":"Rectangle 8","text":"Para obtener el título de Ingeniero en Computación","textPreview":"Para obtener el título de Ingeniero en Computación","textChars":50,"textLines":1,"bbox":[210,375,580,30]}
+{"kind":"textbox","id":"sh/nyd0z610","slide":1,"name":"Rectangle 9","text":"Antonio de Jesus Torres Martínez\nDiego Jesus Gutierrez Delgado","textPreview":"Antonio de Jesus Torres Martínez | Diego Jesus Gutierrez Delgado","textChars":62,"textLines":2,"bbox":[210,430,520,58]}
+{"kind":"textbox","id":"sh/udg7adsj","slide":1,"name":"Rectangle 10","text":"Asesor: Ricardo Israel Calzada Salas\nCiudad de México · junio 2026","textPreview":"Asesor: Ricardo Israel Calzada Salas | Ciudad de México · junio 2026","textChars":66,"textLines":2,"bbox":[210,545,620,52]}
+{"kind":"textbox","id":"sh/54zidony","slide":1,"name":"Rectangle 11","text":"1/17","textPreview":"1/17","textChars":4,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"image","id":"im/judg7ads","slide":1,"name":"Picture 15","bbox":[70,52.61,100,70.79]}
+{"kind":"image","id":"im/c7u54zid","slide":1,"name":"Picture 16","bbox":[1030,35.05,115,102.89]}
+{"kind":"notes","id":"nt/2x4nap4r","slide":1,"text":""}
+{"kind":"slide","id":"sl/pg3ex0nu","slide":2,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":10}
+{"kind":"shape","id":"sh/5o7qpg3e","slide":2,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/g3ex0nux","slide":2,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/r65wjudg","slide":2,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/ylc7u54z","slide":2,"name":"Rectangle 4","text":"Ruta de la exposición","textPreview":"Ruta de la exposición","textChars":21,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/9cvixcze","slide":2,"name":"Rectangle 5","text":"2/17","textPreview":"2/17","textChars":4,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/gr2p8nqx","slide":2,"text":"1\nProblema","textPreview":"1 | Problema","textChars":10,"textLines":2,"bbox":[88,275,128,100]}
+{"kind":"textbox","id":"sh/rytsvu9k","slide":2,"text":"2\nMarco","textPreview":"2 | Marco","textChars":7,"textLines":2,"bbox":[260,275,128,100]}
+{"kind":"shape","id":"sh/xczed8v6","slide":2,"bbox":[216,325,44,0]}
+{"kind":"textbox","id":"sh/wb2hwfyx","slide":2,"text":"3\nEstado\ndel arte","textPreview":"3 | Estado | del arte","textChars":17,"textLines":3,"bbox":[432,275,128,100]}
+{"kind":"shape","id":"sh/fyxobm58","slide":2,"bbox":[388,325,44,0]}
+{"kind":"textbox","id":"sh/e9cvixcz","slide":2,"text":"4\nSolución","textPreview":"4 | Solución","textChars":10,"textLines":2,"bbox":[604,275,128,100]}
+{"kind":"shape","id":"sh/x4nap4r6","slide":2,"bbox":[560,325,44,0]}
+{"kind":"textbox","id":"sh/w3m94fu1","slide":2,"text":"5\nConstrucción","textPreview":"5 | Construcción","textChars":14,"textLines":2,"bbox":[776,275,128,100]}
+{"kind":"shape","id":"sh/fmlkjm1c","slide":2,"bbox":[732,325,44,0]}
+{"kind":"textbox","id":"sh/ex0nuxc3","slide":2,"text":"6\nCierre","textPreview":"6 | Cierre","textChars":8,"textLines":2,"bbox":[948,275,128,100]}
+{"kind":"shape","id":"sh/kjm1cfa9","slide":2,"bbox":[904,325,44,0]}
+{"kind":"textbox","id":"sh/szqtcj6t","slide":2,"text":"Se amplía el recorrido académico sin convertir la presentación en documento: conceptos, antecedentes, brecha y construcción.","textPreview":"Se amplía el recorrido académico sin convertir la presentación en documento: conceptos, antecedentes, brecha y construcción.","textChars":124,"textLines":1,"bbox":[150,430,880,58]}
+{"kind":"notes","id":"nt/pg3ex0nu","slide":2,"text":""}
+{"kind":"slide","id":"sl/s72x4nap","slide":3,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":32}
+{"kind":"shape","id":"sh/o7qpg3ex","slide":3,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/dsji5sne","slide":3,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/6dcbulwv","slide":3,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/vy90je9c","slide":3,"name":"Rectangle 4","text":"Marco teórico: base tecnológica","textPreview":"Marco teórico: base tecnológica","textChars":31,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/oj2t83it","slide":3,"name":"Rectangle 5","text":"3/17","textPreview":"3/17","textChars":4,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/d4vmtwra","slide":3,"text":"Base conceptual y stack técnico del flujo.","textPreview":"Base conceptual y stack técnico del flujo.","textChars":42,"textLines":1,"bbox":[110,128,900,38]}
+{"kind":"shape","id":"sh/6hcrmhk3","slide":3,"bbox":[120,195,285,96]}
+{"kind":"textbox","id":"sh/z25kb6xk","slide":3,"text":"LLM","textPreview":"LLM","textChars":3,"textLines":1,"bbox":[138,213,58,58]}
+{"kind":"textbox","id":"sh/vy90je9c","slide":3,"text":"LLM / API","textPreview":"LLM / API","textChars":9,"textLines":1,"bbox":[212,213,175,28]}
+{"kind":"textbox","id":"sh/6dcbulwv","slide":3,"text":"interpretación","textPreview":"interpretación","textChars":14,"textLines":1,"bbox":[212,245,175,44]}
+{"kind":"shape","id":"sh/d4vmtwra","slide":3,"bbox":[450,195,285,96]}
+{"kind":"textbox","id":"sh/oj2t83it","slide":3,"text":"LG","textPreview":"LG","textChars":2,"textLines":1,"bbox":[468,213,58,58]}
+{"kind":"textbox","id":"sh/vmtwra5g","slide":3,"text":"LangGraph","textPreview":"LangGraph","textChars":9,"textLines":1,"bbox":[542,213,175,28]}
+{"kind":"textbox","id":"sh/61032lsz","slide":3,"text":"orquestación","textPreview":"orquestación","textChars":12,"textLines":1,"bbox":[542,245,175,44]}
+{"kind":"shape","id":"sh/dsji5sne","slide":3,"bbox":[780,195,285,96]}
+{"kind":"textbox","id":"sh/o7qpg3ex","slide":3,"text":"Py","textPreview":"Py","textChars":2,"textLines":1,"bbox":[798,213,58,58]}
+{"kind":"textbox","id":"sh/vahoza1g","slide":3,"text":"Python","textPreview":"Python","textChars":6,"textLines":1,"bbox":[872,213,175,28]}
+{"kind":"textbox","id":"sh/6tovahoz","slide":3,"text":"servidor","textPreview":"servidor","textChars":8,"textLines":1,"bbox":[872,245,175,44]}
+{"kind":"shape","id":"sh/epkzupwb","slide":3,"bbox":[120,320,285,96]}
+{"kind":"textbox","id":"sh/7adsji5s","slide":3,"text":"PS","textPreview":"PS","textChars":2,"textLines":1,"bbox":[138,338,58,58]}
+{"kind":"textbox","id":"sh/wval87ed","slide":3,"text":"PySpice","textPreview":"PySpice","textChars":7,"textLines":1,"bbox":[212,338,175,28]}
+{"kind":"textbox","id":"sh/pg3ex0nu","slide":3,"text":"puente SPICE","textPreview":"puente SPICE","textChars":12,"textLines":1,"bbox":[212,370,175,44]}
+{"kind":"shape","id":"sh/e1w7mp0b","slide":3,"bbox":[450,320,285,96]}
+{"kind":"textbox","id":"sh/7mp0bi9s","slide":3,"text":"ng","textPreview":"ng","textChars":2,"textLines":1,"bbox":[468,338,58,58]}
+{"kind":"textbox","id":"sh/w7mp0bi9","slide":3,"text":"ngspice","textPreview":"ngspice","textChars":7,"textLines":1,"bbox":[542,338,175,28]}
+{"kind":"textbox","id":"sh/psfil0rq","slide":3,"text":"simulación","textPreview":"simulación","textChars":10,"textLines":1,"bbox":[542,370,175,44]}
+{"kind":"shape","id":"sh/ed8bat47","slide":3,"bbox":[780,320,285,96]}
+{"kind":"textbox","id":"sh/7u54zido","slide":3,"text":"DB","textPreview":"DB","textChars":2,"textLines":1,"bbox":[798,338,58,58]}
+{"kind":"textbox","id":"sh/twra5gbq","slide":3,"text":"PostgreSQL","textPreview":"PostgreSQL","textChars":10,"textLines":1,"bbox":[872,338,175,28]}
+{"kind":"textbox","id":"sh/4byhgn29","slide":3,"text":"persistencia","textPreview":"persistencia","textChars":12,"textLines":1,"bbox":[872,370,175,44]}
+{"kind":"shape","id":"sh/bq1oryts","slide":3,"bbox":[120,445,285,96]}
+{"kind":"textbox","id":"sh/m58z25kb","slide":3,"text":"Dk","textPreview":"Dk","textChars":2,"textLines":1,"bbox":[138,463,58,58]}
+{"kind":"textbox","id":"sh/t83itgfm","slide":3,"text":"Docker","textPreview":"Docker","textChars":6,"textLines":1,"bbox":[212,463,175,28]}
+{"kind":"textbox","id":"sh/4nap4r65","slide":3,"text":"despliegue","textPreview":"despliegue","textChars":10,"textLines":1,"bbox":[212,495,175,44]}
+{"kind":"shape","id":"sh/b2hwfyxo","slide":3,"bbox":[450,445,285,96]}
+{"kind":"textbox","id":"sh/mhk3q5o7","slide":3,"text":"BA","textPreview":"BA","textChars":2,"textLines":1,"bbox":[468,463,58,58]}
+{"kind":"textbox","id":"sh/tgfmlkjm","slide":3,"text":"Better Auth","textPreview":"Better Auth","textChars":11,"textLines":1,"bbox":[542,463,175,28]}
+{"kind":"textbox","id":"sh/4vmtwra5","slide":3,"text":"acceso","textPreview":"acceso","textChars":6,"textLines":1,"bbox":[542,495,175,44]}
+{"kind":"shape","id":"sh/c3ylc7u5","slide":3,"bbox":[780,445,285,96]}
+{"kind":"textbox","id":"sh/1kre1w7m","slide":3,"text":"RL","textPreview":"RL","textChars":2,"textLines":1,"bbox":[798,463,58,58]}
+{"kind":"textbox","id":"sh/uxc3ylc7","slide":3,"text":"Curador RL","textPreview":"Curador RL","textChars":10,"textLines":1,"bbox":[872,463,175,28]}
+{"kind":"textbox","id":"sh/ji5snelo","slide":3,"text":"decisión","textPreview":"decisión","textChars":8,"textLines":1,"bbox":[872,495,175,44]}
+{"kind":"textbox","id":"sh/crmhk3q5","slide":3,"text":"Mapa visual de tecnologías integradas.","textPreview":"Mapa visual de tecnologías integradas.","textChars":38,"textLines":1,"bbox":[175,612,810,30]}
+{"kind":"notes","id":"nt/s72x4nap","slide":3,"text":""}
+{"kind":"slide","id":"sl/val87ed8","slide":4,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":10}
+{"kind":"shape","id":"sh/1w7mp0bi","slide":4,"name":"Rectangle 9","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/qtcj6tov","slide":4,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/je9cvixc","slide":4,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/87ed8bat","slide":4,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/xs72x4na","slide":4,"name":"Rectangle 4","text":"Problema técnico","textPreview":"Problema técnico","textChars":16,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/q1orytsv","slide":4,"name":"Rectangle 5","text":"4/17","textPreview":"4/17","textChars":4,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/fmlkjm1c","slide":4,"name":"Rectangle 6","text":"El diseño analógico requiere iteración, simulación y ajuste; un LLM puede proponer circuitos, pero no garantiza que funcionen físicamente.","textPreview":"El diseño analógico requiere iteración, simulación y ajuste; un LLM puede proponer circuitos, pero no garantiza que funcionen físicamente.","textChars":138,"textLines":1,"bbox":[110,145,940,70]}
+{"kind":"textbox","id":"sh/8jqh0fep","slide":4,"name":"Rectangle: Rounded Corners 7","text":"Especificación","textPreview":"Especificación","textChars":14,"textLines":1,"bbox":[105,310,150,70]}
+{"kind":"textbox","id":"sh/x4nap4r6","slide":4,"name":"Rectangle: Rounded Corners 8","text":"Propuesta","textPreview":"Propuesta","textChars":9,"textLines":1,"bbox":[305,310,150,70]}
+{"kind":"shape","id":"sh/knih4byh","slide":4,"name":"Straight Arrow Connector 26","bbox":[255,345,50,0]}
+{"kind":"textbox","id":"sh/8bat47y1","slide":4,"name":"Rectangle: Rounded Corners 10","text":"Simulación","textPreview":"Simulación","textChars":10,"textLines":1,"bbox":[505,310,150,70]}
+{"kind":"shape","id":"sh/p4r65wju","slide":4,"name":"Straight Arrow Connector 28","bbox":[455,345,50,0]}
+{"kind":"textbox","id":"sh/q5o7qpg3","slide":4,"name":"Rectangle: Rounded Corners 12","text":"Ajuste","textPreview":"Ajuste","textChars":6,"textLines":1,"bbox":[705,310,150,70]}
+{"kind":"shape","id":"sh/7y1kre1w","slide":4,"name":"Straight Arrow Connector 30","bbox":[655,345,50,0]}
+{"kind":"textbox","id":"sh/8nqxs72x","slide":4,"name":"Rectangle: Rounded Corners 14","text":"Nueva propuesta","textPreview":"Nueva propuesta","textChars":15,"textLines":1,"bbox":[905,310,150,70]}
+{"kind":"shape","id":"sh/pwb2hwfy","slide":4,"name":"Straight Arrow Connector 32","bbox":[855,345,50,0]}
+{"kind":"textbox","id":"sh/qh0fepkz","slide":4,"name":"Rectangle: Rounded Corners 16","text":"Punto débil: sin verificación física automática","textPreview":"Punto débil: sin verificación física automática","textChars":47,"textLines":1,"bbox":[340,445,430,58]}
+{"kind":"notes","id":"nt/val87ed8","slide":4,"text":""}
+{"kind":"slide","id":"sl/mlkjm1cf","slide":5,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":17}
+{"kind":"shape","id":"sh/ovahoza1","slide":5,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/dg7adsji","slide":5,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/6hcrmhk3","slide":5,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/z25kb6xk","slide":5,"name":"Rectangle 4","text":"Estado del arte: trabajos revisados","textPreview":"Estado del arte: trabajos revisados","textChars":35,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/onyd0z61","slide":5,"name":"Rectangle 5","text":"5/17","textPreview":"5/17","textChars":4,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/d8v6psfi","slide":5,"text":"La revisión muestra dos líneas: agentes con simulación en transistor y sistemas a nivel componente con validación limitada.","textPreview":"La revisión muestra dos líneas: agentes con simulación en transistor y sistemas a nivel componente con validación limitada.","textChars":123,"textLines":1,"bbox":[110,128,960,42]}
+{"kind":"shape","id":"sh/6dcbulwv","slide":5,"bbox":[120,210,270,104]}
+{"kind":"textbox","id":"sh/vy90je9c","slide":5,"text":"AnalogCoder","textPreview":"AnalogCoder","textChars":11,"textLines":1,"bbox":[134,226,242,32]}
+{"kind":"textbox","id":"sh/nuxc3ylc","slide":5,"text":"código ejecutable + SPICE","textPreview":"código ejecutable + SPICE","textChars":25,"textLines":1,"bbox":[134,262,242,42]}
+{"kind":"shape","id":"sh/y90je9cv","slide":5,"bbox":[450,210,270,104]}
+{"kind":"textbox","id":"sh/5wjudg7a","slide":5,"text":"AnalogAgent","textPreview":"AnalogAgent","textChars":11,"textLines":1,"bbox":[464,226,242,32]}
+{"kind":"textbox","id":"sh/gbq1oryt","slide":5,"text":"multiagente + memoria","textPreview":"multiagente + memoria","textChars":21,"textLines":1,"bbox":[464,262,242,42]}
+{"kind":"shape","id":"sh/n29gr2p8","slide":5,"bbox":[780,210,270,104]}
+{"kind":"textbox","id":"sh/yhgn29gr","slide":5,"text":"CircuitLM","textPreview":"CircuitLM","textChars":9,"textLines":1,"bbox":[794,226,242,32]}
+{"kind":"textbox","id":"sh/58z25kb6","slide":5,"text":"componentes comerciales + ERC","textPreview":"componentes comerciales + ERC","textChars":29,"textLines":1,"bbox":[794,262,242,42]}
+{"kind":"shape","id":"sh/gn29gr2p","slide":5,"bbox":[120,350,270,104]}
+{"kind":"textbox","id":"sh/neloj2t8","slide":5,"text":"AnalogSAGE","textPreview":"AnalogSAGE","textChars":10,"textLines":1,"bbox":[134,366,242,32]}
+{"kind":"textbox","id":"sh/ytsvu9kn","slide":5,"text":"memoria estratificada","textPreview":"memoria estratificada","textChars":21,"textLines":1,"bbox":[134,402,242,42]}
+{"kind":"shape","id":"sh/2x4nap4r","slide":5,"bbox":[450,350,270,104]}
+{"kind":"textbox","id":"sh/vixczed8","slide":5,"text":"PCBSchemaGen","textPreview":"PCBSchemaGen","textChars":12,"textLines":1,"bbox":[464,366,242,32]}
+{"kind":"textbox","id":"sh/k3q5o7qp","slide":5,"text":"PCB y reglas eléctricas","textPreview":"PCB y reglas eléctricas","textChars":23,"textLines":1,"bbox":[464,402,242,42]}
+{"kind":"shape","id":"sh/donyd0z6","slide":5,"bbox":[780,350,270,104]}
+{"kind":"textbox","id":"sh/6psfil0r","slide":5,"text":"HWE-Bench","textPreview":"HWE-Bench","textChars":9,"textLines":1,"bbox":[794,366,242,32]}
+{"kind":"textbox","id":"sh/val87ed8","slide":5,"text":"benchmark con SPICE externo","textPreview":"benchmark con SPICE externo","textChars":27,"textLines":1,"bbox":[794,402,242,42]}
+{"kind":"textbox","id":"sh/kre1w7mp","slide":5,"text":"Lectura clave: ninguno integra simultáneamente componentes comerciales, multiagentes, simulación SPICE en el lazo y curador de ajuste.","textPreview":"Lectura clave: ninguno integra simultáneamente componentes comerciales, multiagentes, simulación SPICE en el lazo y curador de ajuste.","textChars":134,"textLines":1,"bbox":[190,545,820,70]}
+{"kind":"notes","id":"nt/mlkjm1cf","slide":5,"text":""}
+{"kind":"slide","id":"sl/58z25kb6","slide":6,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":5}
+{"kind":"shape","id":"sh/nih4byhg","slide":6,"name":"Rectangle 6","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/ylc7u54z","slide":6,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/r65wjudg","slide":6,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/g3ex0nux","slide":6,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/5o7qpg3e","slide":6,"name":"Rectangle 4","text":"Brecha detectada","textPreview":"Brecha detectada","textChars":16,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/yxobm58z","slide":6,"name":"Rectangle 5","text":"6/17","textPreview":"6/17","textChars":4,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/g7adsji5","slide":6,"name":"Rectangle: Rounded Corners 7","text":"Este proyecto busca el cruce entre componentes comerciales y simulación SPICE dentro del lazo.","textPreview":"Este proyecto busca el cruce entre componentes comerciales y simulación SPICE dentro del lazo.","textChars":94,"textLines":1,"bbox":[900,210,245,176]}
+{"kind":"textbox","id":"sh/9s36hcrm","slide":6,"name":"Rectangle 8","text":"La posición se tomó de la tesina: AnalogCoder, AnalogAgent, CircuitLM, AnalogSAGE, PCBSchemaGen y HWE-Bench.","textPreview":"La posición se tomó de la tesina: AnalogCoder, AnalogAgent, CircuitLM, AnalogSAGE, PCBSchemaGen y HWE-Bench.","textChars":108,"textLines":1,"bbox":[900,395,245,120]}
+{"kind":"image","id":"im/qxs72x4n","slide":6,"name":"Picture 15","bbox":[115,147.54,760,444.92]}
+{"kind":"notes","id":"nt/58z25kb6","slide":6,"text":""}
+{"kind":"slide","id":"sl/0z61032l","slide":7,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":11}
+{"kind":"shape","id":"sh/qtcj6tov","slide":7,"name":"Rectangle 8","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/x4nap4r6","slide":7,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/8jqh0fep","slide":7,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/fa9w3m94","slide":7,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/qpg3ex0n","slide":7,"name":"Rectangle 4","text":"Idea central de la solución","textPreview":"Idea central de la solución","textChars":27,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/xczed8v6","slide":7,"name":"Rectangle 5","text":"7/17","textPreview":"7/17","textChars":4,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/8v6psfil","slide":7,"name":"Rectangle: Rounded Corners 6","text":"Lenguaje natural","textPreview":"Lenguaje natural","textChars":16,"textLines":1,"bbox":[92,215,185,74]}
+{"kind":"textbox","id":"sh/je9cvixc","slide":7,"name":"Rectangle: Rounded Corners 7","text":"Agentes especializados","textPreview":"Agentes especializados","textChars":22,"textLines":1,"bbox":[362,215,185,74]}
+{"kind":"shape","id":"sh/4fu18jqh","slide":7,"name":"Straight Arrow Connector 28","bbox":[277,252,85,0]}
+{"kind":"textbox","id":"sh/svu9knih","slide":7,"name":"Rectangle: Rounded Corners 9","text":"Netlist","textPreview":"Netlist","textChars":7,"textLines":1,"bbox":[632,215,185,74]}
+{"kind":"shape","id":"sh/7y1kre1w","slide":7,"name":"Straight Arrow Connector 30","bbox":[547,252,85,0]}
+{"kind":"textbox","id":"sh/ap4r65wj","slide":7,"name":"Rectangle: Rounded Corners 11","text":"ngspice","textPreview":"ngspice","textChars":7,"textLines":1,"bbox":[902,215,185,74]}
+{"kind":"shape","id":"sh/p4r65wju","slide":7,"name":"Straight Arrow Connector 32","bbox":[817,252,85,0]}
+{"kind":"textbox","id":"sh/s36hcrmh","slide":7,"name":"Rectangle: Rounded Corners 13","text":"Métricas","textPreview":"Métricas","textChars":8,"textLines":1,"bbox":[194,417.33,185,74]}
+{"kind":"shape","id":"sh/7qpg3ex0","slide":7,"name":"Straight Arrow Connector 34","bbox":[1087,252,41.67,0]}
+{"kind":"textbox","id":"sh/a1gvy90j","slide":7,"name":"Rectangle: Rounded Corners 15","text":"Curador","textPreview":"Curador","textChars":7,"textLines":1,"bbox":[464,417.33,185,74]}
+{"kind":"shape","id":"sh/pwb2hwfy","slide":7,"name":"Straight Arrow Connector 36","bbox":[379,454.33,85,0]}
+{"kind":"textbox","id":"sh/s72x4nap","slide":7,"name":"Rectangle: Rounded Corners 17","text":"Ajuste o aceptación","textPreview":"Ajuste o aceptación","textChars":19,"textLines":1,"bbox":[734,417.33,185,74]}
+{"kind":"shape","id":"sh/7ed8bat4","slide":7,"name":"Straight Arrow Connector 38","bbox":[649,454.33,85,0]}
+{"kind":"textbox","id":"sh/pg3ex0nu","slide":7,"name":"Rectangle 19","text":"La aportación es cerrar el ciclo: generar, simular, medir y decidir.","textPreview":"La aportación es cerrar el ciclo: generar, simular, medir y decidir.","textChars":68,"textLines":1,"bbox":[150,570,840,40]}
+{"kind":"shape","id":"sh/e1w7mp0b","slide":7,"name":"Straight Arrow Connector 12","bbox":[152.33,454.33,41.67,0]}
+{"kind":"notes","id":"nt/0z61032l","slide":7,"text":""}
+{"kind":"slide","id":"sl/fu18jqh0","slide":8,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":8}
+{"kind":"shape","id":"sh/j2t83itg","slide":8,"name":"Rectangle 11","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/u9knih4b","slide":8,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/judg7ads","slide":8,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/c7u54zid","slide":8,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/1orytsvu","slide":8,"name":"Rectangle 4","text":"Objetivo técnico resumido","textPreview":"Objetivo técnico resumido","textChars":25,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/u18jqh0f","slide":8,"name":"Rectangle 5","text":"8/17","textPreview":"8/17","textChars":4,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/jm1cfa9w","slide":8,"name":"Rectangle 6","text":"Construir un ecosistema multiagente que genere, simule y ajuste circuitos analógicos CA/CD a partir de lenguaje natural.","textPreview":"Construir un ecosistema multiagente que genere, simule y ajuste circuitos analógicos CA/CD a partir de lenguaje natural.","textChars":120,"textLines":1,"bbox":[115,145,900,78]}
+{"kind":"textbox","id":"sh/cvixczed","slide":8,"name":"Rectangle: Rounded Corners 7","text":"Interpretar\nespecificación","textPreview":"Interpretar | especificación","textChars":26,"textLines":2,"bbox":[135,320,185,110]}
+{"kind":"textbox","id":"sh/5gbq1ory","slide":8,"name":"Rectangle: Rounded Corners 8","text":"Calcular\ncomponentes","textPreview":"Calcular | componentes","textChars":20,"textLines":2,"bbox":[375,320,185,110]}
+{"kind":"textbox","id":"sh/18jqh0fe","slide":8,"name":"Rectangle: Rounded Corners 9","text":"Simular\nen ngspice","textPreview":"Simular | en ngspice","textChars":18,"textLines":2,"bbox":[615,320,185,110]}
+{"kind":"textbox","id":"sh/8nqxs72x","slide":8,"name":"Rectangle: Rounded Corners 10","text":"Ajustar\ncon curador","textPreview":"Ajustar | con curador","textChars":19,"textLines":2,"bbox":[855,320,185,110]}
+{"kind":"notes","id":"nt/fu18jqh0","slide":8,"text":""}
+{"kind":"slide","id":"sl/qh0fepkz","slide":9,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":7}
+{"kind":"shape","id":"sh/y90je9cv","slide":9,"name":"Rectangle 10","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/ovahoza1","slide":9,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/dg7adsji","slide":9,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/6hcrmhk3","slide":9,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/z25kb6xk","slide":9,"name":"Rectangle 4","text":"Alcance de la solución","textPreview":"Alcance de la solución","textChars":22,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/onyd0z61","slide":9,"name":"Rectangle 5","text":"9/17","textPreview":"9/17","textChars":4,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/d8v6psfi","slide":9,"name":"Rectangle: Rounded Corners 6","text":"Sí contempla","textPreview":"Sí contempla","textChars":12,"textLines":1,"bbox":[130,150,430,56]}
+{"kind":"textbox","id":"sh/6dcbulwv","slide":9,"name":"Rectangle 7","text":"• Circuitos analógicos CA/CD\n• Componentes comerciales con modelo SPICE\n• Generación de netlist\n• Simulación en ngspice\n• Historial de iteraciones","textPreview":"• Circuitos analógicos CA/CD | • Componentes comerciales con modelo SPICE | • Generación de netlist | • Simulación en ngspice | • Histori...","textChars":146,"textLines":5,"bbox":[150,230,390,240]}
+{"kind":"textbox","id":"sh/vy90je9c","slide":9,"name":"Rectangle: Rounded Corners 8","text":"No contempla","textPreview":"No contempla","textChars":12,"textLines":1,"bbox":[660,150,430,56]}
+{"kind":"textbox","id":"sh/nuxc3ylc","slide":9,"name":"Rectangle 9","text":"• Diseño PCB\n• Síntesis a nivel transistor\n• PDK propietario\n• Esquemáticos gráficos\n• Componentes sin modelo SPICE","textPreview":"• Diseño PCB | • Síntesis a nivel transistor | • PDK propietario | • Esquemáticos gráficos | • Componentes sin modelo SPICE","textChars":115,"textLines":5,"bbox":[680,230,390,240]}
+{"kind":"notes","id":"nt/qh0fepkz","slide":9,"text":""}
+{"kind":"slide","id":"sl/29gr2p8n","slide":10,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":4}
+{"kind":"shape","id":"sh/kjm1cfa9","slide":10,"name":"Rectangle 6","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/9gr2p8nq","slide":10,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/gvy90je9","slide":10,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/r2p8nqxs","slide":10,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/2hwfyxob","slide":10,"name":"Rectangle 4","text":"Arquitectura general: vista completa","textPreview":"Arquitectura general: vista completa","textChars":36,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/94fu18jq","slide":10,"name":"Rectangle 5","text":"10/17","textPreview":"10/17","textChars":5,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/rqd4vmtw","slide":10,"name":"Rectangle 7","text":"• Cliente web: acceso y solicitudes\n• Servidor: ecosistema de agentes\n• PostgreSQL: estado e historial\n• LLM y ngspice: servicios externos","textPreview":"• Cliente web: acceso y solicitudes | • Servidor: ecosistema de agentes | • PostgreSQL: estado e historial | • LLM y ngspice: servicios e...","textChars":138,"textLines":4,"bbox":[910,190,235,230]}
+{"kind":"image","id":"im/7mp0bi9s","slide":10,"name":"Picture 14","bbox":[163.67,130,662.65,500]}
+{"kind":"notes","id":"nt/29gr2p8n","slide":10,"text":""}
+{"kind":"slide","id":"sl/re1w7mp0","slide":11,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":8}
+{"kind":"shape","id":"sh/z25kb6xk","slide":11,"name":"Rectangle 6","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/6tovahoz","slide":11,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/vahoza1g","slide":11,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/onyd0z61","slide":11,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/d8v6psfi","slide":11,"name":"Rectangle 4","text":"Arquitectura general: recorrido de una solicitud","textPreview":"Arquitectura general: recorrido de una solicitud","textChars":48,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/6hcrmhk3","slide":11,"name":"Rectangle 5","text":"11/17","textPreview":"11/17","textChars":5,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/oj2t83it","slide":11,"name":"Rectangle: Rounded Corners 7","text":"1 Usuario","textPreview":"1 Usuario","textChars":9,"textLines":1,"bbox":[166.67,638,120,44]}
+{"kind":"textbox","id":"sh/d4vmtwra","slide":11,"name":"Rectangle: Rounded Corners 8","text":"2 Cliente","textPreview":"2 Cliente","textChars":9,"textLines":1,"bbox":[351.5,638,120,44]}
+{"kind":"textbox","id":"sh/h4byhgn2","slide":11,"name":"Rectangle: Rounded Corners 9","text":"3 Servidor","textPreview":"3 Servidor","textChars":10,"textLines":1,"bbox":[526.67,638,120,44]}
+{"kind":"textbox","id":"sh/sji5snel","slide":11,"name":"Rectangle: Rounded Corners 10","text":"4 Resultado","textPreview":"4 Resultado","textChars":11,"textLines":1,"bbox":[698.33,638,120,44]}
+{"kind":"textbox","id":"sh/3ylc7u54","slide":11,"name":"Rectangle: Rounded Corners 11","text":"La información viaja autenticada, se procesa en agentes y regresa como netlist, métricas e historial.","textPreview":"La información viaja autenticada, se procesa en agentes y regresa como netlist, métricas e historial.","textChars":101,"textLines":1,"bbox":[910,235,240,150]}
+{"kind":"image","id":"im/d8bat47y","slide":11,"name":"Picture 18","bbox":[158.67,128,662.65,500]}
+{"kind":"notes","id":"nt/re1w7mp0","slide":11,"text":""}
+{"kind":"slide","id":"sl/4fu18jqh","slide":12,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":4}
+{"kind":"shape","id":"sh/h4byhgn2","slide":12,"name":"Rectangle 6","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/s72x4nap","slide":12,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/lszqtcj6","slide":12,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/adsji5sn","slide":12,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/3ylc7u54","slide":12,"name":"Rectangle 4","text":"Ecosistema de agentes: vista general","textPreview":"Ecosistema de agentes: vista general","textChars":36,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/sji5snel","slide":12,"name":"Rectangle 5","text":"12/17","textPreview":"12/17","textChars":5,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/ap4r65wj","slide":12,"name":"Rectangle 7","text":"• Orquestador coordina el flujo\n• Cálculo divide sub-bloques\n• Escritura produce PySpice/netlist\n• Shell ejecuta ngspice\n• Curador decide","textPreview":"• Orquestador coordina el flujo | • Cálculo divide sub-bloques | • Escritura produce PySpice/netlist | • Shell ejecuta ngspice | • Curado...","textChars":137,"textLines":5,"bbox":[920,170,230,275]}
+{"kind":"image","id":"im/2hwfyxob","slide":12,"name":"Picture 14","bbox":[181.87,122,631.25,505]}
+{"kind":"notes","id":"nt/4fu18jqh","slide":12,"text":""}
+{"kind":"slide","id":"sl/lwval87e","slide":13,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":6}
+{"kind":"shape","id":"sh/wra5gbq1","slide":13,"name":"Rectangle 6","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/l0rqd4vm","slide":13,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/wfyxobm5","slide":13,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/36hcrmhk","slide":13,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/eloj2t83","slide":13,"name":"Rectangle 4","text":"Ecosistema de agentes: explicación por zonas","textPreview":"Ecosistema de agentes: explicación por zonas","textChars":44,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/lc7u54zi","slide":13,"name":"Rectangle 5","text":"13/17","textPreview":"13/17","textChars":5,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/7adsji5s","slide":13,"name":"Rectangle: Rounded Corners 7","text":"1 Coordinación\nOrquestador + checkpointer","textPreview":"1 Coordinación | Orquestador + checkpointer","textChars":41,"textLines":2,"bbox":[885,150,265,90]}
+{"kind":"textbox","id":"sh/epkzupwb","slide":13,"name":"Rectangle: Rounded Corners 8","text":"2 Construcción\nCálculo + workers + escritura","textPreview":"2 Construcción | Cálculo + workers + escritura","textChars":44,"textLines":2,"bbox":[885,280,265,90]}
+{"kind":"textbox","id":"sh/8jqh0fep","slide":13,"name":"Rectangle: Rounded Corners 9","text":"3 Validación\nShell + ngspice + curador","textPreview":"3 Validación | Shell + ngspice + curador","textChars":38,"textLines":2,"bbox":[885,410,265,90]}
+{"kind":"image","id":"im/2hwfyxob","slide":13,"name":"Picture 16","bbox":[174.5,122,625,500]}
+{"kind":"notes","id":"nt/lwval87e","slide":13,"text":""}
+{"kind":"slide","id":"sl/25kb6xkf","slide":14,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":4}
+{"kind":"shape","id":"sh/donyd0z6","slide":14,"name":"Rectangle 6","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/kre1w7mp","slide":14,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/dcbulwva","slide":14,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/2x4nap4r","slide":14,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/vixczed8","slide":14,"name":"Rectangle 4","text":"Flujo de construcción del circuito","textPreview":"Flujo de construcción del circuito","textChars":34,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/k3q5o7qp","slide":14,"name":"Rectangle 5","text":"14/17","textPreview":"14/17","textChars":5,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/29gr2p8n","slide":14,"name":"Rectangle 7","text":"• Entrada: descripción y parámetros\n• Cálculo: sub-bloques en paralelo\n• Simulación: PySpice y ngspice\n• Decisión: métricas y curador\n• Resultado: netlist e historial","textPreview":"• Entrada: descripción y parámetros | • Cálculo: sub-bloques en paralelo | • Simulación: PySpice y ngspice | • Decisión: métricas y curad...","textChars":166,"textLines":5,"bbox":[905,165,245,300]}
+{"kind":"image","id":"im/y90je9cv","slide":14,"name":"Picture 14","bbox":[99.58,126,770.83,500]}
+{"kind":"notes","id":"nt/25kb6xkf","slide":14,"text":""}
+{"kind":"slide","id":"sl/7y1kre1w","slide":15,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":9}
+{"kind":"shape","id":"sh/nap4r65w","slide":15,"name":"Rectangle 11","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/yd0z6103","slide":15,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/rytsvu9k","slide":15,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/g7adsji5","slide":15,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/9s36hcrm","slide":15,"name":"Rectangle 4","text":"Lazo de validación y ajuste","textPreview":"Lazo de validación y ajuste","textChars":27,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/y1kre1w7","slide":15,"name":"Rectangle 5","text":"15/17","textPreview":"15/17","textChars":5,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/rmhk3q5o","slide":15,"name":"Rectangle: Rounded Corners 6","text":"Curador RL\nacepta · ajusta · rechaza","textPreview":"Curador RL | acepta · ajusta · rechaza","textChars":36,"textLines":2,"bbox":[500,300,230,100]}
+{"kind":"textbox","id":"sh/g3ex0nux","slide":15,"name":"Rectangle: Rounded Corners 7","text":"Netlist\npropuesto","textPreview":"Netlist | propuesto","textChars":17,"textLines":2,"bbox":[140,185,175,80]}
+{"kind":"textbox","id":"sh/5o7qpg3e","slide":15,"name":"Rectangle: Rounded Corners 8","text":"Simulación\nngspice","textPreview":"Simulación | ngspice","textChars":18,"textLines":2,"bbox":[430,185,175,80]}
+{"kind":"textbox","id":"sh/5gbq1ory","slide":15,"name":"Rectangle: Rounded Corners 9","text":"Métricas\neléctricas","textPreview":"Métricas | eléctricas","textChars":19,"textLines":2,"bbox":[735,185,175,80]}
+{"kind":"textbox","id":"sh/cvixczed","slide":15,"name":"Rectangle: Rounded Corners 10","text":"Ajuste de\nvalores","textPreview":"Ajuste de | valores","textChars":17,"textLines":2,"bbox":[430,500,175,80]}
+{"kind":"shape","id":"sh/9s36hcrm","slide":15,"name":"Straight Arrow Connector 28","bbox":[315,225,115,0]}
+{"kind":"shape","id":"sh/y1kre1w7","slide":15,"name":"Straight Arrow Connector 29","bbox":[605,225,130,0]}
+{"kind":"shape","id":"sh/rmhk3q5o","slide":15,"name":"Connector: Elbow 30","bbox":[730,265,92.5,85]}
+{"kind":"shape","id":"sh/gfmlkjm1","slide":15,"name":"Connector: Elbow 31","bbox":[517.5,400,97.5,100]}
+{"kind":"shape","id":"sh/90je9cvi","slide":15,"name":"Connector: Elbow 32","bbox":[227.5,265,202.5,275]}
+{"kind":"textbox","id":"sh/udg7adsj","slide":15,"name":"Rectangle: Rounded Corners 16","text":"El sistema no solo genera: valida físicamente y corrige dentro del ciclo.","textPreview":"El sistema no solo genera: valida físicamente y corrige dentro del ciclo.","textChars":73,"textLines":1,"bbox":[855,435,245,105]}
+{"kind":"notes","id":"nt/7y1kre1w","slide":15,"text":""}
+{"kind":"slide","id":"sl/8z25kb6x","slide":16,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":9}
+{"kind":"shape","id":"sh/pg3ex0nu","slide":16,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/wval87ed","slide":16,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/7mp0bi9s","slide":16,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/e1w7mp0b","slide":16,"name":"Rectangle 4","text":"Referencias clave","textPreview":"Referencias clave","textChars":17,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/psfil0rq","slide":16,"name":"Rectangle 5","text":"16/17","textPreview":"16/17","textChars":5,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/w7mp0bi9","slide":16,"text":"Fuentes usadas para sostener marco teórico, estado del arte y herramientas del sistema.","textPreview":"Fuentes usadas para sostener marco teórico, estado del arte y herramientas del sistema.","textChars":87,"textLines":1,"bbox":[110,128,850,34]}
+{"kind":"textbox","id":"sh/7u54zido","slide":16,"text":"Estado del arte","textPreview":"Estado del arte","textChars":15,"textLines":1,"bbox":[130,205,430,54]}
+{"kind":"textbox","id":"sh/ed8bat47","slide":16,"text":"• AnalogCoder (AAAI 2025)\n• AnalogAgent (arXiv 2026)\n• CircuitLM (arXiv 2026)\n• AnalogSAGE (arXiv 2025)\n• PCBSchemaGen (arXiv 2026)\n• HWE-Bench (arXiv 2026)","textPreview":"• AnalogCoder (AAAI 2025) | • AnalogAgent (arXiv 2026) | • CircuitLM (arXiv 2026) | • AnalogSAGE (arXiv 2025) | • PCBSchemaGen (arXiv 202...","textChars":156,"textLines":6,"bbox":[155,285,390,220]}
+{"kind":"textbox","id":"sh/onyd0z61","slide":16,"text":"Base técnica","textPreview":"Base técnica","textChars":12,"textLines":1,"bbox":[660,205,430,54]}
+{"kind":"textbox","id":"sh/d8v6psfi","slide":16,"text":"• Ngspice User's Manual\n• PySpice documentation\n• LangGraph documentation\n• Sutton & Barto: Reinforcement Learning\n• SPICE: Nagel & Pederson\n• Sedra & Smith: Microelectronic Circuits","textPreview":"• Ngspice User's Manual | • PySpice documentation | • LangGraph documentation | • Sutton & Barto: Reinforcement Learning | • SPICE: Nagel...","textChars":182,"textLines":6,"bbox":[685,285,390,240]}
+{"kind":"textbox","id":"sh/6hcrmhk3","slide":16,"text":"La bibliografía completa permanece en la tesina; aquí se muestran solo las referencias necesarias para la exposición.","textPreview":"La bibliografía completa permanece en la tesina; aquí se muestran solo las referencias necesarias para la exposición.","textChars":117,"textLines":1,"bbox":[170,590,820,36]}
+{"kind":"notes","id":"nt/8z25kb6x","slide":16,"text":""}
+{"kind":"slide","id":"sl/54zidony","slide":17,"title":"Instituto Politécnico Nacional · ESIME Culhuacán","textShapes":8}
+{"kind":"shape","id":"sh/6dcbulwv","slide":17,"name":"Rectangle 11","bbox":[1210,0,70,720]}
+{"kind":"shape","id":"sh/x0nuxc3y","slide":17,"name":"Rectangle 1","bbox":[46,112,6,520]}
+{"kind":"shape","id":"sh/4fu18jqh","slide":17,"name":"Rectangle 2","bbox":[62,112,3,520]}
+{"kind":"textbox","id":"sh/fil0rqd4","slide":17,"name":"Rectangle 3","text":"Instituto Politécnico Nacional · ESIME Culhuacán","textPreview":"Instituto Politécnico Nacional · ESIME Culhuacán","textChars":48,"textLines":1,"bbox":[90,30,760,28]}
+{"kind":"textbox","id":"sh/qxs72x4n","slide":17,"name":"Rectangle 4","text":"Cierre técnico","textPreview":"Cierre técnico","textChars":14,"textLines":1,"bbox":[90,62,960,56]}
+{"kind":"textbox","id":"sh/xobm58z2","slide":17,"name":"Rectangle 5","text":"17/17","textPreview":"17/17","textChars":5,"textLines":1,"bbox":[1110,660,58,26]}
+{"kind":"textbox","id":"sh/83itgfml","slide":17,"name":"Rectangle: Rounded Corners 6","text":"1. Lenguaje natural\nse transforma en intención técnica","textPreview":"1. Lenguaje natural | se transforma en intención técnica","textChars":54,"textLines":2,"bbox":[150,150,750,82]}
+{"kind":"textbox","id":"sh/fepkzupw","slide":17,"name":"Rectangle: Rounded Corners 7","text":"2. Agentes\ndividen y ejecutan el proceso","textPreview":"2. Agentes | dividen y ejecutan el proceso","textChars":40,"textLines":2,"bbox":[150,270,750,82]}
+{"kind":"textbox","id":"sh/mtwra5gb","slide":17,"name":"Rectangle: Rounded Corners 8","text":"3. ngspice + curador\ncierran el lazo de validación","textPreview":"3. ngspice + curador | cierran el lazo de validación","textChars":50,"textLines":2,"bbox":[150,390,750,82]}
+{"kind":"textbox","id":"sh/oj2t83it","slide":17,"name":"Rectangle 9","text":"La aportación no está en generar un circuito una sola vez, sino en integrar generación, simulación y ajuste dentro de un mismo flujo.","textPreview":"La aportación no está en generar un circuito una sola vez, sino en integrar generación, simulación y ajuste dentro de un mismo flujo.","textChars":133,"textLines":1,"bbox":[160,525,800,58]}
+{"kind":"textbox","id":"sh/d4vmtwra","slide":17,"name":"Rectangle 10","text":"Gracias","textPreview":"Gracias","textChars":7,"textLines":1,"bbox":[405,610,360,44]}
+{"kind":"notes","id":"nt/54zidony","slide":17,"text":""}
