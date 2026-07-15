@@ -75,6 +75,7 @@ export function createMockWorkspaceService(): WorkspaceService {
         name: input.name,
         description: input.description,
         conversationIds: [],
+        fileCount: 0,
         updatedAt: '2026-07-15T12:00:00.000Z',
       }
       projects.push(project)

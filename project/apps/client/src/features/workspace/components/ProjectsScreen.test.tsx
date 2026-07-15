@@ -16,6 +16,7 @@ const snapshot: WorkspaceSnapshot = {
       name: 'Filtros analógicos',
       description: 'Diseño y validación de filtros pasivos y activos.',
       conversationIds: Array.from({ length: 12 }, (_, index) => `filter-${index}`),
+      fileCount: 38,
       updatedAt: '2026-07-15T15:00:00.000Z',
     },
     {
@@ -23,6 +24,7 @@ const snapshot: WorkspaceSnapshot = {
       name: 'Fuente regulada',
       description: 'Conversores y regulación lineal para prototipos.',
       conversationIds: ['power-1'],
+      fileCount: 16,
       updatedAt: '2026-07-14T15:00:00.000Z',
     },
     {
@@ -30,6 +32,7 @@ const snapshot: WorkspaceSnapshot = {
       name: 'Amplificador BJT',
       description: 'Polarización y ganancia.',
       conversationIds: [],
+      fileCount: 0,
       updatedAt: '2026-07-13T15:00:00.000Z',
     },
   ],
@@ -41,7 +44,7 @@ function serviceWith(overrides: Partial<WorkspaceService> = {}): WorkspaceServic
   return {
     getSnapshot: vi.fn().mockResolvedValue(snapshot),
     createProject: vi.fn().mockResolvedValue({
-      id: 'sensors', name: 'Sensores', description: '', conversationIds: [], updatedAt: '2026-07-15T16:00:00.000Z',
+      id: 'sensors', name: 'Sensores', description: '', conversationIds: [], fileCount: 0, updatedAt: '2026-07-15T16:00:00.000Z',
     }),
     getProject: vi.fn(),
     getConversation: vi.fn(),
@@ -65,6 +68,7 @@ it('renders a searchable, newest-first project directory', async () => {
   const { user } = renderScreen()
 
   expect(await screen.findByRole('row', { name: /Filtros analógicos/ })).toHaveTextContent('12 conversaciones')
+  expect(screen.getByRole('row', { name: /Filtros analógicos/ })).toHaveTextContent('38 archivos')
   const rows = screen.getAllByRole('row').slice(1)
   expect(within(rows[0]).getByText('Filtros analógicos')).toBeVisible()
   expect(within(rows[1]).getByText('Fuente regulada')).toBeVisible()
@@ -90,6 +94,23 @@ it('creates a project and opens its route', async () => {
   expect(service.createProject).toHaveBeenCalledWith({ name: 'Sensores', description: '' })
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/projects/sensors')
+})
+
+it('invokes createProject with its service receiver', async () => {
+  const service = serviceWith()
+  service.createProject = vi.fn(function (this: WorkspaceService) {
+    if (this !== service) throw new Error('missing service receiver')
+    return Promise.resolve({
+      id: 'bound', name: 'Proyecto ligado', description: '', conversationIds: [], fileCount: 0, updatedAt: '2026-07-15T16:00:00.000Z',
+    })
+  })
+  const { user } = renderScreen(service)
+  await screen.findByRole('table')
+  await user.click(screen.getByRole('button', { name: 'Nuevo proyecto' }))
+  await user.type(screen.getByLabelText('Nombre'), 'Proyecto ligado')
+  await user.click(screen.getByRole('button', { name: 'Crear proyecto' }))
+
+  expect(await screen.findByLabelText('Ruta actual')).toHaveTextContent('/projects/bound')
 })
 
 it('shows empty and filtered-empty states', async () => {

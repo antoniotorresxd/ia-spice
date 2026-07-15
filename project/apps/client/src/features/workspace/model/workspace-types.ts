@@ -41,6 +41,7 @@ export type WorkspaceProject = {
   name: string
   description: string
   conversationIds: string[]
+  fileCount: number
   updatedAt: string
 }
 

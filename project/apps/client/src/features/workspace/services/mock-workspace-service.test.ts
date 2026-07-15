@@ -26,6 +26,7 @@ describe('createMockWorkspaceService', () => {
 
     const project = await service.getProject('project-filters')
     expect(project.conversations.length).toBeGreaterThan(0)
+    expect(project.fileCount).toBe(2)
     expect(await service.getConversation(project.conversationIds[0])).toMatchObject({
       projectId: project.id,
     })
@@ -38,7 +39,7 @@ describe('createMockWorkspaceService', () => {
       description: 'Convertidores DC-DC',
     })
 
-    expect(project).toMatchObject({ name: 'Fuentes conmutadas', conversationIds: [] })
+    expect(project).toMatchObject({ name: 'Fuentes conmutadas', conversationIds: [], fileCount: 0 })
     expect((await service.getSnapshot()).projects).toContainEqual(project)
   })
 

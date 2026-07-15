@@ -105,7 +105,7 @@ export function ProjectsScreen({ service }: ProjectsScreenProps) {
                   <span><Link to={`/projects/${project.id}`}>{project.name}</Link><small>{project.description || 'Sin descripción'}</small></span>
                 </td>
                 <td data-label="Conversaciones"><strong>{project.conversationIds.length}</strong> conversaciones</td>
-                <td data-label="Archivos"><strong>—</strong> archivos</td>
+                <td data-label="Archivos"><strong>{project.fileCount}</strong> archivos</td>
                 <td data-label="Actualizado"><time dateTime={project.updatedAt}>{dateFormatter.format(new Date(project.updatedAt))}</time></td>
               </tr>
             ))}</tbody>
@@ -113,7 +113,7 @@ export function ProjectsScreen({ service }: ProjectsScreenProps) {
         </div>
       )}
 
-      {dialogOpen && <CreateProjectDialog createProject={service.createProject} onClose={closeDialog} onCreated={handleCreated} />}
+      {dialogOpen && <CreateProjectDialog createProject={(input) => service.createProject(input)} onClose={closeDialog} onCreated={handleCreated} />}
     </section>
   )
 }

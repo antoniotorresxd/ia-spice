@@ -11,6 +11,7 @@ export const workspaceProjectFixtures: WorkspaceProject[] = [
     name: 'Filtros analógicos',
     description: 'Diseño y simulación de filtros activos y pasivos.',
     conversationIds: ['conversation-rc', 'conversation-active-filter'],
+    fileCount: 2,
     updatedAt: date(14),
   },
   {
@@ -18,6 +19,7 @@ export const workspaceProjectFixtures: WorkspaceProject[] = [
     name: 'Amplificadores',
     description: 'Etapas de ganancia y acondicionamiento de señal.',
     conversationIds: ['conversation-opamp', 'conversation-bjt'],
+    fileCount: 2,
     updatedAt: date(13),
   },
   {
@@ -25,6 +27,7 @@ export const workspaceProjectFixtures: WorkspaceProject[] = [
     name: 'Electrónica de potencia',
     description: 'Fuentes y convertidores de energía.',
     conversationIds: ['conversation-regulator'],
+    fileCount: 1,
     updatedAt: date(12),
   },
 ]
