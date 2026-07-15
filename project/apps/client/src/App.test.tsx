@@ -112,7 +112,7 @@ it.each([
 it.each([
   ['/new', 'Nueva solicitud'],
   ['/projects', 'Proyectos'],
-  ['/projects/project-filters', 'Detalle del proyecto'],
+  ['/projects/project-filters', 'Filtros analógicos'],
   ['/conversations', 'Conversaciones'],
   ['/conversations/conversation-filter', 'Detalle de la conversación'],
   ['/files', 'Archivos'],

@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 
 import type { ConversationSummary } from '../model/home-types'
 import type { WorkspaceProject } from '../../workspace/model/workspace-types'
+import { ConversationActions } from '../../workspace/components/ConversationActions'
 
 type SidebarConversation = Pick<ConversationSummary, 'id' | 'projectId' | 'title' | 'updatedAt'>
 
@@ -12,8 +13,11 @@ type HomeSidebarProps = {
   onClose: () => void
   onSignOut: () => Promise<void>
   projects?: WorkspaceProject[]
+  onAssignConversation?: (conversationId: string, projectId: string, previousProjectId: string | null) => Promise<void> | void
   userName: string
 }
+
+const workspaceConversationMime = 'application/x-workspace-conversation'
 
 const navigation = [
   ['Inicio', '⌂', '/'],
@@ -29,6 +33,7 @@ export function HomeSidebar({
   isOpen,
   onClose,
   onSignOut,
+  onAssignConversation = () => undefined,
   projects = [],
   userName,
 }: HomeSidebarProps) {
@@ -75,6 +80,13 @@ export function HomeSidebar({
     onClose()
   }
 
+  const conversationItem = (conversation: SidebarConversation) => (
+    <li draggable onDragStart={(event) => event.dataTransfer.setData(workspaceConversationMime, JSON.stringify({ conversationId: conversation.id, previousProjectId: conversation.projectId }))} key={conversation.id}>
+      <NavLink onClick={closeNavigation} to={`/conversations/${conversation.id}`}>{conversation.title}</NavLink>
+      <ConversationActions conversationId={conversation.id} conversationTitle={conversation.title} currentProjectId={conversation.projectId} onAssign={onAssignConversation} projects={projects} />
+    </li>
+  )
+
   return (
     <aside className="home-sidebar" data-open={isOpen}>
       <div className="home-brand">
@@ -102,6 +114,9 @@ export function HomeSidebar({
               <span aria-hidden="true" className="home-recent-dot" />
               <span>Sin proyecto</span>
             </NavLink>
+            <ul className="home-project-conversations">
+              {conversations.filter(({ projectId }) => projectId === null).slice(0, 4).map(conversationItem)}
+            </ul>
           </li>
           {projects.map((project) => {
             const isExpanded = expandedProjectIds.includes(project.id)
@@ -123,13 +138,7 @@ export function HomeSidebar({
                 </div>
                 {isExpanded && children.length > 0 ? (
                   <ul className="home-project-conversations">
-                    {children.slice(0, 4).map((conversation) => (
-                      <li key={conversation.id}>
-                        <NavLink onClick={closeNavigation} to={`/conversations/${conversation.id}`}>
-                          {conversation.title}
-                        </NavLink>
-                      </li>
-                    ))}
+                    {children.slice(0, 4).map(conversationItem)}
                   </ul>
                 ) : null}
               </li>

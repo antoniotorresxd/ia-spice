@@ -159,3 +159,28 @@ it('closes before delegating sign out', async () => {
   expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   expect(onSignOut).toHaveBeenCalledOnce()
 })
+
+it('provides drag data and keyboard project assignment for conversations', async () => {
+  const user = userEvent.setup()
+  const onAssignConversation = vi.fn().mockResolvedValue(undefined)
+  render(
+    <MemoryRouter>
+      <HomeSidebar
+        conversations={workspaceConversationFixtures}
+        isOpen
+        onAssignConversation={onAssignConversation}
+        onClose={vi.fn()}
+        onSignOut={vi.fn()}
+        projects={workspaceProjectFixtures}
+        userName="Antonio"
+      />
+    </MemoryRouter>,
+  )
+  const item = screen.getByText('Divisor de voltaje').closest('[draggable="true"]')
+  const setData = vi.fn()
+  fireEvent.dragStart(item!, { dataTransfer: { setData } })
+  expect(setData).toHaveBeenCalledWith('application/x-workspace-conversation', JSON.stringify({ conversationId: 'conversation-unassigned', previousProjectId: null }))
+  await user.click(screen.getByRole('button', { name: 'Mover a proyecto Divisor de voltaje' }))
+  await user.click(screen.getByRole('menuitem', { name: 'Filtros analógicos' }))
+  expect(onAssignConversation).toHaveBeenCalledWith('conversation-unassigned', 'project-filters', null)
+})

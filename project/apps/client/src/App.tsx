@@ -11,6 +11,7 @@ import { mockSettingsService } from './features/settings/services/mock-settings-
 import { WorkspaceShell } from './features/workspace/components/WorkspaceShell'
 import { NewRequestScreen } from './features/workspace/components/NewRequestScreen'
 import { ProjectsScreen } from './features/workspace/components/ProjectsScreen'
+import { ProjectScreen } from './features/workspace/components/ProjectScreen'
 import { createMockWorkspaceService } from './features/workspace/services/mock-workspace-service'
 import './App.css'
 
@@ -97,7 +98,7 @@ function App() {
         >
           <Route path="/new" element={<NewRequestScreen service={workspaceService} />} />
           <Route path="/projects" element={<ProjectsScreen service={workspaceService} />} />
-          <Route path="/projects/:projectId" element={<PlaceholderScreen heading="Detalle del proyecto" />} />
+          <Route path="/projects/:projectId" element={<ProjectScreen service={workspaceService} />} />
           <Route path="/conversations" element={<PlaceholderScreen heading="Conversaciones" />} />
           <Route path="/conversations/:conversationId" element={<PlaceholderScreen heading="Detalle de la conversación" />} />
           <Route path="/files" element={<UpcomingScreen heading="Archivos" />} />
