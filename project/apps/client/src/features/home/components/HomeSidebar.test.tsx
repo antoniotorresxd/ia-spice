@@ -11,13 +11,13 @@ function Location() {
   return <output aria-label="Ruta actual">{useLocation().pathname}</output>
 }
 
-function renderSidebar(onSignOut = vi.fn().mockResolvedValue(undefined)) {
+function renderSidebar(onSignOut = vi.fn().mockResolvedValue(undefined), onClose = vi.fn()) {
   render(
     <MemoryRouter>
       <HomeSidebar
         conversations={[]}
         isOpen
-        onClose={vi.fn()}
+        onClose={onClose}
         onSignOut={onSignOut}
         userName="Antonio"
       />
@@ -25,8 +25,34 @@ function renderSidebar(onSignOut = vi.fn().mockResolvedValue(undefined)) {
     </MemoryRouter>,
   )
 
-  return { onSignOut }
+  return { onSignOut, onClose }
 }
+
+it('does not retain the profile menu after mobile navigation closes and reopens', async () => {
+  const user = userEvent.setup()
+  const onClose = vi.fn()
+  const { rerender } = render(
+    <MemoryRouter>
+      <HomeSidebar conversations={[]} isOpen onClose={onClose} onSignOut={vi.fn()} userName="Antonio" />
+    </MemoryRouter>,
+  )
+
+  await user.click(screen.getByRole('button', { name: 'Perfil de Antonio' }))
+  await user.click(screen.getByRole('button', { name: 'Cerrar navegación' }))
+  expect(onClose).toHaveBeenCalledOnce()
+
+  rerender(
+    <MemoryRouter>
+      <HomeSidebar conversations={[]} isOpen={false} onClose={onClose} onSignOut={vi.fn()} userName="Antonio" />
+    </MemoryRouter>,
+  )
+  rerender(
+    <MemoryRouter>
+      <HomeSidebar conversations={[]} isOpen onClose={onClose} onSignOut={vi.fn()} userName="Antonio" />
+    </MemoryRouter>,
+  )
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+})
 
 it('opens an accessible profile menu', async () => {
   const user = userEvent.setup()

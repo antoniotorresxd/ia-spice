@@ -66,6 +66,11 @@ export function HomeSidebar({
     await onSignOut()
   }
 
+  const closeNavigation = () => {
+    setIsProfileMenuOpen(false)
+    onClose()
+  }
+
   return (
     <aside className="home-sidebar" data-open={isOpen}>
       <div className="home-brand">
@@ -73,7 +78,7 @@ export function HomeSidebar({
           EM
         </span>
         <span>Ecosistema Multiagente</span>
-        <button aria-label="Cerrar navegación" onClick={onClose} type="button">
+        <button aria-label="Cerrar navegación" onClick={closeNavigation} type="button">
           ×
         </button>
       </div>

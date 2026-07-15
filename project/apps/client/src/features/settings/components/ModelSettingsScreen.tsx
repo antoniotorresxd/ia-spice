@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import type { AgentAssignment, AgentAssignmentInput, AgentId, ConnectionInput, LlmConnection, UserProfile } from '../model/settings-types'
 import type { SettingsService } from '../services/settings-service'
 import { AgentAssignmentList } from './AgentAssignmentList'
 import { ConnectionForm } from './ConnectionForm'
 import { SettingsShell } from './SettingsShell'
+import { SettingsDialog } from './SettingsDialog'
 import styles from './SettingsShell.module.css'
 
 type Props = { service: SettingsService; onSignOut?: () => Promise<void> }
@@ -19,6 +20,8 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
   const [deleteError, setDeleteError] = useState('')
   const [attentionAgentIds, setAttentionAgentIds] = useState<Set<AgentId>>(new Set())
   const [retryKey, setRetryKey] = useState(0)
+  const [connectionFormDirty, setConnectionFormDirty] = useState(false)
+  const connectionNameRef = useRef<HTMLInputElement>(null)
 
   async function fetchCollections() {
     return Promise.all([service.listConnections(), service.listAgentAssignments()])
@@ -55,6 +58,7 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
     if (editing) await service.updateConnection(editing.id, input)
     else await service.createConnection(input)
     await load()
+    setConnectionFormDirty(false)
     setEditing(undefined)
   }
 
@@ -75,6 +79,12 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
   }
 
   const isAssigned = deleting && assignments.some((item) => item.connectionId === deleting.id)
+
+  function dismissConnectionForm() {
+    if (connectionFormDirty && !window.confirm('Tienes cambios sin guardar. ¿Quieres descartarlos?')) return
+    setConnectionFormDirty(false)
+    setEditing(undefined)
+  }
 
   async function saveAssignment(agentId: AgentId, input: AgentAssignmentInput) {
     const saved = await service.updateAgentAssignment(agentId, input)
@@ -100,7 +110,7 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
       {connections ? (
         <>
         <section>
-          <button onClick={() => setEditing(null)} type="button">Nueva conexión</button>
+          <button onClick={() => { setConnectionFormDirty(false); setEditing(null) }} type="button">Nueva conexión</button>
           {connections.length === 0 ? <p>Todavía no tienes conexiones.</p> : (
             <ul>
               {connections.map((item) => (
@@ -108,7 +118,7 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
                   <strong>{item.label}</strong> <span>{item.provider}</span>
                   {item.keyHint ? <span>••••{item.keyHint}</span> : <span>Sin API key</span>}
                   {item.baseUrl ? <span>{item.baseUrl}</span> : null}
-                  <button aria-label={`Editar ${item.label}`} onClick={() => setEditing(item)} type="button">Editar</button>
+                  <button aria-label={`Editar ${item.label}`} onClick={() => { setConnectionFormDirty(false); setEditing(item) }} type="button">Editar</button>
                   <button aria-label={`Eliminar ${item.label}`} onClick={() => setDeleting(item)} type="button">Eliminar</button>
                 </li>
               ))}
@@ -127,19 +137,19 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
         </>
       ) : !loadError ? <p aria-busy="true">Cargando conexiones…</p> : null}
       {editing !== undefined ? (
-        <section aria-label={editing ? 'Editar conexión' : 'Nueva conexión'} role="dialog">
+        <SettingsDialog ariaLabel={editing ? 'Editar conexión' : 'Nueva conexión'} initialFocusRef={connectionNameRef} onDismiss={dismissConnectionForm}>
           <h2>{editing ? 'Editar conexión' : 'Nueva conexión'}</h2>
-          <ConnectionForm connection={editing} onCancel={() => setEditing(undefined)} onSave={save} />
-        </section>
+          <ConnectionForm connection={editing} nameInputRef={connectionNameRef} onCancel={dismissConnectionForm} onDirtyChange={setConnectionFormDirty} onSave={save} />
+        </SettingsDialog>
       ) : null}
       {deleting ? (
-        <section aria-label="Eliminar conexión" role="dialog">
+        <SettingsDialog ariaLabel="Eliminar conexión" onDismiss={() => setDeleting(null)}>
           <h2>Eliminar conexión</h2>
           <p>{isAssigned ? 'Esta conexión está asignada a uno o más agentes. Sus asignaciones se quitarán.' : 'Esta acción no se puede deshacer.'}</p>
           {deleteError ? <p role="alert">{deleteError}</p> : null}
           <button onClick={() => setDeleting(null)} type="button">Cancelar</button>
           <button onClick={() => void remove()} type="button">Confirmar eliminación</button>
-        </section>
+        </SettingsDialog>
       ) : null}
     </SettingsShell>
   )

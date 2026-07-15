@@ -56,6 +56,68 @@ describe('ModelSettingsScreen', () => {
     expect(screen.getByText('Ingresa la URL del servidor.')).toBeVisible()
   })
 
+  it('focuses and traps focus in the connection dialog, closes on Escape, and restores focus', async () => {
+    const user = userEvent.setup()
+    render(<ModelSettingsScreen service={makeService()} />)
+    const trigger = await screen.findByRole('button', { name: 'Nueva conexión' })
+    await user.click(trigger)
+
+    expect(screen.getByLabelText('Nombre')).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(screen.getByRole('button', { name: 'Guardar conexión' })).toHaveFocus()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'Nueva conexión' })).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+  })
+
+  it('confirms before dismissing a dirty connection form', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true)
+    const user = userEvent.setup()
+    render(<ModelSettingsScreen service={makeService()} />)
+    await user.click(await screen.findByRole('button', { name: 'Nueva conexión' }))
+    await user.type(screen.getByLabelText('Nombre'), 'Borrador')
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    expect(screen.getByRole('dialog', { name: 'Nueva conexión' })).toBeVisible()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'Nueva conexión' })).not.toBeInTheDocument()
+    expect(confirm).toHaveBeenCalledTimes(2)
+  })
+
+  it('clears dirty state after a successful connection save', async () => {
+    const created = { ...connection, id: 'created-1' }
+    const confirm = vi.spyOn(window, 'confirm')
+    const service = makeService({
+      createConnection: vi.fn().mockResolvedValue(created),
+      listConnections: vi.fn().mockResolvedValueOnce([]).mockResolvedValueOnce([created]),
+    })
+    const user = userEvent.setup()
+    render(<ModelSettingsScreen service={service} />)
+    await user.click(await screen.findByRole('button', { name: 'Nueva conexión' }))
+    await user.type(screen.getByLabelText('Nombre'), 'Nueva')
+    await user.type(screen.getByLabelText('API key'), 'secret')
+    await user.click(screen.getByRole('button', { name: 'Guardar conexión' }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Nueva conexión' })).not.toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: 'Nueva conexión' }))
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    expect(confirm).not.toHaveBeenCalled()
+  })
+
+  it('focuses the delete confirmation, traps focus, closes on Escape, and restores focus', async () => {
+    const user = userEvent.setup()
+    render(<ModelSettingsScreen service={makeService({ listConnections: vi.fn().mockResolvedValue([connection]) })} />)
+    const trigger = await screen.findByRole('button', { name: 'Eliminar OpenAI principal' })
+    await user.click(trigger)
+
+    expect(screen.getByRole('button', { name: 'Cancelar' })).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(screen.getByRole('button', { name: 'Confirmar eliminación' })).toHaveFocus()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'Eliminar conexión' })).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+  })
+
   it('creates a connection and only displays its masked key hint', async () => {
     const created = { ...connection, id: 'anthropic-1', label: 'Claude', provider: 'anthropic' as const, keyHint: '1234' }
     const service = makeService({

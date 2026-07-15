@@ -123,6 +123,22 @@ describe('ProfileSettingsScreen', () => {
     expect(screen.getByLabelText('Nombre')).toHaveValue('Ada Lovelace')
   })
 
+  it('locks all mutable profile controls while a save is in flight', async () => {
+    let resolveSave!: (value: typeof profile) => void
+    const updateProfile = vi.fn(() => new Promise<typeof profile>((resolve) => { resolveSave = resolve }))
+    const user = userEvent.setup()
+    render(<ProfileSettingsScreen service={makeService({ updateProfile })} />)
+    await screen.findByDisplayValue('Ada Lovelace')
+
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(screen.getByLabelText('Nombre')).toBeDisabled()
+    expect(screen.getByLabelText('Cambiar avatar')).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Descartar' })).toBeDisabled()
+    resolveSave(profile)
+    await waitFor(() => expect(screen.getByLabelText('Nombre')).toBeEnabled())
+  })
+
   it('shows a safe error when saving fails', async () => {
     const user = userEvent.setup()
     const service = makeService({

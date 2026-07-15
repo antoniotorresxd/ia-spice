@@ -164,14 +164,14 @@ export function ProfileSettingsScreen({
             )}
             <label>
               Cambiar avatar
-              <input accept="image/*" onChange={selectAvatar} type="file" />
+              <input accept="image/*" disabled={isSaving} onChange={selectAvatar} type="file" />
             </label>
           </div>
         </section>
         <section className={styles.fields}>
           <label>
             <span>Nombre</span>
-            <input onChange={(event) => setName(event.target.value)} value={name} />
+            <input disabled={isSaving} onChange={(event) => setName(event.target.value)} value={name} />
           </label>
           <label>
             <span>Correo electrónico</span>
@@ -181,7 +181,7 @@ export function ProfileSettingsScreen({
         {error ? <p className={styles.error} role="alert">{error}</p> : null}
         {message ? <p className={styles.status} role="status">{message}</p> : null}
         <div className={styles.actions}>
-          <button onClick={discard} type="button">Descartar</button>
+          <button disabled={isSaving} onClick={discard} type="button">Descartar</button>
           <button disabled={isSaving} type="submit">
             {isSaving ? 'Guardando…' : 'Guardar cambios'}
           </button>
