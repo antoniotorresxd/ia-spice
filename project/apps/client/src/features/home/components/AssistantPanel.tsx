@@ -18,14 +18,21 @@ export function AssistantPanel() {
   return (
     <div className="home-assistant-shell">
       <button
+        aria-label="Abrir asistente"
         className="home-assistant-opener"
         hidden={mode !== 'minimized'}
         onClick={() => setMode('compact')}
         ref={openerRef}
         type="button"
       >
-        Abrir asistente
+        <span aria-hidden="true" className="home-assistant-opener-mark">
+          EM
+        </span>
+        <span aria-hidden="true" className="home-assistant-availability" />
       </button>
+      <span className="home-assistant-tooltip" role="tooltip">
+        Abrir asistente
+      </span>
 
       {mode !== 'minimized' ? (
         <section

@@ -17,9 +17,23 @@ it('moves through minimized, compact, and expanded states', async () => {
   ).toHaveAttribute('data-mode', 'compact')
 
   await user.click(screen.getByRole('button', { name: 'Minimizar asistente' }))
-  expect(screen.getByRole('button', { name: 'Abrir asistente' })).toBeVisible()
+  const opener = screen.getByRole('button', { name: 'Abrir asistente' })
+  expect(opener).toBeVisible()
+  expect(opener).toHaveTextContent('EM')
+  expect(opener).not.toHaveTextContent('Abrir asistente')
 
-  await user.click(screen.getByRole('button', { name: 'Abrir asistente' }))
+  await user.hover(opener)
+  expect(screen.getByRole('tooltip')).toHaveTextContent('Abrir asistente')
+
+  await user.tab()
+  expect(screen.getByRole('tooltip')).toHaveTextContent('Abrir asistente')
+
+  await user.click(opener)
+  expect(
+    screen.getByRole('dialog', {
+      name: 'Asistente del Ecosistema Multiagente',
+    }),
+  ).toHaveAttribute('data-mode', 'compact')
   await user.click(screen.getByRole('button', { name: 'Expandir asistente' }))
 
   expect(

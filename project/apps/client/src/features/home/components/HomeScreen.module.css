@@ -611,18 +611,70 @@
 :global(.home-assistant-shell) {
   position: fixed;
   z-index: 40;
-  right: 1.25rem;
-  bottom: 1.25rem;
+  right: max(1.25rem, env(safe-area-inset-right));
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
 }
 
 :global(.home-assistant-opener) {
-  padding: 0.65rem 0.85rem;
-  border: 1px solid rgb(114 226 198 / 32%);
-  border-radius: 0.55rem;
+  position: relative;
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgb(114 226 198 / 38%);
+  border-radius: 0.875rem;
   background: #171a1e;
-  box-shadow: 0 1rem 3rem rgb(0 0 0 / 45%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%), 0 1rem 3rem rgb(0 0 0 / 45%);
   color: var(--color-mint);
   cursor: pointer;
+  transition: border-color var(--duration-fast) ease, transform var(--duration-fast) ease;
+}
+
+:global(.home-assistant-opener:hover),
+:global(.home-assistant-opener:focus-visible) {
+  border-color: rgb(114 226 198 / 62%);
+  transform: translateY(-1px);
+}
+
+:global(.home-assistant-opener-mark) {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+:global(.home-assistant-availability) {
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.35rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border: 2px solid #171a1e;
+  border-radius: 50%;
+  background: var(--color-mint);
+}
+
+:global(.home-assistant-tooltip) {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  width: max-content;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.35rem;
+  background: #111316;
+  color: #c8ccce;
+  font-size: 0.65rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.2rem);
+  transition: opacity var(--duration-fast) ease, transform var(--duration-fast) ease;
+}
+
+:global(.home-assistant-shell:hover .home-assistant-tooltip),
+:global(.home-assistant-shell:focus-within .home-assistant-tooltip) {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 :global(.home-assistant) {
@@ -817,8 +869,8 @@
   }
 
   :global(.home-assistant-shell) {
-    right: 0.75rem;
-    bottom: 0.75rem;
+    right: max(0.75rem, env(safe-area-inset-right));
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
 
   :global(.home-assistant) {
@@ -834,7 +886,9 @@
 @media (prefers-reduced-motion: reduce) {
   :global(.home-sidebar),
   :global(.home-context),
-  :global(.home-profile-menu) {
+  :global(.home-profile-menu),
+  :global(.home-assistant-opener),
+  :global(.home-assistant-tooltip) {
     animation: none;
     transition: none;
   }
