@@ -1,0 +1,147 @@
+.screen {
+  display: grid;
+  min-height: calc(100dvh - 11rem);
+  place-items: center;
+}
+
+.request {
+  width: min(100%, 46rem);
+}
+
+.intro {
+  margin-bottom: 1.8rem;
+  text-align: center;
+}
+
+.intro h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  font-weight: 560;
+  letter-spacing: -.04em;
+}
+
+.intro h2 {
+  margin: 0 0 .7rem;
+  color: var(--color-mint);
+  font-size: .7rem;
+  font-weight: 650;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.intro p {
+  margin: .65rem 0 0;
+  color: var(--color-text-muted);
+  font-size: .9rem;
+}
+
+.composer {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+  box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 22%);
+}
+
+.composer:focus-within {
+  border-color: rgb(114 226 198 / 38%);
+}
+
+.composer textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 8rem;
+  resize: vertical;
+  border: 0;
+  outline: 0;
+  padding: 1.25rem 1.35rem .7rem;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  line-height: 1.55;
+}
+
+.composer textarea::placeholder { color: #666d70; }
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .65rem .75rem .75rem;
+}
+
+.tools button {
+  min-height: 2rem;
+  border-radius: var(--radius-control);
+  font: inherit;
+  font-size: .75rem;
+}
+
+.context {
+  border: 1px solid var(--color-border);
+  padding: .35rem .65rem;
+  background: transparent;
+  color: #b6bbbd;
+}
+
+.mode {
+  color: var(--color-text-muted);
+  font-size: .75rem;
+}
+
+.submit {
+  margin-left: auto;
+  border: 0;
+  padding: .38rem .75rem;
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-weight: 650;
+}
+
+.tools button:disabled, .examples button:disabled, .composer textarea:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.error {
+  margin: .7rem .2rem 0;
+  color: var(--color-danger);
+  font-size: .78rem;
+}
+
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .55rem;
+  margin-top: 1rem;
+}
+
+.examples button {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: .42rem .75rem;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: .72rem;
+}
+
+.examples button:hover { border-color: rgb(255 255 255 / 22%); color: var(--color-text); }
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 560px) {
+  .screen { min-height: calc(100dvh - 8rem); place-items: start center; }
+  .mode { display: none; }
+  .submit { padding-inline: .6rem; }
+}
