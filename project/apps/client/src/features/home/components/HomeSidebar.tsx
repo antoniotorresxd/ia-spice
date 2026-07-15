@@ -1,3 +1,6 @@
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
 import type { ConversationSummary } from '../model/home-types'
 
 type HomeSidebarProps = {
@@ -24,6 +27,45 @@ export function HomeSidebar({
   onSignOut,
   userName,
 }: HomeSidebarProps) {
+  const navigate = useNavigate()
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
+  const profileTriggerRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) return
+
+    const closeAndRestoreFocus = () => {
+      setIsProfileMenuOpen(false)
+      profileTriggerRef.current?.focus()
+    }
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!profileMenuRef.current?.contains(event.target as Node)) {
+        closeAndRestoreFocus()
+      }
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeAndRestoreFocus()
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isProfileMenuOpen])
+
+  const goToSettings = (path: string) => {
+    setIsProfileMenuOpen(false)
+    navigate(path)
+  }
+
+  const signOut = async () => {
+    setIsProfileMenuOpen(false)
+    await onSignOut()
+  }
+
   return (
     <aside className="home-sidebar" data-open={isOpen}>
       <div className="home-brand">
@@ -60,16 +102,36 @@ export function HomeSidebar({
           ))}
         </ul>
       </section>
-      <div className="home-user-menu">
-        <span aria-hidden="true" className="home-user-avatar">
-          {userName.slice(0, 1).toUpperCase()}
-        </span>
-        <span>{userName}</span>
-        <button onClick={() => void onSignOut()} type="button">
-          Cerrar sesión
+      <div className="home-user-menu" ref={profileMenuRef}>
+        {isProfileMenuOpen && (
+          <div aria-label="Menú de perfil" className="home-profile-menu" role="menu">
+            <button onClick={() => goToSettings('/settings/profile')} role="menuitem" type="button">
+              Perfil
+            </button>
+            <button onClick={() => goToSettings('/settings/models')} role="menuitem" type="button">
+              Modelos y providers
+            </button>
+            <button onClick={() => void signOut()} role="menuitem" type="button">
+              Cerrar sesión
+            </button>
+          </div>
+        )}
+        <button
+          aria-expanded={isProfileMenuOpen}
+          aria-haspopup="menu"
+          aria-label={`Perfil de ${userName}`}
+          className="home-profile-trigger"
+          onClick={() => setIsProfileMenuOpen((open) => !open)}
+          ref={profileTriggerRef}
+          type="button"
+        >
+          <span aria-hidden="true" className="home-user-avatar">
+            {userName.slice(0, 1).toUpperCase()}
+          </span>
+          <span>{userName}</span>
+          <span aria-hidden="true" className="home-profile-chevron">⌃</span>
         </button>
       </div>
     </aside>
   )
 }
-

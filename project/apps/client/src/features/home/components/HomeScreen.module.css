@@ -212,15 +212,10 @@
 }
 
 :global(.home-user-menu) {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 0.55rem;
+  position: relative;
   margin-top: auto;
-  padding: 0.75rem 0.4rem 0;
+  padding-top: 0.75rem;
   border-top: 1px solid var(--color-border);
-  color: #989ea1;
-  font-size: 0.7rem;
 }
 
 :global(.home-user-avatar) {
@@ -232,15 +227,69 @@
   background: #292c30;
 }
 
-:global(.home-user-menu button) {
-  grid-column: 1 / -1;
-  padding: 0.35rem;
-  border: 0;
-  background: transparent;
-  color: #777e82;
+:global(.home-profile-trigger) {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem;
+  border: 1px solid #292d31;
+  border-radius: 0.5rem;
+  background: #131518;
+  color: #a5aaad;
   cursor: pointer;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   text-align: start;
+}
+
+:global(.home-profile-trigger:hover),
+:global(.home-profile-trigger[aria-expanded='true']) {
+  border-color: #373c41;
+  background: #17191d;
+}
+
+:global(.home-profile-chevron) {
+  color: #62696d;
+}
+
+:global(.home-profile-menu) {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.45rem);
+  left: 0;
+  z-index: 25;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.35rem;
+  border: 1px solid #2c3035;
+  border-radius: 0.55rem;
+  background: #15171a;
+  box-shadow: 0 1rem 2.5rem rgb(0 0 0 / 45%);
+  animation: home-profile-menu-in var(--duration-fast) ease;
+}
+
+:global(.home-profile-menu button) {
+  padding: 0.55rem 0.6rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: #a7acae;
+  cursor: pointer;
+  font-size: 0.68rem;
+  text-align: start;
+}
+
+:global(.home-profile-menu button:hover),
+:global(.home-profile-menu button:focus-visible) {
+  outline: none;
+  background: rgb(255 255 255 / 6%);
+  color: #e0e2e3;
+}
+
+@keyframes home-profile-menu-in {
+  from { opacity: 0; transform: translateY(0.25rem); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 :global(.home-context) {
@@ -739,6 +788,15 @@
     display: inline-grid;
   }
 
+  :global(.home-profile-menu) {
+    position: fixed;
+    right: 0.65rem;
+    bottom: calc(0.65rem + env(safe-area-inset-bottom));
+    left: 0.65rem;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+  }
+
   :global(.home-metrics),
   :global(.home-overview-grid) {
     grid-template-columns: 1fr;
@@ -775,7 +833,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   :global(.home-sidebar),
-  :global(.home-context) {
+  :global(.home-context),
+  :global(.home-profile-menu) {
+    animation: none;
     transition: none;
   }
 }
