@@ -14,6 +14,10 @@ type AssignmentState =
 
 export function ProjectScreen({ service }: { service: WorkspaceService }) {
   const { projectId = '' } = useParams()
+  return <ProjectScreenContent key={projectId} projectId={projectId} service={service} />
+}
+
+function ProjectScreenContent({ projectId, service }: { projectId: string; service: WorkspaceService }) {
   const outlet = useOutletContext<{ refreshSnapshot?: () => Promise<void> } | null>()
   const [project, setProject] = useState<WorkspaceProjectDetail | null>(null)
   const [details, setDetails] = useState<WorkspaceConversationDetail[]>([])

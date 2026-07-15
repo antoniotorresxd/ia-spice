@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom'
+import { Link, MemoryRouter, Outlet, Route, Routes } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import type { WorkspaceService } from '../services/workspace-service'
@@ -29,6 +29,10 @@ function service(overrides: Partial<WorkspaceService> = {}): WorkspaceService {
 function renderScreen(workspaceService = service(), refreshSnapshot = vi.fn().mockResolvedValue(undefined)) {
   render(<MemoryRouter initialEntries={['/projects/project-filters']}><Routes><Route element={<Outlet context={{ refreshSnapshot }} />}><Route path="/projects/:projectId" element={<ProjectScreen service={workspaceService} />} /></Route></Routes></MemoryRouter>)
   return workspaceService
+}
+
+function renderNavigable(workspaceService: WorkspaceService) {
+  render(<MemoryRouter initialEntries={['/projects/project-filters']}><Routes><Route element={<Outlet context={{ refreshSnapshot: vi.fn() }} />}><Route path="/projects/:projectId" element={<><ProjectScreen service={workspaceService} /><Link to="/projects/project-b">Ir a B</Link></>} /></Route></Routes></MemoryRouter>)
 }
 
 it('renders semantic tabs and links files to their source conversations', async () => {
@@ -105,4 +109,43 @@ it('announces assignment failures without showing success', async () => {
   fireEvent.drop(await screen.findByRole('region', { name: 'Asignar a Filtros analógicos' }), { dataTransfer: { getData: () => JSON.stringify({ conversationId: 'conversation-draft', previousProjectId: null }) } })
   expect(await screen.findByRole('alert')).toHaveTextContent('Sin conexión')
   expect(screen.queryByText('Conversación movida a Filtros analógicos')).not.toBeInTheDocument()
+})
+
+it('isolates file cache and selected tab when navigating between project params', async () => {
+  const user = userEvent.setup()
+  const projectB = { ...project, id: 'project-b', name: 'Proyecto B', conversationIds: [], conversations: [], fileCount: 0 }
+  const workspaceService = service({ getProject: vi.fn().mockImplementation((id) => Promise.resolve(id === 'project-b' ? projectB : project)) })
+  renderNavigable(workspaceService)
+  await user.click(await screen.findByRole('tab', { name: 'Archivos 1' }))
+  expect(await screen.findByRole('link', { name: 'report.pdf' })).toBeVisible()
+  await user.click(screen.getByRole('link', { name: 'Ir a B' }))
+  expect(await screen.findByRole('heading', { name: 'Proyecto B' })).toBeVisible()
+  expect(screen.getByRole('tab', { name: 'Conversaciones 0' })).toHaveAttribute('aria-selected', 'true')
+  expect(screen.queryByText('report.pdf')).not.toBeInTheDocument()
+  expect(workspaceService.getConversation).toHaveBeenCalledTimes(1)
+})
+
+it('recovers from a failed project load when navigating to a valid project', async () => {
+  const user = userEvent.setup()
+  const projectB = { ...project, id: 'project-b', name: 'Proyecto B' }
+  const workspaceService = service({ getProject: vi.fn().mockImplementation((id) => id === 'project-b' ? Promise.resolve(projectB) : Promise.reject(new Error('A failed'))) })
+  renderNavigable(workspaceService)
+  expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos cargar')
+  await user.click(screen.getByRole('link', { name: 'Ir a B' }))
+  expect(await screen.findByRole('heading', { name: 'Proyecto B' })).toBeVisible()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
+it('ignores a stale project response after navigating to another project', async () => {
+  const user = userEvent.setup()
+  let resolveA!: (value: typeof project) => void
+  const pendingA = new Promise<typeof project>((resolve) => { resolveA = resolve })
+  const projectB = { ...project, id: 'project-b', name: 'Proyecto B' }
+  const workspaceService = service({ getProject: vi.fn().mockImplementation((id) => id === 'project-b' ? Promise.resolve(projectB) : pendingA) })
+  renderNavigable(workspaceService)
+  await user.click(screen.getByRole('link', { name: 'Ir a B' }))
+  expect(await screen.findByRole('heading', { name: 'Proyecto B' })).toBeVisible()
+  resolveA(project)
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'Proyecto B' })).toBeVisible())
+  expect(screen.queryByRole('heading', { name: 'Filtros analógicos' })).not.toBeInTheDocument()
 })
