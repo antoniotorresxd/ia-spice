@@ -155,10 +155,17 @@ describe('ProfileSettingsScreen', () => {
     expect(createObjectURL).toHaveBeenCalledTimes(2)
   })
 
-  it('never restores a revoked preview after saving and discarding', async () => {
+  it('saves a durable avatar that survives discard and remount', async () => {
     const user = userEvent.setup()
-    const service = makeService()
-    render(<ProfileSettingsScreen service={service} />)
+    let storedProfile = { ...profile }
+    const service = makeService({
+      getProfile: vi.fn(async () => storedProfile),
+      updateProfile: vi.fn(async (input) => {
+        storedProfile = { ...storedProfile, ...input }
+        return storedProfile
+      }),
+    })
+    const firstRender = render(<ProfileSettingsScreen service={service} />)
     await screen.findByDisplayValue('Ada Lovelace')
 
     await user.upload(
@@ -167,15 +174,29 @@ describe('ProfileSettingsScreen', () => {
     )
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
     await screen.findByRole('status')
+    const savedAvatar = screen.getByRole('img', {
+      name: 'Vista previa del avatar',
+    })
+    expect(savedAvatar.getAttribute('src')).toMatch(/^data:image\/png;base64,/)
+    expect(savedAvatar).not.toHaveAttribute('src', 'blob:avatar-preview')
     await user.clear(screen.getByLabelText('Nombre'))
     await user.type(screen.getByLabelText('Nombre'), 'Grace Hopper')
     await user.click(screen.getByRole('button', { name: 'Descartar' }))
 
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:avatar-preview')
-    expect(screen.queryByRole('img', { name: 'Vista previa del avatar' })).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Vista previa del avatar' })).toHaveAttribute(
+      'src',
+      storedProfile.avatarUrl,
+    )
+
+    firstRender.unmount()
+    render(<ProfileSettingsScreen service={service} />)
+    expect(
+      await screen.findByRole('img', { name: 'Vista previa del avatar' }),
+    ).toHaveAttribute('src', storedProfile.avatarUrl)
   })
 
-  it('does not persist a preview URL when saving before unmount', async () => {
+  it('persists data instead of the preview URL and still revokes the draft', async () => {
     const user = userEvent.setup()
     const service = makeService()
     const { unmount } = render(<ProfileSettingsScreen service={service} />)
@@ -188,10 +209,15 @@ describe('ProfileSettingsScreen', () => {
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
     await screen.findByRole('status')
 
-    expect(service.updateProfile).toHaveBeenCalledWith({
-      name: 'Ada Lovelace',
-      avatarUrl: null,
-    })
+    expect(service.updateProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Ada Lovelace',
+        avatarUrl: expect.stringMatching(/^data:image\/png;base64,/),
+      }),
+    )
+    expect(service.updateProfile).not.toHaveBeenCalledWith(
+      expect.objectContaining({ avatarUrl: 'blob:avatar-preview' }),
+    )
     unmount()
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:avatar-preview')
   })

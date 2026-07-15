@@ -10,6 +10,15 @@ type ProfileSettingsScreenProps = {
   onSignOut?: () => Promise<void>
 }
 
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.addEventListener('load', () => resolve(String(reader.result)))
+    reader.addEventListener('error', () => reject(reader.error))
+    reader.readAsDataURL(file)
+  })
+}
+
 export function ProfileSettingsScreen({
   service,
   onSignOut = async () => {},
@@ -23,6 +32,7 @@ export function ProfileSettingsScreen({
   const [retryKey, setRetryKey] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
   const previewUrlRef = useRef<string | null>(null)
+  const selectedAvatarRef = useRef<File | null>(null)
 
   useEffect(() => {
     let current = true
@@ -56,6 +66,7 @@ export function ProfileSettingsScreen({
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
     const previewUrl = URL.createObjectURL(file)
     previewUrlRef.current = previewUrl
+    selectedAvatarRef.current = file
     setAvatarUrl(previewUrl)
     setMessage('')
     setError('')
@@ -72,9 +83,12 @@ export function ProfileSettingsScreen({
     setError('')
     setIsSaving(true)
     try {
+      const durableAvatarInput = selectedAvatarRef.current
+        ? await readFileAsDataUrl(selectedAvatarRef.current)
+        : saved?.avatarUrl ?? null
       const updated = await service.updateProfile({
         name: trimmedName,
-        avatarUrl: saved?.avatarUrl ?? null,
+        avatarUrl: durableAvatarInput,
       })
       const durableAvatarUrl = updated.avatarUrl?.startsWith('blob:')
         ? saved?.avatarUrl ?? null
@@ -84,6 +98,7 @@ export function ProfileSettingsScreen({
         URL.revokeObjectURL(previewUrlRef.current)
         previewUrlRef.current = null
       }
+      selectedAvatarRef.current = null
       setSaved(durableProfile)
       setName(updated.name)
       setAvatarUrl(durableAvatarUrl)
@@ -101,6 +116,7 @@ export function ProfileSettingsScreen({
       URL.revokeObjectURL(previewUrlRef.current)
       previewUrlRef.current = null
     }
+    selectedAvatarRef.current = null
     setName(saved.name)
     setAvatarUrl(saved.avatarUrl)
     setError('')
