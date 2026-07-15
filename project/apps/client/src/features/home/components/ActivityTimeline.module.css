@@ -1,0 +1,248 @@
+.timelinePanel {
+  width: min(100%, 50rem);
+  margin-inline: auto;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-block: 0.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header h2 {
+  margin: 0.45rem 0 0.35rem;
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  font-weight: 620;
+  letter-spacing: -0.04em;
+}
+
+.header p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.kicker {
+  color: var(--color-mint) !important;
+  font-size: 0.68rem;
+  font-weight: 720;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.executionStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+  color: #aab0b3;
+  font-size: 0.75rem;
+}
+
+.executionStatus::before {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--color-mint);
+  content: '';
+}
+
+.executionStatus[data-status='failed']::before {
+  background: var(--color-danger);
+}
+
+.timeline {
+  position: relative;
+  display: grid;
+  gap: 0.8rem;
+  margin: 1.5rem 0 0;
+  padding: 0 0 0 2rem;
+  list-style: none;
+}
+
+.timeline::before {
+  position: absolute;
+  inset-block: 0.8rem;
+  left: 0.42rem;
+  width: 1px;
+  background: var(--color-border);
+  content: '';
+}
+
+.stage {
+  position: relative;
+}
+
+.node {
+  position: absolute;
+  top: 1.25rem;
+  left: -1.93rem;
+  z-index: 1;
+  width: 0.72rem;
+  height: 0.72rem;
+  border: 3px solid var(--color-bg);
+  border-radius: 50%;
+  background: #454a4d;
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+
+.stage[data-status='completed'] .node {
+  background: var(--color-mint);
+}
+
+.stage[data-status='active'] .node {
+  background: var(--color-mint);
+  box-shadow: 0 0 0 1px var(--color-mint), 0 0 1rem rgb(114 226 198 / 50%);
+  animation: timeline-pulse 1.5s ease-in-out infinite alternate;
+}
+
+.stage[data-status='failed'] .node {
+  background: var(--color-danger);
+}
+
+.stageCard {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+  background: rgb(16 18 22 / 78%);
+}
+
+.stage[data-status='active'] .stageCard {
+  border-color: rgb(114 226 198 / 32%);
+  background: linear-gradient(90deg, rgb(114 226 198 / 7%), transparent 48%);
+}
+
+.stage[data-status='pending'] .stageCard {
+  opacity: 0.58;
+}
+
+.stageCard > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.stageIdentity {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.stageIdentity h3,
+.files h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.stageIdentity span,
+.stageCard time,
+.stageCard p {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.actorMark {
+  display: grid;
+  width: 1.7rem;
+  height: 1.7rem;
+  place-items: center;
+  border-radius: 0.42rem;
+  background: rgb(255 255 255 / 6%);
+  font-size: 0.58rem !important;
+}
+
+.stageCard p {
+  margin: 0.7rem 0 0;
+  line-height: 1.55;
+}
+
+.detailsButton {
+  margin-top: 0.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #9da3a6;
+  cursor: pointer;
+  font-size: 0.7rem;
+}
+
+.metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.75rem 0 0;
+}
+
+.metrics div {
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.35rem;
+}
+
+.metrics dt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.metrics dd {
+  margin: 0;
+  color: #b9bec0;
+  font-size: 0.68rem;
+}
+
+.files {
+  margin: 1.3rem 0 0 2rem;
+}
+
+.files ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.files li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  color: #b7bcbe;
+  font-size: 0.7rem;
+}
+
+.files li span:last-child {
+  color: var(--color-text-muted);
+}
+
+@keyframes timeline-pulse {
+  to {
+    box-shadow: 0 0 0 1px var(--color-mint), 0 0 0.35rem rgb(114 226 198 / 18%);
+  }
+}
+
+@media (max-width: 560px) {
+  .header {
+    display: grid;
+  }
+
+  .files ul {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage[data-status='active'] .node {
+    animation: none;
+  }
+}
