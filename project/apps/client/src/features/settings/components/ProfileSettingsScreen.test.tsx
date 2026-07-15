@@ -50,6 +50,27 @@ describe('ProfileSettingsScreen', () => {
     expect(await screen.findByDisplayValue('Ada Lovelace')).toBeVisible()
     expect(screen.getByLabelText('Correo electrónico')).toBeDisabled()
     expect(screen.getByRole('heading', { name: 'Tu perfil' })).toBeVisible()
+    expect(screen.getByText('Datos de demostración')).toBeVisible()
+  })
+
+  it('keeps load errors inside the shell and retries safely', async () => {
+    const getProfile = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('private backend detail'))
+      .mockResolvedValueOnce(profile)
+    const user = userEvent.setup()
+    render(<ProfileSettingsScreen service={makeService({ getProfile })} />)
+
+    expect(screen.getByLabelText('Navegación principal')).toBeVisible()
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No pudimos cargar tu perfil. Inténtalo de nuevo.',
+    )
+    expect(screen.queryByText('private backend detail')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    expect(await screen.findByDisplayValue('Ada Lovelace')).toBeVisible()
+    expect(getProfile).toHaveBeenCalledTimes(2)
   })
 
   it('rejects an empty name', async () => {
@@ -132,5 +153,46 @@ describe('ProfileSettingsScreen', () => {
     unmount()
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:second')
     expect(createObjectURL).toHaveBeenCalledTimes(2)
+  })
+
+  it('never restores a revoked preview after saving and discarding', async () => {
+    const user = userEvent.setup()
+    const service = makeService()
+    render(<ProfileSettingsScreen service={service} />)
+    await screen.findByDisplayValue('Ada Lovelace')
+
+    await user.upload(
+      screen.getByLabelText('Cambiar avatar'),
+      new File(['avatar'], 'avatar.png', { type: 'image/png' }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    await screen.findByRole('status')
+    await user.clear(screen.getByLabelText('Nombre'))
+    await user.type(screen.getByLabelText('Nombre'), 'Grace Hopper')
+    await user.click(screen.getByRole('button', { name: 'Descartar' }))
+
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:avatar-preview')
+    expect(screen.queryByRole('img', { name: 'Vista previa del avatar' })).not.toBeInTheDocument()
+  })
+
+  it('does not persist a preview URL when saving before unmount', async () => {
+    const user = userEvent.setup()
+    const service = makeService()
+    const { unmount } = render(<ProfileSettingsScreen service={service} />)
+    await screen.findByDisplayValue('Ada Lovelace')
+
+    await user.upload(
+      screen.getByLabelText('Cambiar avatar'),
+      new File(['avatar'], 'avatar.png', { type: 'image/png' }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    await screen.findByRole('status')
+
+    expect(service.updateProfile).toHaveBeenCalledWith({
+      name: 'Ada Lovelace',
+      avatarUrl: null,
+    })
+    unmount()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:avatar-preview')
   })
 })

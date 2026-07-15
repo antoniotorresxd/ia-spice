@@ -9,6 +9,9 @@
 .pageHeader p { margin: 0; color: var(--color-mint); font-size: .65rem; font-weight: 720; letter-spacing: .13em; text-transform: uppercase; }
 .pageHeader h1 { margin: .5rem 0; font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 590; letter-spacing: -.04em; }
 .pageHeader span, .form p { color: var(--color-text-muted); font-size: .8rem; }
+.demoBadge { display: inline-flex; margin-top: .9rem; padding: .28rem .45rem; border: 1px solid rgb(155 140 255 / 25%); border-radius: .35rem; color: #a99fff; font-size: .58rem; font-weight: 580; }
+.loadState { display: grid; min-height: 20rem; place-items: center; align-content: center; gap: 1rem; color: var(--color-text-muted); }
+.loadState button { min-height: 44px; padding-inline: .9rem; border: 1px solid rgb(114 226 198 / 35%); border-radius: .45rem; background: rgb(114 226 198 / 8%); color: var(--color-mint); cursor: pointer; }
 .form section { padding-block: 1.4rem; border-top: 1px solid var(--color-border); }
 .avatarSection { display: flex; align-items: center; justify-content: space-between; gap: 2rem; }
 .form h2 { margin: 0 0 .4rem; font-size: .9rem; }

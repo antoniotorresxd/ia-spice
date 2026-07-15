@@ -19,6 +19,8 @@ export function ProfileSettingsScreen({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState(false)
+  const [retryKey, setRetryKey] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
   const previewUrlRef = useRef<string | null>(null)
 
@@ -31,14 +33,15 @@ export function ProfileSettingsScreen({
         setSaved(profile)
         setName(profile.name)
         setAvatarUrl(profile.avatarUrl)
+        setLoadError(false)
       })
       .catch(() => {
-        if (current) setError('No pudimos cargar tu perfil. Inténtalo de nuevo.')
+        if (current) setLoadError(true)
       })
     return () => {
       current = false
     }
-  }, [service])
+  }, [retryKey, service])
 
   useEffect(
     () => () => {
@@ -71,11 +74,19 @@ export function ProfileSettingsScreen({
     try {
       const updated = await service.updateProfile({
         name: trimmedName,
-        avatarUrl,
+        avatarUrl: saved?.avatarUrl ?? null,
       })
-      setSaved(updated)
+      const durableAvatarUrl = updated.avatarUrl?.startsWith('blob:')
+        ? saved?.avatarUrl ?? null
+        : updated.avatarUrl
+      const durableProfile = { ...updated, avatarUrl: durableAvatarUrl }
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current)
+        previewUrlRef.current = null
+      }
+      setSaved(durableProfile)
       setName(updated.name)
-      setAvatarUrl(updated.avatarUrl)
+      setAvatarUrl(durableAvatarUrl)
       setMessage('Tus cambios se guardaron.')
     } catch {
       setError('No pudimos guardar tus cambios. Inténtalo de nuevo.')
@@ -96,22 +107,34 @@ export function ProfileSettingsScreen({
     setMessage('Cambios descartados.')
   }
 
-  if (!saved) {
-    return error ? <p role="alert">{error}</p> : <p aria-busy="true">Cargando perfil…</p>
-  }
-
   return (
     <SettingsShell
       onSignOut={onSignOut}
-      userEmail={saved.email}
-      userName={saved.name}
+      userEmail={saved?.email ?? ''}
+      userName={saved?.name ?? 'Cuenta'}
     >
-      <header className={styles.pageHeader}>
-        <p>Cuenta personal</p>
-        <h1>Tu perfil</h1>
-        <span>Actualiza cómo apareces en el ecosistema.</span>
-      </header>
-      <form className={styles.form} onSubmit={save}>
+      {!saved ? (
+        <section className={styles.loadState}>
+          {loadError ? (
+            <>
+              <p role="alert">No pudimos cargar tu perfil. Inténtalo de nuevo.</p>
+              <button onClick={() => setRetryKey((value) => value + 1)} type="button">
+                Reintentar
+              </button>
+            </>
+          ) : (
+            <p aria-busy="true">Cargando perfil…</p>
+          )}
+        </section>
+      ) : (
+        <>
+          <header className={styles.pageHeader}>
+            <p>Cuenta personal</p>
+            <h1>Tu perfil</h1>
+            <span>Actualiza cómo apareces en el ecosistema.</span>
+            <strong className={styles.demoBadge}>Datos de demostración</strong>
+          </header>
+          <form className={styles.form} onSubmit={save}>
         <section className={styles.avatarSection}>
           <div>
             <h2>Imagen de perfil</h2>
@@ -147,7 +170,9 @@ export function ProfileSettingsScreen({
             {isSaving ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </div>
-      </form>
+          </form>
+        </>
+      )}
     </SettingsShell>
   )
 }
