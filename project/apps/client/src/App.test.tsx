@@ -7,8 +7,8 @@ const authClientMocks = vi.hoisted(() => ({
   useSession: vi.fn(),
 }))
 
-vi.mock('./features/auth/services/auth-client', () => ({
-  authClient: authClientMocks,
+vi.mock('better-auth/react', () => ({
+  createAuthClient: () => authClientMocks,
 }))
 
 import App from './App'
@@ -53,6 +53,8 @@ function setSessionState({
 
 beforeEach(() => {
   window.history.pushState({}, '', '/')
+  authClientMocks.useSession.mockReset()
+  authClientMocks.signOut.mockReset()
   authClientMocks.signOut.mockResolvedValue({ error: null })
 })
 
@@ -82,12 +84,14 @@ it('shows the real authentication experience without a session', () => {
 })
 
 it('shows the Ecosistema Multiagente home with a session', async () => {
+  const user = userEvent.setup()
   setSessionState({ data: session })
 
   render(<App />)
 
   expect(await screen.findByText('Ecosistema Multiagente')).toBeVisible()
-  expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Perfil de Ada Lovelace' }))
+  expect(screen.getByRole('menuitem', { name: 'Cerrar sesión' })).toBeVisible()
   expect(
     screen.queryByRole('heading', { name: 'Sesión activa' }),
   ).not.toBeInTheDocument()
@@ -121,7 +125,8 @@ it('delegates sign-out through the authentication service', async () => {
   setSessionState({ data: session })
 
   render(<App />)
-  await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+  await user.click(await screen.findByRole('button', { name: 'Perfil de Ada Lovelace' }))
+  await user.click(screen.getByRole('menuitem', { name: 'Cerrar sesión' }))
 
   expect(authClientMocks.signOut).toHaveBeenCalledOnce()
 })
@@ -134,7 +139,8 @@ it('shows a safe inline error when sign-out fails', async () => {
   setSessionState({ data: session })
 
   render(<App />)
-  await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+  await user.click(await screen.findByRole('button', { name: 'Perfil de Ada Lovelace' }))
+  await user.click(screen.getByRole('menuitem', { name: 'Cerrar sesión' }))
 
   expect(
     await screen.findByText('No pudimos cerrar sesión. Inténtalo de nuevo.'),

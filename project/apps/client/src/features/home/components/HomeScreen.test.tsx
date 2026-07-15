@@ -1,11 +1,17 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render as renderComponent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { createMockHomeService } from '../services/mock-home-service'
 import { HomeScreen } from './HomeScreen'
 
 afterEach(cleanup)
+
+function render(component: ReactNode) {
+  return renderComponent(<MemoryRouter>{component}</MemoryRouter>)
+}
 
 it('loads the operational overview through the service', async () => {
   render(

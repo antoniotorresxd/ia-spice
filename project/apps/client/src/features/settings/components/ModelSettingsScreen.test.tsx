@@ -1,5 +1,7 @@
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, render as renderComponent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { AgentAssignment, LlmConnection } from '../model/settings-types'
@@ -9,6 +11,10 @@ import { ModelSettingsScreen } from './ModelSettingsScreen'
 const connection: LlmConnection = {
   id: 'openai-1', label: 'OpenAI principal', provider: 'openai', baseUrl: null,
   hasKey: true, keyHint: '7890', createdAt: '2026-07-15', updatedAt: '2026-07-15',
+}
+
+function render(component: ReactNode) {
+  return renderComponent(<MemoryRouter>{component}</MemoryRouter>)
 }
 
 function makeService(overrides: Partial<SettingsService> = {}): SettingsService {

@@ -1,5 +1,7 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render as renderComponent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SettingsService } from '../services/settings-service'
@@ -9,6 +11,10 @@ const profile = {
   name: 'Ada Lovelace',
   email: 'ada@example.com',
   avatarUrl: null,
+}
+
+function render(component: ReactNode) {
+  return renderComponent(<MemoryRouter>{component}</MemoryRouter>)
 }
 
 function makeService(
