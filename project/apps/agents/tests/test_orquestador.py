@@ -83,7 +83,9 @@ def test_request_text_uses_llm_to_produce_normalized_spec(monkeypatch):
     fake_spec = {
         "blocks": [
             {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
-        ]
+        ],
+        "max_iterations": 5,
+        "tolerance": 0.05,
     }
     from agents.orquestador.schema import CircuitSpec
 

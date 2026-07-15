@@ -72,7 +72,7 @@ def orquestador_node(state: CircuitState) -> dict:
         result = _normalize(spec)
         # se sobreescribe circuit_spec con lo que el LLM entendió, para que
         # history/depuración muestren la especificación resuelta
-        result["circuit_spec"] = spec.model_dump(mode="json", exclude_unset=True)
+        result["circuit_spec"] = spec.model_dump(mode="json")
         return result
 
     if circuit_spec:
