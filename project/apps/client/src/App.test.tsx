@@ -52,6 +52,7 @@ function setSessionState({
 }
 
 beforeEach(() => {
+  window.history.pushState({}, '', '/')
   authClientMocks.signOut.mockResolvedValue({ error: null })
 })
 
@@ -90,6 +91,29 @@ it('shows the Ecosistema Multiagente home with a session', async () => {
   expect(
     screen.queryByRole('heading', { name: 'Sesión activa' }),
   ).not.toBeInTheDocument()
+})
+
+it.each([
+  ['/settings/profile', 'Tu perfil'],
+  ['/settings/models', 'Modelos y providers'],
+])('renders %s for authenticated users', async (path, heading) => {
+  window.history.pushState({}, '', path)
+  setSessionState({ data: session })
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: heading })).toBeVisible()
+})
+
+it('redirects unknown authenticated routes home', async () => {
+  window.history.pushState({}, '', '/unknown')
+  setSessionState({ data: session })
+
+  render(<App />)
+
+  expect(
+    await screen.findByRole('heading', { name: /buenos días/i }),
+  ).toBeVisible()
 })
 
 it('delegates sign-out through the authentication service', async () => {
