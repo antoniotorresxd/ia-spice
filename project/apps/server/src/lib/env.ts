@@ -11,6 +11,10 @@ const EnvSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
   APP_URL: z.string().default("http://localhost:5173"),
+  LLM_SECRETS_KEY: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/i, "must be 32 bytes hex (64 hex chars)"),
+  AGENTS_SERVICE_TOKEN: z.string().min(16),
   CORS_ALLOWED_ORIGINS: z
     .string()
     .default("http://localhost:5173")
