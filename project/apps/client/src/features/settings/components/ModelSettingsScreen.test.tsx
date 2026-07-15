@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -78,7 +78,7 @@ describe('ModelSettingsScreen', () => {
     })
     const user = userEvent.setup()
     render(<ModelSettingsScreen service={service} />)
-    await screen.findByText('OpenAI principal')
+    await screen.findByRole('button', { name: 'Editar OpenAI principal' })
 
     await user.click(screen.getByRole('button', { name: 'Editar OpenAI principal' }))
     expect(screen.getByText('Déjala vacía para conservar la actual.')).toBeVisible()
@@ -99,7 +99,7 @@ describe('ModelSettingsScreen', () => {
       updateConnection: vi.fn().mockRejectedValue(new Error('secret backend response')),
     })
     render(<ModelSettingsScreen service={service} />)
-    await screen.findByText('OpenAI principal')
+    await screen.findByRole('button', { name: 'Editar OpenAI principal' })
     await user.click(screen.getByRole('button', { name: 'Editar OpenAI principal' }))
     await user.click(screen.getByRole('button', { name: 'Guardar conexión' }))
 
@@ -115,7 +115,7 @@ describe('ModelSettingsScreen', () => {
     })
     const user = userEvent.setup()
     render(<ModelSettingsScreen service={service} />)
-    await screen.findByText('OpenAI principal')
+    await screen.findByRole('button', { name: 'Editar OpenAI principal' })
 
     await user.click(screen.getByRole('button', { name: 'Eliminar OpenAI principal' }))
     expect(screen.getByRole('dialog', { name: 'Eliminar conexión' })).toBeVisible()
@@ -125,5 +125,74 @@ describe('ModelSettingsScreen', () => {
     await waitFor(() => expect(service.deleteConnection).toHaveBeenCalledWith(connection.id))
     expect(service.listConnections).toHaveBeenCalledTimes(2)
     expect(service.listAgentAssignments).toHaveBeenCalledTimes(2)
+  })
+
+  it('renders exactly the four configurable agents and marks blank assignments safely', async () => {
+    const assignments: AgentAssignment[] = [
+      { agentId: 'orchestrator', label: 'Orquestador', connectionId: null, model: '' },
+      { agentId: 'calculation', label: 'Cálculo', connectionId: null, model: '' },
+      { agentId: 'writer', label: 'Escritura', connectionId: null, model: '' },
+      { agentId: 'curator', label: 'Curador', connectionId: null, model: '' },
+    ]
+    render(<ModelSettingsScreen service={makeService({ listAgentAssignments: vi.fn().mockResolvedValue(assignments) })} />)
+
+    const list = await screen.findByRole('list', { name: 'Asignaciones de agentes' })
+    expect(within(list).getAllByRole('listitem').map((row) => within(row).getByRole('heading').textContent)).toEqual([
+      'Orquestador', 'Cálculo', 'Escritura', 'Curador',
+    ])
+    expect(within(list).queryByText('Shell')).not.toBeInTheDocument()
+    expect(within(list).getAllByText('Sin configurar')).toHaveLength(4)
+  })
+
+  it('saves independent models for agents that reuse the same connection', async () => {
+    const assignments: AgentAssignment[] = [
+      { agentId: 'orchestrator', label: 'Orquestador', connectionId: null, model: '' },
+      { agentId: 'calculation', label: 'Cálculo', connectionId: null, model: '' },
+      { agentId: 'writer', label: 'Escritura', connectionId: null, model: '' },
+      { agentId: 'curator', label: 'Curador', connectionId: null, model: '' },
+    ]
+    const service = makeService({
+      listConnections: vi.fn().mockResolvedValue([connection]),
+      listAgentAssignments: vi.fn().mockResolvedValue(assignments),
+      updateAgentAssignment: vi.fn().mockImplementation((agentId, input) => Promise.resolve({
+        ...assignments.find((item) => item.agentId === agentId)!, ...input,
+      })),
+    })
+    const user = userEvent.setup()
+    render(<ModelSettingsScreen service={service} />)
+
+    const list = await screen.findByRole('list', { name: 'Asignaciones de agentes' })
+    const orchestrator = within(list).getByRole('listitem', { name: /Orquestador/ })
+    const curator = within(list).getByRole('listitem', { name: /Curador/ })
+    await user.selectOptions(within(orchestrator).getByLabelText('Conexión'), connection.id)
+    await user.type(within(orchestrator).getByLabelText('Modelo'), 'gpt-5')
+    await user.click(within(orchestrator).getByRole('button', { name: 'Guardar' }))
+    await user.selectOptions(within(curator).getByLabelText('Conexión'), connection.id)
+    await user.type(within(curator).getByLabelText('Modelo'), 'gpt-5-mini')
+    await user.click(within(curator).getByRole('button', { name: 'Guardar' }))
+
+    expect(service.updateAgentAssignment).toHaveBeenNthCalledWith(1, 'orchestrator', {
+      connectionId: connection.id, model: 'gpt-5',
+    })
+    expect(service.updateAgentAssignment).toHaveBeenNthCalledWith(2, 'curator', {
+      connectionId: connection.id, model: 'gpt-5-mini',
+    })
+  })
+
+  it('calls attention to an assignment cleared by deleting its connection', async () => {
+    const assigned: AgentAssignment = { agentId: 'orchestrator', label: 'Orquestador', connectionId: connection.id, model: 'gpt-5' }
+    const cleared = { ...assigned, connectionId: null, model: '' }
+    const service = makeService({
+      listConnections: vi.fn().mockResolvedValueOnce([connection]).mockResolvedValueOnce([]),
+      listAgentAssignments: vi.fn().mockResolvedValueOnce([assigned]).mockResolvedValueOnce([cleared]),
+    })
+    const user = userEvent.setup()
+    render(<ModelSettingsScreen service={service} />)
+    await screen.findByRole('button', { name: 'Editar OpenAI principal' })
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar OpenAI principal' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar eliminación' }))
+
+    expect(await screen.findByRole('alert', { name: 'Asignación de Orquestador requiere atención' })).toHaveTextContent('Sin configurar')
   })
 })

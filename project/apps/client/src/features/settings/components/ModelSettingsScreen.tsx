@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 
-import type { AgentAssignment, ConnectionInput, LlmConnection, UserProfile } from '../model/settings-types'
+import type { AgentAssignment, AgentAssignmentInput, AgentId, ConnectionInput, LlmConnection, UserProfile } from '../model/settings-types'
 import type { SettingsService } from '../services/settings-service'
+import { AgentAssignmentList } from './AgentAssignmentList'
 import { ConnectionForm } from './ConnectionForm'
 import { SettingsShell } from './SettingsShell'
 import styles from './SettingsShell.module.css'
@@ -16,6 +17,7 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
   const [deleting, setDeleting] = useState<LlmConnection | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  const [attentionAgentIds, setAttentionAgentIds] = useState<Set<AgentId>>(new Set())
   const [retryKey, setRetryKey] = useState(0)
 
   async function fetchCollections() {
@@ -58,10 +60,14 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
 
   async function remove() {
     if (!deleting) return
+    const affectedAgentIds = assignments
+      .filter((assignment) => assignment.connectionId === deleting.id)
+      .map((assignment) => assignment.agentId)
     setDeleteError('')
     try {
       await service.deleteConnection(deleting.id)
       await load()
+      setAttentionAgentIds((current) => new Set([...current, ...affectedAgentIds]))
       setDeleting(null)
     } catch {
       setDeleteError('No pudimos eliminar la conexión. Inténtalo de nuevo.')
@@ -69,6 +75,19 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
   }
 
   const isAssigned = deleting && assignments.some((item) => item.connectionId === deleting.id)
+
+  async function saveAssignment(agentId: AgentId, input: AgentAssignmentInput) {
+    const saved = await service.updateAgentAssignment(agentId, input)
+    setAssignments((current) => current.some((item) => item.agentId === agentId)
+      ? current.map((item) => item.agentId === agentId ? saved : item)
+      : [...current, saved])
+    setAttentionAgentIds((current) => {
+      const next = new Set(current)
+      next.delete(agentId)
+      return next
+    })
+    return saved
+  }
 
   return (
     <SettingsShell onSignOut={onSignOut} userEmail={profile?.email ?? ''} userName={profile?.name ?? 'Cuenta'}>
@@ -79,6 +98,7 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
       </header>
       {loadError ? <section className={styles.loadState}><p role="alert">No pudimos cargar las conexiones. Inténtalo de nuevo.</p><button onClick={() => setRetryKey((value) => value + 1)} type="button">Reintentar</button></section> : null}
       {connections ? (
+        <>
         <section>
           <button onClick={() => setEditing(null)} type="button">Nueva conexión</button>
           {connections.length === 0 ? <p>Todavía no tienes conexiones.</p> : (
@@ -95,6 +115,16 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
             </ul>
           )}
         </section>
+        <section aria-labelledby="agent-assignments-title">
+          <h2 id="agent-assignments-title">Asignaciones por agente</h2>
+          <AgentAssignmentList
+            assignments={assignments}
+            attentionAgentIds={attentionAgentIds}
+            connections={connections}
+            onSave={saveAssignment}
+          />
+        </section>
+        </>
       ) : !loadError ? <p aria-busy="true">Cargando conexiones…</p> : null}
       {editing !== undefined ? (
         <section aria-label={editing ? 'Editar conexión' : 'Nueva conexión'} role="dialog">
