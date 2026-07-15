@@ -11,10 +11,14 @@ import type {
 import type { WorkspaceService } from './workspace-service'
 
 const clone = <T>(value: T): T => structuredClone(value)
-const summary = (conversation: WorkspaceConversationDetail): WorkspaceConversation => {
-  const { messages: _messages, files: _files, execution: _execution, ...result } = conversation
-  return result
-}
+const summary = (conversation: WorkspaceConversationDetail): WorkspaceConversation => ({
+  id: conversation.id,
+  projectId: conversation.projectId,
+  title: conversation.title,
+  preview: conversation.preview,
+  updatedAt: conversation.updatedAt,
+  executionStatus: conversation.executionStatus,
+})
 
 export function createMockWorkspaceService(): WorkspaceService {
   const projects = clone(workspaceProjectFixtures)
