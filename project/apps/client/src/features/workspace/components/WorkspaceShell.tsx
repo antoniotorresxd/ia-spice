@@ -23,8 +23,12 @@ export function WorkspaceShell({ onSignOut, service, userName }: WorkspaceShellP
     | { status: 'saved'; conversationId: string; previousProjectId: string | null; projectId: string }
     | { status: 'error'; message: string }
   >({ status: 'idle' })
+  const [refreshWarning, setRefreshWarning] = useState(false)
 
-  const refreshSnapshot = async () => setSnapshot(await service.getSnapshot())
+  const refreshSnapshot = async () => {
+    const next = await service.getSnapshot()
+    setSnapshot(next)
+  }
 
   useEffect(() => {
     let isCurrent = true
@@ -39,11 +43,12 @@ export function WorkspaceShell({ onSignOut, service, userName }: WorkspaceShellP
     setAssignmentNotice({ status: 'saving' })
     try {
       await service.assignConversation(conversationId, projectId)
-      await refreshSnapshot()
-      setAssignmentNotice({ status: 'saved', conversationId, previousProjectId, projectId })
     } catch (error) {
       setAssignmentNotice({ status: 'error', message: error instanceof Error ? error.message : 'No pudimos mover la conversación.' })
+      return
     }
+    setAssignmentNotice({ status: 'saved', conversationId, previousProjectId, projectId })
+    try { await refreshSnapshot(); setRefreshWarning(false) } catch { setRefreshWarning(true) }
   }
 
   const undoAssignment = async () => {
@@ -51,11 +56,16 @@ export function WorkspaceShell({ onSignOut, service, userName }: WorkspaceShellP
     const { conversationId, previousProjectId } = assignmentNotice
     try {
       await service.restoreConversationProject(conversationId, previousProjectId)
-      await refreshSnapshot()
-      setAssignmentNotice({ status: 'idle' })
     } catch (error) {
       setAssignmentNotice({ status: 'error', message: error instanceof Error ? error.message : 'No pudimos deshacer el movimiento.' })
+      return
     }
+    setAssignmentNotice({ status: 'idle' })
+    try { await refreshSnapshot(); setRefreshWarning(false) } catch { setRefreshWarning(true) }
+  }
+
+  const retryRefresh = async () => {
+    try { await refreshSnapshot(); setRefreshWarning(false) } catch { setRefreshWarning(true) }
   }
 
   return (
@@ -79,6 +89,7 @@ export function WorkspaceShell({ onSignOut, service, userName }: WorkspaceShellP
           {assignmentNotice.status === 'saving' ? <p aria-live="polite">Moviendo conversación…</p> : null}
           {assignmentNotice.status === 'saved' ? <div aria-live="polite" role="status">Conversación movida <button onClick={() => void undoAssignment()} type="button">Deshacer</button></div> : null}
           {assignmentNotice.status === 'error' ? <p role="alert">{assignmentNotice.message}</p> : null}
+          {refreshWarning ? <p>La operación se guardó, pero no pudimos actualizar la vista. <button onClick={() => void retryRefresh()} type="button">Reintentar actualización</button></p> : null}
         </div>
       </section>
       <AssistantPanel />

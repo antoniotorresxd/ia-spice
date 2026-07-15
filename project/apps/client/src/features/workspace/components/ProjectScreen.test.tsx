@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import type { WorkspaceService } from '../services/workspace-service'
@@ -26,8 +26,8 @@ function service(overrides: Partial<WorkspaceService> = {}): WorkspaceService {
   } as WorkspaceService
 }
 
-function renderScreen(workspaceService = service()) {
-  render(<MemoryRouter initialEntries={['/projects/project-filters']}><Routes><Route path="/projects/:projectId" element={<ProjectScreen service={workspaceService} />} /></Routes></MemoryRouter>)
+function renderScreen(workspaceService = service(), refreshSnapshot = vi.fn().mockResolvedValue(undefined)) {
+  render(<MemoryRouter initialEntries={['/projects/project-filters']}><Routes><Route element={<Outlet context={{ refreshSnapshot }} />}><Route path="/projects/:projectId" element={<ProjectScreen service={workspaceService} />} /></Route></Routes></MemoryRouter>)
   return workspaceService
 }
 
@@ -35,9 +35,31 @@ it('renders semantic tabs and links files to their source conversations', async 
   const user = userEvent.setup()
   renderScreen()
   expect(await screen.findByRole('tab', { name: 'Conversaciones 1' })).toHaveAttribute('aria-selected', 'true')
+  expect(screen.getByRole('tab', { name: 'Conversaciones 1' })).toHaveAttribute('tabindex', '0')
+  expect(screen.getByRole('tab', { name: 'Archivos 1' })).toHaveAttribute('tabindex', '-1')
   await user.click(screen.getByRole('tab', { name: 'Archivos 1' }))
-  expect(screen.getByRole('tabpanel', { name: 'Archivos' })).toHaveTextContent('report.pdf')
+  expect(screen.getByRole('tabpanel', { name: 'Archivos 1' })).toHaveTextContent('report.pdf')
   expect(screen.getByRole('link', { name: 'report.pdf' })).toHaveAttribute('href', '/conversations/conversation-rc')
+})
+
+it('loads file details lazily, tolerates partial failures, and supports arrow tab navigation', async () => {
+  const user = userEvent.setup()
+  const second = { ...project.conversations[0], id: 'conversation-failed', title: 'Fallida' }
+  const workspaceService = service({
+    getProject: vi.fn().mockResolvedValue({ ...project, conversationIds: ['conversation-rc', second.id], conversations: [project.conversations[0], second], fileCount: 1 }),
+    getConversation: vi.fn().mockImplementation((id) => id === second.id ? Promise.reject(new Error('Detalle no disponible')) : service().getConversation(id)),
+  })
+  renderScreen(workspaceService)
+  const conversationsTab = await screen.findByRole('tab', { name: 'Conversaciones 2' })
+  expect(workspaceService.getConversation).not.toHaveBeenCalled()
+  conversationsTab.focus()
+  await user.keyboard('{ArrowRight}')
+  expect(screen.getByRole('tab', { name: 'Archivos 1' })).toHaveFocus()
+  expect(await screen.findByRole('link', { name: 'report.pdf' })).toBeVisible()
+  expect(screen.getByText(/algunos archivos no se pudieron cargar/i)).toBeVisible()
+  expect(workspaceService.getConversation).toHaveBeenCalledTimes(2)
+  await user.keyboard('{ArrowLeft}')
+  expect(screen.getByRole('tab', { name: 'Conversaciones 2' })).toHaveFocus()
 })
 
 it('validates drag data, assigns a conversation, and supports undo', async () => {
@@ -45,12 +67,36 @@ it('validates drag data, assigns a conversation, and supports undo', async () =>
   const workspaceService = renderScreen()
   const target = await screen.findByRole('region', { name: 'Asignar a Filtros analógicos' })
   fireEvent.drop(target, { dataTransfer: { getData: () => '{bad json' } })
+  fireEvent.drop(target, { dataTransfer: { getData: () => JSON.stringify({ conversationId: 'draft', previousProjectId: null, extra: true }) } })
   expect(workspaceService.assignConversation).not.toHaveBeenCalled()
   fireEvent.drop(target, { dataTransfer: { getData: () => JSON.stringify({ conversationId: 'conversation-draft', previousProjectId: null }) } })
   await waitFor(() => expect(workspaceService.assignConversation).toHaveBeenCalledWith('conversation-draft', 'project-filters'))
   expect(screen.getByRole('status')).toHaveTextContent('Conversación movida a Filtros analógicos')
   await user.click(screen.getByRole('button', { name: 'Deshacer' }))
   expect(workspaceService.restoreConversationProject).toHaveBeenCalledWith('conversation-draft', null)
+})
+
+it('keeps successful assignment undoable when project refresh fails and allows retry', async () => {
+  const user = userEvent.setup()
+  const workspaceService = service({ getProject: vi.fn().mockResolvedValueOnce(project).mockRejectedValueOnce(new Error('Refresh failed')).mockResolvedValue(project) })
+  renderScreen(workspaceService)
+  fireEvent.drop(await screen.findByRole('region', { name: 'Asignar a Filtros analógicos' }), { dataTransfer: { getData: () => JSON.stringify({ conversationId: 'conversation-draft', previousProjectId: null }) } })
+  expect(await screen.findByRole('status')).toHaveTextContent('Conversación movida')
+  expect(screen.getByRole('button', { name: 'Deshacer' })).toBeVisible()
+  expect(screen.getByText(/no pudimos actualizar/i)).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Reintentar actualización' }))
+  await waitFor(() => expect(workspaceService.getProject).toHaveBeenCalledTimes(3))
+})
+
+it('reports refresh separately after a successful undo', async () => {
+  const user = userEvent.setup()
+  const workspaceService = service({ getProject: vi.fn().mockResolvedValueOnce(project).mockResolvedValueOnce(project).mockRejectedValueOnce(new Error('Refresh failed')) })
+  renderScreen(workspaceService)
+  fireEvent.drop(await screen.findByRole('region', { name: 'Asignar a Filtros analógicos' }), { dataTransfer: { getData: () => JSON.stringify({ conversationId: 'conversation-draft', previousProjectId: null }) } })
+  await user.click(await screen.findByRole('button', { name: 'Deshacer' }))
+  expect(workspaceService.restoreConversationProject).toHaveBeenCalledWith('conversation-draft', null)
+  expect(await screen.findByText(/no pudimos actualizar/i)).toBeVisible()
+  expect(screen.queryByText(/no pudimos deshacer/i)).not.toBeInTheDocument()
 })
 
 it('announces assignment failures without showing success', async () => {
@@ -60,4 +106,3 @@ it('announces assignment failures without showing success', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('Sin conexión')
   expect(screen.queryByText('Conversación movida a Filtros analógicos')).not.toBeInTheDocument()
 })
-

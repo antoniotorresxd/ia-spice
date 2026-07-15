@@ -12,6 +12,7 @@ function parseConversationDragPayload(value: string): ConversationDragPayload | 
     const parsed: unknown = JSON.parse(value)
     if (!parsed || typeof parsed !== 'object') return null
     const candidate = parsed as Record<string, unknown>
+    if (Object.keys(candidate).length !== 2 || !Object.hasOwn(candidate, 'conversationId') || !Object.hasOwn(candidate, 'previousProjectId')) return null
     if (typeof candidate.conversationId !== 'string' || candidate.conversationId.trim() === '') return null
     if (candidate.previousProjectId !== null && typeof candidate.previousProjectId !== 'string') return null
     return { conversationId: candidate.conversationId, previousProjectId: candidate.previousProjectId as string | null }
