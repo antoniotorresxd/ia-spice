@@ -1,7 +1,12 @@
 # project/apps/agents/tests/test_graph.py
+import os
+from unittest.mock import MagicMock
+
 import pytest
 
+import agents.orquestador.node as orquestador_module
 from agents.graph import build_graph
+from agents.orquestador.schema import CircuitSpec
 
 
 def _initial_state(circuit_spec):
@@ -116,3 +121,65 @@ def test_graph_checkpoints_state_by_thread_id():
     assert snapshot.values["sim_results"]["div1"]["metrics"]["v_out"] == pytest.approx(
         6.0, rel=0.05
     )
+
+
+def test_request_text_end_to_end_with_fake_llm(monkeypatch):
+    fake_spec = CircuitSpec.model_validate(
+        {
+            "blocks": [
+                {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+            ]
+        }
+    )
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda: MagicMock())
+    monkeypatch.setattr(
+        orquestador_module, "extract_circuit_spec", lambda chat_model, text: fake_spec
+    )
+
+    spec = {"blocks": []}  # circuit_spec vacio: se ignora porque hay request_text
+    graph = build_graph()
+    config = {"configurable": {"thread_id": "e2e-request-text"}}
+    initial_state = {
+        "circuit_spec": spec,
+        "request_text": "dame un divisor de 5V a 3.3V",
+        "normalized_spec": None,
+        "pending_blocks": None,
+        "component_values": {},
+        "netlists": {},
+        "sim_results": {},
+        "iteration": 0,
+        "history": [],
+        "verdict": None,
+    }
+
+    final = graph.invoke(initial_state, config)
+
+    assert final["verdict"]["status"] == "accepted"
+    v_out = final["sim_results"]["div1"]["metrics"]["v_out"]
+    assert v_out == pytest.approx(3.3, rel=0.05)
+
+
+@pytest.mark.live_llm
+@pytest.mark.skipif(
+    not (os.environ.get("SERVER_BASE_URL") and os.environ.get("AGENTS_SERVICE_TOKEN")),
+    reason="requires a running server with SERVER_BASE_URL/AGENTS_SERVICE_TOKEN and an active LLM",
+)
+def test_request_text_end_to_end_with_live_llm():
+    graph = build_graph()
+    config = {"configurable": {"thread_id": "e2e-live-llm"}}
+    initial_state = {
+        "circuit_spec": {},
+        "request_text": "Necesito un divisor de voltaje que baje 5V a 3.3V",
+        "normalized_spec": None,
+        "pending_blocks": None,
+        "component_values": {},
+        "netlists": {},
+        "sim_results": {},
+        "iteration": 0,
+        "history": [],
+        "verdict": None,
+    }
+
+    final = graph.invoke(initial_state, config)
+
+    assert final["verdict"]["status"] == "accepted"
