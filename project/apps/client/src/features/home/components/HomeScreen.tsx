@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import type {
   ConversationExecution,
@@ -31,26 +31,29 @@ export function HomeScreen({ service, userName, onSignOut }: HomeScreenProps) {
   const [contextOpen, setContextOpen] = useState(false)
   const [announcement, setAnnouncement] = useState('')
   const [signOutError, setSignOutError] = useState<string | null>(null)
-
-  const loadOverview = useCallback(
-    async (nextPeriod: UsagePeriod) => {
-      setIsLoading(true)
-      setLoadError(false)
-      try {
-        const data = await service.getHomeOverview(nextPeriod)
-        setOverview(data)
-      } catch {
-        setLoadError(true)
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [service],
-  )
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    void loadOverview(period)
-  }, [loadOverview, period])
+    let isCurrent = true
+
+    service
+      .getHomeOverview(period)
+      .then((data) => {
+        if (!isCurrent) return
+        setOverview(data)
+        setLoadError(false)
+      })
+      .catch(() => {
+        if (isCurrent) setLoadError(true)
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [period, refreshKey, service])
 
   async function submitPrompt(text: string) {
     const execution = await service.submitPrompt({ text })
@@ -69,6 +72,18 @@ export function HomeScreen({ service, userName, onSignOut }: HomeScreenProps) {
   }
 
   const conversations = overview?.recentConversations ?? []
+
+  function changePeriod(nextPeriod: UsagePeriod) {
+    setIsLoading(true)
+    setLoadError(false)
+    setPeriod(nextPeriod)
+  }
+
+  function retryOverview() {
+    setIsLoading(true)
+    setLoadError(false)
+    setRefreshKey((current) => current + 1)
+  }
 
   return (
     <main className={styles.workspace}>
@@ -125,7 +140,7 @@ export function HomeScreen({ service, userName, onSignOut }: HomeScreenProps) {
             {loadError && !overview ? (
               <section className={styles.loadState}>
                 <p role="alert">No pudimos cargar tu espacio.</p>
-                <button onClick={() => void loadOverview(period)} type="button">
+                <button onClick={retryOverview} type="button">
                   Reintentar
                 </button>
               </section>
@@ -138,7 +153,7 @@ export function HomeScreen({ service, userName, onSignOut }: HomeScreenProps) {
             ) : overview ? (
               <HomeOverview
                 data={overview}
-                onPeriodChange={(nextPeriod) => setPeriod(nextPeriod)}
+                onPeriodChange={changePeriod}
               />
             ) : null}
           </div>
@@ -157,4 +172,3 @@ export function HomeScreen({ service, userName, onSignOut }: HomeScreenProps) {
     </main>
   )
 }
-
