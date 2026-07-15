@@ -109,6 +109,22 @@ it.each([
   expect(await screen.findByRole('heading', { name: heading })).toBeVisible()
 })
 
+it.each([
+  ['/new', 'Nueva solicitud'],
+  ['/projects', 'Proyectos'],
+  ['/projects/project-filters', 'Detalle del proyecto'],
+  ['/conversations', 'Conversaciones'],
+  ['/conversations/conversation-filter', 'Detalle de la conversación'],
+])('renders workspace route %s for authenticated users', async (path, heading) => {
+  window.history.pushState({}, '', path)
+  setSessionState({ data: session })
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: heading })).toBeVisible()
+  expect(screen.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible()
+})
+
 it('redirects unknown authenticated routes home', async () => {
   window.history.pushState({}, '', '/unknown')
   setSessionState({ data: session })

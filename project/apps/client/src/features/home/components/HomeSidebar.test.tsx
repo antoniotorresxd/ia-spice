@@ -4,6 +4,7 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { HomeSidebar } from './HomeSidebar'
+import { workspaceConversationFixtures, workspaceProjectFixtures } from '../../workspace/model/workspace-fixtures'
 
 afterEach(cleanup)
 
@@ -27,6 +28,38 @@ function renderSidebar(onSignOut = vi.fn().mockResolvedValue(undefined), onClose
 
   return { onSignOut, onClose }
 }
+
+it('renders route-aware workspace navigation and collapsed projects', async () => {
+  const user = userEvent.setup()
+  render(
+    <MemoryRouter>
+      <HomeSidebar
+        conversations={workspaceConversationFixtures}
+        isOpen
+        onClose={vi.fn()}
+        onSignOut={vi.fn()}
+        projects={workspaceProjectFixtures}
+        userName="Antonio"
+      />
+    </MemoryRouter>,
+  )
+
+  expect(screen.getByRole('link', { name: 'Nueva solicitud' })).toHaveAttribute('href', '/new')
+  expect(screen.getByRole('link', { name: 'Proyectos' })).toHaveAttribute('href', '/projects')
+  expect(screen.getByRole('link', { name: 'Sin proyecto' })).toHaveAttribute('href', '/conversations')
+
+  const disclosure = screen.getByRole('button', { name: 'Expandir Filtros analógicos' })
+  expect(disclosure).toHaveAttribute('aria-expanded', 'false')
+  expect(screen.queryByRole('link', { name: 'Filtro RC pasa bajas' })).not.toBeInTheDocument()
+
+  await user.click(disclosure)
+
+  expect(disclosure).toHaveAttribute('aria-expanded', 'true')
+  expect(screen.getByRole('link', { name: 'Filtro RC pasa bajas' })).toHaveAttribute(
+    'href',
+    '/conversations/conversation-rc',
+  )
+})
 
 it('does not retain the profile menu after mobile navigation closes and reopens', async () => {
   const user = userEvent.setup()

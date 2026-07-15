@@ -8,7 +8,15 @@ import { mockHomeService } from './features/home/services/mock-home-service'
 import { ModelSettingsScreen } from './features/settings/components/ModelSettingsScreen'
 import { ProfileSettingsScreen } from './features/settings/components/ProfileSettingsScreen'
 import { mockSettingsService } from './features/settings/services/mock-settings-service'
+import { WorkspaceShell } from './features/workspace/components/WorkspaceShell'
+import { createMockWorkspaceService } from './features/workspace/services/mock-workspace-service'
 import './App.css'
+
+const workspaceService = createMockWorkspaceService()
+
+function PlaceholderScreen({ heading }: { heading: string }) {
+  return <h1>{heading}</h1>
+}
 
 function App() {
   const { data: session, isPending } = authClient.useSession()
@@ -67,6 +75,21 @@ function App() {
             />
           }
         />
+        <Route
+          element={
+            <WorkspaceShell
+              onSignOut={handleSignOut}
+              service={workspaceService}
+              userName={session.user.name}
+            />
+          }
+        >
+          <Route path="/new" element={<PlaceholderScreen heading="Nueva solicitud" />} />
+          <Route path="/projects" element={<PlaceholderScreen heading="Proyectos" />} />
+          <Route path="/projects/:projectId" element={<PlaceholderScreen heading="Detalle del proyecto" />} />
+          <Route path="/conversations" element={<PlaceholderScreen heading="Conversaciones" />} />
+          <Route path="/conversations/:conversationId" element={<PlaceholderScreen heading="Detalle de la conversación" />} />
+        </Route>
         <Route path="*" element={<Navigate replace to="/" />} />
       </Routes>
     </BrowserRouter>
