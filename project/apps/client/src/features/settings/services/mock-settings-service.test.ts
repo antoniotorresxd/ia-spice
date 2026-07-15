@@ -28,6 +28,17 @@ describe('MockSettingsService', () => {
     expect(assignments.find((item) => item.agentId === 'curator')?.model).toBe('gpt-5-mini')
   })
 
+  it('lists exactly the four configurable agent labels without Shell', async () => {
+    const service = createMockSettingsService()
+
+    expect((await service.listAgentAssignments()).map((item) => item.label)).toEqual([
+      'Orquestador',
+      'Cálculo',
+      'Escritura',
+      'Curador',
+    ])
+  })
+
   it('clears matching assignments when deleting a connection', async () => {
     const service = createMockSettingsService()
     await service.deleteConnection('connection-openai')

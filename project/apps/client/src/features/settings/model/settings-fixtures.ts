@@ -26,6 +26,6 @@ export const connectionsFixture: LlmConnection[] = [
 export const agentAssignmentsFixture: AgentAssignment[] = [
   { agentId: 'orchestrator', label: 'Orquestador', connectionId: 'connection-openai', model: 'gpt-5' },
   { agentId: 'calculation', label: 'Cálculo', connectionId: 'connection-openai', model: 'gpt-5-mini' },
-  { agentId: 'writer', label: 'Escritor', connectionId: null, model: '' },
+  { agentId: 'writer', label: 'Escritura', connectionId: null, model: '' },
   { agentId: 'curator', label: 'Curador', connectionId: null, model: '' },
 ]
