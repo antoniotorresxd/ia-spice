@@ -80,14 +80,16 @@ it('shows the real authentication experience without a session', () => {
   expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeVisible()
 })
 
-it('shows the authenticated user and sign-out control with a session', () => {
+it('shows the Ecosistema Multiagente home with a session', async () => {
   setSessionState({ data: session })
 
   render(<App />)
 
-  expect(screen.getByRole('heading', { name: 'Sesión activa' })).toBeVisible()
-  expect(screen.getByText('Ada Lovelace')).toBeVisible()
+  expect(await screen.findByText('Ecosistema Multiagente')).toBeVisible()
   expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
+  expect(
+    screen.queryByRole('heading', { name: 'Sesión activa' }),
+  ).not.toBeInTheDocument()
 })
 
 it('delegates sign-out through the authentication service', async () => {
