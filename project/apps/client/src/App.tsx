@@ -10,6 +10,7 @@ import { ProfileSettingsScreen } from './features/settings/components/ProfileSet
 import { mockSettingsService } from './features/settings/services/mock-settings-service'
 import { WorkspaceShell } from './features/workspace/components/WorkspaceShell'
 import { NewRequestScreen } from './features/workspace/components/NewRequestScreen'
+import { ProjectsScreen } from './features/workspace/components/ProjectsScreen'
 import { createMockWorkspaceService } from './features/workspace/services/mock-workspace-service'
 import './App.css'
 
@@ -95,7 +96,7 @@ function App() {
           }
         >
           <Route path="/new" element={<NewRequestScreen service={workspaceService} />} />
-          <Route path="/projects" element={<PlaceholderScreen heading="Proyectos" />} />
+          <Route path="/projects" element={<ProjectsScreen service={workspaceService} />} />
           <Route path="/projects/:projectId" element={<PlaceholderScreen heading="Detalle del proyecto" />} />
           <Route path="/conversations" element={<PlaceholderScreen heading="Conversaciones" />} />
           <Route path="/conversations/:conversationId" element={<PlaceholderScreen heading="Detalle de la conversación" />} />
