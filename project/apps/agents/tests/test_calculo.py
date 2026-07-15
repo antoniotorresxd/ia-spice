@@ -43,6 +43,7 @@ def test_calculo_subgraph_fans_out_one_worker_per_block():
     graph = build_calculo_graph()
     state = {
         "circuit_spec": {},
+        "request_text": None,
         "normalized_spec": {
             "blocks": [
                 {

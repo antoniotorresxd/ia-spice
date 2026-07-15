@@ -9,8 +9,9 @@ def merge_dicts(left: dict | None, right: dict | None) -> dict:
 
 
 class CircuitState(TypedDict):
-    # Entrada cruda del caller
+    # Entrada cruda del caller (uno de los dos, o ambos — ver orquestador)
     circuit_spec: dict
+    request_text: str | None
 
     # Escrito por 'orquestador'
     normalized_spec: dict | None

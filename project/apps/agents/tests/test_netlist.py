@@ -61,6 +61,7 @@ def test_netlist_builders_registry_covers_all_types():
 def _pipeline_state():
     return {
         "circuit_spec": {},
+        "request_text": None,
         "normalized_spec": {
             "blocks": [
                 {

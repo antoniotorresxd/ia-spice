@@ -80,6 +80,7 @@ from agents.shell.node import shell_node
 def _pipeline_state(netlists, pending):
     return {
         "circuit_spec": {},
+        "request_text": None,
         "normalized_spec": {
             "blocks": [
                 {

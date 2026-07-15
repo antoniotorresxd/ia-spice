@@ -7,6 +7,7 @@ def test_sintesis_generates_and_simulates_mixed_blocks():
     graph = build_sintesis_graph()
     state = {
         "circuit_spec": {},
+        "request_text": None,
         "normalized_spec": {
             "blocks": [
                 {

@@ -7,6 +7,7 @@ from agents.graph import build_graph
 def _initial_state(circuit_spec):
     return {
         "circuit_spec": circuit_spec,
+        "request_text": None,
         "normalized_spec": None,
         "pending_blocks": None,
         "component_values": {},

@@ -1,5 +1,8 @@
 from pydantic import ValidationError
 
+from agents.llm.extraction import ExtractionError, extract_circuit_spec
+from agents.llm.factory import build_chat_model
+from agents.llm.settings_client import LlmSettingsError, fetch_active_llm
 from agents.orquestador.schema import CircuitSpec
 from agents.state import CircuitState
 
@@ -11,18 +14,23 @@ _GOALS = {
 }
 
 
-def orquestador_node(state: CircuitState) -> dict:
-    try:
-        spec = CircuitSpec.model_validate(state["circuit_spec"])
-    except ValidationError as exc:
-        return {
-            "verdict": {
-                "status": "rejected",
-                "reason": f"invalid circuit_spec: {exc}",
-                "best_iteration": None,
-            }
-        }
+def get_chat_model():
+    """Resuelve el LLM activo desde el server y construye el chat model.
 
+    Punto de indirección a nivel de módulo: los tests lo sustituyen (monkeypatch)
+    por un fake para no depender de red ni del server.
+    """
+    config = fetch_active_llm()
+    return build_chat_model(config)
+
+
+def _rejected(reason: str) -> dict:
+    return {
+        "verdict": {"status": "rejected", "reason": reason, "best_iteration": None}
+    }
+
+
+def _normalize(spec: CircuitSpec) -> dict:
     blocks = []
     for block in spec.blocks:
         params = block.params.model_dump()
@@ -39,12 +47,42 @@ def orquestador_node(state: CircuitState) -> dict:
                 },
             }
         )
-
     return {
         "normalized_spec": {"blocks": blocks, "max_iterations": spec.max_iterations},
         "pending_blocks": [b["id"] for b in blocks],
         "iteration": 0,
     }
+
+
+def orquestador_node(state: CircuitState) -> dict:
+    request_text = state.get("request_text")
+    circuit_spec = state.get("circuit_spec")
+
+    if request_text:
+        try:
+            chat_model = get_chat_model()
+        except LlmSettingsError as exc:
+            return _rejected(f"llm_settings_unavailable: {exc}")
+
+        try:
+            spec = extract_circuit_spec(chat_model, request_text)
+        except ExtractionError as exc:
+            return _rejected(f"llm_extraction_failed: {exc}")
+
+        result = _normalize(spec)
+        # se sobreescribe circuit_spec con lo que el LLM entendió, para que
+        # history/depuración muestren la especificación resuelta
+        result["circuit_spec"] = spec.model_dump(mode="json", exclude_unset=True)
+        return result
+
+    if circuit_spec:
+        try:
+            spec = CircuitSpec.model_validate(circuit_spec)
+        except ValidationError as exc:
+            return _rejected(f"invalid circuit_spec: {exc}")
+        return _normalize(spec)
+
+    return _rejected("no input provided: neither request_text nor circuit_spec")
 
 
 def route_after_orquestador(state: CircuitState) -> str:

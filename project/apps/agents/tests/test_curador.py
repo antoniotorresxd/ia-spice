@@ -59,6 +59,7 @@ from agents.curador.node import curador_node, route_after_curador
 def _state(sim_results, iteration=0, max_iterations=5, history=None):
     return {
         "circuit_spec": {},
+        "request_text": None,
         "normalized_spec": {
             "blocks": [
                 {
