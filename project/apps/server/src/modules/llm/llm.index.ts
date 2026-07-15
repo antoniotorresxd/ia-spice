@@ -1,6 +1,9 @@
+import { timingSafeEqual } from "node:crypto";
+
 import { z } from "zod";
 
 import { createRouter } from "@/lib/create-app";
+import env from "@/lib/env";
 import { requireAuth } from "@/middleware/session";
 
 import {
@@ -12,6 +15,7 @@ import {
   activateLlmConfig,
   createLlmConfig,
   deleteLlmConfig,
+  getActiveLlmResolved,
   listLlmConfigs,
   updateLlmConfig,
 } from "./llm.services";
@@ -67,4 +71,22 @@ llmRouter.post("/api/llm/:id/activate", async (c) => {
     active: toPublicLlmConfig(row),
     catalog: catalog.map(toPublicLlmConfig),
   });
+});
+
+function isValidServiceToken(header: string | undefined): boolean {
+  if (!header?.startsWith("Bearer ")) return false;
+  const provided = Buffer.from(header.slice("Bearer ".length));
+  const expected = Buffer.from(env.AGENTS_SERVICE_TOKEN);
+  return provided.length === expected.length && timingSafeEqual(provided, expected);
+}
+
+llmRouter.get("/api/internal/llm/active", async (c) => {
+  if (!isValidServiceToken(c.req.header("authorization"))) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  const active = await getActiveLlmResolved();
+  if (!active) {
+    return c.json({ error: "No active LLM configured" }, 404);
+  }
+  return c.json(active);
 });
