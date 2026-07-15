@@ -24,9 +24,10 @@ bun run db:migrate    # drizzle-kit migrate
 bun run db:push       # drizzle-kit push (schema push without migration files)
 bun run db:studio     # drizzle-kit studio
 bun run db:drop       # drizzle-kit drop
+bun test              # run the test suite
 ```
 
-No lint/test scripts are defined for the server.
+`bun test` runs the suite; `RUN_DB_TESTS=1 bun test` additionally runs the DB-integration tests against Neon (skipped otherwise). No lint script is defined for the server.
 
 ### Client (`project/apps/client`)
 Standard Vite/React/TypeScript app (npm-based).
@@ -62,14 +63,14 @@ Built on **Hono** (`@hono/zod-openapi`'s `OpenAPIHono`) with **better-auth** for
 - `src/app.ts` — builds the app via `createApp()`, calls `configureOpenAPI(app)`, mounts the routes array (currently `[authRouter]`).
 - `src/lib/create-app.ts` — exports `createRouter()` (bare `OpenAPIHono` factory, `strict: false`) used by every module to build its own sub-router, and `createApp()` which chains global middleware in order: `requestLogger` → CORS (`env.CORS_ALLOWED_ORIGINS`, `credentials: true`) → `sessionMiddleware`, plus JSON `notFound`/`onError` handlers.
 - `src/lib/configure-open-api.ts` — registers `/doc` (OpenAPI 3.0 spec) and `/reference` (Scalar UI), pulling in both the app's own `/doc` and better-auth's `/api/auth/open-api/generate-schema`.
-- `src/lib/env.ts` — Zod-validated env schema; process exits on invalid env. Key vars: `PORT`, `DATA_BASE_URL`, `DATA_BASE_URL_POOL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `APP_URL`, `CORS_ALLOWED_ORIGINS` (comma-separated, split into an array).
+- `src/lib/env.ts` — Zod-validated env schema; process exits on invalid env. Key vars: `PORT`, `DATA_BASE_URL`, `DATA_BASE_URL_POOL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `APP_URL`, `CORS_ALLOWED_ORIGINS` (comma-separated, split into an array), `LLM_SECRETS_KEY`, `AGENTS_SERVICE_TOKEN`.
 - `src/lib/types.ts` — `AppBindings` types Hono's `Variables` as `user`/`session` (inferred from `auth.$Infer.Session`); `AppOpenAPI` / `AppRouteHandler<R>` are the generic types every OpenAPI route handler should use.
 - `src/middleware/session.ts` — `sessionMiddleware` calls `auth.api.getSession()` and populates `user`/`session` context vars (or nulls) on every request; `requireAuth` is a separate guard middleware that 401s if no user is present. Mount `requireAuth` per-route/router, not globally.
 - `src/middleware/request-logger.ts` — logs method/path/status/timing.
 
 ### Module pattern
 
-Feature code lives under `src/modules/<name>/` with a consistent 3-file shape, illustrated by the only existing module, `auth`:
+Feature code lives under `src/modules/<name>/` with a consistent 3-file shape. Existing modules: `auth`, and `llm` — a catalog of LLM configs (API keys encrypted at rest, at most one active) with admin routes under `/api/llm` (session auth) and an internal endpoint `/api/internal/llm/active` (service-token auth via `AGENTS_SERVICE_TOKEN`) consumed by the agents subsystem.
 
 - `<name>.model.ts` — Drizzle pg table definitions. `drizzle.config.ts` globs schema from `./src/**/*.model.ts`, so a new module's tables are picked up automatically just by naming the file this way — nothing to register manually.
 - `<name>.services.ts` — business logic / library setup (e.g. `auth.services.ts` configures `betterAuth()` with `drizzleAdapter`, cookie settings, and plugins).
