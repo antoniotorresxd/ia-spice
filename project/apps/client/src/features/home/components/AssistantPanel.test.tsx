@@ -15,6 +15,7 @@ it('moves through minimized, compact, and expanded states', async () => {
       name: 'Asistente del Ecosistema Multiagente',
     }),
   ).toHaveAttribute('data-mode', 'compact')
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
 
   await user.click(screen.getByRole('button', { name: 'Minimizar asistente' }))
   const opener = screen.getByRole('button', { name: 'Abrir asistente' })
@@ -34,6 +35,7 @@ it('moves through minimized, compact, and expanded states', async () => {
       name: 'Asistente del Ecosistema Multiagente',
     }),
   ).toHaveAttribute('data-mode', 'compact')
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Expandir asistente' }))
 
   expect(

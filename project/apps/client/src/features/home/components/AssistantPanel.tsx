@@ -30,9 +30,11 @@ export function AssistantPanel() {
         </span>
         <span aria-hidden="true" className="home-assistant-availability" />
       </button>
-      <span className="home-assistant-tooltip" role="tooltip">
-        Abrir asistente
-      </span>
+      {mode === 'minimized' ? (
+        <span className="home-assistant-tooltip" role="tooltip">
+          Abrir asistente
+        </span>
+      ) : null}
 
       {mode !== 'minimized' ? (
         <section
