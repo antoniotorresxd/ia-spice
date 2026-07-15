@@ -38,7 +38,19 @@ describe('ModelSettingsScreen', () => {
     render(<ModelSettingsScreen service={makeService()} />)
 
     expect(await screen.findByRole('heading', { name: 'Modelos y providers' })).toBeVisible()
+    expect(screen.getByRole('region', { name: 'Conexiones' })).toBeVisible()
+    expect(screen.getByRole('region', { name: 'Asignaciones por agente' })).toBeVisible()
     expect(screen.getByText('Todavía no tienes conexiones.')).toBeVisible()
+  })
+
+  it('presents connections as structured provider rows with a safe status', async () => {
+    render(<ModelSettingsScreen service={makeService({ listConnections: vi.fn().mockResolvedValue([connection]) })} />)
+
+    const connectionsRegion = await screen.findByRole('region', { name: 'Conexiones' })
+    const row = within(connectionsRegion).getByRole('listitem', { name: 'OpenAI principal' })
+    expect(within(row).getByText('OpenAI')).toBeVisible()
+    expect(within(row).getByText('Conectado')).toBeVisible()
+    expect(within(row).getByText('••••7890')).toBeVisible()
   })
 
   it('shows provider-specific fields and validates them', async () => {

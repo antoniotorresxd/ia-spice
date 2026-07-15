@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent, type RefObject } from 'react'
 
 import { validateConnection, type ConnectionErrors } from '../model/settings-validation'
 import type { ConnectionInput, LlmConnection, LlmProvider } from '../model/settings-types'
+import styles from './ModelSettingsScreen.module.css'
 
 type ConnectionFormProps = {
   connection?: LlmConnection | null
@@ -53,7 +54,7 @@ export function ConnectionForm({ connection, nameInputRef, onCancel, onDirtyChan
   }
 
   return (
-    <form onSubmit={submit}>
+    <form className={styles.connectionForm} onSubmit={submit}>
       <label>
         <span>Nombre</span>
         <input aria-invalid={Boolean(errors.label)} onChange={(event) => { setLabel(event.target.value); reportDirty({ label: event.target.value }) }} ref={nameInputRef} value={label} />
@@ -81,7 +82,7 @@ export function ConnectionForm({ connection, nameInputRef, onCancel, onDirtyChan
         </>
       ) : null}
       {saveError ? <p role="alert">{saveError}</p> : null}
-      <div>
+      <div className={styles.formActions}>
         <button onClick={onCancel} type="button">Cancelar</button>
         <button disabled={saving} type="submit">{saving ? 'Guardando…' : 'Guardar conexión'}</button>
       </div>

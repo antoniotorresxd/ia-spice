@@ -6,7 +6,15 @@ import { AgentAssignmentList } from './AgentAssignmentList'
 import { ConnectionForm } from './ConnectionForm'
 import { SettingsShell } from './SettingsShell'
 import { SettingsDialog } from './SettingsDialog'
-import styles from './SettingsShell.module.css'
+import styles from './ModelSettingsScreen.module.css'
+import shellStyles from './SettingsShell.module.css'
+
+const providerLabels = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  google: 'Google',
+  openai_compatible: 'OpenAI compatible',
+} as const
 
 type Props = { service: SettingsService; onSignOut?: () => Promise<void> }
 
@@ -101,32 +109,60 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
 
   return (
     <SettingsShell onSignOut={onSignOut} userEmail={profile?.email ?? ''} userName={profile?.name ?? 'Cuenta'}>
-      <header className={styles.pageHeader}>
-        <p>Configuración de IA</p>
-        <h1>Modelos y providers</h1>
-        <span>Administra las credenciales y endpoints disponibles.</span>
+      <header className={`${shellStyles.pageHeader} ${styles.pageHeader}`}>
+        <div>
+          <p>Configuración de IA</p>
+          <h1>Modelos y providers</h1>
+          <span>Conecta proveedores y decide qué modelo utiliza cada agente.</span>
+        </div>
+        <button className={styles.primaryButton} onClick={() => { setConnectionFormDirty(false); setEditing(null) }} type="button">
+          <span aria-hidden="true">+</span>
+          Nueva conexión
+        </button>
       </header>
-      {loadError ? <section className={styles.loadState}><p role="alert">No pudimos cargar las conexiones. Inténtalo de nuevo.</p><button onClick={() => setRetryKey((value) => value + 1)} type="button">Reintentar</button></section> : null}
+      {loadError ? <section className={shellStyles.loadState}><p role="alert">No pudimos cargar las conexiones. Inténtalo de nuevo.</p><button onClick={() => setRetryKey((value) => value + 1)} type="button">Reintentar</button></section> : null}
       {connections ? (
-        <>
-        <section>
-          <button onClick={() => { setConnectionFormDirty(false); setEditing(null) }} type="button">Nueva conexión</button>
-          {connections.length === 0 ? <p>Todavía no tienes conexiones.</p> : (
-            <ul>
+        <div className={styles.sections}>
+        <section aria-labelledby="connections-title" className={styles.section}>
+          <div className={styles.sectionHeading}>
+            <div>
+              <h2 id="connections-title">Conexiones</h2>
+              <p>Credenciales y endpoints disponibles para el ecosistema.</p>
+            </div>
+            <span>{connections.length} {connections.length === 1 ? 'conexión' : 'conexiones'}</span>
+          </div>
+          {connections.length === 0 ? (
+            <div className={styles.emptyState}>
+              <span aria-hidden="true">✦</span>
+              <div><strong>Todavía no tienes conexiones.</strong><p>Agrega un provider para comenzar a asignar modelos.</p></div>
+            </div>
+          ) : (
+            <ul className={styles.connectionList}>
               {connections.map((item) => (
-                <li key={item.id}>
-                  <strong>{item.label}</strong> <span>{item.provider}</span>
-                  {item.keyHint ? <span>••••{item.keyHint}</span> : <span>Sin API key</span>}
-                  {item.baseUrl ? <span>{item.baseUrl}</span> : null}
-                  <button aria-label={`Editar ${item.label}`} onClick={() => { setConnectionFormDirty(false); setEditing(item) }} type="button">Editar</button>
-                  <button aria-label={`Eliminar ${item.label}`} onClick={() => setDeleting(item)} type="button">Eliminar</button>
+                <li aria-label={item.label} className={styles.connectionRow} key={item.id}>
+                  <span aria-hidden="true" className={styles.providerMark}>{providerLabels[item.provider].slice(0, 2)}</span>
+                  <div className={styles.connectionIdentity}>
+                    <strong>{item.label}</strong>
+                    <span>{providerLabels[item.provider]}</span>
+                  </div>
+                  <div className={styles.connectionEndpoint}>
+                    <span>{item.keyHint ? `••••${item.keyHint}` : 'Sin API key'}</span>
+                    {item.baseUrl ? <small>{item.baseUrl}</small> : <small>Endpoint administrado</small>}
+                  </div>
+                  <span className={styles.connectedStatus}><i aria-hidden="true" />Conectado</span>
+                  <div className={styles.rowActions}>
+                    <button aria-label={`Editar ${item.label}`} onClick={() => { setConnectionFormDirty(false); setEditing(item) }} type="button">Editar</button>
+                    <button aria-label={`Eliminar ${item.label}`} onClick={() => setDeleting(item)} type="button">Eliminar</button>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </section>
-        <section aria-labelledby="agent-assignments-title">
-          <h2 id="agent-assignments-title">Asignaciones por agente</h2>
+        <section aria-labelledby="agent-assignments-title" className={styles.section}>
+          <div className={styles.sectionHeading}>
+            <div><h2 id="agent-assignments-title">Asignaciones por agente</h2><p>Cada agente puede utilizar una conexión y un modelo diferente.</p></div>
+          </div>
           <AgentAssignmentList
             assignments={assignments}
             attentionAgentIds={attentionAgentIds}
@@ -134,11 +170,13 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
             onSave={saveAssignment}
           />
         </section>
-        </>
+        </div>
       ) : !loadError ? <p aria-busy="true">Cargando conexiones…</p> : null}
       {editing !== undefined ? (
         <SettingsDialog ariaLabel={editing ? 'Editar conexión' : 'Nueva conexión'} initialFocusRef={connectionNameRef} onDismiss={dismissConnectionForm}>
+          <p className={styles.dialogEyebrow}>{editing ? 'Actualizar provider' : 'Conectar provider'}</p>
           <h2>{editing ? 'Editar conexión' : 'Nueva conexión'}</h2>
+          <p className={styles.dialogDescription}>Las credenciales permanecerán ocultas después de guardarlas.</p>
           <ConnectionForm connection={editing} nameInputRef={connectionNameRef} onCancel={dismissConnectionForm} onDirtyChange={setConnectionFormDirty} onSave={save} />
         </SettingsDialog>
       ) : null}
@@ -147,8 +185,10 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
           <h2>Eliminar conexión</h2>
           <p>{isAssigned ? 'Esta conexión está asignada a uno o más agentes. Sus asignaciones se quitarán.' : 'Esta acción no se puede deshacer.'}</p>
           {deleteError ? <p role="alert">{deleteError}</p> : null}
-          <button onClick={() => setDeleting(null)} type="button">Cancelar</button>
-          <button onClick={() => void remove()} type="button">Confirmar eliminación</button>
+          <div className={styles.dialogActions}>
+            <button onClick={() => setDeleting(null)} type="button">Cancelar</button>
+            <button className={styles.dangerButton} onClick={() => void remove()} type="button">Confirmar eliminación</button>
+          </div>
         </SettingsDialog>
       ) : null}
     </SettingsShell>

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { Link, NavLink } from 'react-router-dom'
 
 import { AssistantPanel } from '../../home/components/AssistantPanel'
 import { HomeSidebar } from '../../home/components/HomeSidebar'
@@ -48,7 +49,35 @@ export function SettingsShell({
             <strong>{userEmail}</strong>
           </div>
         </header>
-        <div className={styles.content}>{children}</div>
+        <div className={styles.settingsWorkspace}>
+          <aside className={styles.settingsRail}>
+            <Link className={styles.backLink} to="/">
+              <span aria-hidden="true">←</span>
+              Volver a la aplicación
+            </Link>
+            <div className={styles.settingsRailHeading}>
+              <span aria-hidden="true" className={styles.settingsMark}>
+                ⚙
+              </span>
+              <div>
+                <strong>Configuración</strong>
+                <small>Preferencias del workspace</small>
+              </div>
+            </div>
+            <nav aria-label="Configuración" className={styles.settingsNav}>
+              <p>Personal</p>
+              <NavLink to="/settings/profile">
+                <span aria-hidden="true">○</span>
+                Perfil
+              </NavLink>
+              <NavLink to="/settings/models">
+                <span aria-hidden="true">✦</span>
+                Modelos y providers
+              </NavLink>
+            </nav>
+          </aside>
+          <div className={styles.content}>{children}</div>
+        </div>
       </section>
       <AssistantPanel />
     </main>

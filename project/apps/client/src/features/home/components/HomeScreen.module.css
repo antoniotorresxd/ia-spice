@@ -631,6 +631,10 @@
   transition: border-color var(--duration-fast) ease, transform var(--duration-fast) ease;
 }
 
+:global(.home-assistant-opener[hidden]) {
+  display: none;
+}
+
 :global(.home-assistant-opener:hover),
 :global(.home-assistant-opener:focus-visible) {
   border-color: rgb(114 226 198 / 62%);

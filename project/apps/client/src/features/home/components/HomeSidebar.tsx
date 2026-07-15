@@ -111,10 +111,7 @@ export function HomeSidebar({
         {isProfileMenuOpen && (
           <div aria-label="Menú de perfil" className="home-profile-menu" role="menu">
             <button onClick={() => goToSettings('/settings/profile')} role="menuitem" type="button">
-              Perfil
-            </button>
-            <button onClick={() => goToSettings('/settings/models')} role="menuitem" type="button">
-              Modelos y providers
+              Configuración
             </button>
             <button onClick={() => void signOut()} role="menuitem" type="button">
               Cerrar sesión

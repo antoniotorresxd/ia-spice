@@ -68,18 +68,25 @@ it('opens an accessible profile menu', async () => {
   expect(trigger).toHaveAttribute('aria-expanded', 'true')
 })
 
-it.each([
-  ['Perfil', '/settings/profile'],
-  ['Modelos y providers', '/settings/models'],
-] as const)('navigates with %s and closes the menu', async (label, path) => {
+it('navigates to Configuración and closes the menu', async () => {
   const user = userEvent.setup()
   renderSidebar()
 
   await user.click(screen.getByRole('button', { name: 'Perfil de Antonio' }))
-  await user.click(screen.getByRole('menuitem', { name: label }))
+  await user.click(screen.getByRole('menuitem', { name: 'Configuración' }))
 
-  expect(screen.getByLabelText('Ruta actual')).toHaveTextContent(path)
+  expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/settings/profile')
   expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+})
+
+it('does not expose model settings as a direct profile-menu destination', async () => {
+  const user = userEvent.setup()
+  renderSidebar()
+
+  await user.click(screen.getByRole('button', { name: 'Perfil de Antonio' }))
+
+  expect(screen.queryByRole('menuitem', { name: 'Perfil' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('menuitem', { name: 'Modelos y providers' })).not.toBeInTheDocument()
 })
 
 it('closes on Escape and restores focus to the trigger', async () => {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
+import styles from './ModelSettingsScreen.module.css'
 
 type Props = {
   ariaLabel: string
@@ -40,5 +41,11 @@ export function SettingsDialog({ ariaLabel, children, initialFocusRef, onDismiss
     }
   }
 
-  return <section aria-label={ariaLabel} onKeyDown={handleKeyDown} ref={dialogRef} role="dialog">{children}</section>
+  return (
+    <div className={styles.dialogBackdrop}>
+      <section aria-label={ariaLabel} className={styles.dialog} onKeyDown={handleKeyDown} ref={dialogRef} role="dialog">
+        {children}
+      </section>
+    </div>
+  )
 }

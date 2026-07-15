@@ -15,6 +15,7 @@ it('moves through minimized, compact, and expanded states', async () => {
       name: 'Asistente del Ecosistema Multiagente',
     }),
   ).toHaveAttribute('data-mode', 'compact')
+  expect(screen.getByLabelText('Abrir asistente')).toHaveStyle({ display: 'none' })
   expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
 
   await user.click(screen.getByRole('button', { name: 'Minimizar asistente' }))
@@ -43,6 +44,7 @@ it('moves through minimized, compact, and expanded states', async () => {
       name: 'Asistente del Ecosistema Multiagente',
     }),
   ).toHaveAttribute('data-mode', 'expanded')
+  expect(screen.getByLabelText('Abrir asistente')).toHaveStyle({ display: 'none' })
 })
 
 it('returns focus to the opener after minimizing', async () => {
