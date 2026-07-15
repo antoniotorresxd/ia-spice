@@ -18,6 +18,15 @@ function PlaceholderScreen({ heading }: { heading: string }) {
   return <h1>{heading}</h1>
 }
 
+function UpcomingScreen({ heading }: { heading: string }) {
+  return (
+    <section>
+      <h1>{heading}</h1>
+      <p>Próximamente</p>
+    </section>
+  )
+}
+
 function App() {
   const { data: session, isPending } = authClient.useSession()
 
@@ -89,6 +98,8 @@ function App() {
           <Route path="/projects/:projectId" element={<PlaceholderScreen heading="Detalle del proyecto" />} />
           <Route path="/conversations" element={<PlaceholderScreen heading="Conversaciones" />} />
           <Route path="/conversations/:conversationId" element={<PlaceholderScreen heading="Detalle de la conversación" />} />
+          <Route path="/files" element={<UpcomingScreen heading="Archivos" />} />
+          <Route path="/executions" element={<UpcomingScreen heading="Ejecuciones" />} />
         </Route>
         <Route path="*" element={<Navigate replace to="/" />} />
       </Routes>

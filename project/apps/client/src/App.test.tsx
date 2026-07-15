@@ -115,6 +115,8 @@ it.each([
   ['/projects/project-filters', 'Detalle del proyecto'],
   ['/conversations', 'Conversaciones'],
   ['/conversations/conversation-filter', 'Detalle de la conversación'],
+  ['/files', 'Archivos'],
+  ['/executions', 'Ejecuciones'],
 ])('renders workspace route %s for authenticated users', async (path, heading) => {
   window.history.pushState({}, '', path)
   setSessionState({ data: session })
@@ -123,6 +125,9 @@ it.each([
 
   expect(await screen.findByRole('heading', { name: heading })).toBeVisible()
   expect(screen.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible()
+  if (path === '/files' || path === '/executions') {
+    expect(screen.getByText('Próximamente')).toBeVisible()
+  }
 })
 
 it('redirects unknown authenticated routes home', async () => {
