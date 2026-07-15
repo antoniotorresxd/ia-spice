@@ -21,6 +21,45 @@ describe('createMockWorkspaceService', () => {
     expect(restored.projectId).toBeNull()
   })
 
+  it('keeps file counts synchronized when moving conversations', async () => {
+    const service = createMockWorkspaceService()
+
+    await service.assignConversation('conversation-rc', 'project-amplifiers')
+    expect(await service.getProject('project-filters')).toMatchObject({
+      conversationIds: ['conversation-active-filter'],
+      fileCount: 1,
+    })
+    expect(await service.getProject('project-amplifiers')).toMatchObject({
+      conversationIds: ['conversation-opamp', 'conversation-bjt', 'conversation-rc'],
+      fileCount: 3,
+    })
+
+    await service.restoreConversationProject('conversation-rc', null)
+    expect(await service.getProject('project-amplifiers')).toMatchObject({
+      conversationIds: ['conversation-opamp', 'conversation-bjt'],
+      fileCount: 2,
+    })
+  })
+
+  it('does not drift counts or identifiers on repeated assignment', async () => {
+    const service = createMockWorkspaceService()
+    const conversationId = 'conversation-rc'
+
+    await service.assignConversation(conversationId, 'project-filters')
+    await service.assignConversation(conversationId, 'project-filters')
+    const assigned = await service.getProject('project-filters')
+    expect(assigned.fileCount).toBe(2)
+    expect(assigned.conversationIds.filter((id) => id === conversationId)).toHaveLength(1)
+
+    await service.restoreConversationProject(conversationId, null)
+    await service.restoreConversationProject(conversationId, null)
+    expect(await service.getProject('project-filters')).toMatchObject({ fileCount: 1 })
+
+    await service.assignConversation(conversationId, 'project-filters')
+    await service.assignConversation(conversationId, 'project-filters')
+    expect(await service.getProject('project-filters')).toMatchObject({ fileCount: 2 })
+  })
+
   it('looks up fixture projects and conversations', async () => {
     const service = createMockWorkspaceService()
 

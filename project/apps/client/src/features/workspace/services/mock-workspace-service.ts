@@ -40,11 +40,27 @@ export function createMockWorkspaceService(): WorkspaceService {
 
   const moveConversation = (conversationId: string, projectId: string | null) => {
     const conversation = getConversationRecord(conversationId)
-    if (projectId !== null) getProjectRecord(projectId)
-    projects.forEach((project) => {
-      project.conversationIds = project.conversationIds.filter((id) => id !== conversationId)
-    })
-    if (projectId !== null) getProjectRecord(projectId).conversationIds.push(conversationId)
+    const destination = projectId === null ? null : getProjectRecord(projectId)
+    const source = conversation.projectId === null ? null : getProjectRecord(conversation.projectId)
+
+    if (source?.id === destination?.id) {
+      if (destination) {
+        destination.conversationIds = destination.conversationIds.filter((id) => id !== conversationId)
+        destination.conversationIds.push(conversationId)
+      }
+      return clone(summary(conversation))
+    }
+
+    const fileDelta = conversation.files.length
+    if (source) {
+      source.conversationIds = source.conversationIds.filter((id) => id !== conversationId)
+      source.fileCount = Math.max(0, source.fileCount - fileDelta)
+    }
+    if (destination) {
+      destination.conversationIds = destination.conversationIds.filter((id) => id !== conversationId)
+      destination.conversationIds.push(conversationId)
+      destination.fileCount += fileDelta
+    }
     conversation.projectId = projectId
     return clone(summary(conversation))
   }
