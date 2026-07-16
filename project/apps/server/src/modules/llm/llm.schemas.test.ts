@@ -66,6 +66,7 @@ describe("updateLlmConfigSchema", () => {
 describe("toPublicLlmConfig", () => {
   const row = {
     id: "abc",
+    userId: "user-test-001",
     label: "Claude prod",
     provider: "anthropic" as const,
     model: "claude-sonnet-5",

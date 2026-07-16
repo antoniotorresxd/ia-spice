@@ -12,14 +12,12 @@ import { WorkspaceShell } from './features/workspace/components/WorkspaceShell'
 import { NewRequestScreen } from './features/workspace/components/NewRequestScreen'
 import { ProjectsScreen } from './features/workspace/components/ProjectsScreen'
 import { ProjectScreen } from './features/workspace/components/ProjectScreen'
+import { ConversationsScreen } from './features/workspace/components/ConversationsScreen'
+import { ConversationScreen } from './features/workspace/components/ConversationScreen'
 import { createMockWorkspaceService } from './features/workspace/services/mock-workspace-service'
 import './App.css'
 
 const workspaceService = createMockWorkspaceService()
-
-function PlaceholderScreen({ heading }: { heading: string }) {
-  return <h1>{heading}</h1>
-}
 
 function UpcomingScreen({ heading }: { heading: string }) {
   return (
@@ -99,8 +97,8 @@ function App() {
           <Route path="/new" element={<NewRequestScreen service={workspaceService} />} />
           <Route path="/projects" element={<ProjectsScreen service={workspaceService} />} />
           <Route path="/projects/:projectId" element={<ProjectScreen service={workspaceService} />} />
-          <Route path="/conversations" element={<PlaceholderScreen heading="Conversaciones" />} />
-          <Route path="/conversations/:conversationId" element={<PlaceholderScreen heading="Detalle de la conversación" />} />
+          <Route path="/conversations" element={<ConversationsScreen service={workspaceService} />} />
+          <Route path="/conversations/:conversationId" element={<ConversationScreen service={workspaceService} />} />
           <Route path="/files" element={<UpcomingScreen heading="Archivos" />} />
           <Route path="/executions" element={<UpcomingScreen heading="Ejecuciones" />} />
         </Route>
