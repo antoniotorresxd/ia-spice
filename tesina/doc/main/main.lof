@@ -12,8 +12,11 @@
 \contentsline {figure}{\numberline {4.5}{\ignorespaces C4 Nivel 3: Diagrama de componentes.}}{23}{figure.caption.11}%
 \contentsline {figure}{\numberline {4.6}{\ignorespaces Diagrama de secuencia del flujo de generación.}}{25}{figure.caption.12}%
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Pantalla de inicio de sesión del prototipo, con la ruta de solución del pipeline de generación.}}{34}{figure.caption.14}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Espacio de trabajo autenticado: solicitud en lenguaje natural, resumen operativo, actividad reciente y archivos generados.}}{35}{figure.caption.15}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {A.1}{\ignorespaces Diagrama de casos de uso: acceso y gestión de sesiones.}}{37}{figure.caption.15}%
-\contentsline {figure}{\numberline {A.2}{\ignorespaces Diagrama de casos de uso: generación de circuito.}}{38}{figure.caption.16}%
-\contentsline {figure}{\numberline {A.3}{\ignorespaces Diagrama de casos de uso: decisión del agente curador.}}{38}{figure.caption.17}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {A.1}{\ignorespaces Diagrama de casos de uso: acceso y gestión de sesiones.}}{44}{figure.caption.18}%
+\contentsline {figure}{\numberline {A.2}{\ignorespaces Diagrama de casos de uso: generación de circuito.}}{45}{figure.caption.19}%
+\contentsline {figure}{\numberline {A.3}{\ignorespaces Diagrama de casos de uso: decisión del agente curador.}}{45}{figure.caption.20}%

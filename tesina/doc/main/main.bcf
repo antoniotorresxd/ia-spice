@@ -2417,6 +2417,7 @@
     <bcf:citekey order="38" intorder="1">stallings2018computer</bcf:citekey>
     <bcf:citekey order="39" intorder="1">betterauth</bcf:citekey>
     <bcf:citekey order="40" intorder="1">owasp_top10</bcf:citekey>
+    <bcf:citekey order="41" intorder="1">owasp_top10</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">

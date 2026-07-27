@@ -5,3 +5,6 @@ project/node_modules/*
 
 temp/*
 .turbo/*
+
+# archivos temporales de Office/LaTeX
+*.tmp
