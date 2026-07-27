@@ -8,8 +8,10 @@ const EnvSchema = z.object({
   DATA_BASE_URL_POOL: z.string().min(1),
   BETTER_AUTH_SECRET: z.string().min(1),
   BETTER_AUTH_URL: z.string().min(1),
-  GOOGLE_CLIENT_ID: z.string().min(1),
-  GOOGLE_CLIENT_SECRET: z.string().min(1),
+  // opcionales: sin ellas el login con Google queda desactivado,
+  // pero email+password sigue funcionando
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   APP_URL: z.string().default("http://localhost:5173"),
   LLM_SECRETS_KEY: z
     .string()
