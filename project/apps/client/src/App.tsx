@@ -7,7 +7,7 @@ import { HomeScreen } from './features/home/components/HomeScreen'
 import { mockHomeService } from './features/home/services/mock-home-service'
 import { ModelSettingsScreen } from './features/settings/components/ModelSettingsScreen'
 import { ProfileSettingsScreen } from './features/settings/components/ProfileSettingsScreen'
-import { mockSettingsService } from './features/settings/services/mock-settings-service'
+import { httpSettingsService } from './features/settings/services/http-settings-service'
 import { WorkspaceShell } from './features/workspace/components/WorkspaceShell'
 import { NewRequestScreen } from './features/workspace/components/NewRequestScreen'
 import { ProjectsScreen } from './features/workspace/components/ProjectsScreen'
@@ -72,7 +72,7 @@ function App() {
           element={
             <ProfileSettingsScreen
               onSignOut={handleSignOut}
-              service={mockSettingsService}
+              service={httpSettingsService}
             />
           }
         />
@@ -81,7 +81,7 @@ function App() {
           element={
             <ModelSettingsScreen
               onSignOut={handleSignOut}
-              service={mockSettingsService}
+              service={httpSettingsService}
             />
           }
         />
