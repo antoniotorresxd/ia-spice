@@ -98,6 +98,17 @@ Sin esas variables el pipeline sigue funcionando por la vía del `circuit_spec`
 estructurado; lo único que se desactiva es la entrada en lenguaje natural
 (`request_text`).
 
+Además del *pull* de configuración de LLM de arriba, agents ahora también
+**escucha** peticiones: hace falta levantar `uvicorn` para que la generación
+desde la UI funcione (el server llama a `POST /runs` en agents). En ese mismo
+`.env`, `AGENTS_API_TOKEN` **tiene que ser idéntico** al `AGENTS_API_TOKEN` del
+`.env` del server: es el mismo secreto, en sentido server→agents (no confundir
+con `AGENTS_SERVICE_TOKEN`, que va al revés).
+
+```bash
+cd project/apps/agents && uv run --env-file .env uvicorn agents.api:app --port 8000
+```
+
 ## Comandos
 
 ### Desde el workspace (`project/`)
@@ -150,6 +161,7 @@ compilando contra la API vieja.
 ```bash
 uv sync
 uv run pytest
+uv run --env-file .env uvicorn agents.api:app --port 8000
 ```
 
 Los tests ejecutan el binario real de `ngspice` de punta a punta; no hay mocks.

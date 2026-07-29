@@ -63,19 +63,22 @@ bun run preview   # vite preview
 
 `bun run test` runs `vitest run`; `bun run test:watch` runs vitest in watch mode.
 
-Feature folders live under `src/features/` (`auth`, `home`, `settings`, `workspace`), each with a `components/ model/ services/` shape. Every feature is built against a **service interface** injected from `App.tsx`, with both a mock and (where wired) a real HTTP implementation — that seam is what lets component tests run without network. `settings` is wired to the real server (`http-settings-service.ts`); `workspace` and `home` still run on mocks.
+Feature folders live under `src/features/` (`auth`, `home`, `settings`, `workspace`), each with a `components/ model/ services/` shape. Every feature is built against a **service interface** injected from `App.tsx`, with both a mock and (where wired) a real HTTP implementation — that seam is what lets component tests run without network. `settings` and `workspace` are wired to the real server (`http-settings-service.ts`, `HttpWorkspaceService` with 2s polling); `home` still runs on a mock.
 
 The client talks to the server through the Vite dev proxy (`/api` → `http://localhost:3001`) and a typed Hono RPC client in `src/lib/rpc.ts`, which imports `AppType` from the server.
 
 **Gotcha:** those server types are generated, not live. After changing server routes run `bun run --cwd ../server build:types` (or `bun run build:server-types` from `project/`), or the client keeps typechecking against the old API. Relatedly, Hono only carries a route into `AppType` if the router is built as a **single chained expression** (see `auth.index.ts` and `llm.index.ts`); routes added as separate `router.get(...)` statements work at runtime but stay invisible to the client's types.
 
 ### Agents (`project/apps/agents`)
-A separate **Python 3.12** project managed with **uv**, outside the Bun workspace. It is wired to the server for LLM configuration (see below), but nothing invokes the graph over HTTP yet — agents is still a library, with no HTTP entrypoint.
+A separate **Python 3.12** project managed with **uv**, outside the Bun workspace. It is wired to the server for LLM configuration (see below), and also has an HTTP entrypoint (`src/agents/api.py`, FastAPI) with `POST /runs` and `GET /health`, authenticated with `AGENTS_API_TOKEN` via bearer token. Start it with `uv run uvicorn agents.api:app --port 8000`.
+
+`langgraph.json` also exists at the project root, but it is only development tooling — config for LangGraph Studio, used to inspect the graph locally. The server does not use it. The server deliberately does **not** use the official LangGraph Platform server (`langgraph dev` / `langgraph-api`): that package is Elastic License 2.0 and requires a commercial key in production, and it would duplicate the persistence that already lives in the server's Postgres. A minimal FastAPI entrypoint was used instead.
 
 ```
 uv sync
 uv run pytest
 uv run pytest tests/test_graph.py::test_graph_runs_escritura_then_shell_for_voltage_divider -v   # single test
+uv run uvicorn agents.api:app --port 8000   # HTTP entrypoint consumed by the server
 ```
 
 Requires the `ngspice` binary on `PATH` (a system dependency, not installed via `uv`) — the `shell` node shells out to it directly. Tests exercise the real `ngspice` binary end-to-end; there are no mocks of ngspice execution anywhere in this project.
@@ -108,10 +111,10 @@ See `docs/superpowers/specs/` and `docs/superpowers/plans/` for the slice-by-sli
 Built on **Hono** (`@hono/zod-openapi`'s `OpenAPIHono`) with **better-auth** for authentication and **Drizzle ORM** over Neon serverless Postgres.
 
 - `src/index.ts` — entrypoint; `Bun.serve({ port: env.PORT, fetch: app.fetch })`.
-- `src/app.ts` — builds the app via `createApp()`, calls `configureOpenAPI(app)`, chains the module routers (currently `authRouter` and `llmRouter`) and exports `AppType`, the type the client's RPC client consumes.
+- `src/app.ts` — builds the app via `createApp()`, calls `configureOpenAPI(app)`, chains the module routers (currently `authRouter`, `llmRouter` and `workspaceRouter`) and exports `AppType`, the type the client's RPC client consumes.
 - `src/lib/create-app.ts` — exports `createRouter()` (bare `OpenAPIHono` factory, `strict: false`) used by every module to build its own sub-router, and `createApp()` which chains global middleware in order: `requestLogger` → CORS (`env.CORS_ALLOWED_ORIGINS`, `credentials: true`) → `sessionMiddleware`, plus JSON `notFound`/`onError` handlers.
 - `src/lib/configure-open-api.ts` — registers `/doc` (OpenAPI 3.0 spec) and `/reference` (Scalar UI), pulling in both the app's own `/doc` and better-auth's `/api/auth/open-api/generate-schema`.
-- `src/lib/env.ts` — Zod-validated env schema; process exits on invalid env. Key vars: `PORT`, `DATA_BASE_URL`, `DATA_BASE_URL_POOL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `APP_URL`, `CORS_ALLOWED_ORIGINS` (comma-separated, split into an array), `LLM_SECRETS_KEY`, `AGENTS_SERVICE_TOKEN`.
+- `src/lib/env.ts` — Zod-validated env schema; process exits on invalid env. Key vars: `PORT`, `DATA_BASE_URL`, `DATA_BASE_URL_POOL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `APP_URL`, `CORS_ALLOWED_ORIGINS` (comma-separated, split into an array), `LLM_SECRETS_KEY`, `AGENTS_SERVICE_TOKEN`, `AGENTS_BASE_URL`, `AGENTS_API_TOKEN`. `AGENTS_API_TOKEN` is the opposite direction from `AGENTS_SERVICE_TOKEN`: `AGENTS_SERVICE_TOKEN` authenticates agents→server calls (agents calling `GET /api/internal/llm/agent/:agentId`), while `AGENTS_API_TOKEN` authenticates server→agents calls (the server calling agents' `POST /runs`). Two distinct secrets on purpose.
 - `src/lib/types.ts` — `AppBindings` types Hono's `Variables` as `user`/`session` (inferred from `auth.$Infer.Session`); `AppOpenAPI` / `AppRouteHandler<R>` are the generic types every OpenAPI route handler should use.
 - `src/middleware/session.ts` — `sessionMiddleware` calls `auth.api.getSession()` and populates `user`/`session` context vars (or nulls) on every request; `requireAuth` is a separate guard middleware that 401s if no user is present. Mount `requireAuth` per-route/router, not globally.
 - `src/middleware/request-logger.ts` — logs method/path/status/timing.
@@ -128,7 +131,9 @@ Modules add files past those three when a responsibility deserves isolation — 
 
 `src/db/schema.ts` is just an aggregator that re-exports each module's `*.model.ts` — it is not where you define tables.
 
-**Existing modules:** `auth` and `llm`.
+**Existing modules:** `auth`, `llm` and `workspace`.
+
+The `workspace` module holds five tables: `project`, `conversation`, `message`, `execution` and `artifact`. Artifacts hang off the conversation, not the execution, and are replaced wholesale on each new run rather than accumulated. Nothing derived is stored — preview, title and fileCount are all computed at read time. The `neon-http` driver does not support interactive transactions, so creating a conversation is three sequential `INSERT`s rather than one transaction, and `toConversationDetail` synthesizes a failed execution when one is missing (to keep the read-side consistent despite the lack of atomicity). There is a sweep (`sweepStaleExecutions`) that closes `active` executions older than ten minutes, because the server runs with `--hot` and restarts on every save, which can otherwise strand an execution mid-flight.
 
 The `llm` module holds two tables: `llm_connection` (label, provider, encrypted API key, baseUrl, last-test result) and `agent_llm_assignment` (`agentId` → connection + model, one row per agent per user, `connectionId` nullable with `ON DELETE SET NULL`). Assignments are materialized lazily — `GET /api/llm/assignments` always returns all four agents, filling absent rows as `{connectionId: null, model: ''}`. There is no "active configuration" concept anymore.
 

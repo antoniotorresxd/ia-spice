@@ -6,6 +6,20 @@ Requires the `ngspice` binary on `PATH` (a system dependency, not installed via 
 
 Run with `uv sync && uv run pytest` from this directory.
 
+## HTTP entrypoint
+
+`src/agents/api.py` (FastAPI) exposes two routes: `POST /runs` and `GET /health`. `POST /runs` accepts `user_id` plus either `request_text` or `circuit_spec`, invokes the graph synchronously, and returns the final state (`verdict`, `normalized_spec`, `netlists`, `sim_results`, `component_values`, `history`, `iteration`). It is authenticated with a bearer token: the `Authorization` header must be `Bearer <AGENTS_API_TOKEN>`; if `AGENTS_API_TOKEN` is not set the route returns 503 rather than serving unauthenticated.
+
+Run it with:
+
+```bash
+uv run uvicorn agents.api:app --port 8000
+# or, to load .env:
+uv run --env-file .env uvicorn agents.api:app --port 8000
+```
+
+Note on `langgraph.json`: it exists at the project root but is only for opening LangGraph Studio locally as a development/debugging tool — it plays no part in the path the server uses. This project deliberately does not use the official LangGraph Platform server (`langgraph dev` / `langgraph-api`); that package is Elastic License 2.0 and requires a commercial key in production.
+
 ## LLM configuration
 
 The LLM used to resolve `request_text` into a `circuit_spec` is never configured directly in agents — each agent's connection and model are resolved from the server per user via `GET /api/internal/llm/agent/:agentId?userId=`, cached 60s in memory keyed by `(agent_id, user_id)`. Set `SERVER_BASE_URL` and `AGENTS_SERVICE_TOKEN` to enable the `request_text` path; without them the natural-language path is unavailable but the structured `circuit_spec` path keeps working.

@@ -56,6 +56,7 @@ bun run dev | build | test | lint | preview
 uv sync
 uv run pytest
 uv run --env-file .env pytest    # uv does not load .env on its own
+uv run uvicorn agents.api:app --port 8000   # HTTP entrypoint (POST /runs, GET /health)
 ```
 
 `ngspice` must be on `PATH` — it is a system dependency (`sudo apt install ngspice`), not
@@ -71,6 +72,9 @@ installed by `uv`, and the tests execute the real binary end to end with no mock
 - Hono only carries a route into `AppType` if its router is built as a **single chained
   expression**; separate `router.get(...)` statements work at runtime but stay invisible to
   the client's types.
+- The `neon-http` driver does not support interactive transactions; multi-insert operations
+  (e.g. creating a `workspace` conversation) run as sequential inserts, not inside a
+  transaction.
 
 Everything else — pipeline architecture, the `llm` module's invariants, LLM-provider
 gotchas — is in `CLAUDE.md`.
