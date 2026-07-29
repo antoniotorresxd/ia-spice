@@ -3,9 +3,13 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 
 import { encryptApiKey } from "./llm.crypto";
-import { llmConnection, type TestStatus } from "./llm.model";
+import { agentLlmAssignment, AGENT_IDS, llmConnection, type AgentId, type TestStatus } from "./llm.model";
 
-import type { CreateConnectionInput, UpdateConnectionInput } from "./llm.schemas";
+import type {
+  CreateConnectionInput,
+  UpdateAssignmentInput,
+  UpdateConnectionInput,
+} from "./llm.schemas";
 
 export async function listConnections(userId: string) {
   return db
@@ -84,4 +88,73 @@ export async function recordConnectionTest(
     .where(and(eq(llmConnection.id, id), eq(llmConnection.userId, userId)))
     .returning();
   return row ?? null;
+}
+
+export type ResolvedAssignment = {
+  agentId: AgentId;
+  connectionId: string | null;
+  model: string;
+};
+
+// Las asignaciones se materializan perezosamente: un agente sin fila se
+// reporta como vacío en lugar de sembrarse al registrar al usuario.
+export function fillAssignmentGaps(rows: ResolvedAssignment[]): ResolvedAssignment[] {
+  const byAgent = new Map(rows.map((row) => [row.agentId, row]));
+  return AGENT_IDS.map((agentId) => {
+    const row = byAgent.get(agentId);
+    return {
+      agentId,
+      connectionId: row?.connectionId ?? null,
+      model: row?.model ?? "",
+    };
+  });
+}
+
+export async function listAssignments(userId: string): Promise<ResolvedAssignment[]> {
+  const rows = await db
+    .select({
+      agentId: agentLlmAssignment.agentId,
+      connectionId: agentLlmAssignment.connectionId,
+      model: agentLlmAssignment.model,
+    })
+    .from(agentLlmAssignment)
+    .where(eq(agentLlmAssignment.userId, userId));
+  return fillAssignmentGaps(rows);
+}
+
+// Devuelve null si la conexión referida no es de este usuario: sin esta
+// comprobación, un usuario podría asignarle a su agente la credencial de otro.
+export async function upsertAssignment(
+  userId: string,
+  agentId: AgentId,
+  input: UpdateAssignmentInput,
+): Promise<ResolvedAssignment | null> {
+  if (input.connectionId !== null) {
+    const owned = await getConnection(userId, input.connectionId);
+    if (!owned) return null;
+  }
+
+  const [row] = await db
+    .insert(agentLlmAssignment)
+    .values({
+      userId,
+      agentId,
+      connectionId: input.connectionId,
+      model: input.model,
+    })
+    .onConflictDoUpdate({
+      target: [agentLlmAssignment.userId, agentLlmAssignment.agentId],
+      set: {
+        connectionId: input.connectionId,
+        model: input.model,
+        updatedAt: new Date(),
+      },
+    })
+    .returning();
+
+  return {
+    agentId,
+    connectionId: row!.connectionId,
+    model: row!.model,
+  };
 }

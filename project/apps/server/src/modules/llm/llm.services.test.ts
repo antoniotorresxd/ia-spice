@@ -3,9 +3,11 @@ import { afterAll, describe, expect, test } from "bun:test";
 import {
   createConnection,
   deleteConnection,
+  listAssignments,
   listConnections,
   recordConnectionTest,
   updateConnection,
+  upsertAssignment,
 } from "./llm.services";
 
 // Integración real contra la BD (Neon). Correr con:
@@ -86,5 +88,66 @@ describe("conexiones (db)", () => {
     const updated = await recordConnectionTest(TEST_USER_ID, created.id, "failed");
     expect(updated?.lastTestStatus).toBe("failed");
     expect(updated?.lastTestedAt).not.toBeNull();
+  });
+});
+
+describe("asignaciones (db)", () => {
+  t("upsert crea y luego actualiza sin duplicar", async () => {
+    const conn = await createConnection(TEST_USER_ID, {
+      label: `test-assign-${Date.now()}`,
+      provider: "openai",
+      apiKey: "sk-assign-test",
+    });
+    createdIds.push(conn.id);
+
+    const first = await upsertAssignment(TEST_USER_ID, "orchestrator", {
+      connectionId: conn.id,
+      model: "gpt-5",
+    });
+    expect(first).toEqual({ agentId: "orchestrator", connectionId: conn.id, model: "gpt-5" });
+
+    const second = await upsertAssignment(TEST_USER_ID, "orchestrator", {
+      connectionId: conn.id,
+      model: "gpt-5-mini",
+    });
+    expect(second?.model).toBe("gpt-5-mini");
+
+    const listed = await listAssignments(TEST_USER_ID);
+    expect(listed.filter((a) => a.agentId === "orchestrator")).toHaveLength(1);
+  });
+
+  t("rechaza asignar una conexión de otro usuario", async () => {
+    const conn = await createConnection(TEST_USER_ID, {
+      label: `test-cross-${Date.now()}`,
+      provider: "openai",
+      apiKey: "sk-cross-test",
+    });
+    createdIds.push(conn.id);
+
+    const result = await upsertAssignment("other-user-99999999", "orchestrator", {
+      connectionId: conn.id,
+      model: "gpt-5",
+    });
+    expect(result).toBeNull();
+  });
+
+  t("borrar la conexión desasigna al agente en lugar de borrar la fila", async () => {
+    const conn = await createConnection(TEST_USER_ID, {
+      label: `test-setnull-${Date.now()}`,
+      provider: "openai",
+      apiKey: "sk-setnull-test",
+    });
+    await upsertAssignment(TEST_USER_ID, "writer", {
+      connectionId: conn.id,
+      model: "gpt-5",
+    });
+
+    await deleteConnection(TEST_USER_ID, conn.id);
+
+    const listed = await listAssignments(TEST_USER_ID);
+    const writer = listed.find((a) => a.agentId === "writer");
+    expect(writer?.connectionId).toBeNull();
+    // el modelo sobrevive: el usuario solo perdió la credencial
+    expect(writer?.model).toBe("gpt-5");
   });
 });
