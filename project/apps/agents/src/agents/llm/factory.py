@@ -1,6 +1,6 @@
 from langchain.chat_models import init_chat_model
 
-from agents.llm.settings_client import ActiveLlmConfig
+from agents.llm.settings_client import AgentLlmConfig
 
 _PROVIDER_MAP = {
     "anthropic": "anthropic",
@@ -14,7 +14,7 @@ class UnsupportedProviderError(Exception):
     pass
 
 
-def build_chat_model(config: ActiveLlmConfig):
+def build_chat_model(config: AgentLlmConfig):
     if config.provider not in _PROVIDER_MAP:
         raise UnsupportedProviderError(f"unsupported provider: {config.provider}")
 
