@@ -43,6 +43,8 @@ export function createMockSettingsService(): SettingsService {
         provider: input.provider,
         baseUrl: input.baseUrl.trim() || null,
         ...keyMetadata(input.apiKey),
+        lastTestStatus: null,
+        lastTestedAt: null,
         createdAt: now,
         updatedAt: now,
       }
@@ -73,6 +75,18 @@ export function createMockSettingsService(): SettingsService {
       assignments = assignments.map((item) =>
         item.connectionId === id ? { ...item, connectionId: null } : item,
       )
+    },
+    async testConnection(id) {
+      const index = connections.findIndex((item) => item.id === id)
+      if (index < 0) throw new Error(`Connection not found: ${id}`)
+      // el mock reporta éxito si hay key; basta para ejercitar la interfaz
+      const ok = connections[index].hasKey || Boolean(connections[index].baseUrl)
+      connections[index] = {
+        ...connections[index],
+        lastTestStatus: ok ? 'ok' : 'failed',
+        lastTestedAt: new Date().toISOString(),
+      }
+      return ok ? { ok: true } : { ok: false, error: 'Sin credencial' }
     },
     async listAgentAssignments() {
       return structuredClone(assignments)

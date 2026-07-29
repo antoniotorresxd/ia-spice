@@ -18,6 +18,8 @@ export const connectionsFixture: LlmConnection[] = [
     baseUrl: null,
     hasKey: true,
     keyHint: '7890',
+    lastTestStatus: 'ok',
+    lastTestedAt: '2026-07-15T12:00:00.000Z',
     createdAt: '2026-07-15T12:00:00.000Z',
     updatedAt: '2026-07-15T12:00:00.000Z',
   },

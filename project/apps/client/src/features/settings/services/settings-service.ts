@@ -3,6 +3,7 @@ import type {
   AgentAssignmentInput,
   AgentId,
   ConnectionInput,
+  ConnectionTestResult,
   LlmConnection,
   UserProfile,
 } from '../model/settings-types'
@@ -14,6 +15,7 @@ export type SettingsService = {
   createConnection(input: ConnectionInput): Promise<LlmConnection>
   updateConnection(id: string, input: ConnectionInput): Promise<LlmConnection>
   deleteConnection(id: string): Promise<void>
+  testConnection(id: string): Promise<ConnectionTestResult>
   listAgentAssignments(): Promise<AgentAssignment[]>
   updateAgentAssignment(agentId: AgentId, input: AgentAssignmentInput): Promise<AgentAssignment>
 }
