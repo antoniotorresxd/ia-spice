@@ -1,14 +1,14 @@
 import { z } from "zod";
 
-import { LLM_PROVIDERS, type llmConfig } from "./llm.model";
+import { AGENT_IDS, LLM_PROVIDERS, type llmConnection } from "./llm.model";
 
 export const providerSchema = z.enum(LLM_PROVIDERS);
+export const agentIdSchema = z.enum(AGENT_IDS);
 
-export const createLlmConfigSchema = z
+export const createConnectionSchema = z
   .object({
     label: z.string().min(1),
     provider: providerSchema,
-    model: z.string().min(1),
     apiKey: z.string().min(1).optional(),
     baseUrl: z.url().optional(),
   })
@@ -30,30 +30,37 @@ export const createLlmConfigSchema = z
     }
   });
 
-export type CreateLlmConfigInput = z.infer<typeof createLlmConfigSchema>;
+export type CreateConnectionInput = z.infer<typeof createConnectionSchema>;
 
-export const updateLlmConfigSchema = z.object({
+export const updateConnectionSchema = z.object({
   label: z.string().min(1).optional(),
-  model: z.string().min(1).optional(),
   apiKey: z.string().min(1).optional(),
   baseUrl: z.url().nullable().optional(),
 });
 
-export type UpdateLlmConfigInput = z.infer<typeof updateLlmConfigSchema>;
+export type UpdateConnectionInput = z.infer<typeof updateConnectionSchema>;
 
-type LlmConfigRow = typeof llmConfig.$inferSelect;
+// connectionId nulo desasigna al agente; model vacío es válido.
+export const updateAssignmentSchema = z.object({
+  connectionId: z.string().min(1).nullable(),
+  model: z.string(),
+});
+
+export type UpdateAssignmentInput = z.infer<typeof updateAssignmentSchema>;
+
+type ConnectionRow = typeof llmConnection.$inferSelect;
 
 // vista pública: jamás incluye la key (ni cifrada ni en claro)
-export function toPublicLlmConfig(row: LlmConfigRow) {
+export function toPublicConnection(row: ConnectionRow) {
   return {
     id: row.id,
     label: row.label,
     provider: row.provider,
-    model: row.model,
     baseUrl: row.baseUrl,
-    isActive: row.isActive,
     hasKey: row.apiKeyEncrypted !== null,
     keyHint: row.keyHint,
+    lastTestedAt: row.lastTestedAt,
+    lastTestStatus: row.lastTestStatus,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

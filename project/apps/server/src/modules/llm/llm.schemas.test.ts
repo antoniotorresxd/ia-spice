@@ -1,93 +1,119 @@
 import { describe, expect, test } from "bun:test";
 
 import {
-  createLlmConfigSchema,
-  toPublicLlmConfig,
-  updateLlmConfigSchema,
+  createConnectionSchema,
+  toPublicConnection,
+  updateAssignmentSchema,
+  updateConnectionSchema,
 } from "./llm.schemas";
 
-describe("createLlmConfigSchema", () => {
-  test("accepts anthropic with apiKey", () => {
-    const result = createLlmConfigSchema.safeParse({
-      label: "Claude prod",
-      provider: "anthropic",
-      model: "claude-sonnet-5",
-      apiKey: "sk-ant-xxx",
+describe("createConnectionSchema", () => {
+  test("acepta un provider normal con apiKey", () => {
+    const result = createConnectionSchema.safeParse({
+      label: "OpenAI",
+      provider: "openai",
+      apiKey: "sk-test-1234",
     });
     expect(result.success).toBe(true);
   });
 
-  test("rejects anthropic without apiKey", () => {
-    const result = createLlmConfigSchema.safeParse({
-      label: "Claude prod",
-      provider: "anthropic",
-      model: "claude-sonnet-5",
+  test("rechaza un provider normal sin apiKey", () => {
+    const result = createConnectionSchema.safeParse({
+      label: "OpenAI",
+      provider: "openai",
     });
     expect(result.success).toBe(false);
   });
 
-  test("accepts openai_compatible with baseUrl and no apiKey", () => {
-    const result = createLlmConfigSchema.safeParse({
-      label: "Ollama local",
+  test("acepta openai_compatible sin apiKey si trae baseUrl", () => {
+    const result = createConnectionSchema.safeParse({
+      label: "Ollama",
       provider: "openai_compatible",
-      model: "llama3.1:8b",
       baseUrl: "http://localhost:11434/v1",
     });
     expect(result.success).toBe(true);
   });
 
-  test("rejects openai_compatible without baseUrl", () => {
-    const result = createLlmConfigSchema.safeParse({
-      label: "Ollama local",
+  test("rechaza openai_compatible sin baseUrl", () => {
+    const result = createConnectionSchema.safeParse({
+      label: "Ollama",
       provider: "openai_compatible",
-      model: "llama3.1:8b",
     });
     expect(result.success).toBe(false);
   });
 
-  test("rejects unknown provider", () => {
-    const result = createLlmConfigSchema.safeParse({
-      label: "x",
-      provider: "nope",
-      model: "y",
-      apiKey: "z",
+  test("ya no acepta el campo model, que ahora vive en la asignación", () => {
+    const result = createConnectionSchema.safeParse({
+      label: "OpenAI",
+      provider: "openai",
+      apiKey: "sk-test-1234",
+      model: "gpt-5",
     });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect("model" in result.data).toBe(false);
+    }
+  });
+});
+
+describe("updateConnectionSchema", () => {
+  test("permite baseUrl nulo para limpiarlo", () => {
+    const result = updateConnectionSchema.safeParse({ baseUrl: null });
+    expect(result.success).toBe(true);
+  });
+
+  test("rechaza una apiKey vacía", () => {
+    const result = updateConnectionSchema.safeParse({ apiKey: "" });
     expect(result.success).toBe(false);
   });
 });
 
-describe("updateLlmConfigSchema", () => {
-  test("all fields optional", () => {
-    expect(updateLlmConfigSchema.safeParse({}).success).toBe(true);
-    expect(updateLlmConfigSchema.safeParse({ model: "gpt-4o" }).success).toBe(true);
+describe("updateAssignmentSchema", () => {
+  test("acepta connectionId nulo para desasignar", () => {
+    const result = updateAssignmentSchema.safeParse({ connectionId: null, model: "" });
+    expect(result.success).toBe(true);
+  });
+
+  test("acepta una asignación completa", () => {
+    const result = updateAssignmentSchema.safeParse({
+      connectionId: "conn-1",
+      model: "gpt-5",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("rechaza si falta model", () => {
+    const result = updateAssignmentSchema.safeParse({ connectionId: "conn-1" });
+    expect(result.success).toBe(false);
   });
 });
 
-describe("toPublicLlmConfig", () => {
+describe("toPublicConnection", () => {
   const row = {
-    id: "abc",
-    userId: "user-test-001",
-    label: "Claude prod",
-    provider: "anthropic" as const,
-    model: "claude-sonnet-5",
-    apiKeyEncrypted: "iv:ct:tag",
-    keyHint: "x123",
+    id: "conn-1",
+    userId: "user-1",
+    label: "OpenAI",
+    provider: "openai" as const,
+    apiKeyEncrypted: "cifrado:abc",
+    keyHint: "1234",
     baseUrl: null,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    lastTestedAt: new Date("2026-07-29T10:00:00.000Z"),
+    lastTestStatus: "ok" as const,
+    createdAt: new Date("2026-07-29T09:00:00.000Z"),
+    updatedAt: new Date("2026-07-29T09:00:00.000Z"),
   };
 
-  test("never exposes the encrypted key", () => {
-    const pub = toPublicLlmConfig(row);
-    expect(JSON.stringify(pub)).not.toContain("iv:ct:tag");
-    expect((pub as Record<string, unknown>).apiKeyEncrypted).toBeUndefined();
+  test("nunca expone la key, ni cifrada", () => {
+    const publicView = toPublicConnection(row);
+    expect(JSON.stringify(publicView)).not.toContain("cifrado:abc");
+    expect("apiKeyEncrypted" in publicView).toBe(false);
+    expect("userId" in publicView).toBe(false);
   });
 
-  test("exposes hasKey and keyHint instead", () => {
-    const pub = toPublicLlmConfig(row);
-    expect(pub.hasKey).toBe(true);
-    expect(pub.keyHint).toBe("x123");
-    expect(toPublicLlmConfig({ ...row, apiKeyEncrypted: null, keyHint: null }).hasKey).toBe(false);
+  test("expone el estado de prueba y la pista de la key", () => {
+    const publicView = toPublicConnection(row);
+    expect(publicView.hasKey).toBe(true);
+    expect(publicView.keyHint).toBe("1234");
+    expect(publicView.lastTestStatus).toBe("ok");
   });
 });
