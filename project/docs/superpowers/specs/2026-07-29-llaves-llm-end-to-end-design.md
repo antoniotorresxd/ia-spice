@@ -112,11 +112,18 @@ agente— y `model` acepta `''`. Un `agentId` fuera de la lista de cuatro respon
 
 El endpoint interno conserva la forma de respuesta actual, que es la que valida el modelo
 Pydantic de agents: `{provider, model, api_key, base_url}`. Responde 404 cuando el agente
-no tiene asignación, cuando su `connectionId` es `null`, o cuando la conexión asignada no
-tiene API key; agents trata los tres casos por el mismo camino de error.
+no tiene asignación, cuando su `connectionId` es `null`, o cuando la conexión asignada
+carece de API key **y su provider la exige**; agents trata los casos por el mismo camino de
+error. Los proveedores `openai_compatible` quedan exentos de ese último caso: endpoints
+locales como Ollama no requieren llave, y `build_chat_model` ya contempla `api_key` nulo
+para ellos.
 
-`getActiveLlmResolved` se convierte en `getAgentLlmResolved(userId, agentId)` y sigue
-siendo la única función que descifra una llave.
+`getActiveLlmResolved` se convierte en `getAgentLlmResolved(userId, agentId)`.
+
+El descifrado queda confinado a `llm.services.ts`, en dos funciones que responden preguntas
+distintas: `getAgentLlmResolved` ("¿qué LLM usa este agente?", alimenta el endpoint interno)
+y `getConnectionCredentials` ("¿sirve esta credencial?", alimenta la sonda de prueba).
+Ningún otro módulo llama a `decryptApiKey`.
 
 ### Prueba de conexión
 
