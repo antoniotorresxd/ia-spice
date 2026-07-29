@@ -2,27 +2,35 @@ import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 
-import { decryptApiKey, encryptApiKey } from "./llm.crypto";
-import { llmConfig } from "./llm.model";
+import { encryptApiKey } from "./llm.crypto";
+import { llmConnection, type TestStatus } from "./llm.model";
 
-import type { CreateLlmConfigInput, UpdateLlmConfigInput } from "./llm.schemas";
+import type { CreateConnectionInput, UpdateConnectionInput } from "./llm.schemas";
 
-export async function listLlmConfigs(userId: string) {
+export async function listConnections(userId: string) {
   return db
     .select()
-    .from(llmConfig)
-    .where(eq(llmConfig.userId, userId))
-    .orderBy(llmConfig.createdAt);
+    .from(llmConnection)
+    .where(eq(llmConnection.userId, userId))
+    .orderBy(llmConnection.createdAt);
 }
 
-export async function createLlmConfig(userId: string, input: CreateLlmConfigInput) {
+export async function getConnection(userId: string, id: string) {
   const [row] = await db
-    .insert(llmConfig)
+    .select()
+    .from(llmConnection)
+    .where(and(eq(llmConnection.id, id), eq(llmConnection.userId, userId)))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function createConnection(userId: string, input: CreateConnectionInput) {
+  const [row] = await db
+    .insert(llmConnection)
     .values({
       userId,
       label: input.label,
       provider: input.provider,
-      model: input.model,
       apiKeyEncrypted: input.apiKey ? encryptApiKey(input.apiKey) : null,
       keyHint: input.apiKey ? input.apiKey.slice(-4) : null,
       baseUrl: input.baseUrl ?? null,
@@ -31,72 +39,49 @@ export async function createLlmConfig(userId: string, input: CreateLlmConfigInpu
   return row!;
 }
 
-export async function updateLlmConfig(
+export async function updateConnection(
   userId: string,
   id: string,
-  input: UpdateLlmConfigInput,
+  input: UpdateConnectionInput,
 ) {
-  const values: Partial<typeof llmConfig.$inferInsert> = {};
+  const values: Partial<typeof llmConnection.$inferInsert> = {};
   if (input.label !== undefined) values.label = input.label;
-  if (input.model !== undefined) values.model = input.model;
   if (input.baseUrl !== undefined) values.baseUrl = input.baseUrl;
   if (input.apiKey !== undefined) {
     values.apiKeyEncrypted = encryptApiKey(input.apiKey);
     values.keyHint = input.apiKey.slice(-4);
+    // la credencial cambió: el resultado de la última prueba ya no aplica
+    values.lastTestStatus = null;
+    values.lastTestedAt = null;
   }
   if (Object.keys(values).length === 0) {
-    const [row] = await db
-      .select()
-      .from(llmConfig)
-      .where(and(eq(llmConfig.id, id), eq(llmConfig.userId, userId)))
-      .limit(1);
-    return row ?? null;
+    return getConnection(userId, id);
   }
   const [row] = await db
-    .update(llmConfig)
+    .update(llmConnection)
     .set(values)
-    .where(and(eq(llmConfig.id, id), eq(llmConfig.userId, userId)))
+    .where(and(eq(llmConnection.id, id), eq(llmConnection.userId, userId)))
     .returning();
   return row ?? null;
 }
 
-export async function deleteLlmConfig(userId: string, id: string) {
+export async function deleteConnection(userId: string, id: string) {
   const [row] = await db
-    .delete(llmConfig)
-    .where(and(eq(llmConfig.id, id), eq(llmConfig.userId, userId)))
+    .delete(llmConnection)
+    .where(and(eq(llmConnection.id, id), eq(llmConnection.userId, userId)))
     .returning();
   return row ?? null;
 }
 
-// El driver neon-http no soporta transacciones interactivas; se hacen dos
-// updates secuenciales. El índice único parcial de la tabla garantiza que
-// nunca queden dos activas aunque el proceso muera entre ambos updates
-// (el estado intermedio posible es "ninguna activa", que es seguro).
-export async function activateLlmConfig(userId: string, id: string) {
-  await db
-    .update(llmConfig)
-    .set({ isActive: false })
-    .where(and(eq(llmConfig.userId, userId), eq(llmConfig.isActive, true)));
+export async function recordConnectionTest(
+  userId: string,
+  id: string,
+  status: TestStatus,
+) {
   const [row] = await db
-    .update(llmConfig)
-    .set({ isActive: true })
-    .where(and(eq(llmConfig.id, id), eq(llmConfig.userId, userId)))
+    .update(llmConnection)
+    .set({ lastTestStatus: status, lastTestedAt: new Date() })
+    .where(and(eq(llmConnection.id, id), eq(llmConnection.userId, userId)))
     .returning();
   return row ?? null;
-}
-
-// Única función que descifra la key: alimenta el endpoint interno de agents.
-export async function getActiveLlmResolved(userId: string) {
-  const [row] = await db
-    .select()
-    .from(llmConfig)
-    .where(and(eq(llmConfig.userId, userId), eq(llmConfig.isActive, true)))
-    .limit(1);
-  if (!row) return null;
-  return {
-    provider: row.provider,
-    model: row.model,
-    api_key: row.apiKeyEncrypted ? decryptApiKey(row.apiKeyEncrypted) : null,
-    base_url: row.baseUrl,
-  };
 }
