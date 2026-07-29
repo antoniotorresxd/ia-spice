@@ -1,99 +1,76 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+Guidance for coding agents working in this repository.
+
+> **`CLAUDE.md` in this same directory is the single source of truth** for architecture,
+> module patterns and gotchas. Read it. This file used to duplicate that content and the
+> two silently drifted apart until they contradicted each other on something as basic as
+> whether `project/` is a workspace — so it now carries only orientation plus the pointer.
 
 ## Repository layout
 
-This repo has two unrelated parts:
+- `project/` — the software. **`project/` is a Bun workspace** (`workspaces: ["apps/*"]`)
+  covering `apps/server` (Hono API) and `apps/client` (Vite/React): one `project/bun.lock`,
+  one shared `project/node_modules`, installed with a single `bun install` from `project/`.
+  `apps/agents` is outside the workspace — a separate Python 3.12 / LangGraph project
+  managed with `uv`.
+- `tesina/` — a LaTeX thesis (Spanish-language academic document). Unrelated to the app
+  code; only touch it when asked about the thesis.
 
-- `project/` — the actual software. Its root is a Bun workspace for `apps/server` (Hono API) and `apps/client` (Vite/React); `apps/agents` remains a separate Python/LangGraph project managed with `uv`.
-- `tesina/` — a LaTeX thesis (Spanish-language academic document, "cronograma", "edo-art", "main"). Unrelated to the app code; only touch it when asked about the thesis.
+Design docs live in `docs/superpowers/specs/` and implementation plans in
+`docs/superpowers/plans/`, both at the repo root (not under `project/`).
 
 ## Commands
 
-Install JavaScript dependencies once from `project/` with `bun install`. Root scripts run the server and client workspace commands; Python commands still run from `project/apps/agents`.
-
-### Bun workspace (`project`)
+From the workspace root (`project/`):
 
 ```
 bun install
-bun run dev                 # server + client
+bun run dev                 # server + client together, via concurrently
 bun run dev:server
 bun run dev:client
 bun run typecheck:server
-bun run build:server-types
+bun run build:server-types  # regenerate the RPC types the client imports
 bun run build:client
 bun run test:client
 bun run lint:client
 ```
 
-### Server (`project/apps/server`)
-Uses **Bun** as the runtime. Dependency installation is managed by the canonical `project/bun.lock` workspace lockfile.
+`bun run dev` prefixes each line with `[0]`/`[1]` — that is `concurrently`, not an error.
+
+Per app:
 
 ```
-bun run dev          # bun run --hot src/index.ts
+# project/apps/server
+bun run dev            # bun run --hot src/index.ts
+bun test               # add RUN_DB_TESTS=1 TEST_USER_ID=<real-id> for the DB tests
 bun run typecheck
-bun run build:types  # emit the Hono RPC declaration consumed by the client
-bun run db:generate   # drizzle-kit generate — after editing any *.model.ts
-bun run db:migrate    # drizzle-kit migrate
-bun run db:push       # drizzle-kit push (schema push without migration files)
-bun run db:studio     # drizzle-kit studio
-bun run db:drop       # drizzle-kit drop
-```
+bun run build:types
+bun run db:generate    # after editing any *.model.ts
+bun run db:migrate | db:push | db:studio | db:drop
 
-No lint/test scripts are defined for the server.
+# project/apps/client
+bun run dev | build | test | lint | preview
 
-### Client (`project/apps/client`)
-Vite/React/TypeScript app, managed by the root Bun workspace.
-
-```
-bun run dev       # vite
-bun run build     # server RPC declarations, then tsc -b && vite build
-bun run test      # vitest run
-bun run lint      # eslint .
-bun run preview   # vite preview
-```
-
-The client consumes the server's generated Hono RPC type declaration and proxies `/api` to the local Hono server during development.
-
-### Agents (`project/apps/agents`)
-A separate **Python 3.12** project managed with **uv** — unrelated to the Bun/Hono server or the Vite client, and not wired to either yet.
-
-```
+# project/apps/agents
 uv sync
 uv run pytest
-uv run pytest tests/test_graph.py::test_graph_runs_escritura_then_shell_for_voltage_divider -v   # single test
+uv run --env-file .env pytest    # uv does not load .env on its own
 ```
 
-Requires the `ngspice` binary on `PATH` (a system dependency, not installed via `uv`) — the `shell` node shells out to it directly. Tests exercise the real `ngspice` binary end-to-end; there are no mocks of ngspice execution anywhere in this project.
+`ngspice` must be on `PATH` — it is a system dependency (`sudo apt install ngspice`), not
+installed by `uv`, and the tests execute the real binary end to end with no mocks.
 
-Architecture: a LangGraph `StateGraph` (`src/agents/graph.py`, `build_graph()`) wires two nodes — `escritura` and `shell` — in sequence (`escritura → shell → END`) over a shared `CircuitState` TypedDict (`src/agents/state.py`: `circuit_spec`, `netlist_path`, `netlist_text`, `raw_output_path`, `metrics`, `sim_error`). `escritura` builds a PySpice netlist from `circuit_spec` and writes it to a temp file; `shell` runs it through the real `ngspice` binary as a subprocess (batch mode, `wrdata` output) and parses simulated metrics — on any failure it sets `sim_error` instead of raising, so the graph always reaches `END`. The graph is compiled with a `MemorySaver` checkpointer (no DB persistence yet). Code lives under `src/agents/` (`escritura/`, `shell/`, `graph.py`, `state.py`), with tests in `tests/`. This is the first of several planned slices (see `docs/superpowers/specs/` and `docs/superpowers/plans/` for the full multi-agent design — LLM-based orchestration and an RL curator agent are not implemented yet; `circuit_spec` is currently supplied by the caller, not extracted from natural language).
+## Conventions that are easy to violate
 
-## Server architecture
+- **Never run database commands.** The maintainer runs `db:generate`, `db:migrate` and
+  `db:push` himself. Write the `*.model.ts` schema, then stop and say which command is due.
+- **Do not use git worktrees.** Work directly on the current branch.
+- After changing server routes, regenerate the client's types (`bun run build:server-types`)
+  or the client keeps typechecking against the old API.
+- Hono only carries a route into `AppType` if its router is built as a **single chained
+  expression**; separate `router.get(...)` statements work at runtime but stay invisible to
+  the client's types.
 
-Built on **Hono** (`@hono/zod-openapi`'s `OpenAPIHono`) with **better-auth** for authentication and **Drizzle ORM** over Neon serverless Postgres.
-
-- `src/index.ts` — entrypoint; `Bun.serve({ port: env.PORT, fetch: app.fetch })`.
-- `src/app.ts` — builds the app via `createApp()`, calls `configureOpenAPI(app)`, mounts the routes array (currently `[authRouter]`).
-- `src/lib/create-app.ts` — exports `createRouter()` (bare `OpenAPIHono` factory, `strict: false`) used by every module to build its own sub-router, and `createApp()` which chains global middleware in order: `requestLogger` → CORS (`env.CORS_ALLOWED_ORIGINS`, `credentials: true`) → `sessionMiddleware`, plus JSON `notFound`/`onError` handlers.
-- `src/lib/configure-open-api.ts` — registers `/doc` (OpenAPI 3.0 spec) and `/reference` (Scalar UI), pulling in both the app's own `/doc` and better-auth's `/api/auth/open-api/generate-schema`.
-- `src/lib/env.ts` — Zod-validated env schema; process exits on invalid env. Key vars: `PORT`, `DATA_BASE_URL`, `DATA_BASE_URL_POOL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `APP_URL`, `CORS_ALLOWED_ORIGINS` (comma-separated, split into an array).
-- `src/lib/types.ts` — `AppBindings` types Hono's `Variables` as `user`/`session` (inferred from `auth.$Infer.Session`); `AppOpenAPI` / `AppRouteHandler<R>` are the generic types every OpenAPI route handler should use.
-- `src/middleware/session.ts` — `sessionMiddleware` calls `auth.api.getSession()` and populates `user`/`session` context vars (or nulls) on every request; `requireAuth` is a separate guard middleware that 401s if no user is present. Mount `requireAuth` per-route/router, not globally.
-- `src/middleware/request-logger.ts` — logs method/path/status/timing.
-
-### Module pattern
-
-Feature code lives under `src/modules/<name>/` with a consistent 3-file shape, illustrated by the only existing module, `auth`:
-
-- `<name>.model.ts` — Drizzle pg table definitions. `drizzle.config.ts` globs schema from `./src/**/*.model.ts`, so a new module's tables are picked up automatically just by naming the file this way — nothing to register manually.
-- `<name>.services.ts` — business logic / library setup (e.g. `auth.services.ts` configures `betterAuth()` with `drizzleAdapter`, cookie settings, and plugins).
-- `<name>.index.ts` — exports the module's Hono router (e.g. `authRouter`), built with `createRouter()` from `lib/create-app.ts`. Add new routers to the array in `src/app.ts`.
-
-`src/db/schema.ts` is just an aggregator that re-exports each module's `*.model.ts` — it is not where you define tables.
-
-### Auth specifics
-
-better-auth is mounted at `/api/auth/*` via a catch-all in `auth.index.ts` that forwards `c.req.raw` to `auth.handler`. Email+password auth is enabled with `autoSignIn`; cookies use `sameSite: lax` and `secure` in production. Plugins in use: `openAPI()` and `dash()` (from `@better-auth/infra`).
-
-DB tables (`auth.model.ts`) follow the standard better-auth shape: `user`, `session`, `account`, `verification`, with FK cascades and indexes on `userId`/`identifier`.
+Everything else — pipeline architecture, the `llm` module's invariants, LLM-provider
+gotchas — is in `CLAUDE.md`.
