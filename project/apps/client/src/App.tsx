@@ -14,10 +14,10 @@ import { ProjectsScreen } from './features/workspace/components/ProjectsScreen'
 import { ProjectScreen } from './features/workspace/components/ProjectScreen'
 import { ConversationsScreen } from './features/workspace/components/ConversationsScreen'
 import { ConversationScreen } from './features/workspace/components/ConversationScreen'
-import { createMockWorkspaceService } from './features/workspace/services/mock-workspace-service'
+import { httpWorkspaceService } from './features/workspace/services/http-workspace-service'
 import './App.css'
 
-const workspaceService = createMockWorkspaceService()
+const workspaceService = httpWorkspaceService
 
 function UpcomingScreen({ heading }: { heading: string }) {
   return (

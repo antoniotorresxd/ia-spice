@@ -54,6 +54,55 @@ function setSessionState({
   authClientMocks.getSession.mockResolvedValue({ data, error: null })
 }
 
+const workspaceSnapshot = {
+  projects: [
+    {
+      id: 'project-filters',
+      name: 'Filtros analógicos',
+      description: 'pruebas',
+      conversationIds: ['conversation-filter'],
+      fileCount: 1,
+      updatedAt: '2026-07-29T12:00:00.000Z',
+    },
+  ],
+  conversations: [
+    {
+      id: 'conversation-filter',
+      projectId: 'project-filters',
+      title: 'Detalle de la conversación',
+      preview: 'listo',
+      updatedAt: '2026-07-29T12:00:05.000Z',
+      executionStatus: 'completed',
+    },
+  ],
+  unassignedConversationIds: [],
+}
+
+const conversationDetail = {
+  ...workspaceSnapshot.conversations[0],
+  messages: [],
+  files: [],
+  execution: { id: 'exec-1', status: 'completed', summary: 'all blocks within tolerance' },
+}
+
+function stubWorkspaceFetch() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: string) => {
+      const url = String(input)
+      const body = url.includes('/snapshot')
+        ? workspaceSnapshot
+        : url.includes('/projects/')
+          ? { ...workspaceSnapshot.projects[0], conversations: workspaceSnapshot.conversations }
+          : conversationDetail
+      return new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    }),
+  )
+}
+
 beforeEach(() => {
   window.history.pushState({}, '', '/')
   authClientMocks.useSession.mockReset()
@@ -61,11 +110,13 @@ beforeEach(() => {
   authClientMocks.updateUser.mockReset()
   authClientMocks.signOut.mockReset()
   authClientMocks.signOut.mockResolvedValue({ error: null })
+  stubWorkspaceFetch()
 })
 
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  vi.unstubAllGlobals()
 })
 
 it('shows a busy preparation state while the session is pending', () => {

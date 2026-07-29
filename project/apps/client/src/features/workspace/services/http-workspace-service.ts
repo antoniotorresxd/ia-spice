@@ -11,9 +11,8 @@ import type { WorkspaceService } from './workspace-service'
 type Options = { fetchImpl?: typeof fetch }
 
 export function createHttpWorkspaceService(options: Options = {}): WorkspaceService {
-  const fetchImpl = options.fetchImpl ?? fetch
-
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const fetchImpl = options.fetchImpl ?? fetch
     const response = await fetchImpl(path, {
       credentials: 'include',
       headers: init.body ? { 'content-type': 'application/json' } : undefined,
