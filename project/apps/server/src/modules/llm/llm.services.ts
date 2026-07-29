@@ -192,3 +192,14 @@ export async function getAgentLlmResolved(userId: string, agentId: AgentId) {
     base_url: row.baseUrl,
   };
 }
+
+// Descifra la key de una conexión concreta, solo para la sonda de prueba.
+// Se mantiene aparte de getAgentLlmResolved porque responde otra pregunta:
+// "¿sirve esta credencial?", no "¿qué usa este agente?".
+export async function getConnectionCredentials(userId: string, id: string) {
+  const row = await getConnection(userId, id);
+  if (!row) return null;
+  return {
+    apiKey: row.apiKeyEncrypted ? decryptApiKey(row.apiKeyEncrypted) : null,
+  };
+}
