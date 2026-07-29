@@ -1,3 +1,5 @@
+import env from "@/lib/env";
+
 import type { ArtifactStatus, ExecutionStatus } from "./workspace.model";
 
 export type AgentsVerdict = {
@@ -76,4 +78,41 @@ export function toAssistantMessage(result: AgentsRunResult): string {
   return lines.length > 0
     ? `${summary}\n\n${lines.join("\n")}\n${iterations}`
     : `${summary}\n\n${iterations}`;
+}
+
+// El sumidero se inyecta para que todo el camino de red se pruebe en memoria:
+// sin él, comprobar la forma de la petición exigiría una base de datos.
+export type RunSink = {
+  onResult(result: AgentsRunResult): Promise<void>;
+  onFailure(summary: string): Promise<void>;
+};
+
+const RUN_FAILURE_SUMMARY = "No pudimos ejecutar el diseño. Inténtalo de nuevo.";
+
+export async function startRun(
+  input: { userId: string; requestText: string },
+  sink: RunSink,
+  fetchImpl: typeof fetch = fetch,
+): Promise<void> {
+  try {
+    const response = await fetchImpl(`${env.AGENTS_BASE_URL}/runs`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${env.AGENTS_API_TOKEN}`,
+      },
+      body: JSON.stringify({ user_id: input.userId, request_text: input.requestText }),
+    });
+
+    if (!response.ok) {
+      // El cuerpo del error puede traer detalles internos: no se propaga.
+      await sink.onFailure(RUN_FAILURE_SUMMARY);
+      return;
+    }
+
+    const result = (await response.json()) as AgentsRunResult;
+    await sink.onResult(result);
+  } catch {
+    await sink.onFailure(RUN_FAILURE_SUMMARY);
+  }
 }

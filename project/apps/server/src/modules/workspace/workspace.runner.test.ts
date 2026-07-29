@@ -3,8 +3,10 @@ import { describe, expect, test } from "bun:test";
 import {
   type AgentsRunResult,
   mapVerdictToStatus,
+  startRun,
   toArtifactDrafts,
   toAssistantMessage,
+  type RunSink,
 } from "./workspace.runner";
 
 const accepted: AgentsRunResult = {
@@ -94,5 +96,76 @@ describe("toAssistantMessage", () => {
       sim_results: { "block-1": { metrics: null, sim_error: "ngspice exited 1" } },
     });
     expect(content).toContain("block-1: ngspice exited 1");
+  });
+});
+
+function recordingSink() {
+  const results: AgentsRunResult[] = [];
+  const failures: string[] = [];
+  const sink: RunSink = {
+    async onResult(result) {
+      results.push(result);
+    },
+    async onFailure(summary) {
+      failures.push(summary);
+    },
+  };
+  return { sink, results, failures };
+}
+
+describe("startRun", () => {
+  test("manda user_id y request_text al endpoint de agents con el bearer", async () => {
+    const calls: { url: string; init: RequestInit | undefined }[] = [];
+    const fakeFetch = async (url: string | URL | Request, init?: RequestInit) => {
+      calls.push({ url: String(url), init });
+      return new Response(JSON.stringify(accepted), { status: 200 });
+    };
+    const { sink, results } = recordingSink();
+
+    await startRun(
+      { userId: "user-1", requestText: "un divisor de 12V a 5V" },
+      sink,
+      fakeFetch as unknown as typeof fetch,
+    );
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.url).toEndWith("/runs");
+    expect((calls[0]!.init!.headers as Record<string, string>).authorization).toStartWith("Bearer ");
+    expect(JSON.parse(calls[0]!.init!.body as string)).toEqual({
+      user_id: "user-1",
+      request_text: "un divisor de 12V a 5V",
+    });
+    expect(results).toEqual([accepted]);
+  });
+
+  test("una respuesta no-2xx falla sin filtrar el cuerpo del error", async () => {
+    const fakeFetch = async () => new Response("stack trace interno", { status: 500 });
+    const { sink, results, failures } = recordingSink();
+
+    await startRun({ userId: "user-1", requestText: "x" }, sink, fakeFetch as unknown as typeof fetch);
+
+    expect(results).toEqual([]);
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toBe("No pudimos ejecutar el diseño. Inténtalo de nuevo.");
+  });
+
+  test("agents inalcanzable falla sin propagar la excepción", async () => {
+    const fakeFetch = async () => {
+      throw new Error("ECONNREFUSED 127.0.0.1:8000");
+    };
+    const { sink, failures } = recordingSink();
+
+    await startRun({ userId: "user-1", requestText: "x" }, sink, fakeFetch as unknown as typeof fetch);
+
+    expect(failures[0]).toBe("No pudimos ejecutar el diseño. Inténtalo de nuevo.");
+  });
+
+  test("un cuerpo que no es JSON también falla con el mensaje neutro", async () => {
+    const fakeFetch = async () => new Response("<html>502</html>", { status: 200 });
+    const { sink, failures } = recordingSink();
+
+    await startRun({ userId: "user-1", requestText: "x" }, sink, fakeFetch as unknown as typeof fetch);
+
+    expect(failures[0]).toBe("No pudimos ejecutar el diseño. Inténtalo de nuevo.");
   });
 });

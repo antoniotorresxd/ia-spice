@@ -17,6 +17,11 @@ const EnvSchema = z.object({
     .string()
     .regex(/^[0-9a-f]{64}$/i, "must be 32 bytes hex (64 hex chars)"),
   AGENTS_SERVICE_TOKEN: z.string().min(16),
+  // Dirección contraria a AGENTS_SERVICE_TOKEN: con este el server llama a
+  // agents. Son dos secretos distintos a propósito; si se filtra uno, el otro
+  // sigue valiendo.
+  AGENTS_BASE_URL: z.string().default("http://localhost:8000"),
+  AGENTS_API_TOKEN: z.string().min(16),
   CORS_ALLOWED_ORIGINS: z
     .string()
     .default("http://localhost:5173")
