@@ -5,6 +5,8 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 const authClientMocks = vi.hoisted(() => ({
   signOut: vi.fn(),
   useSession: vi.fn(),
+  getSession: vi.fn(),
+  updateUser: vi.fn(),
 }))
 
 vi.mock('better-auth/react', () => ({
@@ -49,11 +51,14 @@ function setSessionState({
     isRefetching: false,
     refetch: vi.fn(),
   })
+  authClientMocks.getSession.mockResolvedValue({ data, error: null })
 }
 
 beforeEach(() => {
   window.history.pushState({}, '', '/')
   authClientMocks.useSession.mockReset()
+  authClientMocks.getSession.mockReset()
+  authClientMocks.updateUser.mockReset()
   authClientMocks.signOut.mockReset()
   authClientMocks.signOut.mockResolvedValue({ error: null })
 })
