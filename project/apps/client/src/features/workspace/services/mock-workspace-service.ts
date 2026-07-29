@@ -25,6 +25,9 @@ export function createMockWorkspaceService(): WorkspaceService {
   const conversations = clone(workspaceConversationFixtures)
   let projectSequence = 1
   let conversationSequence = 1
+  // Solo las conversaciones creadas en esta sesión completan: las de fixture
+  // conservan el estado que declaran, para no alterar los tests existentes.
+  const awaitingCompletion = new Set<string>()
 
   const getProjectRecord = (projectId: string): WorkspaceProject => {
     const project = projects.find(({ id }) => id === projectId)
@@ -83,7 +86,32 @@ export function createMockWorkspaceService(): WorkspaceService {
       })
     },
     async getConversation(conversationId) {
-      return clone(getConversationRecord(conversationId))
+      const conversation = getConversationRecord(conversationId)
+      if (awaitingCompletion.has(conversationId)) {
+        awaitingCompletion.delete(conversationId)
+        conversation.executionStatus = 'completed'
+        conversation.execution = {
+          ...conversation.execution,
+          status: 'completed',
+          summary: 'all blocks within tolerance',
+        }
+        conversation.files = [
+          {
+            id: `${conversationId}-file-1`,
+            name: 'block-1.cir',
+            language: 'spice',
+            content: '* divisor\nR1 in out 1k\nR2 out 0 714\n',
+            status: 'complete',
+          },
+        ]
+        conversation.messages.push({
+          id: `${conversationId}-message-${conversation.messages.length + 1}`,
+          role: 'assistant',
+          content: 'all blocks within tolerance\n\nblock-1.v_out = 5.01\nIteraciones: 1',
+          createdAt: '2026-07-15T12:00:30.000Z',
+        })
+      }
+      return clone(conversation)
     },
     async createProject(input: ProjectInput) {
       const project: WorkspaceProject = {
@@ -108,12 +136,12 @@ export function createMockWorkspaceService(): WorkspaceService {
         executionStatus: 'active',
         messages: [
           { id: `${id}-message-1`, role: 'user', content: text, createdAt: '2026-07-15T12:00:00.000Z' },
-          { id: `${id}-message-2`, role: 'assistant', content: 'Estoy preparando el circuito.', createdAt: '2026-07-15T12:00:01.000Z' },
         ],
         files: [],
         execution: { id: `${id}-execution`, status: 'active', summary: 'Diseño en progreso' },
       }
       conversations.push(created)
+      awaitingCompletion.add(id)
       return clone(created)
     },
     async continueConversation(conversationId, text) {

@@ -114,4 +114,41 @@ describe('createMockWorkspaceService', () => {
     await expect(second.getConversation(created.id)).rejects.toThrow()
     expect((await second.getSnapshot()).unassignedConversationIds).not.toContain(created.id)
   })
+
+  it('completa la ejecución de una solicitud nueva en la siguiente lectura', async () => {
+    const service = createMockWorkspaceService()
+
+    const created = await service.submitRequest('un divisor de 12V a 5V')
+    expect(created.executionStatus).toBe('active')
+
+    const polled = await service.getConversation(created.id)
+    expect(polled.executionStatus).toBe('completed')
+    expect(polled.execution.status).toBe('completed')
+    expect(polled.files).toHaveLength(1)
+    expect(polled.files[0].language).toBe('spice')
+    expect(polled.messages.at(-1)?.role).toBe('assistant')
+  })
+
+  it('no reabre ni vuelve a completar una conversación ya completada', async () => {
+    const service = createMockWorkspaceService()
+
+    const created = await service.submitRequest('un divisor de 12V a 5V')
+    const first = await service.getConversation(created.id)
+    const second = await service.getConversation(created.id)
+
+    expect(second.executionStatus).toBe('completed')
+    expect(second.messages).toHaveLength(first.messages.length)
+    expect(second.files).toHaveLength(1)
+  })
+
+  it('no toca las conversaciones de fixture que ya vienen activas', async () => {
+    const service = createMockWorkspaceService()
+    const snapshot = await service.getSnapshot()
+    const active = snapshot.conversations.find((item) => item.executionStatus === 'active')
+
+    if (active) {
+      const detail = await service.getConversation(active.id)
+      expect(detail.executionStatus).toBe('active')
+    }
+  })
 })
