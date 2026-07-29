@@ -91,4 +91,28 @@ describe('ConversationScreen', () => {
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Sin conexión'))
     expect(input).toHaveValue('Conserva este texto')
   })
+
+  it('refresca la conversación hasta que la ejecución termina', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const service = createMockWorkspaceService()
+    const detail = await service.getConversation('conversation-rc')
+
+    const getConversation = vi
+      .spyOn(service, 'getConversation')
+      .mockResolvedValueOnce({ ...detail, executionStatus: 'active', execution: { ...detail.execution, status: 'active' } })
+      .mockResolvedValue({ ...detail, executionStatus: 'completed', execution: { ...detail.execution, status: 'completed' } })
+
+    renderScreen(service)
+
+    expect(await screen.findByText('En curso')).toBeVisible()
+
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(await screen.findByText('Completada')).toBeVisible()
+
+    const callsAfterCompletion = getConversation.mock.calls.length
+    await vi.advanceTimersByTimeAsync(6000)
+    expect(getConversation.mock.calls.length).toBe(callsAfterCompletion)
+
+    vi.useRealTimers()
+  })
 })

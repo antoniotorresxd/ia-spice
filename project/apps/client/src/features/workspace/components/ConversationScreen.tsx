@@ -1,8 +1,9 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { ActivityTimeline } from '../../home/components/ActivityTimeline'
 import type { ConversationExecution } from '../../home/model/home-types'
+import { useConversationPolling } from '../model/use-conversation-polling'
 import type { WorkspaceConversationDetail, WorkspaceSnapshot } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
 import styles from './ConversationScreen.module.css'
@@ -26,6 +27,19 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
     )
     return () => { current = false }
   }, [conversationId, service])
+
+  // useCallback es obligatorio: sin identidad estable, el efecto del hook
+  // reinicia el intervalo en cada render y el sondeo nunca dispara.
+  const refresh = useCallback(async () => {
+    try {
+      setConversation(await service.getConversation(conversationId))
+    } catch {
+      // Un fallo puntual de red no debe tumbar la pantalla ya cargada: el
+      // siguiente ciclo del sondeo lo reintenta.
+    }
+  }, [conversationId, service])
+
+  useConversationPolling(conversation?.executionStatus ?? null, refresh)
 
   const timeline = useMemo<ConversationExecution | null>(() => conversation ? ({
     id: conversation.execution.id,
