@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 
-import { encryptApiKey } from "./llm.crypto";
+import { decryptApiKey, encryptApiKey } from "./llm.crypto";
 import { agentLlmAssignment, AGENT_IDS, llmConnection, type AgentId, type TestStatus } from "./llm.model";
 
 import type {
@@ -156,5 +156,39 @@ export async function upsertAssignment(
     agentId,
     connectionId: row!.connectionId,
     model: row!.model,
+  };
+}
+
+// Única función que descifra una key para alimentar al endpoint interno de
+// agents. Devuelve null (→ 404) cuando el agente no tiene asignación, cuando
+// no tiene conexión, o cuando la conexión carece de key y su provider la exige.
+export async function getAgentLlmResolved(userId: string, agentId: AgentId) {
+  const [row] = await db
+    .select({
+      provider: llmConnection.provider,
+      apiKeyEncrypted: llmConnection.apiKeyEncrypted,
+      baseUrl: llmConnection.baseUrl,
+      model: agentLlmAssignment.model,
+    })
+    .from(agentLlmAssignment)
+    .innerJoin(llmConnection, eq(agentLlmAssignment.connectionId, llmConnection.id))
+    .where(
+      and(
+        eq(agentLlmAssignment.userId, userId),
+        eq(agentLlmAssignment.agentId, agentId),
+      ),
+    )
+    .limit(1);
+
+  if (!row) return null;
+  // openai_compatible queda exento: endpoints locales como Ollama no piden key,
+  // y build_chat_model del lado de agents ya contempla api_key nulo.
+  if (!row.apiKeyEncrypted && row.provider !== "openai_compatible") return null;
+
+  return {
+    provider: row.provider,
+    model: row.model,
+    api_key: row.apiKeyEncrypted ? decryptApiKey(row.apiKeyEncrypted) : null,
+    base_url: row.baseUrl,
   };
 }

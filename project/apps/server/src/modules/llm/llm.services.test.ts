@@ -3,6 +3,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import {
   createConnection,
   deleteConnection,
+  getAgentLlmResolved,
   listAssignments,
   listConnections,
   recordConnectionTest,
@@ -149,5 +150,68 @@ describe("asignaciones (db)", () => {
     expect(writer?.connectionId).toBeNull();
     // el modelo sobrevive: el usuario solo perdió la credencial
     expect(writer?.model).toBe("gpt-5");
+  });
+});
+
+describe("getAgentLlmResolved (db)", () => {
+  t("devuelve la forma del contrato con la key descifrada", async () => {
+    const conn = await createConnection(TEST_USER_ID, {
+      label: `test-resolved-${Date.now()}`,
+      provider: "anthropic",
+      apiKey: "sk-resolved-9999",
+    });
+    createdIds.push(conn.id);
+    await upsertAssignment(TEST_USER_ID, "orchestrator", {
+      connectionId: conn.id,
+      model: "claude-sonnet-5",
+    });
+
+    const resolved = await getAgentLlmResolved(TEST_USER_ID, "orchestrator");
+    expect(resolved).toEqual({
+      provider: "anthropic",
+      model: "claude-sonnet-5",
+      api_key: "sk-resolved-9999",
+      base_url: null,
+    });
+  });
+
+  t("devuelve null para un agente sin asignación", async () => {
+    const resolved = await getAgentLlmResolved(TEST_USER_ID, "curator");
+    expect(resolved).toBeNull();
+  });
+
+  t("devuelve null si el agente está asignado pero sin conexión", async () => {
+    await upsertAssignment(TEST_USER_ID, "calculation", {
+      connectionId: null,
+      model: "gpt-5",
+    });
+    const resolved = await getAgentLlmResolved(TEST_USER_ID, "calculation");
+    expect(resolved).toBeNull();
+  });
+
+  t("openai_compatible resuelve sin api_key", async () => {
+    const conn = await createConnection(TEST_USER_ID, {
+      label: `test-ollama-${Date.now()}`,
+      provider: "openai_compatible",
+      baseUrl: "http://localhost:11434/v1",
+    });
+    createdIds.push(conn.id);
+    await upsertAssignment(TEST_USER_ID, "writer", {
+      connectionId: conn.id,
+      model: "llama3.1:8b",
+    });
+
+    const resolved = await getAgentLlmResolved(TEST_USER_ID, "writer");
+    expect(resolved).toEqual({
+      provider: "openai_compatible",
+      model: "llama3.1:8b",
+      api_key: null,
+      base_url: "http://localhost:11434/v1",
+    });
+  });
+
+  t("no resuelve la asignación de otro usuario", async () => {
+    const resolved = await getAgentLlmResolved("other-user-99999999", "orchestrator");
+    expect(resolved).toBeNull();
   });
 });
