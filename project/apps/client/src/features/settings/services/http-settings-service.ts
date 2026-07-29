@@ -76,7 +76,8 @@ export function createHttpSettingsService(options: Options = {}): SettingsServic
 
     async updateConnection(id, input) {
       // provider no es actualizable: cambiarlo invalidaría la credencial guardada
-      const { provider: _provider, ...body } = omitEmpty(input)
+      const body = omitEmpty(input)
+      delete body.provider
       return request<LlmConnection>(`/api/llm/connections/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(body),
