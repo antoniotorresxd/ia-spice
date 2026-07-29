@@ -89,14 +89,17 @@ def test_request_text_uses_llm_to_produce_normalized_spec(monkeypatch):
     }
     from agents.orquestador.schema import CircuitSpec
 
-    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda: MagicMock())
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
     monkeypatch.setattr(
         orquestador_module,
         "extract_circuit_spec",
         lambda chat_model, text: CircuitSpec.model_validate(fake_spec),
     )
 
-    result = orquestador_node(_state(request_text="dame un divisor de 5V a 3.3V"))
+    result = orquestador_node(
+        _state(request_text="dame un divisor de 5V a 3.3V"),
+        {"configurable": {"user_id": "user-1"}},
+    )
 
     assert result["normalized_spec"]["blocks"][0]["id"] == "div1"
     assert result["circuit_spec"] == fake_spec
@@ -106,12 +109,14 @@ def test_request_text_uses_llm_to_produce_normalized_spec(monkeypatch):
 def test_request_text_llm_settings_failure_is_rejected(monkeypatch):
     from agents.llm.settings_client import LlmSettingsError
 
-    def _raise():
+    def _raise(user_id):
         raise LlmSettingsError("server unreachable: boom")
 
     monkeypatch.setattr(orquestador_module, "get_chat_model", _raise)
 
-    result = orquestador_node(_state(request_text="algo"))
+    result = orquestador_node(
+        _state(request_text="algo"), {"configurable": {"user_id": "user-1"}}
+    )
 
     assert result["verdict"]["status"] == "rejected"
     assert "llm_settings_unavailable" in result["verdict"]["reason"]
@@ -120,14 +125,16 @@ def test_request_text_llm_settings_failure_is_rejected(monkeypatch):
 def test_request_text_extraction_failure_is_rejected(monkeypatch):
     from agents.llm.extraction import ExtractionError
 
-    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda: MagicMock())
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
 
     def _raise(chat_model, text):
         raise ExtractionError("LLM returned garbage")
 
     monkeypatch.setattr(orquestador_module, "extract_circuit_spec", _raise)
 
-    result = orquestador_node(_state(request_text="algo"))
+    result = orquestador_node(
+        _state(request_text="algo"), {"configurable": {"user_id": "user-1"}}
+    )
 
     assert result["verdict"]["status"] == "rejected"
     assert "llm_extraction_failed" in result["verdict"]["reason"]
@@ -144,3 +151,63 @@ def test_circuit_spec_path_still_works_when_request_text_is_none():
     # camino estructurado (Task 2 de la iteracion 2), intacto
     result = orquestador_node(_state(circuit_spec=VALID_SPEC))
     assert result["normalized_spec"]["blocks"][0]["id"] == "div1"
+
+
+def test_orquestador_pasa_user_id_y_agent_id_al_resolver_el_llm(monkeypatch):
+    """El nodo debe pedir la config del agente 'orchestrator' para el usuario
+    de la corrida, no una config global."""
+    from agents.orquestador import node as node_module
+
+    visto = {}
+
+    def fake_fetch(agent_id, user_id):
+        visto["agent_id"] = agent_id
+        visto["user_id"] = user_id
+        raise node_module.LlmSettingsError("cortocircuito intencional")
+
+    monkeypatch.setattr(node_module, "fetch_agent_llm", fake_fetch)
+
+    result = node_module.orquestador_node(
+        {"request_text": "un divisor de voltaje de 5V a 2.5V"},
+        {"configurable": {"user_id": "user-77"}},
+    )
+
+    assert visto == {"agent_id": "orchestrator", "user_id": "user-77"}
+    assert result["verdict"]["status"] == "rejected"
+
+
+def test_orquestador_rechaza_sin_user_id_en_la_config():
+    from agents.orquestador import node as node_module
+
+    result = node_module.orquestador_node(
+        {"request_text": "un divisor de voltaje de 5V a 2.5V"},
+        {"configurable": {}},
+    )
+
+    assert result["verdict"]["status"] == "rejected"
+    assert "user_id" in result["verdict"]["reason"]
+
+
+def test_orquestador_con_circuit_spec_no_necesita_user_id():
+    """La ruta estructurada no usa LLM, así que no debe exigir identidad."""
+    from agents.orquestador import node as node_module
+
+    result = node_module.orquestador_node(
+        {
+            "circuit_spec": {
+                "blocks": [
+                    {
+                        "id": "b1",
+                        "type": "voltage_divider",
+                        "params": {"v_in": 5.0, "v_out": 2.5},
+                    }
+                ],
+                "tolerance": 0.05,
+                "max_iterations": 5,
+            }
+        },
+        {"configurable": {}},
+    )
+
+    assert result.get("verdict") is None
+    assert result["pending_blocks"] == ["b1"]

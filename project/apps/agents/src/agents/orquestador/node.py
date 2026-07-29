@@ -1,8 +1,9 @@
+from langchain_core.runnables import RunnableConfig
 from pydantic import ValidationError
 
 from agents.llm.extraction import ExtractionError, extract_circuit_spec
 from agents.llm.factory import build_chat_model
-from agents.llm.settings_client import LlmSettingsError, fetch_active_llm
+from agents.llm.settings_client import LlmSettingsError, fetch_agent_llm
 from agents.orquestador.schema import CircuitSpec
 from agents.state import CircuitState
 
@@ -14,13 +15,18 @@ _GOALS = {
 }
 
 
-def get_chat_model():
-    """Resuelve el LLM activo desde el server y construye el chat model.
+# El agente al que corresponde este nodo, para pedir su configuración de LLM.
+AGENT_ID = "orchestrator"
+
+
+def get_chat_model(user_id: str):
+    """Resuelve el LLM de este agente para el usuario de la corrida y construye
+    el chat model.
 
     Punto de indirección a nivel de módulo: los tests lo sustituyen (monkeypatch)
     por un fake para no depender de red ni del server.
     """
-    config = fetch_active_llm()
+    config = fetch_agent_llm(AGENT_ID, user_id)
     return build_chat_model(config)
 
 
@@ -54,13 +60,17 @@ def _normalize(spec: CircuitSpec) -> dict:
     }
 
 
-def orquestador_node(state: CircuitState) -> dict:
+def orquestador_node(state: CircuitState, config: RunnableConfig | None = None) -> dict:
     request_text = state.get("request_text")
     circuit_spec = state.get("circuit_spec")
 
     if request_text:
+        user_id = (config or {}).get("configurable", {}).get("user_id")
+        if not user_id:
+            return _rejected("missing user_id in run config")
+
         try:
-            chat_model = get_chat_model()
+            chat_model = get_chat_model(user_id)
         except LlmSettingsError as exc:
             return _rejected(f"llm_settings_unavailable: {exc}")
 

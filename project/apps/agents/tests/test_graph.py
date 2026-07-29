@@ -131,14 +131,14 @@ def test_request_text_end_to_end_with_fake_llm(monkeypatch):
             ]
         }
     )
-    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda: MagicMock())
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
     monkeypatch.setattr(
         orquestador_module, "extract_circuit_spec", lambda chat_model, text: fake_spec
     )
 
     spec = {"blocks": []}  # circuit_spec vacio: se ignora porque hay request_text
     graph = build_graph()
-    config = {"configurable": {"thread_id": "e2e-request-text"}}
+    config = {"configurable": {"thread_id": "e2e-request-text", "user_id": "test-user"}}
     initial_state = {
         "circuit_spec": spec,
         "request_text": "dame un divisor de 5V a 3.3V",
@@ -166,7 +166,7 @@ def test_request_text_end_to_end_with_fake_llm(monkeypatch):
 )
 def test_request_text_end_to_end_with_live_llm():
     graph = build_graph()
-    config = {"configurable": {"thread_id": "e2e-live-llm"}}
+    config = {"configurable": {"thread_id": "e2e-live-llm", "user_id": "test-user"}}
     initial_state = {
         "circuit_spec": {},
         "request_text": "Necesito un divisor de voltaje que baje 5V a 3.3V",
