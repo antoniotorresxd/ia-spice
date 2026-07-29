@@ -28,6 +28,8 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
   const [deleteError, setDeleteError] = useState('')
   const [attentionAgentIds, setAttentionAgentIds] = useState<Set<AgentId>>(new Set())
   const [retryKey, setRetryKey] = useState(0)
+  const [testing, setTesting] = useState<Set<string>>(new Set())
+  const [testErrors, setTestErrors] = useState<Record<string, string>>({})
   const [connectionFormDirty, setConnectionFormDirty] = useState(false)
   const connectionNameRef = useRef<HTMLInputElement>(null)
 
@@ -83,6 +85,33 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
       setDeleting(null)
     } catch {
       setDeleteError('No pudimos eliminar la conexión. Inténtalo de nuevo.')
+    }
+  }
+
+  async function test(connectionId: string) {
+    setTesting((current) => new Set([...current, connectionId]))
+    setTestErrors((current) => {
+      const next = { ...current }
+      delete next[connectionId]
+      return next
+    })
+    try {
+      const result = await service.testConnection(connectionId)
+      if (!result.ok) {
+        setTestErrors((current) => ({ ...current, [connectionId]: result.error }))
+      }
+      await load()
+    } catch {
+      setTestErrors((current) => ({
+        ...current,
+        [connectionId]: 'No pudimos probar la conexión. Inténtalo de nuevo.',
+      }))
+    } finally {
+      setTesting((current) => {
+        const next = new Set(current)
+        next.delete(connectionId)
+        return next
+      })
     }
   }
 
@@ -149,11 +178,37 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
                     <span>{item.keyHint ? `••••${item.keyHint}` : 'Sin API key'}</span>
                     {item.baseUrl ? <small>{item.baseUrl}</small> : <small>Endpoint administrado</small>}
                   </div>
-                  <span className={styles.connectedStatus}><i aria-hidden="true" />Conectado</span>
+                  <span
+                    className={
+                      item.lastTestStatus === 'ok'
+                        ? styles.connectedStatus
+                        : item.lastTestStatus === 'failed'
+                          ? styles.failedStatus
+                          : styles.untestedStatus
+                    }
+                  >
+                    <i aria-hidden="true" />
+                    {item.lastTestStatus === 'ok'
+                      ? 'Conectado'
+                      : item.lastTestStatus === 'failed'
+                        ? 'Falló'
+                        : 'Sin probar'}
+                  </span>
                   <div className={styles.rowActions}>
+                    <button
+                      aria-label={`Probar ${item.label}`}
+                      disabled={testing.has(item.id)}
+                      onClick={() => void test(item.id)}
+                      type="button"
+                    >
+                      {testing.has(item.id) ? 'Probando…' : 'Probar'}
+                    </button>
                     <button aria-label={`Editar ${item.label}`} onClick={() => { setConnectionFormDirty(false); setEditing(item) }} type="button">Editar</button>
                     <button aria-label={`Eliminar ${item.label}`} onClick={() => setDeleting(item)} type="button">Eliminar</button>
                   </div>
+                  {testErrors[item.id] ? (
+                    <p className={styles.testError} role="alert">{testErrors[item.id]}</p>
+                  ) : null}
                 </li>
               ))}
             </ul>

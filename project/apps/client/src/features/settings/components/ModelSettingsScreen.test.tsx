@@ -10,7 +10,8 @@ import { ModelSettingsScreen } from './ModelSettingsScreen'
 
 const connection: LlmConnection = {
   id: 'openai-1', label: 'OpenAI principal', provider: 'openai', baseUrl: null,
-  hasKey: true, keyHint: '7890', createdAt: '2026-07-15', updatedAt: '2026-07-15',
+  hasKey: true, keyHint: '7890', lastTestStatus: 'ok', lastTestedAt: '2026-07-15T12:00:00.000Z',
+  createdAt: '2026-07-15', updatedAt: '2026-07-15',
 }
 
 function render(component: ReactNode) {
@@ -27,6 +28,7 @@ function makeService(overrides: Partial<SettingsService> = {}): SettingsService 
     deleteConnection: vi.fn().mockResolvedValue(undefined),
     listAgentAssignments: vi.fn().mockResolvedValue([]),
     updateAgentAssignment: vi.fn(),
+    testConnection: vi.fn().mockResolvedValue({ ok: true }),
     ...overrides,
   }
 }
@@ -274,5 +276,33 @@ describe('ModelSettingsScreen', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar eliminación' }))
 
     expect(await screen.findByRole('alert', { name: 'Asignación de Orquestador requiere atención' })).toHaveTextContent('Sin configurar')
+  })
+
+  it('muestra "Sin probar" cuando la conexión nunca se ha probado', async () => {
+    const untested = { ...connection, lastTestStatus: null, lastTestedAt: null }
+    render(<ModelSettingsScreen service={makeService({ listConnections: vi.fn().mockResolvedValue([untested]) })} />)
+
+    expect(await screen.findByText('Sin probar')).toBeInTheDocument()
+  })
+
+  it('muestra el fallo cuando la última prueba falló', async () => {
+    const failed = { ...connection, lastTestStatus: 'failed' as const, lastTestedAt: '2026-07-29T10:00:00.000Z' }
+    render(<ModelSettingsScreen service={makeService({ listConnections: vi.fn().mockResolvedValue([failed]) })} />)
+
+    expect(await screen.findByText('Falló')).toBeInTheDocument()
+  })
+
+  it('al pulsar Probar refleja el resultado del servicio', async () => {
+    const user = userEvent.setup()
+    const untested = { ...connection, lastTestStatus: null, lastTestedAt: null }
+    const service = makeService({
+      listConnections: vi.fn().mockResolvedValue([untested]),
+      testConnection: vi.fn().mockResolvedValue({ ok: false, error: 'El proveedor rechazó la credencial.' }),
+    })
+    render(<ModelSettingsScreen service={service} />)
+
+    await user.click(await screen.findByRole('button', { name: /probar openai principal/i }))
+
+    expect(await screen.findByText('El proveedor rechazó la credencial.')).toBeInTheDocument()
   })
 })
