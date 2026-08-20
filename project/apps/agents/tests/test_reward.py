@@ -39,6 +39,24 @@ def test_build_measurements_imputes_failed_ape_when_there_is_no_measurement():
     assert build_measurements(blocks, evaluations, CFG) == [("v_out", 100.0)]
 
 
+def test_build_measurements_handles_a_mix_of_ok_and_failed_blocks():
+    """El caso real: un spec de varios bloques donde unos simulan y otros no.
+    Sin la imputación, el bloque fallido aportaría 0 al error —como si hubiera
+    dado justo en el blanco— y una corrida con un bloque roto puntuaría mejor
+    que una donde todos midieron con error moderado."""
+    blocks = [
+        {"id": "div1", "goal": {"metric": "v_out"}},
+        {"id": "rc1", "goal": {"metric": "f_c"}},
+    ]
+    evaluations = {"div1": ("off", 0.10), "rc1": ("error", None)}
+
+    measurements = build_measurements(blocks, evaluations, CFG)
+
+    assert measurements == [("v_out", 10.0), ("f_c", 100.0)]
+    # v_out pesa 2.0 y f_c usa el default 1.0: 2*10 + 1*100
+    assert weighted_ape(measurements, CFG) == pytest.approx(120.0)
+
+
 def test_weighted_ape_applies_the_per_metric_weight():
     # v_out pesa 2.0, f_c usa el default 1.0
     assert weighted_ape([("v_out", 10.0), ("f_c", 5.0)], CFG) == pytest.approx(25.0)
