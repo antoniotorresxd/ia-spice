@@ -14,6 +14,7 @@ dependencies = [
     "langgraph>=1.2.8",
     "pydantic>=2.13.4",
     "pyspice>=1.5",
+    "pyyaml>=6.0.2",
     "uvicorn>=0.42.0",
 ]
 
