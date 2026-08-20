@@ -154,3 +154,11 @@ def test_shell_node_skips_non_pending_blocks():
     result = shell_node(state)
 
     assert result["sim_results"] == {}
+
+
+def test_run_ngspice_reports_a_missing_working_directory_as_an_error():
+    output_path, error = run_ngspice("/ruta/que/no/existe.cir")
+
+    assert output_path is None
+    assert error is not None
+    assert "could not run ngspice" in error
