@@ -41,7 +41,7 @@ def test_get_config_is_cached(tmp_path, monkeypatch):
     custom.write_text(yaml.safe_dump({"curador": {"beta": 1.0}}))
     monkeypatch.setenv("CURADOR_CONFIG_PATH", str(custom))
 
-    first = get_config()
+    assert get_config()["curador"]["beta"] == 1.0
     custom.write_text(yaml.safe_dump({"curador": {"beta": 2.0}}))
 
     # sin reset, la segunda lectura devuelve lo cacheado
