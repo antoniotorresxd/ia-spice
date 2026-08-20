@@ -143,3 +143,89 @@ def test_curador_rejects_with_diagnosis_when_sim_error_and_no_iterations_left():
 def test_route_after_curador():
     assert route_after_curador({"verdict": None}) == "adjust"
     assert route_after_curador({"verdict": {"status": "accepted"}}) == "done"
+
+
+from agents.curador.policy import (
+    choose_action,
+    estimate_action_rewards,
+    observed_reduction,
+)
+
+POLICY_CFG = {
+    "curador": {
+        "weights": {"default": 1.0},
+        "beta": 10.0,
+        "gamma": 3.0,
+        "failed_ape": 100.0,
+        "expected_error_reduction": 0.7,
+        "reject_reward": -50.0,
+    }
+}
+
+
+def test_estimate_action_rewards_projects_the_adjustment():
+    rewards = estimate_action_rewards(
+        [("v_out", 20.0)], converged=True, iteration=0, config=POLICY_CFG
+    )
+
+    # accept: -20 + 10 - 0 = -10
+    assert rewards["accept"] == pytest.approx(-10.0)
+    # adjust: -(20*0.7) + 10 - 3 = -14 + 7 = -7
+    assert rewards["adjust"] == pytest.approx(-7.0)
+    assert rewards["reject"] == pytest.approx(-50.0)
+
+
+def test_estimate_action_rewards_prefers_the_observed_reduction():
+    rewards = estimate_action_rewards(
+        [("v_out", 20.0)],
+        converged=True,
+        iteration=0,
+        config=POLICY_CFG,
+        reduction=0.5,
+    )
+
+    # adjust con ρ=0.5: -(20*0.5) + 10 - 3 = -3
+    assert rewards["adjust"] == pytest.approx(-3.0)
+
+
+def test_choose_action_adjusts_when_the_error_is_large():
+    # A=24.24 supera el umbral γ/(1-ρ) = 10
+    rewards = estimate_action_rewards(
+        [("v_out", 24.24)], converged=True, iteration=0, config=POLICY_CFG
+    )
+
+    assert choose_action(rewards, adjust_available=True) == "adjust"
+
+
+def test_choose_action_accepts_early_when_one_more_iteration_costs_more_than_it_gains():
+    # A=7.0 queda por debajo del umbral: ajustar cuesta más de lo que quita
+    rewards = estimate_action_rewards(
+        [("v_out", 7.0)], converged=True, iteration=0, config=POLICY_CFG
+    )
+
+    assert choose_action(rewards, adjust_available=True) == "accept"
+
+
+def test_choose_action_rejects_when_there_are_no_iterations_left():
+    rewards = estimate_action_rewards(
+        [("v_out", 24.24)], converged=True, iteration=4, config=POLICY_CFG
+    )
+
+    assert choose_action(rewards, adjust_available=False) == "reject"
+
+
+def test_observed_reduction_is_the_ratio_of_the_last_two_iterations():
+    history = [{"weighted_ape": 40.0}, {"weighted_ape": 10.0}]
+
+    assert observed_reduction(history) == pytest.approx(0.25)
+
+
+def test_observed_reduction_is_unavailable_with_a_single_iteration():
+    assert observed_reduction([{"weighted_ape": 40.0}]) is None
+
+
+def test_observed_reduction_never_exceeds_one():
+    # el error empeoró: no se puede prometer una reducción
+    history = [{"weighted_ape": 10.0}, {"weighted_ape": 40.0}]
+
+    assert observed_reduction(history) == pytest.approx(1.0)
