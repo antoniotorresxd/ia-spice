@@ -214,6 +214,30 @@ def test_choose_action_rejects_when_there_are_no_iterations_left():
     assert choose_action(rewards, adjust_available=False) == "reject"
 
 
+def test_choose_action_breaks_the_exact_boundary_tie_toward_accepting():
+    """En A = γ/(1-ρ) = 10 las dos acciones empatan. Se acepta: gastar una
+    iteración que no mejora la recompensa no tiene sentido."""
+    rewards = estimate_action_rewards(
+        [("v_out", 10.0)], converged=True, iteration=0, config=POLICY_CFG
+    )
+
+    assert rewards["accept"] == pytest.approx(rewards["adjust"])
+    assert choose_action(rewards, adjust_available=True) == "accept"
+
+
+def test_choose_action_keeps_adjusting_when_accepting_is_not_admissible():
+    """Con ρ saturado en 1.0 aceptar gana siempre por -γ, sin importar el
+    error. La barandilla impide que eso declare aceptado un circuito lejísimos
+    de la meta."""
+    rewards = estimate_action_rewards(
+        [("v_out", 200.0)], converged=True, iteration=1, config=POLICY_CFG, reduction=1.0
+    )
+
+    assert rewards["accept"] > rewards["adjust"]
+    assert choose_action(rewards, adjust_available=True) == "accept"
+    assert choose_action(rewards, adjust_available=True, accept_admissible=False) == "adjust"
+
+
 def test_observed_reduction_is_the_ratio_of_the_last_two_iterations():
     history = [{"weighted_ape": 40.0}, {"weighted_ape": 10.0}]
 

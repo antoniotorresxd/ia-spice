@@ -30,6 +30,13 @@ curador:
   # no dirige la decisión (ver la nota de calibración del plan).
   reject_reward: -50.0
 
+  # Tope de error ponderado por encima del cual aceptar deja de ser admisible,
+  # gane lo que gane en recompensa. La recompensa decide cuándo parar de
+  # iterar, no si el circuito sirve: sin este tope, un circuito que se estanca
+  # muy lejos de la meta se reportaría como aceptado. Igual al umbral de parada
+  # γ/(1-ρ) para que el camino normal no cambie; solo corta el caso patológico.
+  max_acceptable_ape: 10.0
+
   max_iterations: 5
   tolerance: 0.05
 
