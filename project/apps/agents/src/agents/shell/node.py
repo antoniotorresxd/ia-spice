@@ -10,9 +10,13 @@ def shell_node(state: CircuitState) -> dict:
         netlist_path = state["netlists"][block_id]["path"]
         raw_output_path, error = run_ngspice(netlist_path)
 
-        # ngspice señala la no convergencia saliendo con código distinto de
-        # cero o no escribiendo el archivo de salida; ambos casos llegan aquí
-        # como `error`, así que converger equivale a haber podido medir.
+        # `error` agrupa dos cosas distintas: un fallo del circuito —ngspice
+        # sale con código distinto de cero, o no escribe la salida— y un fallo
+        # del entorno —timeout, o ngspice ausente del PATH—. Se reportan igual
+        # porque en ninguno hubo medición: converger equivale a haber podido
+        # medir. Distinguirlos exigiría leer el log de ngspice y está fuera de
+        # alcance; téngalo presente al leer la recompensa, donde un entorno
+        # roto puntúa igual que un circuito que no converge.
         if error is not None:
             sim_results[block_id] = {
                 "metrics": None,

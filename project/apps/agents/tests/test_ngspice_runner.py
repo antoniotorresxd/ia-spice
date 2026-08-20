@@ -162,3 +162,17 @@ def test_run_ngspice_reports_a_missing_working_directory_as_an_error():
     assert output_path is None
     assert error is not None
     assert "could not run ngspice" in error
+
+
+def test_run_ngspice_reports_a_missing_binary_as_an_error(tmp_path, monkeypatch):
+    """El caso que más importa: ngspice no instalado. Es una dependencia de
+    sistema, así que un despliegue sin ella tiene que dar una ejecución fallida
+    legible, no una excepción no capturada que tumbe el grafo."""
+    netlist = tmp_path / "circuito.cir"
+    netlist.write_text(VOLTAGE_DIVIDER_NETLIST)
+    monkeypatch.setenv("PATH", "")
+
+    output_path, error = run_ngspice(str(netlist))
+
+    assert output_path is None
+    assert "could not run ngspice" in error
