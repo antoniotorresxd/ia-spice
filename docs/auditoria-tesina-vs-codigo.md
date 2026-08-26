@@ -11,6 +11,25 @@ o el **documento** (porque la decisión del código es defendible y lo que sobra
 
 ---
 
+## Estado de los hallazgos
+
+Este documento es el diagnóstico de partida y **se conserva tal cual se levantó**: describe lo que
+había, no lo que hay. Para saber qué sigue abierto, esta es la única tabla que hay que mirar.
+
+| Hallazgo | Estado |
+|---|---|
+| A1 — no existe la función de recompensa | ✅ Cerrado (`curador/reward.py`) |
+| A2 — no hay política, solo reglas fijas | ✅ Cerrado como MDP formalizado con decisión por recompensa; la política *aprendida* queda como trabajo futuro, por decisión de alcance registrada en el diseño |
+| A3 — parámetros no están en configuración externa | ✅ Cerrado (`config/curador.yaml`, incluidos `max_iterations` y `tolerance`, que ahora gobiernan los valores por omisión del schema) |
+| A4 — el estado observado es más pobre que el descrito | ⚠️ Parcial: se registra la convergencia (`converged`), que era lo que la fórmula necesitaba. Siguen sin capturarse voltajes de nodo y corrientes de rama |
+| A5 — el historial no guarda la recompensa | ✅ Cerrado (`reward`, `weighted_ape`, `converged` y `action_rewards` por iteración) |
+| D4 — la temperatura del LLM no se fija | ✅ Cerrado (`llm.temperature` en la configuración) |
+| B1, B2, B3, C1, C2, C3, D1, D2, D3, E1–E4, F1–F3, G1, G2 | Abiertos — planificados en las fases 2 a 6 del diseño de la iteración |
+
+Referencia: [`docs/superpowers/specs/2026-08-19-cierre-de-la-tesina-design.md`](superpowers/specs/2026-08-19-cierre-de-la-tesina-design.md).
+
+---
+
 ## Resumen
 
 | Área | Hallazgos | Críticos |

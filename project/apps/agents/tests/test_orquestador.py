@@ -211,3 +211,76 @@ def test_orquestador_con_circuit_spec_no_necesita_user_id():
 
     assert result.get("verdict") is None
     assert result["pending_blocks"] == ["b1"]
+
+
+def test_max_iterations_and_tolerance_come_from_the_config(tmp_path, monkeypatch):
+    """El RNF-04.2 dice que estos dos se ajustan sin tocar código. Antes vivían
+    como valores por omisión del schema y la configuración no los gobernaba."""
+    import yaml
+
+    from agents.config import reset_config_cache
+    from agents.orquestador.schema import CircuitSpec
+
+    custom = tmp_path / "experimento.yaml"
+    custom.write_text(
+        yaml.safe_dump(
+            {
+                "curador": {
+                    "weights": {"default": 1.0},
+                    "beta": 10.0,
+                    "gamma": 3.0,
+                    "failed_ape": 100.0,
+                    "expected_error_reduction": 0.7,
+                    "reject_reward": -50.0,
+                    "accept_tolerance_slack": 1.5,
+                    "max_iterations": 9,
+                    "tolerance": 0.02,
+                },
+                "calculo": {
+                    "r1_default": 1000.0,
+                    "r_rc_default": 1000.0,
+                    "r_min": 1.0,
+                    "perturb_factor": 1.05,
+                },
+                "llm": {"temperature": 0.0},
+            }
+        )
+    )
+    monkeypatch.setenv("CURADOR_CONFIG_PATH", str(custom))
+    reset_config_cache()
+    try:
+        spec = CircuitSpec.model_validate(
+            {
+                "blocks": [
+                    {
+                        "id": "div1",
+                        "type": "voltage_divider",
+                        "params": {"v_in": 5.0, "v_out": 3.3},
+                    }
+                ]
+            }
+        )
+
+        assert spec.max_iterations == 9
+        assert spec.tolerance == 0.02
+    finally:
+        reset_config_cache()
+
+
+def test_the_caller_can_still_override_what_the_config_proposes(tmp_path, monkeypatch):
+    """La configuración pone el valor por omisión, no un techo: un spec que
+    trae los suyos manda sobre ella."""
+    from agents.orquestador.schema import CircuitSpec
+
+    spec = CircuitSpec.model_validate(
+        {
+            "blocks": [
+                {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+            ],
+            "max_iterations": 2,
+            "tolerance": 0.1,
+        }
+    )
+
+    assert spec.max_iterations == 2
+    assert spec.tolerance == 0.1

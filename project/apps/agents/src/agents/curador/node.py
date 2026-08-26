@@ -59,6 +59,12 @@ def curador_node(state: CircuitState) -> dict:
         "worst_rel_err": worst_rel_err,
         "weighted_ape": weighted_ape(measurements, cfg),
         "converged": converged,
+        # R de ESTA iteración según la fórmula de la tesina, que es una
+        # propiedad del estado y no de la acción tomada: coincide con la
+        # recompensa de aceptar porque aceptar es quedarse con este estado.
+        # OJO si algún día se entrena una política con este historial: para
+        # armar tuplas (estado, acción, recompensa) hay que tomar la entrada
+        # de `action_rewards` que corresponda a `decision`, no este campo.
         "reward": action_rewards["accept"],
         "action_rewards": action_rewards,
     }
