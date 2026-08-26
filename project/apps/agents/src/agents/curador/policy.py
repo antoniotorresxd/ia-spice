@@ -1,6 +1,5 @@
+from agents.config import get_config
 from agents.curador.reward import Measurement, compute_reward
-
-R_MIN = 1.0
 
 
 def evaluate_block(goal: dict, sim_result: dict) -> tuple[str, float | None]:
@@ -13,9 +12,10 @@ def evaluate_block(goal: dict, sim_result: dict) -> tuple[str, float | None]:
 
 
 def _adjust_voltage_divider(values: dict, target: float, actual: float) -> dict:
+    r_min = get_config()["calculo"]["r_min"]
     if actual <= 0:
         return {**values, "r2": values["r2"] * 2}
-    return {**values, "r2": max(values["r2"] * target / actual, R_MIN)}
+    return {**values, "r2": max(values["r2"] * target / actual, r_min)}
 
 
 def _adjust_rc_lowpass(values: dict, target: float, actual: float) -> dict:
@@ -25,9 +25,10 @@ def _adjust_rc_lowpass(values: dict, target: float, actual: float) -> dict:
 
 
 def _adjust_led_resistor(values: dict, target: float, actual: float) -> dict:
+    r_min = get_config()["calculo"]["r_min"]
     if actual <= 0:
-        return {**values, "r": max(values["r"] / 2, R_MIN)}
-    return {**values, "r": max(values["r"] * actual / target, R_MIN)}
+        return {**values, "r": max(values["r"] / 2, r_min)}
+    return {**values, "r": max(values["r"] * actual / target, r_min)}
 
 
 # regla proporcional sobre el componente dominante, por tipo de circuito
@@ -40,7 +41,8 @@ ADJUST_RULES = {
 
 def perturb(values: dict) -> dict:
     """Reintento tras sim_error: perturbación simple de todos los valores."""
-    return {k: v * 1.05 for k, v in values.items()}
+    factor = get_config()["calculo"]["perturb_factor"]
+    return {k: v * factor for k, v in values.items()}
 
 
 def observed_reduction(history: list) -> float | None:
