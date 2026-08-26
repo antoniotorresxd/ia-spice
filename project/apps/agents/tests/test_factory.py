@@ -42,3 +42,24 @@ def test_build_chat_model_unsupported_provider_raises():
         build_chat_model(
             AgentLlmConfig(provider="not_a_provider", model="x", api_key="k", base_url=None)
         )
+
+
+def test_build_chat_model_passes_the_configured_temperature(monkeypatch):
+    captured = {}
+
+    def fake_init_chat_model(**kwargs):
+        captured.update(kwargs)
+        return object()
+
+    monkeypatch.setattr("agents.llm.factory.init_chat_model", fake_init_chat_model)
+
+    build_chat_model(
+        AgentLlmConfig(
+            provider="openai",
+            model="gpt-4o-mini",
+            api_key="sk-test",
+            base_url=None,
+        )
+    )
+
+    assert captured["temperature"] == 0.0
