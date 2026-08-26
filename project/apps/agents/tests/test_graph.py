@@ -342,3 +342,76 @@ def test_el_camino_generico_tambien_llega_desde_lenguaje_natural(monkeypatch):
 
     assert final["verdict"]["status"] == "accepted"
     assert final["sim_results"]["gen1"]["metrics"]["f_c"] == pytest.approx(1000.0, rel=0.01)
+
+
+def test_un_bloque_generico_fuera_de_meta_se_repara_y_converge(monkeypatch):
+    """El lazo cerrado para circuitos fuera del catálogo.
+
+    La primera versión mide 6.67 V contra una meta de 5 V. El curador pide una
+    corrección, y la segunda vuelta la simula de verdad antes de aceptarla:
+    que el modelo diga que lo arregló no basta.
+    """
+    fuera_de_meta = (
+        "* primera version\nVinput vin 0 10.0\nR1 vin vout 1000\nR2 vout 0 2000\n"
+        ".control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+    )
+    corregido = (
+        "* corregido\nVinput vin 0 10.0\nR1 vin vout 1000\nR2 vout 0 1000\n"
+        ".control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+    )
+
+    import agents.curador.node as curador_module
+
+    monkeypatch.setattr(
+        curador_module, "reparar_netlist_del_bloque", lambda *a, **k: corregido, raising=False
+    )
+
+    spec = {
+        "blocks": [
+            {
+                "id": "gen1",
+                "type": "generic",
+                "params": {
+                    "description": "un divisor resistivo",
+                    "metric": "v_out",
+                    "target": 5.0,
+                    "netlist": fuera_de_meta,
+                },
+            }
+        ]
+    }
+
+    final = _run(spec, "e2e-generico-repara")
+
+    assert final["verdict"]["status"] == "accepted"
+    assert len(final["history"]) >= 2
+    assert final["history"][0]["decision"] == "adjust"
+    assert final["sim_results"]["gen1"]["metrics"]["v_out"] == pytest.approx(5.0, rel=0.01)
+
+
+def test_sin_llm_un_generico_fuera_de_meta_termina_con_un_motivo_legible():
+    """Degradar tiene que ser explícito: sin modelo configurado no se puede
+    reparar, y el usuario merece leer por qué en lugar de una excepción."""
+    fuera_de_meta = (
+        "* primera version\nVinput vin 0 10.0\nR1 vin vout 1000\nR2 vout 0 2000\n"
+        ".control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+    )
+    spec = {
+        "blocks": [
+            {
+                "id": "gen1",
+                "type": "generic",
+                "params": {
+                    "description": "un divisor resistivo",
+                    "metric": "v_out",
+                    "target": 5.0,
+                    "netlist": fuera_de_meta,
+                },
+            }
+        ]
+    }
+
+    final = _run(spec, "e2e-generico-sin-llm")
+
+    assert final["verdict"]["status"] == "rejected"
+    assert "gen1" in final["verdict"]["reason"]
