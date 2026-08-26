@@ -24,11 +24,10 @@ services:
       # Dirección contraria, secreto distinto a propósito.
       AGENTS_SERVICE_TOKEN: ${AGENTS_SERVICE_TOKEN:?define AGENTS_SERVICE_TOKEN en .env}
       SERVER_BASE_URL: http://server:3001
-      # El checkpointer del grafo guarda el estado en la misma Neon que ya
-      # usa el resto del sistema. Neon es Postgres: además del driver HTTP
-      # que consume la API, expone la cadena estándar que psycopg entiende.
-      # Levantar un Postgres aparte solo para esto sería una segunda base
-      # que mantener sin ganar nada.
+      # El checkpointer guarda el estado en la misma Neon que usa el resto
+      # del sistema —Neon habla los dos protocolos— pero en su propio esquema,
+      # para que sus migraciones y las de Drizzle no se estorben. Ver
+      # .env.example.
       CHECKPOINTER_URL: ${CHECKPOINTER_URL:?define CHECKPOINTER_URL en .env}
     volumes:
       # Los pesos y umbrales del curador se montan, no se hornean: la tesina
