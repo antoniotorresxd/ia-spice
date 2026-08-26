@@ -13,11 +13,19 @@ una más que mantener sin ganar nada.
 """
 
 import os
+import re
 from contextlib import contextmanager
+from urllib.parse import parse_qs, unquote, urlsplit
 
 from langgraph.checkpoint.memory import MemorySaver
 
 CHECKPOINTER_URL = "CHECKPOINTER_URL"
+
+# Un identificador de Postgres sin comillas. Se valida antes de interpolarlo en
+# el CREATE SCHEMA: el valor sale de una variable de entorno nuestra, pero
+# construir DDL por concatenación sin comprobar nada es una costumbre que
+# tarde o temprano se paga.
+_IDENTIFICADOR = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 def checkpointer_url() -> str | None:
@@ -48,12 +56,28 @@ def open_checkpointer():
         yield saver
 
 
+def schema_from_url(url: str) -> str | None:
+    """El esquema que pide la cadena, si trae `options=-c search_path=...`.
+
+    Aislar las tablas del checkpointer en su propio esquema evita el único
+    problema serio de compartir base con la API: LangGraph trae su propio
+    sistema de migraciones —diez, versionadas en `checkpoint_migrations`, y
+    alguna es un ALTER TABLE— así que si esas tablas vivieran en `public`,
+    Drizzle las vería como deriva de su esquema y querría revertirlas. Cada
+    sistema manda en el suyo y no se estorban.
+    """
+    options = parse_qs(urlsplit(url).query).get("options", [""])[0]
+    encontrado = re.search(r"search_path\s*=\s*([^\s,]+)", unquote(options))
+    return encontrado.group(1) if encontrado else None
+
+
 def setup() -> None:
-    """Crea las tablas que el checkpointer necesita.
+    """Crea el esquema y las tablas que el checkpointer necesita.
 
     Se ejecuta a mano una sola vez, no en cada arranque: escribe DDL sobre la
     base del usuario y eso no debe ocurrir de forma implícita al levantar un
-    servicio.
+    servicio. Es el equivalente, del lado de agents, a `db:migrate` del lado de
+    la API; el guion `db:setup` de la raíz del workspace corre los dos.
 
         uv run --env-file .env python -m agents.checkpointer
     """
@@ -65,7 +89,15 @@ def setup() -> None:
 
     from langgraph.checkpoint.postgres import PostgresSaver
 
+    esquema = schema_from_url(url)
+    if esquema is not None and not _IDENTIFICADOR.match(esquema):
+        raise RuntimeError(f"search_path no es un identificador válido: {esquema!r}")
+
     with PostgresSaver.from_conn_string(url) as saver:
+        if esquema is not None:
+            # Sin esto, el primer arranque falla con un "schema does not exist"
+            # que no dice qué hacer al respecto.
+            saver.conn.execute(f'CREATE SCHEMA IF NOT EXISTS "{esquema}"')
         saver.setup()
 
 

@@ -145,3 +145,30 @@ def test_el_estado_sobrevive_al_proceso(monkeypatch):
 
     assert estado.values["verdict"]["status"] == "accepted"
     assert estado.values["history"], "el historial no sobrevivió"
+
+
+def test_el_esquema_se_lee_de_la_cadena_de_conexion():
+    """Aislar el checkpointer en su propio esquema es lo que evita que Drizzle
+    y LangGraph se peleen por las mismas tablas."""
+    from agents.checkpointer import schema_from_url
+
+    con_esquema = "postgresql://u:p@h/d?options=-c%20search_path%3Dagents"
+    assert schema_from_url(con_esquema) == "agents"
+
+
+def test_sin_search_path_no_hay_esquema_y_se_usa_el_de_por_defecto():
+    from agents.checkpointer import schema_from_url
+
+    assert schema_from_url("postgresql://u:p@h/d") is None
+    assert schema_from_url("postgresql://u:p@h/d?sslmode=require") is None
+
+
+def test_un_search_path_que_no_es_identificador_se_rechaza(monkeypatch):
+    """El valor sale de una variable nuestra, pero acaba interpolado en un
+    CREATE SCHEMA: se comprueba antes de construir el DDL."""
+    monkeypatch.setenv(
+        "CHECKPOINTER_URL", "postgresql://u:p@h/d?options=-c%20search_path%3Dagents%22%3B--"
+    )
+
+    with pytest.raises(RuntimeError, match="identificador"):
+        setup()
