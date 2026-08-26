@@ -1,0 +1,138 @@
+# Banco de circuitos de prueba con solución de referencia.
+#
+# `referencia.componentes` está calculado a mano con la ecuación de diseño de
+# cada topología. No se usa para puntuar —eso se hace sobre la métrica que
+# ngspice mide— sino para que el banco sea auditable: cualquiera puede
+# verificar que el caso está bien planteado.
+#
+# `descripcion` es la entrada en lenguaje natural que consume la línea base
+# best-of-N, para que compita sobre exactamente el mismo enunciado.
+
+casos:
+  # --- Divisores de voltaje: R2 = R1·v_out/(v_in − v_out), con R1 = 1 kΩ ---
+  - id: divisor-12-5
+    descripcion: "un divisor de voltaje que baje 12 V a 5 V"
+    spec:
+      blocks: [{id: div1, type: voltage_divider, params: {v_in: 12.0, v_out: 5.0}}]
+    referencia: {metrica: v_out, objetivo: 5.0, componentes: {r1: 1000.0, r2: 714.29}}
+
+  - id: divisor-5-3v3
+    descripcion: "un divisor de voltaje de 5 V a 3.3 V"
+    spec:
+      blocks: [{id: div1, type: voltage_divider, params: {v_in: 5.0, v_out: 3.3}}]
+    referencia: {metrica: v_out, objetivo: 3.3, componentes: {r1: 1000.0, r2: 1941.18}}
+
+  - id: divisor-9-5
+    descripcion: "un divisor de voltaje de 9 V a 5 V"
+    spec:
+      blocks: [{id: div1, type: voltage_divider, params: {v_in: 9.0, v_out: 5.0}}]
+    referencia: {metrica: v_out, objetivo: 5.0, componentes: {r1: 1000.0, r2: 1250.0}}
+
+  - id: divisor-24-12
+    descripcion: "un divisor de voltaje que reduzca 24 V a la mitad"
+    spec:
+      blocks: [{id: div1, type: voltage_divider, params: {v_in: 24.0, v_out: 12.0}}]
+    referencia: {metrica: v_out, objetivo: 12.0, componentes: {r1: 1000.0, r2: 1000.0}}
+
+  - id: divisor-3v3-1v8
+    descripcion: "un divisor de voltaje de 3.3 V a 1.8 V"
+    spec:
+      blocks: [{id: div1, type: voltage_divider, params: {v_in: 3.3, v_out: 1.8}}]
+    referencia: {metrica: v_out, objetivo: 1.8, componentes: {r1: 1000.0, r2: 1200.0}}
+
+  # --- Filtros RC pasa-bajas: C = 1/(2π·R·f_c), con R = 1 kΩ ---
+  - id: rc-100hz
+    descripcion: "un filtro RC pasa-bajas con frecuencia de corte de 100 Hz"
+    spec:
+      blocks: [{id: rc1, type: rc_lowpass, params: {f_c: 100.0}}]
+    referencia: {metrica: f_c, objetivo: 100.0, componentes: {r: 1000.0, c: 1.5915e-06}}
+
+  - id: rc-1khz
+    descripcion: "un filtro RC pasa-bajas de 1 kHz de corte"
+    spec:
+      blocks: [{id: rc1, type: rc_lowpass, params: {f_c: 1000.0}}]
+    referencia: {metrica: f_c, objetivo: 1000.0, componentes: {r: 1000.0, c: 1.5915e-07}}
+
+  - id: rc-10khz
+    descripcion: "un filtro RC pasa-bajas de 10 kHz"
+    spec:
+      blocks: [{id: rc1, type: rc_lowpass, params: {f_c: 10000.0}}]
+    referencia: {metrica: f_c, objetivo: 10000.0, componentes: {r: 1000.0, c: 1.5915e-08}}
+
+  - id: rc-50khz
+    descripcion: "un filtro RC pasa-bajas con corte en 50 kHz"
+    spec:
+      blocks: [{id: rc1, type: rc_lowpass, params: {f_c: 50000.0}}]
+    referencia: {metrica: f_c, objetivo: 50000.0, componentes: {r: 1000.0, c: 3.1831e-09}}
+
+  - id: rc-1mhz
+    descripcion: "un filtro RC pasa-bajas de 1 MHz"
+    spec:
+      blocks: [{id: rc1, type: rc_lowpass, params: {f_c: 1000000.0}}]
+    referencia: {metrica: f_c, objetivo: 1000000.0, componentes: {r: 1000.0, c: 1.5915e-10}}
+
+  # --- LED con resistencia: R = (v_in − v_f)/i_led ---
+  # El v_f declarado no coincide con el del modelo de diodo (~2.18 V a 20 mA):
+  # la ecuación ideal falla y el lazo tiene que corregir. Es a propósito.
+  - id: led-5v-20ma
+    descripcion: "un LED de 2 V a 20 mA alimentado con 5 V"
+    spec:
+      blocks: [{id: led1, type: led_resistor, params: {v_in: 5.0, v_f: 2.0, i_led: 0.02}}]
+    referencia: {metrica: i_led, objetivo: 0.02, componentes: {r: 150.0}}
+
+  - id: led-12v-10ma
+    descripcion: "un LED de 2.1 V a 10 mA con fuente de 12 V"
+    spec:
+      blocks: [{id: led1, type: led_resistor, params: {v_in: 12.0, v_f: 2.1, i_led: 0.01}}]
+    referencia: {metrica: i_led, objetivo: 0.01, componentes: {r: 990.0}}
+
+  - id: led-3v3-5ma
+    descripcion: "un LED de 1.8 V a 5 mA con 3.3 V"
+    spec:
+      blocks: [{id: led1, type: led_resistor, params: {v_in: 3.3, v_f: 1.8, i_led: 0.005}}]
+    referencia: {metrica: i_led, objetivo: 0.005, componentes: {r: 300.0}}
+
+  - id: led-9v-15ma
+    descripcion: "un LED de 2 V a 15 mA alimentado con 9 V"
+    spec:
+      blocks: [{id: led1, type: led_resistor, params: {v_in: 9.0, v_f: 2.0, i_led: 0.015}}]
+    referencia: {metrica: i_led, objetivo: 0.015, componentes: {r: 466.67}}
+
+  - id: led-5v-3v2
+    descripcion: "un LED azul de 3.2 V a 20 mA con fuente de 5 V"
+    spec:
+      blocks: [{id: led1, type: led_resistor, params: {v_in: 5.0, v_f: 3.2, i_led: 0.02}}]
+    referencia: {metrica: i_led, objetivo: 0.02, componentes: {r: 90.0}}
+
+  # --- Amplificadores no inversores: Rf = Rg·(Av − 1), con Rg = 1 kΩ ---
+  # Las ganancias altas sufren la ganancia finita en lazo abierto del
+  # macromodelo: con Av = 1000 la ecuación ideal se desvía casi un 1 %.
+  - id: amp-ganancia-2
+    descripcion: "un amplificador no inversor de ganancia 2 para una señal de 1 V"
+    spec:
+      blocks: [{id: amp1, type: noninverting_amp, params: {v_in: 1.0, v_out: 2.0}}]
+    referencia: {metrica: v_out, objetivo: 2.0, componentes: {rg: 1000.0, rf: 1000.0}}
+
+  - id: amp-ganancia-3
+    descripcion: "un amplificador no inversor que lleve 1 V a 3 V"
+    spec:
+      blocks: [{id: amp1, type: noninverting_amp, params: {v_in: 1.0, v_out: 3.0}}]
+    referencia: {metrica: v_out, objetivo: 3.0, componentes: {rg: 1000.0, rf: 2000.0}}
+
+  - id: amp-ganancia-10
+    descripcion: "un amplificador no inversor de ganancia 10 para 0.5 V de entrada"
+    spec:
+      blocks: [{id: amp1, type: noninverting_amp, params: {v_in: 0.5, v_out: 5.0}}]
+    referencia: {metrica: v_out, objetivo: 5.0, componentes: {rg: 1000.0, rf: 9000.0}}
+
+  - id: amp-ganancia-100
+    descripcion: "un amplificador no inversor de ganancia 100 para 0.1 V"
+    spec:
+      blocks: [{id: amp1, type: noninverting_amp, params: {v_in: 0.1, v_out: 10.0}}]
+    referencia: {metrica: v_out, objetivo: 10.0, componentes: {rg: 1000.0, rf: 99000.0}}
+
+  - id: amp-ganancia-1000
+    descripcion: "un amplificador no inversor de ganancia 1000 para una señal de 10 mV"
+    spec:
+      blocks: [{id: amp1, type: noninverting_amp, params: {v_in: 0.01, v_out: 10.0}}]
+    referencia: {metrica: v_out, objetivo: 10.0, componentes: {rg: 1000.0, rf: 999000.0}}
