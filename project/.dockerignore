@@ -1,0 +1,28 @@
+# Contexto de construcción de la imagen del servidor (y de cualquier otra que
+# se construya desde la raíz del workspace).
+#
+# Lo primero de la lista es lo que más importa: sin esta exclusión, el `COPY`
+# del código se lleva el .env del desarrollador dentro de la imagen, y con él
+# el secreto de Better Auth, la clave de cifrado de las API keys y las
+# credenciales de la base de datos. Una imagen así filtra todos los secretos
+# del sistema en cuanto se publica en cualquier registro.
+.env
+**/.env
+.env.*
+**/.env.*
+
+# node_modules se reinstala dentro de la imagen desde el lock. Copiarlo desde
+# el anfitrión traería binarios compilados para otra plataforma.
+node_modules
+**/node_modules
+
+# Artefactos de construcción y de pruebas
+dist
+**/dist
+coverage
+**/coverage
+*.tsbuildinfo
+
+.git
+.gitignore
+**/*.log

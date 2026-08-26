@@ -1,0 +1,10 @@
+# El entorno virtual local es de Linux-en-WSL o de Windows; la imagen crea el
+# suyo. Copiarlo rompería la reproducibilidad que justifica el contenedor.
+.venv
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+.env
+tests
+langgraph.json

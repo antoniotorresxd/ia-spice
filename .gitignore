@@ -8,3 +8,5 @@ temp/*
 
 # archivos temporales de Office/LaTeX
 *.tmp
+# Variables del compose
+project/.env

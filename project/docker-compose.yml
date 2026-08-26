@@ -1,0 +1,81 @@
+# Despliegue reproducible del sistema (RIMP-10).
+#
+# Levanta el subsistema de agentes y la API con un solo comando:
+#
+#     docker compose up --build
+#
+# El valor de este archivo para la tesina no es la comodidad: es que la
+# ejecución de los artefactos que produce el modelo —código PySpice y netlists
+# que ngspice ejecuta— quede contenida dentro de un contenedor, que es el
+# control de seguridad que el diseño reclama. Sin esto, esa afirmación no se
+# sostiene.
+
+name: spice
+
+services:
+  # Postgres para el checkpointer del grafo. Es del subsistema de agentes, no
+  # de la API: el servidor habla con Neon por HTTP a través del driver
+  # `neon-http`, que no entiende el protocolo de un Postgres corriente, así que
+  # esta instancia no le sirve y no se le conecta.
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: spice
+      POSTGRES_PASSWORD: spice
+      POSTGRES_DB: spice
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spice -d spice"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  agents:
+    build:
+      context: ./apps/agents
+    environment:
+      # Con el que la API llama a agents. Sin él, agents responde 503 a todo:
+      # servir sin autenticar sería peor que no servir.
+      AGENTS_API_TOKEN: ${AGENTS_API_TOKEN:?define AGENTS_API_TOKEN en .env}
+      # Con el que agents consulta al servidor su configuración de LLM.
+      # Dirección contraria, secreto distinto a propósito.
+      AGENTS_SERVICE_TOKEN: ${AGENTS_SERVICE_TOKEN:?define AGENTS_SERVICE_TOKEN en .env}
+      SERVER_BASE_URL: http://server:3001
+      CHECKPOINTER_URL: postgresql://spice:spice@postgres:5432/spice
+    volumes:
+      # Los pesos y umbrales del curador se montan, no se hornean: la tesina
+      # exige poder ajustarlos durante la evaluación sin recompilar (RNF-04.2),
+      # y reconstruir la imagen para mover una gamma sería justo lo contrario.
+      - ./apps/agents/config:/app/config:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  server:
+    build:
+      # El contexto es la raíz del workspace, no apps/server: cliente y
+      # servidor comparten un solo bun.lock.
+      context: .
+      dockerfile: apps/server/Dockerfile
+    environment:
+      PORT: 3001
+      DATA_BASE_URL: ${DATA_BASE_URL:?define DATA_BASE_URL en .env}
+      DATA_BASE_URL_POOL: ${DATA_BASE_URL_POOL:?define DATA_BASE_URL_POOL en .env}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?define BETTER_AUTH_SECRET en .env}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3001}
+      APP_URL: ${APP_URL:-http://localhost:5173}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      LLM_SECRETS_KEY: ${LLM_SECRETS_KEY:?define LLM_SECRETS_KEY en .env}
+      AGENTS_SERVICE_TOKEN: ${AGENTS_SERVICE_TOKEN:?define AGENTS_SERVICE_TOKEN en .env}
+      AGENTS_API_TOKEN: ${AGENTS_API_TOKEN:?define AGENTS_API_TOKEN en .env}
+      AGENTS_BASE_URL: http://agents:8000
+    ports:
+      - "3001:3001"
+    depends_on:
+      - agents
+
+volumes:
+  pgdata:
