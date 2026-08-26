@@ -324,3 +324,55 @@ def test_noninverting_amp_rejects_nonpositive_params():
                 ]
             }
         )
+
+
+def test_generic_block_trae_su_propia_meta():
+    from agents.orquestador.node import _normalize
+    from agents.orquestador.schema import CircuitSpec
+
+    spec = CircuitSpec.model_validate(
+        {
+            "blocks": [
+                {
+                    "id": "sk1",
+                    "type": "generic",
+                    "params": {
+                        "description": "filtro Sallen-Key pasa-bajas",
+                        "metric": "f_c",
+                        "target": 1000.0,
+                        "netlist": "* x\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n",
+                    },
+                }
+            ]
+        }
+    )
+
+    block = _normalize(spec)["normalized_spec"]["blocks"][0]
+
+    assert block["goal"]["metric"] == "f_c"
+    assert block["goal"]["target"] == 1000.0
+    assert block["goal"]["tolerance"] == 0.05
+
+
+def test_generic_rechaza_un_netlist_que_no_mide_nada():
+    from pydantic import ValidationError
+
+    from agents.orquestador.schema import CircuitSpec
+
+    with pytest.raises(ValidationError, match="output.txt"):
+        CircuitSpec.model_validate(
+            {
+                "blocks": [
+                    {
+                        "id": "x",
+                        "type": "generic",
+                        "params": {
+                            "description": "algo",
+                            "metric": "v_out",
+                            "target": 1.0,
+                            "netlist": "* sin control\n.end\n",
+                        },
+                    }
+                ]
+            }
+        )

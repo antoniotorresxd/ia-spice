@@ -253,3 +253,165 @@ def test_noninverting_amp_with_unreachable_gain_is_rejected():
     assert final["verdict"]["best_iteration"] is not None
     # se simuló de verdad en cada intento, no se abandonó antes de medir
     assert final["sim_results"]["amp1"]["sim_error"] is None
+
+
+def test_un_circuito_fuera_del_catalogo_se_resuelve_por_el_camino_generico():
+    """La prueba de que el sistema dejó de estar cerrado a su catálogo.
+
+    El netlist llega ya escrito —como lo entregaría el LLM— y el lazo lo trata
+    igual que a cualquier otro: lo simula con ngspice, mide y decide. Nada se
+    acepta por parecer correcto.
+    """
+    netlist = (
+        "* divisor entregado como bloque generico\n"
+        "Vinput vin 0 10.0\n"
+        "R1 vin vout 1000\n"
+        "R2 vout 0 1000\n"
+        ".control\n"
+        "op\n"
+        "wrdata output.txt v(vout)\n"
+        ".endc\n"
+        ".end\n"
+    )
+    spec = {
+        "blocks": [
+            {
+                "id": "gen1",
+                "type": "generic",
+                "params": {
+                    "description": "un divisor resistivo simple",
+                    "metric": "v_out",
+                    "target": 5.0,
+                    "netlist": netlist,
+                },
+            }
+        ]
+    }
+
+    final = _run(spec, "e2e-generico")
+
+    assert final["verdict"]["status"] == "accepted"
+    assert final["sim_results"]["gen1"]["metrics"]["v_out"] == pytest.approx(5.0, rel=0.01)
+    assert final["sim_results"]["gen1"]["converged"] is True
+
+
+def test_el_camino_generico_tambien_llega_desde_lenguaje_natural(monkeypatch):
+    """El recorrido completo: prompt libre -> el LLM elige `generic` y escribe
+    el netlist -> ngspice arbitra."""
+    netlist = (
+        "* pasa-bajas RC entregado por el modelo\n"
+        "Vinput vin 0 DC 0 AC 1\n"
+        "R1 vin vout 1000\n"
+        "C1 vout 0 1.5915e-07\n"
+        ".control\n"
+        "ac dec 100 1 1e9\n"
+        "meas ac fc WHEN vdb(vout)=-3.0103\n"
+        "echo $&fc > output.txt\n"
+        ".endc\n"
+        ".end\n"
+    )
+    fake_spec = CircuitSpec.model_validate(
+        {
+            "blocks": [
+                {
+                    "id": "gen1",
+                    "type": "generic",
+                    "params": {
+                        "description": "filtro pasa-bajas de 1 kHz",
+                        "metric": "f_c",
+                        "target": 1000.0,
+                        "netlist": netlist,
+                    },
+                }
+            ]
+        }
+    )
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
+    monkeypatch.setattr(
+        orquestador_module, "extract_circuit_spec", lambda chat_model, text: fake_spec
+    )
+
+    graph = build_graph()
+    initial = _initial_state({"blocks": []})
+    initial["request_text"] = "quiero un filtro que corte en 1 kHz"
+
+    final = graph.invoke(
+        initial,
+        {"configurable": {"thread_id": "e2e-generico-nl", "user_id": "test-user"}},
+    )
+
+    assert final["verdict"]["status"] == "accepted"
+    assert final["sim_results"]["gen1"]["metrics"]["f_c"] == pytest.approx(1000.0, rel=0.01)
+
+
+def test_un_bloque_generico_fuera_de_meta_se_repara_y_converge(monkeypatch):
+    """El lazo cerrado para circuitos fuera del catálogo.
+
+    La primera versión mide 6.67 V contra una meta de 5 V. El curador pide una
+    corrección, y la segunda vuelta la simula de verdad antes de aceptarla:
+    que el modelo diga que lo arregló no basta.
+    """
+    fuera_de_meta = (
+        "* primera version\nVinput vin 0 10.0\nR1 vin vout 1000\nR2 vout 0 2000\n"
+        ".control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+    )
+    corregido = (
+        "* corregido\nVinput vin 0 10.0\nR1 vin vout 1000\nR2 vout 0 1000\n"
+        ".control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+    )
+
+    import agents.curador.node as curador_module
+
+    monkeypatch.setattr(
+        curador_module, "reparar_netlist_del_bloque", lambda *a, **k: corregido, raising=False
+    )
+
+    spec = {
+        "blocks": [
+            {
+                "id": "gen1",
+                "type": "generic",
+                "params": {
+                    "description": "un divisor resistivo",
+                    "metric": "v_out",
+                    "target": 5.0,
+                    "netlist": fuera_de_meta,
+                },
+            }
+        ]
+    }
+
+    final = _run(spec, "e2e-generico-repara")
+
+    assert final["verdict"]["status"] == "accepted"
+    assert len(final["history"]) >= 2
+    assert final["history"][0]["decision"] == "adjust"
+    assert final["sim_results"]["gen1"]["metrics"]["v_out"] == pytest.approx(5.0, rel=0.01)
+
+
+def test_sin_llm_un_generico_fuera_de_meta_termina_con_un_motivo_legible():
+    """Degradar tiene que ser explícito: sin modelo configurado no se puede
+    reparar, y el usuario merece leer por qué en lugar de una excepción."""
+    fuera_de_meta = (
+        "* primera version\nVinput vin 0 10.0\nR1 vin vout 1000\nR2 vout 0 2000\n"
+        ".control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+    )
+    spec = {
+        "blocks": [
+            {
+                "id": "gen1",
+                "type": "generic",
+                "params": {
+                    "description": "un divisor resistivo",
+                    "metric": "v_out",
+                    "target": 5.0,
+                    "netlist": fuera_de_meta,
+                },
+            }
+        ]
+    }
+
+    final = _run(spec, "e2e-generico-sin-llm")
+
+    assert final["verdict"]["status"] == "rejected"
+    assert "gen1" in final["verdict"]["reason"]

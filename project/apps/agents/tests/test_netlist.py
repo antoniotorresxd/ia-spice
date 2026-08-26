@@ -54,6 +54,7 @@ def test_netlist_builders_registry_covers_all_types():
         "rc_lowpass",
         "led_resistor",
         "noninverting_amp",
+        "generic",
     }
     netlist = NETLIST_BUILDERS["voltage_divider"](
         {"v_in": 5.0, "v_out": 3.3}, {"r1": 1000.0, "r2": 1941.18}

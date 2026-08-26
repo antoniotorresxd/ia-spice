@@ -43,9 +43,21 @@ def noninverting_amp_values(params: dict) -> dict:
     return {"rg": rg, "rf": rg * (gain - 1.0)}
 
 
+def generic_values(params: dict) -> dict:
+    """No hay nada que calcular: el netlist ya viene hecho.
+
+    Se deja pasar por `component_values` a propósito, porque ese es el canal
+    que el curador ya muta cuando decide ajustar. Un bloque genérico se corrige
+    reemplazando su netlist, y así viaja por el mismo camino que los valores de
+    los componentes de los tipos curados.
+    """
+    return {"netlist": params["netlist"]}
+
+
 FORMULAS = {
     "voltage_divider": voltage_divider_values,
     "rc_lowpass": rc_lowpass_values,
     "led_resistor": led_resistor_values,
     "noninverting_amp": noninverting_amp_values,
+    "generic": generic_values,
 }

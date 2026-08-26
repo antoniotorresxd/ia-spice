@@ -139,3 +139,13 @@ def test_noninverting_amp_with_unreachable_gain_emits_a_valid_circuit():
 
     assert values["rf"] > 0
     assert values["rg"] > 0
+
+
+def test_generic_deja_pasar_el_netlist_sin_calcular_nada():
+    netlist = "* x\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+
+    values = FORMULAS["generic"](
+        {"description": "algo", "metric": "v_out", "target": 1.0, "netlist": netlist}
+    )
+
+    assert values == {"netlist": netlist}

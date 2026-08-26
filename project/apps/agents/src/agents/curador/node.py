@@ -1,3 +1,5 @@
+from langchain_core.runnables import RunnableConfig
+
 from agents.config import get_config
 from agents.curador.policy import (
     ADJUST_RULES,
@@ -8,7 +10,9 @@ from agents.curador.policy import (
     observed_reduction,
     perturb,
 )
+from agents.curador.reparacion import ReparacionError, get_chat_model, repair_netlist
 from agents.curador.reward import build_measurements, weighted_ape
+from agents.llm.settings_client import LlmSettingsError
 from agents.state import CircuitState
 
 ACCEPTED_BY_TOLERANCE = "all blocks within tolerance"
@@ -17,7 +21,43 @@ ACCEPTED_BY_REWARD = (
 )
 
 
-def curador_node(state: CircuitState) -> dict:
+def reparar_netlist_del_bloque(
+    block: dict, values: dict, sim_result: dict, config: RunnableConfig | None
+) -> str:
+    """Resuelve el LLM del curador para el usuario de la corrida y le pide un
+    netlist corregido para este bloque genérico.
+
+    Un bloque genérico con `sim_error` también pasa por aquí en lugar de
+    perturbarse: perturbar un netlist arbitrario no tiene sentido, así que en
+    su lugar se le cuenta al modelo que la simulación falló y por qué.
+
+    Deja propagar `LlmSettingsError` (sin LLM configurado, o el server no
+    respondió) y `ReparacionError` (el modelo falló) — quien llama decide qué
+    hacer con eso, nunca una excepción no capturada.
+    """
+    user_id = (config or {}).get("configurable", {}).get("user_id")
+    if not user_id:
+        raise LlmSettingsError("missing user_id in run config")
+
+    chat_model = get_chat_model(user_id)
+    params = block["params"]
+    goal = block["goal"]
+    metric = goal["metric"]
+    sim_error = sim_result["sim_error"]
+    measured = None if sim_error is not None else sim_result["metrics"][metric]
+
+    return repair_netlist(
+        chat_model,
+        description=params["description"],
+        metric=metric,
+        target=goal["target"],
+        netlist=values["netlist"],
+        measured=measured,
+        sim_error=sim_error,
+    )
+
+
+def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> dict:
     cfg = get_config()
     spec = state["normalized_spec"]
     iteration = state["iteration"]
@@ -130,16 +170,48 @@ def curador_node(state: CircuitState) -> dict:
     record["decision"] = "adjust"
     blocks_by_id = {b["id"]: b for b in blocks}
     adjusted = {}
+    reparaciones_fallidas: list[str] = []
     for bid, status in failing.items():
         block = blocks_by_id[bid]
         values = state["component_values"][bid]
-        if status == "error":
+        if block["type"] == "generic":
+            # Ni "error" ni "off" tienen ecuación que aplicar aquí: ambos se
+            # reparan pidiéndole al modelo un netlist corregido, dándole
+            # también el error de simulación cuando lo hay.
+            try:
+                nuevo_netlist = reparar_netlist_del_bloque(
+                    block, values, state["sim_results"][bid], config
+                )
+            except (LlmSettingsError, ReparacionError) as exc:
+                reparaciones_fallidas.append(f"{bid}: {exc}")
+            else:
+                adjusted[bid] = {"netlist": nuevo_netlist}
+        elif status == "error":
             adjusted[bid] = perturb(values)
         else:
             actual = state["sim_results"][bid]["metrics"][block["goal"]["metric"]]
             adjusted[bid] = ADJUST_RULES[block["type"]](
                 values, target=block["goal"]["target"], actual=actual
             )
+
+    if reparaciones_fallidas:
+        # Nunca se deja pasar como ajuste silencioso: sin reparación posible
+        # para algún bloque genérico, seguir ajustando el resto agotaría las
+        # iteraciones y terminaría en un rechazo que no dice qué faltó.
+        record["decision"] = "reject"
+        return {
+            "history": [record],
+            "pending_blocks": [],
+            "verdict": {
+                "status": "rejected",
+                "reason": (
+                    "no se pudo reparar el circuito generico "
+                    "(revisa la configuracion de LLM del curador): "
+                    + "; ".join(reparaciones_fallidas)
+                ),
+                "best_iteration": _best_iteration(state["history"] + [record]),
+            },
+        }
 
     return {
         "history": [record],

@@ -49,8 +49,46 @@ class NonInvertingAmpBlock(BaseModel):
     params: NonInvertingAmpParams
 
 
+class GenericParams(BaseModel):
+    """Un circuito fuera del catálogo curado.
+
+    El LLM entrega el netlist ya hecho. Eso no lo vuelve confiable: ngspice
+    sigue siendo el árbitro, igual que con los tipos curados. La diferencia con
+    los trabajos que generan netlists con un LLM no es que aquí se genere
+    mejor, es que aquí no se cree lo generado.
+    """
+
+    description: str = Field(min_length=1)
+    metric: str = Field(min_length=1)
+    target: float
+    netlist: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _el_netlist_mide_algo(self):
+        # Sin esto el shell corre ngspice y no encuentra nada que leer, y el
+        # bloque falla con un error de parseo que no dice cuál fue el problema.
+        if "output.txt" not in self.netlist:
+            raise ValueError(
+                "el netlist debe escribir su medición en output.txt "
+                "(wrdata output.txt ..., o echo $&var > output.txt)"
+            )
+        if ".control" not in self.netlist:
+            raise ValueError("el netlist debe traer un bloque .control que ejecute el análisis")
+        return self
+
+
+class GenericBlock(BaseModel):
+    id: str
+    type: Literal["generic"]
+    params: GenericParams
+
+
 Block = Annotated[
-    VoltageDividerBlock | RcLowpassBlock | LedResistorBlock | NonInvertingAmpBlock,
+    VoltageDividerBlock
+    | RcLowpassBlock
+    | LedResistorBlock
+    | NonInvertingAmpBlock
+    | GenericBlock,
     Field(discriminator="type"),
 ]
 

@@ -114,4 +114,6 @@ NETLIST_BUILDERS = {
     "noninverting_amp": lambda params, values: build_noninverting_amp_netlist(
         v_in=params["v_in"], rf=values["rf"], rg=values["rg"]
     ),
+    # El netlist genérico ya está escrito; escritura solo lo deja pasar.
+    "generic": lambda params, values: values["netlist"],
 }
