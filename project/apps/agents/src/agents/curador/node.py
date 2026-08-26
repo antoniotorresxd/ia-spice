@@ -1,20 +1,51 @@
-from agents.curador.policy import ADJUST_RULES, evaluate_block, perturb
+from agents.config import get_config
+from agents.curador.policy import (
+    ADJUST_RULES,
+    accept_is_admissible,
+    choose_action,
+    estimate_action_rewards,
+    evaluate_block,
+    observed_reduction,
+    perturb,
+)
+from agents.curador.reward import build_measurements, weighted_ape
 from agents.state import CircuitState
+
+ACCEPTED_BY_TOLERANCE = "all blocks within tolerance"
+ACCEPTED_BY_REWARD = (
+    "aceptado por recompensa: otra iteración costaría más de lo que reduciría el error"
+)
 
 
 def curador_node(state: CircuitState) -> dict:
+    cfg = get_config()
     spec = state["normalized_spec"]
     iteration = state["iteration"]
+    blocks = spec["blocks"]
+    max_iterations = spec.get("max_iterations") or cfg["curador"]["max_iterations"]
 
-    evaluations = {}
-    for block in spec["blocks"]:
-        evaluations[block["id"]] = evaluate_block(
-            block["goal"], state["sim_results"][block["id"]]
-        )
+    evaluations = {
+        block["id"]: evaluate_block(block["goal"], state["sim_results"][block["id"]])
+        for block in blocks
+    }
 
     failing = {bid: status for bid, (status, _) in evaluations.items() if status != "ok"}
     rel_errs = [err for _, err in evaluations.values() if err is not None]
     worst_rel_err = max(rel_errs) if rel_errs else None
+
+    # c de la fórmula: la corrida converge si convergieron todos sus bloques
+    converged = all(
+        state["sim_results"][block["id"]].get("converged", False) for block in blocks
+    )
+
+    measurements = build_measurements(blocks, evaluations, cfg)
+    action_rewards = estimate_action_rewards(
+        measurements,
+        converged=converged,
+        iteration=iteration,
+        config=cfg,
+        reduction=observed_reduction(state["history"]),
+    )
 
     record = {
         "iteration": iteration,
@@ -22,8 +53,15 @@ def curador_node(state: CircuitState) -> dict:
         "sim_results": dict(state["sim_results"]),
         "evaluations": {bid: status for bid, (status, _) in evaluations.items()},
         "worst_rel_err": worst_rel_err,
+        "weighted_ape": weighted_ape(measurements, cfg),
+        "converged": converged,
+        "reward": action_rewards["accept"],
+        "action_rewards": action_rewards,
     }
 
+    # Respaldo determinista: dentro de tolerancia se acepta sin consultar la
+    # política. Es la garantía de fiabilidad que la tesina describe — el
+    # sistema siempre produce una decisión aunque la política no aplique.
     if not failing:
         record["decision"] = "accept"
         return {
@@ -31,12 +69,33 @@ def curador_node(state: CircuitState) -> dict:
             "pending_blocks": [],
             "verdict": {
                 "status": "accepted",
-                "reason": "all blocks within tolerance",
+                "reason": ACCEPTED_BY_TOLERANCE,
                 "best_iteration": iteration,
             },
         }
 
-    if iteration + 1 >= spec["max_iterations"]:
+    # La recompensa decide cuándo parar de iterar; la tolerancia de cada
+    # bloque decide si lo que hay se puede entregar. Separarlas evita que un
+    # circuito estancado lejos de su meta se reporte como aceptado.
+    action = choose_action(
+        action_rewards,
+        adjust_available=iteration + 1 < max_iterations,
+        accept_admissible=accept_is_admissible(blocks, evaluations, cfg),
+    )
+
+    if action == "accept":
+        record["decision"] = "accept"
+        return {
+            "history": [record],
+            "pending_blocks": [],
+            "verdict": {
+                "status": "accepted",
+                "reason": ACCEPTED_BY_REWARD,
+                "best_iteration": iteration,
+            },
+        }
+
+    if action == "reject":
         record["decision"] = "reject"
         sim_errors = [
             state["sim_results"][bid]["sim_error"]
@@ -44,9 +103,9 @@ def curador_node(state: CircuitState) -> dict:
             if status == "error"
         ]
         reason = (
-            f"simulation errors after {spec['max_iterations']} iterations: {sim_errors}"
+            f"simulation errors after {max_iterations} iterations: {sim_errors}"
             if sim_errors
-            else f"goals not met after {spec['max_iterations']} iterations"
+            else f"goals not met after {max_iterations} iterations"
         )
         return {
             "history": [record],
@@ -59,10 +118,10 @@ def curador_node(state: CircuitState) -> dict:
         }
 
     record["decision"] = "adjust"
-    blocks = {b["id"]: b for b in spec["blocks"]}
+    blocks_by_id = {b["id"]: b for b in blocks}
     adjusted = {}
     for bid, status in failing.items():
-        block = blocks[bid]
+        block = blocks_by_id[bid]
         values = state["component_values"][bid]
         if status == "error":
             adjusted[bid] = perturb(values)
@@ -81,10 +140,16 @@ def curador_node(state: CircuitState) -> dict:
 
 
 def _best_iteration(history: list) -> int | None:
-    scored = [r for r in history if r.get("worst_rel_err") is not None]
+    """La mejor iteración es la de mayor recompensa.
+
+    Antes se elegía por error relativo mínimo, que ignora la convergencia y el
+    costo de las iteraciones; la recompensa las incorpora, que es justamente
+    para lo que existe.
+    """
+    scored = [r for r in history if r.get("reward") is not None]
     if not scored:
         return None
-    return min(scored, key=lambda r: r["worst_rel_err"])["iteration"]
+    return max(scored, key=lambda r: r["reward"])["iteration"]
 
 
 def route_after_curador(state: CircuitState) -> str:

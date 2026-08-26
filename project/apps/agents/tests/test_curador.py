@@ -83,7 +83,7 @@ def _state(sim_results, iteration=0, max_iterations=5, history=None):
 
 def test_curador_accepts_when_all_blocks_within_tolerance():
     result = curador_node(
-        _state({"div1": {"metrics": {"v_out": 3.31}, "sim_error": None}})
+        _state({"div1": {"metrics": {"v_out": 3.31}, "converged": True, "sim_error": None}})
     )
 
     assert result["verdict"]["status"] == "accepted"
@@ -94,7 +94,7 @@ def test_curador_accepts_when_all_blocks_within_tolerance():
 
 def test_curador_adjusts_failing_block_and_stays_unverdicted():
     result = curador_node(
-        _state({"div1": {"metrics": {"v_out": 2.5}, "sim_error": None}})
+        _state({"div1": {"metrics": {"v_out": 2.5}, "converged": True, "sim_error": None}})
     )
 
     assert "verdict" not in result
@@ -105,7 +105,7 @@ def test_curador_adjusts_failing_block_and_stays_unverdicted():
 
 
 def test_curador_perturbs_on_sim_error_with_iterations_left():
-    result = curador_node(_state({"div1": {"metrics": None, "sim_error": "boom"}}))
+    result = curador_node(_state({"div1": {"metrics": None, "converged": False, "sim_error": "boom"}}))
 
     assert "verdict" not in result
     assert result["component_values"]["div1"]["r2"] == pytest.approx(1050.0)
@@ -115,7 +115,7 @@ def test_curador_perturbs_on_sim_error_with_iterations_left():
 def test_curador_rejects_when_iterations_exhausted():
     result = curador_node(
         _state(
-            {"div1": {"metrics": {"v_out": 2.5}, "sim_error": None}},
+            {"div1": {"metrics": {"v_out": 2.5}, "converged": True, "sim_error": None}},
             iteration=4,
             max_iterations=5,
             history=[
@@ -133,7 +133,7 @@ def test_curador_rejects_when_iterations_exhausted():
 
 def test_curador_rejects_with_diagnosis_when_sim_error_and_no_iterations_left():
     result = curador_node(
-        _state({"div1": {"metrics": None, "sim_error": "boom"}}, iteration=4)
+        _state({"div1": {"metrics": None, "converged": False, "sim_error": "boom"}}, iteration=4)
     )
 
     assert result["verdict"]["status"] == "rejected"
@@ -146,6 +146,7 @@ def test_route_after_curador():
 
 
 from agents.curador.policy import (
+    accept_is_admissible,
     choose_action,
     estimate_action_rewards,
     observed_reduction,
@@ -159,6 +160,7 @@ POLICY_CFG = {
         "failed_ape": 100.0,
         "expected_error_reduction": 0.7,
         "reject_reward": -50.0,
+        "accept_tolerance_slack": 1.5,
     }
 }
 
@@ -253,3 +255,97 @@ def test_observed_reduction_never_exceeds_one():
     history = [{"weighted_ape": 10.0}, {"weighted_ape": 40.0}]
 
     assert observed_reduction(history) == pytest.approx(1.0)
+
+
+def test_curador_records_the_reward_and_the_action_rewards():
+    result = curador_node(
+        _state({"div1": {"metrics": {"v_out": 2.5}, "converged": True, "sim_error": None}})
+    )
+
+    record = result["history"][0]
+    assert record["converged"] is True
+    assert record["weighted_ape"] == pytest.approx(100.0 * 0.8 / 3.3)
+    # accept = -A + β - γ·0
+    assert record["reward"] == pytest.approx(-record["weighted_ape"] + 10.0)
+    assert set(record["action_rewards"]) == {"accept", "adjust", "reject"}
+
+
+def test_curador_accepts_early_when_adjusting_costs_more_than_it_gains():
+    # 3.10 contra una meta de 3.3 es un 6.06 % de error: fuera de la tolerancia
+    # del 5 %, pero por debajo del umbral γ/(1-ρ) = 10 puntos. Las reglas
+    # anteriores habrían seguido ajustando; la política acepta.
+    result = curador_node(
+        _state({"div1": {"metrics": {"v_out": 3.10}, "converged": True, "sim_error": None}})
+    )
+
+    assert result["verdict"]["status"] == "accepted"
+    assert result["history"][0]["decision"] == "accept"
+    assert "recompensa" in result["verdict"]["reason"]
+
+
+def test_curador_marks_the_block_as_not_converged_when_the_simulation_failed():
+    result = curador_node(
+        _state({"div1": {"metrics": None, "converged": False, "sim_error": "boom"}})
+    )
+
+    assert result["history"][0]["converged"] is False
+    # APE imputado de 100 y sin premio de convergencia
+    assert result["history"][0]["reward"] == pytest.approx(-100.0)
+
+
+def test_best_iteration_is_the_one_with_the_highest_reward():
+    result = curador_node(
+        _state(
+            {"div1": {"metrics": {"v_out": 2.5}, "converged": True, "sim_error": None}},
+            iteration=4,
+            max_iterations=5,
+            history=[
+                {"iteration": 0, "decision": "adjust", "reward": -50.0, "weighted_ape": 60.0},
+                {"iteration": 1, "decision": "adjust", "reward": -5.0, "weighted_ape": 12.0},
+                {"iteration": 2, "decision": "adjust", "reward": -40.0, "weighted_ape": 47.0},
+                {"iteration": 3, "decision": "adjust", "reward": -45.0, "weighted_ape": 52.0},
+            ],
+        )
+    )
+
+    assert result["verdict"]["status"] == "rejected"
+    assert result["verdict"]["best_iteration"] == 1
+
+
+def _block(tolerance):
+    return {"id": "b1", "goal": {"metric": "v_out", "target": 3.3, "tolerance": tolerance}}
+
+
+def test_accept_is_admissible_within_the_slack_over_the_declared_tolerance():
+    # 6.06 % de error contra una tolerancia del 5 %: 1.21 veces, cabe en 1.5
+    assert accept_is_admissible([_block(0.05)], {"b1": ("off", 0.0606)}, POLICY_CFG)
+
+
+def test_accept_is_not_admissible_beyond_the_slack():
+    # 24 % contra 5 %: casi cinco veces la tolerancia
+    assert not accept_is_admissible([_block(0.05)], {"b1": ("off", 0.2424)}, POLICY_CFG)
+
+
+def test_admissibility_scales_with_each_blocks_own_tolerance():
+    """El mismo error absoluto se juzga distinto según lo estricta que sea la
+    meta. Es la regresión que atrapó test_graph.py: el LED declara tolerancia
+    del 1 % y cae 5.9 % fuera; un tope global en puntos de APE lo habría dado
+    por bueno incumpliendo su meta por casi seis veces."""
+    evaluations = {"b1": ("off", 0.0589)}
+
+    assert accept_is_admissible([_block(0.05)], evaluations, POLICY_CFG)
+    assert not accept_is_admissible([_block(0.01)], evaluations, POLICY_CFG)
+
+
+def test_accept_is_never_admissible_when_a_block_could_not_be_measured():
+    assert not accept_is_admissible([_block(0.05)], {"b1": ("error", None)}, POLICY_CFG)
+
+
+def test_accept_needs_every_block_to_be_admissible():
+    blocks = [
+        {"id": "b1", "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05}},
+        {"id": "b2", "goal": {"metric": "f_c", "target": 1000.0, "tolerance": 0.05}},
+    ]
+    evaluations = {"b1": ("off", 0.06), "b2": ("off", 0.40)}
+
+    assert not accept_is_admissible(blocks, evaluations, POLICY_CFG)
