@@ -76,7 +76,7 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
       <header className={styles.hero}><p className={styles.eyebrow}>Conversación</p><h1>{conversation.title}</h1><p>{conversation.preview}</p></header>
       <dl aria-label="Métricas de la conversación" className={styles.metrics}><div><dt>Estado</dt><dd>{statusLabels[conversation.executionStatus]}</dd></div><div><dt>Mensajes</dt><dd>{conversation.messages.length}</dd></div><div><dt>Archivos</dt><dd>{conversation.files.length}</dd></div></dl>
       <section aria-labelledby="messages-title" className={styles.messages}><h2 id="messages-title">Mensajes</h2>{conversation.messages.map((message) => <article className={styles.message} data-role={message.role} key={message.id}><p className={styles.role}>{message.role === 'user' ? 'Tú' : 'Asistente'}</p><p>{message.content}</p></article>)}</section>
-      <ActivityTimeline execution={timeline} />
+      <ActivityTimeline execution={timeline} heading="Progreso de la ejecución" />
       <form className={styles.composer} onSubmit={(event) => void submit(event)}><label htmlFor="continuation">Nueva indicación</label><textarea disabled={pending} id="continuation" onChange={(event) => setText(event.target.value)} placeholder="Describe el siguiente ajuste…" value={text} />{submitError ? <p role="alert">{submitError}</p> : null}<button disabled={pending} type="submit">{pending ? 'Continuando…' : 'Continuar conversación'}</button></form>
     </article>
   )

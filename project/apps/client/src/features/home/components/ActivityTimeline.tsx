@@ -8,6 +8,11 @@ import styles from './ActivityTimeline.module.css'
 
 type ActivityTimelineProps = {
   execution: ConversationExecution
+  /** Encabezado de la sección. Por omisión, el título de la conversación:
+   *  sirve en la pantalla de inicio, donde el timeline lista ejecuciones de
+   *  conversaciones distintas. Dentro de una conversación hay que pasarlo,
+   *  o el título se repetiría como h1 y como h2. */
+  heading?: string
 }
 
 function formatDuration(durationMs: number | null) {
@@ -27,7 +32,7 @@ function StageSummary({ stage }: { stage: ExecutionStage }) {
   return <p>{stage.summary}</p>
 }
 
-export function ActivityTimeline({ execution }: ActivityTimelineProps) {
+export function ActivityTimeline({ execution, heading }: ActivityTimelineProps) {
   const [expandedStageId, setExpandedStageId] = useState<string | null>(null)
 
   return (
@@ -37,7 +42,7 @@ export function ActivityTimeline({ execution }: ActivityTimelineProps) {
           <p className={styles.kicker}>
             Ejecución {execution.id.replace('execution-', '#')}
           </p>
-          <h2 id="execution-title">{execution.conversation.title}</h2>
+          <h2 id="execution-title">{heading ?? execution.conversation.title}</h2>
           <p>
             {execution.projectId ? 'Proyecto asignado' : 'Sin proyecto'} ·{' '}
             {execution.status === 'active'
