@@ -122,3 +122,20 @@ def test_formulas_read_their_defaults_from_the_config(tmp_path, monkeypatch):
     values = FORMULAS["voltage_divider"]({"v_in": 5.0, "v_out": 2.5})
 
     assert values["r1"] == 4700.0
+
+
+def test_noninverting_amp_solves_the_feedback_ratio():
+    # Av = 3 con Rg = 1k  ->  Rf = Rg·(Av-1) = 2k
+    values = FORMULAS["noninverting_amp"]({"v_in": 1.0, "v_out": 3.0})
+
+    assert values["rg"] == 1000.0
+    assert values["rf"] == pytest.approx(2000.0)
+
+
+def test_noninverting_amp_with_unreachable_gain_emits_a_valid_circuit():
+    """Un no inversor no atenúa. La meta es inalcanzable, pero se emite un
+    circuito válido y el curador la rechaza al agotar iteraciones."""
+    values = FORMULAS["noninverting_amp"]({"v_in": 5.0, "v_out": 2.0})
+
+    assert values["rf"] > 0
+    assert values["rg"] > 0

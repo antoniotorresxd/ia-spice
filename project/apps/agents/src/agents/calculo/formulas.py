@@ -31,8 +31,21 @@ def led_resistor_values(params: dict) -> dict:
     return {"r": max(r, _calculo_cfg()["r_min"])}
 
 
+def noninverting_amp_values(params: dict) -> dict:
+    cfg = _calculo_cfg()
+    rg = cfg["rg_default"]
+    gain = params["v_out"] / params["v_in"]
+    if gain <= 1.0:
+        # un no inversor no puede atenuar: meta físicamente inalcanzable.
+        # Se emite un circuito válido (ganancia ~1) y el lazo del curador la
+        # rechaza al agotar iteraciones, como hace el divisor.
+        return {"rg": rg, "rf": cfg["r_min"]}
+    return {"rg": rg, "rf": rg * (gain - 1.0)}
+
+
 FORMULAS = {
     "voltage_divider": voltage_divider_values,
     "rc_lowpass": rc_lowpass_values,
     "led_resistor": led_resistor_values,
+    "noninverting_amp": noninverting_amp_values,
 }

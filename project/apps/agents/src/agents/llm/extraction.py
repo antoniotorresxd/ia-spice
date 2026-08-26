@@ -12,6 +12,9 @@ salvo que se indique):
   corte (Hz).
 - led_resistor: LED con resistencia limitadora. params: v_in (V), v_f, \
   voltage forward del LED (V), i_led objetivo, corriente (A).
+- noninverting_amp: amplificador no inversor con amplificador operacional \
+  (macromodelo). params: v_in (V), v_out objetivo (V). La ganancia es \
+  v_out/v_in y tiene que ser mayor que 1: un no inversor no atenúa.
 
 Cada bloque del circuito necesita un "id" único de tu elección (string \
 corto, ej. "div1"). Si el usuario no especifica tolerancia ni número \

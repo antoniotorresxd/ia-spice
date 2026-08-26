@@ -44,6 +44,9 @@ curador:
 calculo:
   r1_default: 1000.0
   r_rc_default: 1000.0
+  # Resistencia a tierra del no inversor. Se fija y se despeja Rf, igual que el
+  # divisor fija R1 y despeja R2.
+  rg_default: 1000.0
   r_min: 1.0
   perturb_factor: 1.05
 

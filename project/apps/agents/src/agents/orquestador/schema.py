@@ -20,6 +20,11 @@ class LedResistorParams(BaseModel):
     i_led: float = Field(gt=0)
 
 
+class NonInvertingAmpParams(BaseModel):
+    v_in: float = Field(gt=0)
+    v_out: float = Field(gt=0)
+
+
 class VoltageDividerBlock(BaseModel):
     id: str
     type: Literal["voltage_divider"]
@@ -38,8 +43,14 @@ class LedResistorBlock(BaseModel):
     params: LedResistorParams
 
 
+class NonInvertingAmpBlock(BaseModel):
+    id: str
+    type: Literal["noninverting_amp"]
+    params: NonInvertingAmpParams
+
+
 Block = Annotated[
-    VoltageDividerBlock | RcLowpassBlock | LedResistorBlock,
+    VoltageDividerBlock | RcLowpassBlock | LedResistorBlock | NonInvertingAmpBlock,
     Field(discriminator="type"),
 ]
 
