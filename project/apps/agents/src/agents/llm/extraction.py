@@ -16,6 +16,34 @@ salvo que se indique):
   (macromodelo). params: v_in (V), v_out objetivo (V). La ganancia es \
   v_out/v_in y tiene que ser mayor que 1: un no inversor no atenúa.
 
+Si la solicitud NO encaja en ninguno de los tipos anteriores, usa el tipo \
+"generic" y entrega tú el netlist. params:
+- description: qué circuito es, en una frase.
+- metric: nombre de la magnitud que se mide (ej. "v_out", "f_c", "i_out").
+- target: valor objetivo de esa magnitud, en unidades SI.
+- netlist: el netlist SPICE completo, listo para `ngspice -b`.
+
+El netlist de un bloque generic TIENE que incluir un bloque .control que \
+ejecute el análisis y escriba la magnitud medida en output.txt, y cerrar con \
+.endc y .end. Dos patrones válidos:
+
+  .control
+  op
+  wrdata output.txt v(vout)
+  .endc
+  .end
+
+  .control
+  ac dec 100 1 1e9
+  meas ac fc WHEN vdb(vout)=-3.0103
+  echo $&fc > output.txt
+  .endc
+  .end
+
+Prefiere siempre un tipo curado cuando la solicitud encaje en él: sus valores \
+salen de ecuaciones exactas y son repetibles. Usa "generic" solo cuando no \
+encaje en ninguno.
+
 Cada bloque del circuito necesita un "id" único de tu elección (string \
 corto, ej. "div1"). Si el usuario no especifica tolerancia ni número \
 máximo de iteraciones, omite esos campos (tienen defaults). Devuelve \

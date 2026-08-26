@@ -37,21 +37,28 @@ def _rejected(reason: str) -> dict:
     }
 
 
+def _goal_for(block, params: dict, tolerance: float) -> dict:
+    """La meta de un bloque.
+
+    Los tipos curados la derivan de sus parámetros por tabla; el genérico la
+    trae consigo, porque solo el LLM sabe qué magnitud eligió medir.
+    """
+    if block.type == "generic":
+        return {"metric": params["metric"], "target": params["target"], "tolerance": tolerance}
+    metric, target_param = _GOALS[block.type]
+    return {"metric": metric, "target": params[target_param], "tolerance": tolerance}
+
+
 def _normalize(spec: CircuitSpec) -> dict:
     blocks = []
     for block in spec.blocks:
         params = block.params.model_dump()
-        metric, target_param = _GOALS[block.type]
         blocks.append(
             {
                 "id": block.id,
                 "type": block.type,
                 "params": params,
-                "goal": {
-                    "metric": metric,
-                    "target": params[target_param],
-                    "tolerance": spec.tolerance,
-                },
+                "goal": _goal_for(block, params, spec.tolerance),
             }
         )
     return {

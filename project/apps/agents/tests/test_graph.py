@@ -253,3 +253,92 @@ def test_noninverting_amp_with_unreachable_gain_is_rejected():
     assert final["verdict"]["best_iteration"] is not None
     # se simuló de verdad en cada intento, no se abandonó antes de medir
     assert final["sim_results"]["amp1"]["sim_error"] is None
+
+
+def test_un_circuito_fuera_del_catalogo_se_resuelve_por_el_camino_generico():
+    """La prueba de que el sistema dejó de estar cerrado a su catálogo.
+
+    El netlist llega ya escrito —como lo entregaría el LLM— y el lazo lo trata
+    igual que a cualquier otro: lo simula con ngspice, mide y decide. Nada se
+    acepta por parecer correcto.
+    """
+    netlist = (
+        "* divisor entregado como bloque generico\n"
+        "Vinput vin 0 10.0\n"
+        "R1 vin vout 1000\n"
+        "R2 vout 0 1000\n"
+        ".control\n"
+        "op\n"
+        "wrdata output.txt v(vout)\n"
+        ".endc\n"
+        ".end\n"
+    )
+    spec = {
+        "blocks": [
+            {
+                "id": "gen1",
+                "type": "generic",
+                "params": {
+                    "description": "un divisor resistivo simple",
+                    "metric": "v_out",
+                    "target": 5.0,
+                    "netlist": netlist,
+                },
+            }
+        ]
+    }
+
+    final = _run(spec, "e2e-generico")
+
+    assert final["verdict"]["status"] == "accepted"
+    assert final["sim_results"]["gen1"]["metrics"]["v_out"] == pytest.approx(5.0, rel=0.01)
+    assert final["sim_results"]["gen1"]["converged"] is True
+
+
+def test_el_camino_generico_tambien_llega_desde_lenguaje_natural(monkeypatch):
+    """El recorrido completo: prompt libre -> el LLM elige `generic` y escribe
+    el netlist -> ngspice arbitra."""
+    netlist = (
+        "* pasa-bajas RC entregado por el modelo\n"
+        "Vinput vin 0 DC 0 AC 1\n"
+        "R1 vin vout 1000\n"
+        "C1 vout 0 1.5915e-07\n"
+        ".control\n"
+        "ac dec 100 1 1e9\n"
+        "meas ac fc WHEN vdb(vout)=-3.0103\n"
+        "echo $&fc > output.txt\n"
+        ".endc\n"
+        ".end\n"
+    )
+    fake_spec = CircuitSpec.model_validate(
+        {
+            "blocks": [
+                {
+                    "id": "gen1",
+                    "type": "generic",
+                    "params": {
+                        "description": "filtro pasa-bajas de 1 kHz",
+                        "metric": "f_c",
+                        "target": 1000.0,
+                        "netlist": netlist,
+                    },
+                }
+            ]
+        }
+    )
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
+    monkeypatch.setattr(
+        orquestador_module, "extract_circuit_spec", lambda chat_model, text: fake_spec
+    )
+
+    graph = build_graph()
+    initial = _initial_state({"blocks": []})
+    initial["request_text"] = "quiero un filtro que corte en 1 kHz"
+
+    final = graph.invoke(
+        initial,
+        {"configurable": {"thread_id": "e2e-generico-nl", "user_id": "test-user"}},
+    )
+
+    assert final["verdict"]["status"] == "accepted"
+    assert final["sim_results"]["gen1"]["metrics"]["f_c"] == pytest.approx(1000.0, rel=0.01)
