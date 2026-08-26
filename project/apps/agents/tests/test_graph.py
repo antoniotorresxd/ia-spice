@@ -183,3 +183,23 @@ def test_request_text_end_to_end_with_live_llm():
     final = graph.invoke(initial_state, config)
 
     assert final["verdict"]["status"] == "accepted"
+
+
+def test_noninverting_amp_converges_end_to_end():
+    """El lazo completo contra ngspice real con un circuito realimentado."""
+    spec = {
+        "blocks": [
+            {
+                "id": "amp1",
+                "type": "noninverting_amp",
+                "params": {"v_in": 1.0, "v_out": 3.0},
+            }
+        ],
+        "tolerance": 0.01,
+    }
+
+    final = _run(spec, "e2e-amp")
+
+    assert final["verdict"]["status"] == "accepted"
+    assert final["sim_results"]["amp1"]["metrics"]["v_out"] == pytest.approx(3.0, rel=0.01)
+    assert ".subckt opamp" in final["netlists"]["amp1"]["text"]

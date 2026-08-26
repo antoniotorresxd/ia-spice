@@ -441,3 +441,22 @@ def test_converged_is_false_when_any_block_failed_to_simulate():
     )
 
     assert result["history"][0]["converged"] is False
+
+
+def test_adjust_noninverting_amp_solves_rf_exactly():
+    # v_out = v_in·(rg+rf)/rg. Con rg=1k, rf=2k la salida es 3·v_in; para
+    # llevar 3.0 medido a 4.0 objetivo hace falta rf = (1k+2k)·4/3 - 1k = 3k
+    values = ADJUST_RULES["noninverting_amp"](
+        {"rg": 1000.0, "rf": 2000.0}, target=4.0, actual=3.0
+    )
+
+    assert values["rf"] == pytest.approx(3000.0)
+    assert values["rg"] == 1000.0
+
+
+def test_adjust_noninverting_amp_guards_against_nonpositive_actual():
+    values = ADJUST_RULES["noninverting_amp"](
+        {"rg": 1000.0, "rf": 2000.0}, target=4.0, actual=0.0
+    )
+
+    assert values["rf"] == pytest.approx(4000.0)

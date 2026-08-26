@@ -31,11 +31,22 @@ def _adjust_led_resistor(values: dict, target: float, actual: float) -> dict:
     return {**values, "r": max(values["r"] * actual / target, r_min)}
 
 
+def _adjust_noninverting_amp(values: dict, target: float, actual: float) -> dict:
+    # v_out = v_in·(rg+rf)/rg, así que (rg+rf_nuevo)/(rg+rf) = target/actual.
+    # El despeje es exacto, no proporcional como en los otros bloques.
+    r_min = get_config()["calculo"]["r_min"]
+    rg, rf = values["rg"], values["rf"]
+    if actual <= 0:
+        return {**values, "rf": max(rf * 2, r_min)}
+    return {**values, "rf": max((rg + rf) * target / actual - rg, r_min)}
+
+
 # regla proporcional sobre el componente dominante, por tipo de circuito
 ADJUST_RULES = {
     "voltage_divider": _adjust_voltage_divider,
     "rc_lowpass": _adjust_rc_lowpass,
     "led_resistor": _adjust_led_resistor,
+    "noninverting_amp": _adjust_noninverting_amp,
 }
 
 

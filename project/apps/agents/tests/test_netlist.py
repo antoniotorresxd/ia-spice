@@ -1,6 +1,8 @@
 import os
 import tempfile
 
+import pytest
+
 from agents.escritura.netlist import build_voltage_divider_netlist
 from agents.escritura.node import escritura_node
 from agents.escritura.netlist import (
@@ -51,6 +53,7 @@ def test_netlist_builders_registry_covers_all_types():
         "voltage_divider",
         "rc_lowpass",
         "led_resistor",
+        "noninverting_amp",
     }
     netlist = NETLIST_BUILDERS["voltage_divider"](
         {"v_in": 5.0, "v_out": 3.3}, {"r1": 1000.0, "r2": 1941.18}
@@ -109,3 +112,30 @@ def test_escritura_node_only_writes_pending_blocks():
     result = escritura_node(state)
 
     assert set(result["netlists"].keys()) == {"led1"}
+
+
+def test_noninverting_amp_netlist_simulates_to_the_expected_gain():
+    """Contra ngspice de verdad: ganancia 3 sobre 1 V debe medir ~3 V.
+    El desvío que quede es la ganancia finita en lazo abierto del macromodelo,
+    no ruido numérico."""
+    import os
+    import tempfile
+
+    from agents.escritura.netlist import NETLIST_BUILDERS
+    from agents.shell.ngspice_runner import parse_wrdata_scalar, run_ngspice
+
+    text = NETLIST_BUILDERS["noninverting_amp"](
+        {"v_in": 1.0, "v_out": 3.0}, {"rg": 1000.0, "rf": 2000.0}
+    )
+    assert ".subckt opamp" in text
+    assert "X1" in text
+
+    work_dir = tempfile.mkdtemp(prefix="agents-test-amp-")
+    path = os.path.join(work_dir, "circuit.cir")
+    with open(path, "w") as fh:
+        fh.write(text)
+
+    output_path, error = run_ngspice(path)
+
+    assert error is None
+    assert parse_wrdata_scalar(output_path) == pytest.approx(3.0, rel=0.001)
