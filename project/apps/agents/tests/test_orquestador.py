@@ -1,3 +1,5 @@
+import pytest
+
 from agents.orquestador.node import orquestador_node, route_after_orquestador
 
 
@@ -284,3 +286,41 @@ def test_the_caller_can_still_override_what_the_config_proposes(tmp_path, monkey
 
     assert spec.max_iterations == 2
     assert spec.tolerance == 0.1
+
+
+def test_noninverting_amp_block_is_accepted_and_gets_its_goal():
+    from agents.orquestador.node import _normalize
+    from agents.orquestador.schema import CircuitSpec
+
+    spec = CircuitSpec.model_validate(
+        {
+            "blocks": [
+                {
+                    "id": "amp1",
+                    "type": "noninverting_amp",
+                    "params": {"v_in": 1.0, "v_out": 3.0},
+                }
+            ]
+        }
+    )
+    result = _normalize(spec)
+    block = result["normalized_spec"]["blocks"][0]
+
+    assert block["type"] == "noninverting_amp"
+    assert block["goal"]["metric"] == "v_out"
+    assert block["goal"]["target"] == 3.0
+
+
+def test_noninverting_amp_rejects_nonpositive_params():
+    from pydantic import ValidationError
+
+    from agents.orquestador.schema import CircuitSpec
+
+    with pytest.raises(ValidationError):
+        CircuitSpec.model_validate(
+            {
+                "blocks": [
+                    {"id": "amp1", "type": "noninverting_amp", "params": {"v_in": 0.0, "v_out": 3.0}}
+                ]
+            }
+        )

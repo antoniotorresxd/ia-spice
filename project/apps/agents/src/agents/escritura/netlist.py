@@ -1,6 +1,22 @@
 from PySpice.Spice.Netlist import Circuit
 
 
+# Macromodelo de un polo: resistencia de entrada, ganancia en lazo abierto,
+# red RC del polo dominante y etapa de salida. Describe el comportamiento en
+# los terminales sin modelar transistores, que es lo que los límites de la
+# tesina entienden por macromodelo. En continua el capacitor está abierto, así
+# que el polo no altera el punto de operación.
+OPAMP_SUBCKT = (
+    ".subckt opamp inp inn out\n"
+    "Rin inp inn 1e6\n"
+    "Egain n1 0 inp inn 1e5\n"
+    "Rp n1 n2 1k\n"
+    "Cp n2 0 159n\n"
+    "Eout out 0 n2 0 1\n"
+    ".ends\n"
+)
+
+
 def build_voltage_divider_netlist(v_in: float, r1: float, r2: float) -> str:
     """Build a resistive voltage-divider netlist ready for ngspice batch mode.
 
@@ -62,6 +78,25 @@ def build_led_resistor_netlist(v_in: float, r: float) -> str:
     return str(circuit) + control_block
 
 
+def build_noninverting_amp_netlist(v_in: float, rf: float, rg: float) -> str:
+    """Amplificador no inversor con macromodelo de operacional; mide la salida
+    en el punto de operación. La ganancia es 1 + Rf/Rg."""
+    circuit = Circuit("Non-inverting Amplifier")
+    circuit.V("input", "vin", circuit.gnd, v_in)
+    circuit.X("1", "opamp", "vin", "vfb", "vout")
+    circuit.R("f", "vout", "vfb", rf)
+    circuit.R("g", "vfb", circuit.gnd, rg)
+
+    control_block = (
+        ".control\n"
+        "op\n"
+        "wrdata output.txt v(vout)\n"
+        ".endc\n"
+        ".end\n"
+    )
+    return str(circuit) + OPAMP_SUBCKT + control_block
+
+
 # firma uniforme: (params_del_bloque, component_values_del_bloque) -> netlist
 NETLIST_BUILDERS = {
     "voltage_divider": lambda params, values: build_voltage_divider_netlist(
@@ -72,5 +107,8 @@ NETLIST_BUILDERS = {
     ),
     "led_resistor": lambda params, values: build_led_resistor_netlist(
         v_in=params["v_in"], r=values["r"]
+    ),
+    "noninverting_amp": lambda params, values: build_noninverting_amp_netlist(
+        v_in=params["v_in"], rf=values["rf"], rg=values["rg"]
     ),
 }

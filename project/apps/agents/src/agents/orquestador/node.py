@@ -12,6 +12,7 @@ _GOALS = {
     "voltage_divider": ("v_out", "v_out"),
     "rc_lowpass": ("f_c", "f_c"),
     "led_resistor": ("i_led", "i_led"),
+    "noninverting_amp": ("v_out", "v_out"),
 }
 
 
