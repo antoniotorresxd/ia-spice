@@ -33,7 +33,11 @@ def curador_node(state: CircuitState) -> dict:
     rel_errs = [err for _, err in evaluations.values() if err is not None]
     worst_rel_err = max(rel_errs) if rel_errs else None
 
-    # c de la fórmula: la corrida converge si convergieron todos sus bloques
+    # c de la fórmula: la corrida converge si convergieron todos sus bloques.
+    # El .get es defensivo a propósito: hoy `shell_node` es el único productor
+    # de sim_results y siempre pone la clave, pero si mañana otro camino la
+    # omite, tratarlo como "no convergió" es la lectura segura — pierde el
+    # premio β en lugar de tumbar la corrida.
     converged = all(
         state["sim_results"][block["id"]].get("converged", False) for block in blocks
     )

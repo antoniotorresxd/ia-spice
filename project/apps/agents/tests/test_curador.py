@@ -126,8 +126,8 @@ def test_curador_rejects_when_iterations_exhausted():
     )
 
     assert result["verdict"]["status"] == "rejected"
-    # la mejor iteración según worst_rel_err es la del registro actual o
-    # la mínima del history; aquí history[3] tiene 0.7 y la actual ~0.24
+    # estos registros del history solo traen worst_rel_err, no reward, así que
+    # _best_iteration los descarta y el actual queda como único candidato
     assert result["verdict"]["best_iteration"] == 4
 
 
@@ -349,3 +349,95 @@ def test_accept_needs_every_block_to_be_admissible():
     evaluations = {"b1": ("off", 0.06), "b2": ("off", 0.40)}
 
     assert not accept_is_admissible(blocks, evaluations, POLICY_CFG)
+
+
+def _two_block_state(sim_results):
+    """Dos bloques con tolerancias muy distintas: 5 % y 0.1 %."""
+    return {
+        "circuit_spec": {},
+        "request_text": None,
+        "normalized_spec": {
+            "blocks": [
+                {
+                    "id": "holgado",
+                    "type": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
+                },
+                {
+                    "id": "estricto",
+                    "type": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.001},
+                },
+            ],
+            "max_iterations": 5,
+        },
+        "pending_blocks": ["holgado", "estricto"],
+        "component_values": {
+            "holgado": {"r1": 1000.0, "r2": 1000.0},
+            "estricto": {"r1": 1000.0, "r2": 1000.0},
+        },
+        "netlists": {},
+        "sim_results": sim_results,
+        "iteration": 0,
+        "history": [],
+        "verdict": None,
+    }
+
+
+def _measured(value):
+    return {"metrics": {"v_out": value}, "converged": True, "sim_error": None}
+
+
+def test_curador_will_not_accept_while_any_block_is_inadmissible():
+    """La barandilla, probada donde de verdad vive: en el nodo.
+
+    Los dos bloques suman 8 puntos de APE ponderado, por debajo del umbral
+    γ/(1-ρ)=10, así que la recompensa prefiere aceptar. Pero `estricto` declara
+    una tolerancia del 0.1 % y se desvía 2 %: veinte veces su meta. Aceptar
+    dejaría de ser honesto, así que se sigue ajustando.
+    """
+    # 3.102 -> 6 % de error (tolerancia 5 %: fuera, pero dentro del margen 1.5)
+    # 3.234 -> 2 % de error (tolerancia 0.1 %: veinte veces fuera)
+    result = curador_node(
+        _two_block_state({"holgado": _measured(3.102), "estricto": _measured(3.234)})
+    )
+
+    record = result["history"][0]
+    assert record["weighted_ape"] == pytest.approx(8.0)
+    # la recompensa, por sí sola, habría aceptado
+    assert record["action_rewards"]["accept"] > record["action_rewards"]["adjust"]
+    # pero la admisibilidad manda
+    assert record["decision"] == "adjust"
+    assert "verdict" not in result
+    assert sorted(result["pending_blocks"]) == ["estricto", "holgado"]
+
+
+def test_curador_accepts_by_reward_when_every_block_is_admissible():
+    """El contraste: mismo error ponderado, pero ahora los dos bloques caben en
+    el margen de su propia tolerancia. Sin la barandilla de por medio, la
+    recompensa decide y acepta."""
+    # 3.102 -> 6 % con tolerancia 5 %; 3.366 -> 2 % con tolerancia... también 5 %
+    state = _two_block_state({"holgado": _measured(3.102), "estricto": _measured(3.366)})
+    state["normalized_spec"]["blocks"][1]["goal"]["tolerance"] = 0.05
+
+    result = curador_node(state)
+
+    assert result["history"][0]["weighted_ape"] == pytest.approx(8.0)
+    assert result["verdict"]["status"] == "accepted"
+    assert "recompensa" in result["verdict"]["reason"]
+
+
+def test_converged_is_false_when_any_block_failed_to_simulate():
+    """`c` de la fórmula es un all() sobre los bloques: basta uno sin medir."""
+    result = curador_node(
+        _two_block_state(
+            {
+                "holgado": _measured(3.30),
+                "estricto": {"metrics": None, "converged": False, "sim_error": "boom"},
+            }
+        )
+    )
+
+    assert result["history"][0]["converged"] is False
