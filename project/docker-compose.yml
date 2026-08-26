@@ -13,24 +13,6 @@
 name: spice
 
 services:
-  # Postgres para el checkpointer del grafo. Es del subsistema de agentes, no
-  # de la API: el servidor habla con Neon por HTTP a través del driver
-  # `neon-http`, que no entiende el protocolo de un Postgres corriente, así que
-  # esta instancia no le sirve y no se le conecta.
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: spice
-      POSTGRES_PASSWORD: spice
-      POSTGRES_DB: spice
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U spice -d spice"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
   agents:
     build:
       context: ./apps/agents
@@ -42,7 +24,12 @@ services:
       # Dirección contraria, secreto distinto a propósito.
       AGENTS_SERVICE_TOKEN: ${AGENTS_SERVICE_TOKEN:?define AGENTS_SERVICE_TOKEN en .env}
       SERVER_BASE_URL: http://server:3001
-      CHECKPOINTER_URL: postgresql://spice:spice@postgres:5432/spice
+      # El checkpointer del grafo guarda el estado en la misma Neon que ya
+      # usa el resto del sistema. Neon es Postgres: además del driver HTTP
+      # que consume la API, expone la cadena estándar que psycopg entiende.
+      # Levantar un Postgres aparte solo para esto sería una segunda base
+      # que mantener sin ganar nada.
+      CHECKPOINTER_URL: ${CHECKPOINTER_URL:?define CHECKPOINTER_URL en .env}
     volumes:
       # Los pesos y umbrales del curador se montan, no se hornean: la tesina
       # exige poder ajustarlos durante la evaluación sin recompilar (RNF-04.2),
@@ -50,9 +37,6 @@ services:
       - ./apps/agents/config:/app/config:ro
     ports:
       - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   server:
     build:
@@ -76,6 +60,3 @@ services:
       - "3001:3001"
     depends_on:
       - agents
-
-volumes:
-  pgdata:

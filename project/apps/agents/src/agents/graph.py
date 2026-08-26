@@ -9,7 +9,7 @@ from agents.sintesis.graph import build_sintesis_graph
 from agents.state import CircuitState
 
 
-def build_graph():
+def build_graph(checkpointer=None):
     # Los subgrafos compilados son stateless (no tienen checkpointer propio),
     # por lo que es seguro construirlos una sola vez por llamada a
     # build_graph() y reutilizarlos en cada invocación del nodo wrapper,
@@ -51,4 +51,6 @@ def build_graph():
         {"adjust": "sintesis", "done": END},
     )
 
-    return builder.compile(checkpointer=MemorySaver())
+    # El checkpointer se inyecta para que quien construye el grafo decida
+    # dónde vive el estado: en producción, la base; en las pruebas, memoria.
+    return builder.compile(checkpointer=checkpointer or MemorySaver())

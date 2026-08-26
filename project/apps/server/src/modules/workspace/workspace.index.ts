@@ -69,7 +69,7 @@ export const workspaceRouter = createRouter()
     // Sin await: la corrida puede tardar decenas de segundos y la respuesta
     // sale ya. El client sondea hasta ver la ejecución cerrada.
     void startRun(
-      { userId, requestText: created.requestText },
+      { userId, requestText: created.requestText, executionId: created.execution.id },
       makeDbSink(created.conversation.id, created.execution.id),
     );
 
@@ -88,7 +88,7 @@ export const workspaceRouter = createRouter()
     if (!appended) return c.json({ error: "Not Found" }, 404);
 
     void startRun(
-      { userId, requestText: appended.requestText },
+      { userId, requestText: appended.requestText, executionId: appended.execution.id },
       makeDbSink(conversationId, appended.execution.id),
     );
 
