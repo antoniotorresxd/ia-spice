@@ -30,12 +30,13 @@ curador:
   # no dirige la decisión (ver la nota de calibración del plan).
   reject_reward: -50.0
 
-  # Tope de error ponderado por encima del cual aceptar deja de ser admisible,
-  # gane lo que gane en recompensa. La recompensa decide cuándo parar de
-  # iterar, no si el circuito sirve: sin este tope, un circuito que se estanca
-  # muy lejos de la meta se reportaría como aceptado. Igual al umbral de parada
-  # γ/(1-ρ) para que el camino normal no cambie; solo corta el caso patológico.
-  max_acceptable_ape: 10.0
+  # Cuánto puede un bloque salirse de SU PROPIA tolerancia y aún así ser
+  # aceptable. Se mide en unidades de esa tolerancia, no en puntos de APE: un
+  # bloque con tolerancia del 1 % y otro con 5 % no admiten el mismo desvío
+  # absoluto. Con 1.5, un objetivo del 5 % tolera hasta 7.5 % de error; uno del
+  # 1 %, hasta 1.5 %. La recompensa decide cuándo parar de iterar, esto decide
+  # si lo que hay se puede entregar.
+  accept_tolerance_slack: 1.5
 
   max_iterations: 5
   tolerance: 0.05

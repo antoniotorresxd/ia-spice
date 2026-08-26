@@ -52,8 +52,8 @@ def observed_reduction(history: list) -> float | None:
     Ojo con ρ = 1.0: ahí `R_adjust - R_accept` colapsa a -γ, negativo sea cual
     sea el error, así que aceptar gana siempre. Es correcto como señal de
     "seguir ajustando ya no paga", pero por sí solo dejaría pasar como aceptado
-    un circuito malísimo que se estancó. Quien decide aplica además el tope de
-    `max_acceptable_ape` (ver `choose_action`).
+    un circuito malísimo que se estancó. Quien decide aplica además
+    `accept_is_admissible`, que compara contra la tolerancia de cada bloque.
     """
     scored = [r["weighted_ape"] for r in history if r.get("weighted_ape") is not None]
     # weighted_ape suma términos no negativos, así que <= 0 solo ocurre cuando
@@ -94,6 +94,37 @@ def estimate_action_rewards(
     }
 
 
+def accept_is_admissible(
+    blocks: list[dict],
+    evaluations: dict[str, tuple[str, float | None]],
+    config: dict,
+) -> bool:
+    """Si el circuito que hay ahora se puede entregar.
+
+    La recompensa dice *cuándo parar de iterar*; esto dice *si lo que hay
+    sirve*. Son preguntas distintas y hay que separarlas: con ρ saturado en
+    1.0 aceptar gana siempre por -γ, sin importar el error, así que sin este
+    freno un circuito estancado lejísimos de la meta se reportaría como
+    aceptado e inflaría la tasa de circuitos que cumplen su meta.
+
+    El desvío se mide en unidades de la tolerancia que el propio objetivo
+    declaró, no en puntos de APE. Un tope global en APE trataría igual a un
+    bloque con tolerancia del 1 % y a uno del 5 %, y aceptaría el primero
+    incumpliendo su meta por seis veces.
+
+    Un bloque que no llegó a medirse nunca es admisible: no hay nada que
+    entregar.
+    """
+    slack = config["curador"]["accept_tolerance_slack"]
+    for block in blocks:
+        _, rel_err = evaluations[block["id"]]
+        if rel_err is None:
+            return False
+        if rel_err > slack * block["goal"]["tolerance"]:
+            return False
+    return True
+
+
 def choose_action(
     action_rewards: dict[str, float],
     adjust_available: bool,
@@ -107,13 +138,10 @@ def choose_action(
     que ganarle a rechazar, y rechazar tiene que ganarle a entregar un circuito
     muy desviado — y no hay ningún valor que cumpla las dos.
 
-    `accept_admissible` es la barandilla: la recompensa dice *cuándo parar*,
-    no *si el circuito sirve*. Con ρ saturado en 1.0 aceptar gana siempre, así
-    que sin este tope un circuito que se estancó lejísimos de la meta se
-    reportaría como aceptado e inflaría la tasa de circuitos que la cumplen.
-    Quien llama lo calcula comparando el error ponderado contra
-    `max_acceptable_ape`. Cuando no es admisible se sigue ajustando, y si ya no
-    quedan iteraciones el desenlace es rechazar, que es lo honesto.
+    `accept_admissible` es la barandilla, y quien llama la calcula con
+    `accept_is_admissible`. Cuando el circuito no es entregable se sigue
+    ajustando aunque la recompensa prefiera aceptar, y si ya no quedan
+    iteraciones el desenlace es rechazar, que es lo honesto.
     """
     if not adjust_available:
         return "reject"
