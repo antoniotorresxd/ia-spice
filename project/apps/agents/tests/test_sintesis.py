@@ -41,9 +41,35 @@ def test_sintesis_generates_and_simulates_mixed_blocks():
 
     div = final_state["sim_results"]["div1"]
     assert div["sim_error"] is None
+    assert div["converged"] is True
     assert div["metrics"]["v_out"] == pytest.approx(3.3, rel=1e-3)
 
     rc = final_state["sim_results"]["rc1"]
     assert rc["sim_error"] is None
     # el punto -3 dB medido difiere ~0.3% del f_c analítico de primer orden
     assert rc["metrics"]["f_c"] == pytest.approx(1000.0, rel=0.02)
+
+
+def test_sim_results_report_convergence():
+    from agents.shell.node import shell_node
+
+    state = {
+        "normalized_spec": {
+            "blocks": [
+                {
+                    "id": "div1",
+                    "type": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
+                },
+            ],
+        },
+        "pending_blocks": ["div1"],
+        "netlists": {"div1": {"path": "/ruta/que/no/existe.cir", "text": ""}},
+    }
+
+    result = shell_node(state)
+
+    # el netlist no existe: ngspice falla y el bloque no converge
+    assert result["sim_results"]["div1"]["sim_error"] is not None
+    assert result["sim_results"]["div1"]["converged"] is False

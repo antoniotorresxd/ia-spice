@@ -23,6 +23,12 @@ def run_ngspice(netlist_path: str) -> tuple[str | None, str | None]:
         )
     except subprocess.TimeoutExpired:
         return None, "ngspice timed out after 30s"
+    except OSError as exc:
+        # El directorio de trabajo no existe, o ngspice no está en el PATH.
+        # Esta función promete devolver el error en la tupla, no lanzarlo:
+        # una corrida sin ngspice instalado debe terminar como ejecución
+        # fallida con un mensaje legible, no como excepción no capturada.
+        return None, f"could not run ngspice: {exc}"
 
     if result.returncode != 0:
         return None, result.stderr.strip() or "ngspice exited with non-zero status"

@@ -76,3 +76,49 @@ def test_calculo_subgraph_fans_out_one_worker_per_block():
     assert set(values.keys()) == {"div1", "rc1"}
     assert values["div1"]["r1"] == 1000.0
     assert "c" in values["rc1"]
+
+
+import yaml
+
+from agents.config import reset_config_cache
+
+
+@pytest.fixture(autouse=True)
+def _clean_config_cache():
+    reset_config_cache()
+    yield
+    reset_config_cache()
+
+
+def test_formulas_read_their_defaults_from_the_config(tmp_path, monkeypatch):
+    custom = tmp_path / "otra.yaml"
+    custom.write_text(
+        yaml.safe_dump(
+            {
+                "curador": {
+                    "weights": {"default": 1.0},
+                    "beta": 10.0,
+                    "gamma": 3.0,
+                    "failed_ape": 100.0,
+                    "expected_error_reduction": 0.7,
+                    "reject_reward": -50.0,
+                    "accept_tolerance_slack": 1.5,
+                    "max_iterations": 5,
+                    "tolerance": 0.05,
+                },
+                "calculo": {
+                    "r1_default": 4700.0,
+                    "r_rc_default": 1000.0,
+                    "r_min": 1.0,
+                    "perturb_factor": 1.05,
+                },
+                "llm": {"temperature": 0.0},
+            }
+        )
+    )
+    monkeypatch.setenv("CURADOR_CONFIG_PATH", str(custom))
+    reset_config_cache()
+
+    values = FORMULAS["voltage_divider"]({"v_in": 5.0, "v_out": 2.5})
+
+    assert values["r1"] == 4700.0

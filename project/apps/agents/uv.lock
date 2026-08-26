@@ -20,6 +20,7 @@ dependencies = [
     { name = "langgraph" },
     { name = "pydantic" },
     { name = "pyspice" },
+    { name = "pyyaml" },
     { name = "uvicorn" },
 ]
 
@@ -39,6 +40,7 @@ requires-dist = [
     { name = "langgraph", specifier = ">=1.2.8" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "pyspice", specifier = ">=1.5" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "uvicorn", specifier = ">=0.42.0" },
 ]
 

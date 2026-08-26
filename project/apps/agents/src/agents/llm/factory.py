@@ -1,5 +1,6 @@
 from langchain.chat_models import init_chat_model
 
+from agents.config import get_config
 from agents.llm.settings_client import AgentLlmConfig
 
 _PROVIDER_MAP = {
@@ -21,6 +22,10 @@ def build_chat_model(config: AgentLlmConfig):
     kwargs: dict = {
         "model": config.model,
         "model_provider": _PROVIDER_MAP[config.provider],
+        # Fija la temperatura para que la evaluación experimental sea
+        # repetible: es un criterio de aceptación de la tesina, no una
+        # preferencia de estilo.
+        "temperature": get_config()["llm"]["temperature"],
     }
     # api_key es opcional para openai_compatible (algunos endpoints locales
     # no exigen key); init_chat_model requiere un valor no vacío igual.
