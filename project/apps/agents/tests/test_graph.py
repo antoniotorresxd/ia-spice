@@ -229,3 +229,27 @@ def test_noninverting_amp_high_gain_needs_the_loop():
     assert len(final["history"]) >= 2
     assert final["history"][0]["decision"] == "adjust"
     assert final["sim_results"]["amp1"]["metrics"]["v_out"] == pytest.approx(10.0, rel=0.001)
+
+
+def test_noninverting_amp_with_unreachable_gain_is_rejected():
+    """Un no inversor no atenúa: pedirle 2 V a partir de 5 V es físicamente
+    imposible. El sistema emite un circuito válido, lo simula, ve que no se
+    acerca, agota las iteraciones y rechaza — nunca entrega algo que no cumple
+    haciéndolo pasar por bueno."""
+    spec = {
+        "blocks": [
+            {
+                "id": "amp1",
+                "type": "noninverting_amp",
+                "params": {"v_in": 5.0, "v_out": 2.0},
+            }
+        ],
+        "max_iterations": 3,
+    }
+
+    final = _run(spec, "e2e-amp-imposible")
+
+    assert final["verdict"]["status"] == "rejected"
+    assert final["verdict"]["best_iteration"] is not None
+    # se simuló de verdad en cada intento, no se abandonó antes de medir
+    assert final["sim_results"]["amp1"]["sim_error"] is None

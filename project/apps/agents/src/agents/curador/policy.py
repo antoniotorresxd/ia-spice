@@ -41,7 +41,8 @@ def _adjust_noninverting_amp(values: dict, target: float, actual: float) -> dict
     return {**values, "rf": max((rg + rf) * target / actual - rg, r_min)}
 
 
-# regla proporcional sobre el componente dominante, por tipo de circuito
+# Regla de ajuste por tipo de circuito. Las tres primeras son proporcionales
+# sobre el componente dominante; la del no inversor es un despeje exacto.
 ADJUST_RULES = {
     "voltage_divider": _adjust_voltage_divider,
     "rc_lowpass": _adjust_rc_lowpass,
