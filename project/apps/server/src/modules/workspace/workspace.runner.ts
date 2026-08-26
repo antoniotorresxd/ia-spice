@@ -90,7 +90,7 @@ export type RunSink = {
 const RUN_FAILURE_SUMMARY = "No pudimos ejecutar el diseño. Inténtalo de nuevo.";
 
 export async function startRun(
-  input: { userId: string; requestText: string },
+  input: { userId: string; requestText: string; executionId: string },
   sink: RunSink,
   fetchImpl: typeof fetch = fetch,
 ): Promise<void> {
@@ -101,7 +101,15 @@ export async function startRun(
         "content-type": "application/json",
         authorization: `Bearer ${env.AGENTS_API_TOKEN}`,
       },
-      body: JSON.stringify({ user_id: input.userId, request_text: input.requestText }),
+      // executionId viaja como identidad estable de la corrida: agents lo usa
+      // como thread_id de su checkpointer, así que reenviar una ejecución
+      // interrumpida la retoma desde su último punto guardado en lugar de
+      // recomenzarla (RNF-03.2).
+      body: JSON.stringify({
+        user_id: input.userId,
+        request_text: input.requestText,
+        execution_id: input.executionId,
+      }),
     });
 
     if (!response.ok) {

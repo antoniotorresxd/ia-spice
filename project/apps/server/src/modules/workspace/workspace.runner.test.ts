@@ -123,7 +123,7 @@ describe("startRun", () => {
     const { sink, results } = recordingSink();
 
     await startRun(
-      { userId: "user-1", requestText: "un divisor de 12V a 5V" },
+      { userId: "user-1", requestText: "un divisor de 12V a 5V", executionId: "exec-1" },
       sink,
       fakeFetch as unknown as typeof fetch,
     );
@@ -134,6 +134,7 @@ describe("startRun", () => {
     expect(JSON.parse(calls[0]!.init!.body as string)).toEqual({
       user_id: "user-1",
       request_text: "un divisor de 12V a 5V",
+      execution_id: "exec-1",
     });
     expect(results).toEqual([accepted]);
   });
@@ -142,7 +143,7 @@ describe("startRun", () => {
     const fakeFetch = async () => new Response("stack trace interno", { status: 500 });
     const { sink, results, failures } = recordingSink();
 
-    await startRun({ userId: "user-1", requestText: "x" }, sink, fakeFetch as unknown as typeof fetch);
+    await startRun({ userId: "user-1", requestText: "x", executionId: "exec-1" }, sink, fakeFetch as unknown as typeof fetch);
 
     expect(results).toEqual([]);
     expect(failures).toHaveLength(1);
@@ -155,7 +156,7 @@ describe("startRun", () => {
     };
     const { sink, failures } = recordingSink();
 
-    await startRun({ userId: "user-1", requestText: "x" }, sink, fakeFetch as unknown as typeof fetch);
+    await startRun({ userId: "user-1", requestText: "x", executionId: "exec-1" }, sink, fakeFetch as unknown as typeof fetch);
 
     expect(failures[0]).toBe("No pudimos ejecutar el diseño. Inténtalo de nuevo.");
   });
@@ -164,7 +165,7 @@ describe("startRun", () => {
     const fakeFetch = async () => new Response("<html>502</html>", { status: 200 });
     const { sink, failures } = recordingSink();
 
-    await startRun({ userId: "user-1", requestText: "x" }, sink, fakeFetch as unknown as typeof fetch);
+    await startRun({ userId: "user-1", requestText: "x", executionId: "exec-1" }, sink, fakeFetch as unknown as typeof fetch);
 
     expect(failures[0]).toBe("No pudimos ejecutar el diseño. Inténtalo de nuevo.");
   });
