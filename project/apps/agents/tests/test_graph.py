@@ -203,3 +203,29 @@ def test_noninverting_amp_converges_end_to_end():
     assert final["verdict"]["status"] == "accepted"
     assert final["sim_results"]["amp1"]["metrics"]["v_out"] == pytest.approx(3.0, rel=0.01)
     assert ".subckt opamp" in final["netlists"]["amp1"]["text"]
+
+
+def test_noninverting_amp_high_gain_needs_the_loop():
+    """Ganancia 1000, donde la ecuación ideal Av = 1 + Rf/Rg se queda corta
+    casi un 1 % porque la ganancia en lazo abierto del operacional es finita.
+
+    Es el argumento central de la tesina hecho prueba: la ecuación de diseño
+    por sí sola no acierta, la simulación lo detecta y el lazo lo corrige."""
+    spec = {
+        "blocks": [
+            {
+                "id": "amp1",
+                "type": "noninverting_amp",
+                "params": {"v_in": 0.01, "v_out": 10.0},
+            }
+        ],
+        "tolerance": 0.001,
+    }
+
+    final = _run(spec, "e2e-amp-highgain")
+
+    assert final["verdict"]["status"] == "accepted"
+    # la primera pasada cae fuera de tolerancia: hizo falta ajustar
+    assert len(final["history"]) >= 2
+    assert final["history"][0]["decision"] == "adjust"
+    assert final["sim_results"]["amp1"]["metrics"]["v_out"] == pytest.approx(10.0, rel=0.001)
