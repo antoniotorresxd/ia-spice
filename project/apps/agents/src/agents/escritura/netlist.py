@@ -50,7 +50,10 @@ def build_rc_lowpass_netlist(r: float, c: float) -> str:
     control_block = (
         ".control\n"
         "ac dec 100 1 1e9\n"
-        "meas ac fc WHEN vdb(vout)=-3\n"
+        # El corte se define donde |H| = 1/√2, que son -3.0103 dB y no
+        # -3.000. Medir en -3 exactos encuentra una frecuencia 0.24 % más
+        # baja, con un sesgo sistemático idéntico en todas las décadas.
+        "meas ac fc WHEN vdb(vout)=-3.0103\n"
         "echo $&fc > output.txt\n"
         ".endc\n"
         ".end\n"

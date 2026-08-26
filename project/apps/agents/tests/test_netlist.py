@@ -139,3 +139,34 @@ def test_noninverting_amp_netlist_simulates_to_the_expected_gain():
 
     assert error is None
     assert parse_wrdata_scalar(output_path) == pytest.approx(3.0, rel=0.001)
+
+
+def test_rc_netlist_measures_the_true_minus_three_db_point():
+    """El corte se define donde |H| = 1/sqrt(2) = -3.0103 dB, no -3.000.
+
+    Medir en -3 exactos encontraba una frecuencia 0.24 % mas baja, con un
+    sesgo sistematico identico en las cinco decadas del banco de evaluacion.
+    Era un error del instrumento, no del circuito."""
+    import math
+    import os
+    import tempfile
+
+    from agents.escritura.netlist import NETLIST_BUILDERS
+    from agents.shell.ngspice_runner import parse_wrdata_scalar, run_ngspice
+
+    f_c = 1000.0
+    r = 1000.0
+    c = 1.0 / (2 * math.pi * r * f_c)
+    text = NETLIST_BUILDERS["rc_lowpass"]({"f_c": f_c}, {"r": r, "c": c})
+
+    assert "-3.0103" in text, "volvio el sesgo de medir en -3 dB exactos"
+
+    work_dir = tempfile.mkdtemp(prefix="agents-test-rc-")
+    path = os.path.join(work_dir, "circuit.cir")
+    with open(path, "w") as fh:
+        fh.write(text)
+
+    output_path, error = run_ngspice(path)
+
+    assert error is None
+    assert parse_wrdata_scalar(output_path) == pytest.approx(f_c, rel=0.001)
