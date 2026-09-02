@@ -12,6 +12,8 @@ html {
   font-family: var(--font-sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -20,8 +22,12 @@ body {
   min-width: 320px;
   min-height: 100dvh;
   margin: 0;
-  background: var(--color-bg);
+  background-color: var(--color-bg);
   color: var(--color-text);
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(114, 226, 198, 0.07), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(155, 140, 255, 0.04), transparent);
+  background-attachment: fixed;
 }
 
 #root {
@@ -29,7 +35,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -38,13 +46,32 @@ button {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-mint) 32%, transparent);
-  color: var(--color-text);
+  background: rgba(114, 226, 198, 0.25);
+  color: #ffffff;
 }
 
 :focus-visible {
   outline: 2px solid var(--color-mint);
-  outline-offset: 3px;
+  outline-offset: 2px;
+}
+
+/* Custom modern scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -46,7 +46,7 @@ it('para de sondear cuando el estado pasa a completado', () => {
   const { rerender } = renderHook(
     ({ status }: { status: 'active' | 'completed' }) =>
       useConversationPolling(status, refresh),
-    { initialProps: { status: 'active' as const } },
+    { initialProps: { status: 'active' as 'active' | 'completed' } },
   )
 
   vi.advanceTimersByTime(POLL_INTERVAL_MS)

@@ -1,20 +1,61 @@
 :root {
-  --color-bg: #08090c;
-  --color-surface: #15171b;
-  --color-surface-strong: #101216;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-text: #f3f4f4;
-  --color-text-muted: #7e8587;
+  --background: #07090e;
+  --foreground: #f3f5f8;
+
+  --card: #0e121b;
+  --card-foreground: #f3f5f8;
+
+  --popover: #0e121b;
+  --popover-foreground: #f3f5f8;
+
+  --primary: #72e2c6;
+  --primary-foreground: #07090e;
+
+  --secondary: #161c28;
+  --secondary-foreground: #f3f5f8;
+
+  --muted: #141a26;
+  --muted-foreground: #8b95a5;
+
+  --accent: #1e2638;
+  --accent-foreground: #f3f5f8;
+
+  --destructive: #f43f5e;
+  --destructive-foreground: #ffffff;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #72e2c6;
+
+  --radius: 0.75rem;
+
+  /* Legacy & App Token Aliases */
+  --color-bg: #07090e;
+  --color-surface: #0e131d;
+  --color-surface-strong: #0a0d14;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-subtle: rgba(255, 255, 255, 0.05);
+  --color-border-hover: rgba(255, 255, 255, 0.18);
+  --color-text: #f3f5f8;
+  --color-text-muted: #8b95a5;
   --color-mint: #72e2c6;
+  --color-mint-dim: rgba(114, 226, 198, 0.15);
   --color-violet: #9b8cff;
-  --radius-control: 0.5rem;
-  --radius-panel: 1.25rem;
-  --shadow-panel: 0 2.25rem 6rem rgba(0, 0, 0, 0.62);
+  --color-violet-dim: rgba(155, 140, 255, 0.15);
+  --color-blue: #4d8dff;
+  --color-blue-dim: rgba(77, 141, 255, 0.15);
+  --color-danger: #ff6b7d;
+
+  --radius-control: 0.625rem;
+  --radius-panel: 1rem;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-panel: 0 1.5rem 4rem -0.75rem rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-glow-mint: 0 0 25px -5px rgba(114, 226, 198, 0.35);
+  --shadow-glow-violet: 0 0 25px -5px rgba(155, 140, 255, 0.35);
+
   --duration-fast: 180ms;
   --duration-automaton: 1400ms;
-  --color-blue: #4d8dff;
-  --color-danger: #ff8d9a;
   --font-sans:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
