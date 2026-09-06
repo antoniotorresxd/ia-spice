@@ -134,7 +134,7 @@ Cada uno con frontmatter:
 name: backend   # / frontend / langgraph
 description: ...
 model: sonnet    # el modelo del propio subagente Claude, no el de Codex
-tools: Bash
+tools: Bash, mcp__graphify__*
 skills:
   - codex-cli-runtime
   - gpt-5-4-prompting
@@ -142,8 +142,9 @@ skills:
 ```
 Sin `Edit`/`Write`/`Agent` en tools — el subagente no edita archivos directamente ni lanza
 sus propios subagentes; su única vía de escritura de código es Codex vía Bash, y su única
-vía de contexto estructurado es graphify (tools MCP disponibles globalmente, no listadas
-en el frontmatter porque son server-level, no per-agent).
+vía de contexto estructurado es graphify (`mcp__graphify__*`, otorgadas explícitamente en
+`tools:` — el frontmatter actúa como allowlist estricto, así que una tool MCP no listada
+ahí queda inaccesible, sin importar que esté disponible globalmente en la sesión).
 
 ## Testing / rollout
 
