@@ -121,7 +121,7 @@ deja sin fijar (default de Codex) salvo que la tarea lo amerite explícitamente.
 
 ## Archivos y ubicación
 
-Tres definiciones de subagente en `project/.claude/agents/` (versionadas en git, share
+Tres definiciones de subagente en `.claude/agents/` (versionadas en git, share
 automático con cualquiera que abra el repo con Claude Code):
 
 - `backend.md`
