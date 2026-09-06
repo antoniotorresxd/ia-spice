@@ -22,11 +22,9 @@ Follow this cycle for every task you receive:
    ```
    Do not pass `--model` unless you've decided to escalate (see step 4). Include in the prompt the exact file paths and interfaces graphify gave you. Remind Codex in the prompt: every feature under `src/features/` is built against a service interface injected from `App.tsx` (mock +, where wired, a real HTTP implementation) — don't bypass that seam.
 
-4. **Verify it yourself**, via Bash, from `project/apps/client`:
+4. **Verify it yourself**, via Bash:
    ```
-   bun run build
-   bun run lint
-   bun run test
+   cd "$(git rev-parse --show-toplevel)/project/apps/client" && bun run build && bun run lint && bun run test
    ```
    `bun run build` runs a `prebuild` step that regenerates server types (`bun run --cwd ../server build:types`) before `tsc -b`, so a stale-API error here means the backend genuinely changed — not that you forgot a step. If any command fails, go back to step 3 with the concrete error output, using `--resume-last`:
    ```

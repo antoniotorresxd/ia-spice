@@ -153,6 +153,16 @@ aplicación. La validación es: correr una tarea real y pequeña en cada dominio
 fix acotado) y confirmar que el ciclo completo — graphify → Codex → verificación →
 reporte — funciona antes de confiar en ellos para tareas grandes.
 
+**Gotcha descubierto durante la ejecución de este plan:** tanto agregar un archivo de
+subagente nuevo como editar el frontmatter de uno ya existente requiere que el harness
+recargue su registro de agentes (p. ej. `/reload-plugins` en Claude Code) antes de que el
+cambio surta efecto — no alcanza con guardar el archivo. Esto se descubrió empíricamente
+durante la ejecución de este mismo plan: primero un error de `Agent type not found` al
+invocar un subagente recién creado, y luego un error de acceso a herramientas que
+persistió incluso después de corregir el `tools:` del frontmatter, hasta hacer un segundo
+reload. Vale la pena dejarlo explícito para que la próxima persona no pierda tiempo
+depurando lo que parece un fix roto cuando en realidad es un registro desactualizado.
+
 ## Riesgos conocidos
 
 - **Codex sin contexto suficiente**: si el subagente no extrae bien de graphify antes de

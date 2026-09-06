@@ -4,7 +4,7 @@
 
 **Goal:** Create three versioned Claude Code subagent definitions (`backend`, `frontend`, `langgraph`) that orient with graphify, delegate all code changes to Codex CLI, verify the result themselves, and report back to the planner — replacing direct code editing by Claude in this repo.
 
-**Architecture:** Three independent Markdown files under `.claude/agents/`, each a self-contained subagent prompt with no `Edit`/`Write`/`Agent` tools — only `Bash` (to call `codex-companion.mjs` and domain verification commands) plus the globally-available graphify MCP tools. No shared code or config file; each file is complete on its own.
+**Architecture:** Three independent Markdown files under `.claude/agents/`, each a self-contained subagent prompt with no `Edit`/`Write`/`Agent` tools — only `Bash` (to call `codex-companion.mjs` and domain verification commands) plus `mcp__graphify__*`, explicitly granted in its frontmatter (a bare `tools: Bash` blocks ALL MCP tool access, including graphify — verified empirically). No shared code or config file; each file is complete on its own.
 
 **Tech Stack:** Claude Code subagent definitions (YAML frontmatter + Markdown body), `codex-companion.mjs` (from the `codex` plugin), graphify MCP tools.
 
@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Agent files live at `.claude/agents/backend.md`, `.claude/agents/frontend.md`, `.claude/agents/langgraph.md` — versioned in git.
-- Every agent's frontmatter: `tools: Bash` only (no `Edit`, `Write`, or `Agent` — the only way to change code is Codex over Bash).
+- Every agent's frontmatter: `tools: Bash, mcp__graphify__*` (no `Edit`, `Write`, or `Agent` — the only way to change code is Codex over Bash; the graphify wildcard is required, not optional — a bare `tools: Bash` blocks all MCP access).
 - Every agent's frontmatter: `skills: [codex-cli-runtime, gpt-5-4-prompting]`.
 - No agent passes `--model` to `codex-companion.mjs task` by default — the Codex runtime's configured default model is used unless a specific call needs to escalate.
 - Every agent must call graphify tools before delegating to Codex (step 1 of the cycle) — this is not optional per task.
@@ -60,8 +60,8 @@ Follow this cycle for every task you receive:
 
 4. **Verify it yourself**, via Bash:
    ```
-   cd project/apps/server && bun run typecheck && bun test
-   cd project && bun run build:server-types
+   cd "$(git rev-parse --show-toplevel)/project/apps/server" && bun run typecheck && bun test
+   cd "$(git rev-parse --show-toplevel)/project" && bun run build:server-types
    ```
    `build:server-types` is not optional — skipping it lets the client typecheck against a stale API without anyone noticing until runtime. If any command fails, go back to step 3 with the concrete error output, using `--resume-last`:
    ```
@@ -136,11 +136,9 @@ Follow this cycle for every task you receive:
    ```
    Do not pass `--model` unless you've decided to escalate (see step 4). Include in the prompt the exact file paths and interfaces graphify gave you. Remind Codex in the prompt: every feature under `src/features/` is built against a service interface injected from `App.tsx` (mock +, where wired, a real HTTP implementation) — don't bypass that seam.
 
-4. **Verify it yourself**, via Bash, from `project/apps/client`:
+4. **Verify it yourself**, via Bash:
    ```
-   bun run build
-   bun run lint
-   bun run test
+   cd "$(git rev-parse --show-toplevel)/project/apps/client" && bun run build && bun run lint && bun run test
    ```
    `bun run build` runs a `prebuild` step that regenerates server types (`bun run --cwd ../server build:types`) before `tsc -b`, so a stale-API error here means the backend genuinely changed — not that you forgot a step. If any command fails, go back to step 3 with the concrete error output, using `--resume-last`:
    ```
@@ -215,9 +213,9 @@ Follow this cycle for every task you receive:
    ```
    Do not pass `--model` unless you've decided to escalate (see step 4). Include in the prompt the exact file paths, signatures, and dependents graphify gave you. Remind Codex in the prompt of these gotchas: there are no mocks of `ngspice` anywhere — tests exercise the real binary end-to-end; LangGraph only injects `config.configurable.user_id` when a node's second parameter is annotated `RunnableConfig` (typing it `dict` silently yields `None`); for `openai_compatible` providers the `baseUrl` must include the `/v1` suffix; and `uv` does not load `.env` on its own, so any command needing env vars must be run with `uv run --env-file .env <command>`.
 
-4. **Verify it yourself**, via Bash, from `project/apps/agents`:
+4. **Verify it yourself**, via Bash:
    ```
-   uv run pytest
+   cd "$(git rev-parse --show-toplevel)/project/apps/agents" && uv run pytest
    ```
    or, for a targeted check, `uv run pytest <path>::<test_name> -v`. If it fails, go back to step 3 with the concrete error output, using `--resume-last`:
    ```

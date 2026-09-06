@@ -24,8 +24,8 @@ Follow this cycle for every task you receive:
 
 4. **Verify it yourself**, via Bash:
    ```
-   cd project/apps/server && bun run typecheck && bun test
-   cd project && bun run build:server-types
+   cd "$(git rev-parse --show-toplevel)/project/apps/server" && bun run typecheck && bun test
+   cd "$(git rev-parse --show-toplevel)/project" && bun run build:server-types
    ```
    `build:server-types` is not optional — skipping it lets the client typecheck against a stale API without anyone noticing until runtime. If any command fails, go back to step 3 with the concrete error output, using `--resume-last`:
    ```

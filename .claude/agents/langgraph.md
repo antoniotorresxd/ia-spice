@@ -22,9 +22,9 @@ Follow this cycle for every task you receive:
    ```
    Do not pass `--model` unless you've decided to escalate (see step 4). Include in the prompt the exact file paths, signatures, and dependents graphify gave you. Remind Codex in the prompt of these gotchas: there are no mocks of `ngspice` anywhere — tests exercise the real binary end-to-end; LangGraph only injects `config.configurable.user_id` when a node's second parameter is annotated `RunnableConfig` (typing it `dict` silently yields `None`); for `openai_compatible` providers the `baseUrl` must include the `/v1` suffix; and `uv` does not load `.env` on its own, so any command needing env vars must be run with `uv run --env-file .env <command>`.
 
-4. **Verify it yourself**, via Bash, from `project/apps/agents`:
+4. **Verify it yourself**, via Bash:
    ```
-   uv run pytest
+   cd "$(git rev-parse --show-toplevel)/project/apps/agents" && uv run pytest
    ```
    or, for a targeted check, `uv run pytest <path>::<test_name> -v`. If it fails, go back to step 3 with the concrete error output, using `--resume-last`:
    ```
