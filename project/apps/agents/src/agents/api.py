@@ -76,6 +76,11 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/version")
+def version() -> dict:
+    return {"version": "0.1.0"}
+
+
 @app.post("/runs")
 def create_run(body: RunRequest, authorization: str | None = Header(default=None)) -> dict:
     _require_token(authorization)
