@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 
 import type { AuthResult, AuthService } from '../model/auth-types'
 import { AuthScreen } from './AuthScreen'
+import { ThemeProvider } from '@/lib/theme'
 
 afterEach(cleanup)
 
@@ -14,7 +15,7 @@ it('composes the SPICE story, solution automaton, and authentication form', () =
     signOut: vi.fn(async (): Promise<AuthResult> => ({ ok: true })),
   }
 
-  render(<AuthScreen service={service} />)
+  render(<AuthScreen service={service} />, { wrapper: ThemeProvider })
 
   expect(
     screen.getByRole('region', { name: 'Acceso a SPICE' }),

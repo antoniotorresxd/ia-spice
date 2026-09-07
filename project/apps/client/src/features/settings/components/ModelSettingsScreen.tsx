@@ -6,6 +6,7 @@ import { AgentAssignmentList } from './AgentAssignmentList'
 import { ConnectionForm } from './ConnectionForm'
 import { SettingsShell } from './SettingsShell'
 import { SettingsDialog } from './SettingsDialog'
+import { ConfirmDeleteModal } from '@/components/ui/ConfirmDeleteModal'
 import styles from './ModelSettingsScreen.module.css'
 import shellStyles from './SettingsShell.module.css'
 
@@ -97,7 +98,7 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
     })
     try {
       const result = await service.testConnection(connectionId)
-      if (!result.ok) {
+      if (!result.ok && 'error' in result) {
         setTestErrors((current) => ({ ...current, [connectionId]: result.error }))
       }
       await load()
@@ -222,6 +223,7 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
             assignments={assignments}
             attentionAgentIds={attentionAgentIds}
             connections={connections}
+            onFetchModels={(id) => (service.listConnectionModels ? service.listConnectionModels(id) : Promise.resolve([]))}
             onSave={saveAssignment}
           />
         </section>
@@ -235,17 +237,18 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
           <ConnectionForm connection={editing} nameInputRef={connectionNameRef} onCancel={dismissConnectionForm} onDirtyChange={setConnectionFormDirty} onSave={save} />
         </SettingsDialog>
       ) : null}
-      {deleting ? (
-        <SettingsDialog ariaLabel="Eliminar conexión" onDismiss={() => setDeleting(null)}>
-          <h2>Eliminar conexión</h2>
-          <p>{isAssigned ? 'Esta conexión está asignada a uno o más agentes. Sus asignaciones se quitarán.' : 'Esta acción no se puede deshacer.'}</p>
-          {deleteError ? <p role="alert">{deleteError}</p> : null}
-          <div className={styles.dialogActions}>
-            <button onClick={() => setDeleting(null)} type="button">Cancelar</button>
-            <button className={styles.dangerButton} onClick={() => void remove()} type="button">Confirmar eliminación</button>
-          </div>
-        </SettingsDialog>
-      ) : null}
+      <ConfirmDeleteModal
+        isOpen={deleting !== null}
+        ariaLabel="Eliminar conexión"
+        title={`¿Eliminar conexión "${deleting?.label ?? ''}"?`}
+        description={deleteError || (isAssigned ? 'Esta conexión está asignada a uno o más agentes. Sus asignaciones se quitarán.' : 'Esta acción no se puede deshacer.')}
+        confirmLabel="Confirmar eliminación"
+        onCancel={() => {
+          setDeleting(null)
+          setDeleteError('')
+        }}
+        onConfirm={() => void remove()}
+      />
     </SettingsShell>
   )
 }

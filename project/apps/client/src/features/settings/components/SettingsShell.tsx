@@ -1,8 +1,11 @@
+import { PanelLeft, PanelLeftClose } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 
 import { AssistantPanel } from '../../home/components/AssistantPanel'
 import { HomeSidebar } from '../../home/components/HomeSidebar'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { useStoredBoolean } from '@/lib/layout-preferences'
 import type { ConversationSummary } from '../../home/model/home-types'
 import '../../home/components/HomeScreen.module.css'
 import styles from './SettingsShell.module.css'
@@ -23,30 +26,56 @@ export function SettingsShell({
   conversations = [],
 }: SettingsShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useStoredBoolean('spice_sidebar_collapsed', false)
 
   return (
-    <main className={styles.workspace}>
+    <main className={styles.workspace} data-collapsed={isSidebarCollapsed}>
       <HomeSidebar
         conversations={conversations}
         isOpen={sidebarOpen}
+        isCollapsed={isSidebarCollapsed}
         onClose={() => setSidebarOpen(false)}
         onSignOut={onSignOut}
         userName={userName}
       />
       <section className={styles.mainColumn}>
         <header className={styles.topbar}>
-          <button
-            aria-label="Abrir navegación"
-            className={styles.mobileButton}
-            onClick={() => setSidebarOpen(true)}
-            type="button"
-          >
-            ☰
-          </button>
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button
+              aria-label="Abrir navegación"
+              className={styles.mobileButton}
+              onClick={() => setSidebarOpen(true)}
+              type="button"
+            >
+              ☰
+            </button>
+            <button
+              type="button"
+              className="home-sidebar-collapse-btn"
+              onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+              aria-label={isSidebarCollapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
+              title={isSidebarCollapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                background: 'var(--card)',
+                color: 'var(--foreground)',
+                cursor: 'pointer',
+              }}
+            >
+              {isSidebarCollapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
+            </button>
             <span>Ajustes</span>
             <span aria-hidden="true">›</span>
             <strong>{userEmail}</strong>
+          </div>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <ThemeToggle />
           </div>
         </header>
         <div className={styles.settingsWorkspace}>

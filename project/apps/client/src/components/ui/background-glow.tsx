@@ -11,11 +11,11 @@ export function BackgroundGlow({
   return (
     <div className={cn("relative overflow-hidden", className)}>
       <div
-        className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-[#72e2c6]/10 via-[#9b8cff]/10 to-transparent blur-3xl"
+        className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-[var(--color-mint)]/10 via-[var(--color-mint)]/10 to-transparent blur-3xl"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute -bottom-40 right-10 -z-10 h-[400px] w-[500px] rounded-full bg-gradient-to-tl from-[#4d8dff]/8 via-[#72e2c6]/5 to-transparent blur-3xl"
+        className="pointer-events-none absolute -bottom-40 right-10 -z-10 h-[400px] w-[500px] rounded-full bg-gradient-to-tl from-[var(--color-surface)]/8 via-[var(--color-mint)]/5 to-transparent blur-3xl"
         aria-hidden="true"
       />
       {children}

@@ -1,9 +1,11 @@
 import { type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useOutletContext, useParams } from 'react-router-dom'
+import { Trash2 } from 'lucide-react'
+import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 
 import type { WorkspaceConversationDetail, WorkspaceProjectDetail } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
 import { ConversationDropTarget, type ConversationDragPayload } from './ConversationDropTarget'
+import { ConfirmDeleteModal } from '@/components/ui/ConfirmDeleteModal'
 import styles from './ProjectScreen.module.css'
 
 type AssignmentState =
@@ -18,7 +20,8 @@ export function ProjectScreen({ service }: { service: WorkspaceService }) {
 }
 
 function ProjectScreenContent({ projectId, service }: { projectId: string; service: WorkspaceService }) {
-  const outlet = useOutletContext<{ refreshSnapshot?: () => Promise<void> } | null>()
+  const navigate = useNavigate()
+  const outlet = useOutletContext<{ refreshSnapshot?: () => Promise<void>; deleteProject?: (id: string) => Promise<void> } | null>()
   const [project, setProject] = useState<WorkspaceProjectDetail | null>(null)
   const [details, setDetails] = useState<WorkspaceConversationDetail[]>([])
   const [filesLoaded, setFilesLoaded] = useState(false)
@@ -91,6 +94,28 @@ function ProjectScreenContent({ projectId, service }: { projectId: string; servi
     await refreshAfterMutation()
   }
 
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const handleDeleteProject = async () => {
+    if (!project) return
+    setIsDeleting(true)
+    setDeleteError(null)
+    try {
+      if (outlet?.deleteProject) {
+        await outlet.deleteProject(project.id)
+      } else {
+        await service.deleteProject(project.id)
+        navigate('/projects')
+      }
+      setIsConfirmingDelete(false)
+    } catch {
+      setDeleteError('No se pudo eliminar el proyecto. Inténtalo de nuevo.')
+      setIsDeleting(false)
+    }
+  }
+
   const undo = async () => {
     if (assignment.status !== 'saved') return
     const { conversationId, previousProjectId } = assignment
@@ -115,7 +140,28 @@ function ProjectScreenContent({ projectId, service }: { projectId: string; servi
 
   return (
     <ConversationDropTarget onAssign={(payload) => void assign(payload)} projectName={project.name}>
-      <header className={styles.header}><p>Proyecto</p><h1>{project.name}</h1><p>{project.description}</p></header>
+      <header className={styles.header}>
+        <div className={styles.headerRow}>
+          <div>
+            <p>Proyecto</p>
+            <h1>{project.name}</h1>
+          </div>
+          <button
+            type="button"
+            className={styles.deleteProjectBtn}
+            onClick={() => {
+              setDeleteError(null)
+              setIsConfirmingDelete(true)
+            }}
+            aria-label={`Eliminar proyecto ${project.name}`}
+            title="Eliminar proyecto"
+          >
+            <Trash2 size={15} />
+            <span>Eliminar proyecto</span>
+          </button>
+        </div>
+        <p>{project.description}</p>
+      </header>
       <div aria-label="Contenido del proyecto" className={styles.tabs} role="tablist">
         <button aria-controls={conversationsPanelId} aria-selected={tab === 'conversations'} id={conversationsTabId} onClick={() => selectTab('conversations')} onKeyDown={handleTabKey} ref={conversationTabRef} role="tab" tabIndex={tab === 'conversations' ? 0 : -1} type="button">Conversaciones {project.conversations.length}</button>
         <button aria-controls={filesPanelId} aria-selected={tab === 'files'} id={filesTabId} onClick={() => selectTab('files')} onKeyDown={handleTabKey} ref={filesTabRef} role="tab" tabIndex={tab === 'files' ? 0 : -1} type="button">Archivos {project.fileCount}</button>
@@ -126,6 +172,18 @@ function ProjectScreenContent({ projectId, service }: { projectId: string; servi
       {assignment.status === 'saved' ? <div aria-live="polite" role="status">Conversación movida a {project.name} <button onClick={() => void undo()} type="button">Deshacer</button></div> : null}
       {assignment.status === 'error' ? <p role="alert">{assignment.message}</p> : null}
       {refreshWarning ? <p>La operación se guardó, pero no pudimos actualizar la vista. <button onClick={() => void retryRefresh()} type="button">Reintentar actualización</button></p> : null}
+      <ConfirmDeleteModal
+        isOpen={isConfirmingDelete}
+        title={`¿Eliminar proyecto "${project.name}"?`}
+        description={deleteError || 'Sus conversaciones se conservarán en "Sin proyecto". Esta acción no se puede deshacer.'}
+        confirmLabel="Eliminar proyecto"
+        isLoading={isDeleting}
+        onCancel={() => {
+          setIsConfirmingDelete(false)
+          setDeleteError(null)
+        }}
+        onConfirm={() => void handleDeleteProject()}
+      />
     </ConversationDropTarget>
   )
 }

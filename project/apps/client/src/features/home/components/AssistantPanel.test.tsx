@@ -6,7 +6,7 @@ import { AssistantPanel } from './AssistantPanel'
 
 afterEach(cleanup)
 
-it('moves through minimized, compact, and expanded states', async () => {
+it('moves through minimized and expanded states', async () => {
   const user = userEvent.setup()
   render(<AssistantPanel />)
 
@@ -14,7 +14,7 @@ it('moves through minimized, compact, and expanded states', async () => {
     screen.getByRole('dialog', {
       name: 'Asistente del Ecosistema Multiagente',
     }),
-  ).toHaveAttribute('data-mode', 'compact')
+  ).toHaveAttribute('data-mode', 'expanded')
   expect(screen.getByLabelText('Abrir asistente')).toHaveStyle({ display: 'none' })
   expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
 
@@ -35,16 +35,8 @@ it('moves through minimized, compact, and expanded states', async () => {
     screen.getByRole('dialog', {
       name: 'Asistente del Ecosistema Multiagente',
     }),
-  ).toHaveAttribute('data-mode', 'compact')
-  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
-  await user.click(screen.getByRole('button', { name: 'Expandir asistente' }))
-
-  expect(
-    screen.getByRole('dialog', {
-      name: 'Asistente del Ecosistema Multiagente',
-    }),
   ).toHaveAttribute('data-mode', 'expanded')
-  expect(screen.getByLabelText('Abrir asistente')).toHaveStyle({ display: 'none' })
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
 })
 
 it('returns focus to the opener after minimizing', async () => {

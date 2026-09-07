@@ -1,3 +1,4 @@
+import { ThemeProvider } from '@/lib/theme'
 import { cleanup, render as renderComponent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
@@ -15,7 +16,7 @@ const connection: LlmConnection = {
 }
 
 function render(component: ReactNode) {
-  return renderComponent(<MemoryRouter>{component}</MemoryRouter>)
+  return renderComponent(<ThemeProvider><MemoryRouter>{component}</MemoryRouter></ThemeProvider>)
 }
 
 function makeService(overrides: Partial<SettingsService> = {}): SettingsService {
@@ -29,6 +30,7 @@ function makeService(overrides: Partial<SettingsService> = {}): SettingsService 
     listAgentAssignments: vi.fn().mockResolvedValue([]),
     updateAgentAssignment: vi.fn(),
     testConnection: vi.fn().mockResolvedValue({ ok: true }),
+    listConnectionModels: vi.fn().mockResolvedValue([]),
     ...overrides,
   }
 }

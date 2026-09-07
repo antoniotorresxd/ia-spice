@@ -35,6 +35,9 @@ function StageSummary({ stage }: { stage: ExecutionStage }) {
 export function ActivityTimeline({ execution, heading }: ActivityTimelineProps) {
   const [expandedStageId, setExpandedStageId] = useState<string | null>(null)
 
+  const completedStages = execution.stages.filter((stage) => stage.status === 'completed').length
+  const stageLabels = { pending: 'Pendiente', active: 'En curso', completed: 'Completada', failed: 'Fallida' } as const
+
   return (
     <section aria-labelledby="execution-title" className={styles.timelinePanel}>
       <header className={styles.header}>
@@ -61,6 +64,13 @@ export function ActivityTimeline({ execution, heading }: ActivityTimelineProps) 
         </span>
       </header>
 
+      {execution.stages.length > 0 ? (
+        <div className={styles.progress} data-status={execution.status}>
+          <span>{completedStages} de {execution.stages.length} etapas completadas</span>
+          <progress aria-label="Etapas completadas" max={execution.stages.length} value={completedStages} />
+        </div>
+      ) : null}
+
       <ol aria-label="Actividad de ejecución" className={styles.timeline}>
         {execution.stages.map((stage) => {
           const isExpanded = expandedStageId === stage.id
@@ -84,7 +94,10 @@ export function ActivityTimeline({ execution, heading }: ActivityTimelineProps) 
                       <span>{stage.actor}</span>
                     </div>
                   </div>
-                  <time>{formatDuration(stage.durationMs)}</time>
+                  <div className={styles.stageMeta}>
+                    <span className={styles.stageStatus}>{stageLabels[stage.status]}</span>
+                    <time>{formatDuration(stage.durationMs)}</time>
+                  </div>
                 </header>
                 <StageSummary stage={stage} />
                 {hasMetrics ? (

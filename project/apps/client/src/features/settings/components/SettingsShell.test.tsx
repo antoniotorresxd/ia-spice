@@ -1,3 +1,4 @@
+import { ThemeProvider } from '@/lib/theme'
 import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
@@ -8,11 +9,11 @@ afterEach(cleanup)
 
 function renderShell(path: string) {
   render(
-    <MemoryRouter initialEntries={[path]}>
+    <ThemeProvider><MemoryRouter initialEntries={[path]}>
       <SettingsShell onSignOut={vi.fn()} userEmail="ada@example.com" userName="Ada">
         <h1>Contenido</h1>
       </SettingsShell>
-    </MemoryRouter>,
+    </MemoryRouter></ThemeProvider>,
   )
 }
 

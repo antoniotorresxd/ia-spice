@@ -161,5 +161,37 @@ export function createMockWorkspaceService(): WorkspaceService {
     async restoreConversationProject(conversationId, projectId) {
       return moveConversation(conversationId, projectId)
     },
+    async deleteProject(projectId) {
+      const index = projects.findIndex(({ id }) => id === projectId)
+      if (index === -1) throw new Error(`Project not found: ${projectId}`)
+      projects.splice(index, 1)
+      for (const conv of conversations) {
+        if (conv.projectId === projectId) conv.projectId = null
+      }
+    },
+    async deleteConversation(conversationId) {
+      const index = conversations.findIndex(({ id }) => id === conversationId)
+      if (index === -1) throw new Error(`Conversation not found: ${conversationId}`)
+      conversations.splice(index, 1)
+      for (const proj of projects) {
+        proj.conversationIds = proj.conversationIds.filter((id) => id !== conversationId)
+      }
+    },
+    async getFiles() {
+      return clone(
+        conversations.flatMap((conv) =>
+          conv.files.map((f) => ({
+            id: f.id,
+            conversationId: conv.id,
+            name: f.name,
+            language: f.language,
+            status: f.status,
+            createdAt: conv.updatedAt,
+            conversationTitle: conv.title,
+            projectId: conv.projectId,
+          })),
+        ),
+      )
+    },
   }
 }

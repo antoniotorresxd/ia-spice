@@ -9,7 +9,7 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[#72e2c6] text-[#07090e] font-semibold hover:bg-[#5fd4b7] shadow-[0_0_20px_-3px_rgba(114,226,198,0.35)] hover:shadow-[0_0_25px_0px_rgba(114,226,198,0.5)] border border-transparent",
+          "bg-[var(--primary)] text-[var(--primary-foreground)] font-semibold hover:bg-[var(--primary)] shadow-[0_0_20px_-3px_color-mix(in_srgb,_var(--color-mint)_35%,_transparent)] hover:shadow-[0_0_25px_0px_color-mix(in_srgb,_var(--color-mint)_50%,_transparent)] border border-transparent",
         destructive:
           "bg-rose-600/90 text-white hover:bg-rose-600 shadow-sm border border-rose-500/30",
         outline:
@@ -19,9 +19,9 @@ export const buttonVariants = cva(
         ghost:
           "text-zinc-300 hover:text-white hover:bg-white/[0.06]",
         link:
-          "text-[#72e2c6] underline-offset-4 hover:underline",
+          "text-[var(--color-mint)] underline-offset-4 hover:underline",
         glow:
-          "bg-gradient-to-r from-[#72e2c6] to-[#9b8cff] text-[#07090e] font-semibold hover:opacity-95 shadow-[0_0_25px_-4px_rgba(114,226,198,0.4)] border border-white/10",
+          "bg-[var(--primary)] text-[var(--primary-foreground)] font-semibold hover:opacity-95 shadow-[0_0_25px_-4px_color-mix(in_srgb,_var(--color-mint)_40%,_transparent)] border border-white/10",
       },
       size: {
         default: "h-10 px-4 py-2",

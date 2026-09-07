@@ -39,3 +39,18 @@ it('keeps a failed stage and partial files visible', () => {
   expect(screen.getByText('La simulación no convergió.')).toBeVisible()
   expect(screen.getByText('partial-output.csv · parcial')).toBeVisible()
 })
+
+it('shows completed-stage progress and updates it with execution data', () => {
+  const { rerender } = render(<ActivityTimeline execution={activeDraftExecutionFixture} />)
+  const progress = screen.getByRole('progressbar', { name: 'Etapas completadas' })
+  expect(progress).toHaveAttribute('value', '3')
+  expect(progress).toHaveAttribute('max', '5')
+  expect(screen.getByText('3 de 5 etapas completadas')).toBeVisible()
+  const stages = within(screen.getByRole('list', { name: 'Actividad de ejecución' })).getAllByRole('listitem')
+  expect(within(stages[0]).getByText('Completada')).toBeVisible()
+  expect(within(stages[3]).getByText('En curso')).toBeVisible()
+
+  rerender(<ActivityTimeline execution={failedExecutionFixture} />)
+  expect(screen.getByText('Fallida', { selector: 'span' })).toBeVisible()
+  expect(progress).toHaveAttribute('value', '2')
+})

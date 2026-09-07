@@ -14,6 +14,9 @@ it('presents tokens first and cost as an estimate', () => {
   expect(metrics[0]).toHaveTextContent('Tokens utilizados')
   expect(screen.getByText('184,200 / 500,000')).toBeVisible()
   expect(screen.getByText('$3.84 estimados')).toBeVisible()
+  expect(screen.getByText('31 · 90% exitosas')).toBeVisible()
+  expect(screen.getByText('74 min')).toBeVisible()
+  expect(screen.getByText('86')).toBeVisible()
 })
 
 it('does not invent unavailable usage values', () => {

@@ -32,10 +32,10 @@
   flex: 0 0 auto;
   align-items: center;
   gap: 0.55rem;
-  border-color: rgba(114, 226, 198, 0.4);
-  background: rgba(114, 226, 198, 0.12);
+  border-color: color-mix(in srgb, var(--color-mint) 40%, transparent);
+  background: color-mix(in srgb, var(--color-mint) 12%, transparent);
   color: var(--color-mint);
-  box-shadow: 0 0 16px -2px rgba(114, 226, 198, 0.3);
+  box-shadow: 0 0 16px -2px color-mix(in srgb, var(--color-mint) 30%, transparent);
 }
 
 .primaryButton span {
@@ -45,9 +45,9 @@
 
 .primaryButton:hover,
 .saveButton:hover {
-  border-color: rgba(114, 226, 198, 0.6);
-  background: rgba(114, 226, 198, 0.2);
-  box-shadow: 0 0 20px rgba(114, 226, 198, 0.45);
+  border-color: color-mix(in srgb, var(--color-mint) 60%, transparent);
+  background: color-mix(in srgb, var(--color-mint) 20%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-mint) 45%, transparent);
 }
 
 .sections {
@@ -117,9 +117,9 @@
   width: 2.75rem;
   height: 2.75rem;
   place-items: center;
-  border: 1px solid rgba(114, 226, 198, 0.3);
+  border: 1px solid color-mix(in srgb, var(--color-mint) 30%, transparent);
   border-radius: 0.75rem;
-  background: rgba(114, 226, 198, 0.08);
+  background: color-mix(in srgb, var(--color-mint) 8%, transparent);
   color: var(--color-mint);
   font-size: 1.1rem;
 }
@@ -223,17 +223,17 @@
 
 .connectedStatus,
 .configuredStatus {
-  background: rgba(114, 226, 198, 0.12);
-  border: 1px solid rgba(114, 226, 198, 0.25);
-  color: var(--color-mint);
+  background: color-mix(in srgb, var(--color-violet) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-violet) 25%, transparent);
+  color: var(--color-violet);
 }
 
 .connectedStatus i {
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 50%;
-  background: var(--color-mint);
-  box-shadow: 0 0 8px rgba(114, 226, 198, 0.8);
+  background: var(--color-violet);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-violet) 80%, transparent);
 }
 
 .unconfiguredStatus {
@@ -331,21 +331,140 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.625rem;
   outline: none;
-  background: rgba(7, 10, 16, 0.7);
+  background-color: rgba(7, 10, 16, 0.7);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
   color: #f3f5f8;
   font: inherit;
   font-size: 0.78rem;
-  transition: all 0.2s ease;
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+.assignmentRow select,
+.connectionForm select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  padding-right: 2.4rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b95a5' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 14px;
+}
+
+.assignmentRow select:hover,
+.connectionForm select:hover {
+  border-color: rgba(255, 255, 255, 0.26);
+  background-color: rgba(18, 24, 38, 0.9);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23c8793d' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.assignmentRow input:hover,
+.connectionForm input:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background-color: rgba(14, 18, 27, 0.85);
 }
 
 .assignmentRow select:focus,
 .assignmentRow input:focus,
 .connectionForm input:focus,
 .connectionForm select:focus {
-  border-color: rgba(114, 226, 198, 0.6);
-  background: rgba(7, 10, 16, 0.9);
-  box-shadow: 0 0 0 3px rgba(114, 226, 198, 0.15);
+  border-color: color-mix(in srgb, var(--color-mint) 75%, transparent);
+  background-color: rgba(10, 14, 22, 0.95);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-mint) 18%, transparent);
+}
+
+.assignmentRow select:focus,
+.connectionForm select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23c8793d' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.assignmentRow select option,
+.connectionForm select option {
+  background-color: #0e1219;
+  color: #f3f5f8;
+  padding: 0.55rem 0.85rem;
+}
+
+.modelToggleBtn {
+  font-size: 0.72rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #8b95a5;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.modelToggleBtn:hover {
+  background: color-mix(in srgb, var(--color-mint) 15%, transparent);
+  border-color: color-mix(in srgb, var(--color-mint) 40%, transparent);
+  color: var(--color-mint);
+}
+
+/* Light mode overrides */
+:global(.light) .assignmentRow label,
+:global(.light) .connectionForm label {
+  color: #64748b;
+}
+
+:global(.light) .assignmentRow select,
+:global(.light) .assignmentRow input,
+:global(.light) .connectionForm input,
+:global(.light) .connectionForm select {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+:global(.light) .assignmentRow select,
+:global(.light) .connectionForm select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+:global(.light) .assignmentRow select:hover,
+:global(.light) .connectionForm select:hover {
+  border-color: rgba(0, 0, 0, 0.28);
+  background-color: #f8fafc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23c8793d' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+:global(.light) .assignmentRow input:hover,
+:global(.light) .connectionForm input:hover {
+  border-color: rgba(0, 0, 0, 0.24);
+  background-color: #f8fafc;
+}
+
+:global(.light) .assignmentRow select:focus,
+:global(.light) .assignmentRow input:focus,
+:global(.light) .connectionForm input:focus,
+:global(.light) .connectionForm select:focus {
+  border-color: var(--color-mint);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-mint) 25%, transparent);
+}
+
+:global(.light) .assignmentRow select option,
+:global(.light) .connectionForm select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+:global(.light) .modelToggleBtn {
+  background: #f1f5f9;
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #64748b;
+}
+
+:global(.light) .modelToggleBtn:hover {
+  background: color-mix(in srgb, var(--color-mint) 12%, transparent);
+  border-color: var(--color-mint);
+  color: var(--color-mint);
 }
 
 .assignmentRow > p {
@@ -354,8 +473,8 @@
 
 .saveButton {
   align-self: end;
-  background: rgba(114, 226, 198, 0.12);
-  border-color: rgba(114, 226, 198, 0.35);
+  background: color-mix(in srgb, var(--color-mint) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-mint) 35%, transparent);
   color: var(--color-mint);
 }
 
@@ -445,14 +564,14 @@
 }
 
 .formActions button:last-child {
-  border-color: rgba(114, 226, 198, 0.4);
-  background: rgba(114, 226, 198, 0.14);
-  box-shadow: 0 0 14px -2px rgba(114, 226, 198, 0.3);
+  border-color: color-mix(in srgb, var(--color-mint) 40%, transparent);
+  background: color-mix(in srgb, var(--color-mint) 14%, transparent);
+  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--color-mint) 30%, transparent);
   color: var(--color-mint);
 }
 
 .formActions button:last-child:hover {
-  background: rgba(114, 226, 198, 0.22);
+  background: color-mix(in srgb, var(--color-mint) 22%, transparent);
 }
 
 .dangerButton {

@@ -28,6 +28,11 @@ export async function createProject(userId: string, input: CreateProjectInput) {
 }
 
 export async function deleteProject(userId: string, id: string) {
+  await db
+    .update(conversation)
+    .set({ projectId: null })
+    .where(and(eq(conversation.projectId, id), eq(conversation.userId, userId)));
+
   const [row] = await db
     .delete(project)
     .where(and(eq(project.id, id), eq(project.userId, userId)))
@@ -178,11 +183,49 @@ export async function createConversationWithRequest(userId: string, text: string
 }
 
 export async function deleteConversation(userId: string, id: string) {
+  await db.delete(artifact).where(eq(artifact.conversationId, id));
+  await db.delete(execution).where(eq(execution.conversationId, id));
+  await db.delete(message).where(eq(message.conversationId, id));
+
   const [row] = await db
     .delete(conversation)
     .where(and(eq(conversation.id, id), eq(conversation.userId, userId)))
     .returning();
   return row ?? null;
+}
+
+export type UserFileView = {
+  id: string;
+  conversationId: string;
+  name: string;
+  language: string;
+  status: 'complete' | 'partial';
+  createdAt: string;
+  conversationTitle: string;
+  projectId: string | null;
+};
+
+export async function listUserFiles(userId: string): Promise<UserFileView[]> {
+  const rows = await db
+    .select({
+      id: artifact.id,
+      conversationId: artifact.conversationId,
+      name: artifact.name,
+      language: artifact.language,
+      status: artifact.status,
+      createdAt: artifact.createdAt,
+      conversationTitle: conversation.title,
+      projectId: conversation.projectId,
+    })
+    .from(artifact)
+    .innerJoin(conversation, eq(conversation.id, artifact.conversationId))
+    .where(eq(conversation.userId, userId))
+    .orderBy(desc(artifact.createdAt));
+
+  return rows.map((r) => ({
+    ...r,
+    createdAt: r.createdAt.toISOString(),
+  }));
 }
 
 async function loadConversationParts(userId: string, id: string) {

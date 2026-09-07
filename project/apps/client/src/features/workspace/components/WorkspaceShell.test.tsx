@@ -1,3 +1,4 @@
+import { ThemeProvider } from '@/lib/theme'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -10,7 +11,7 @@ afterEach(cleanup)
 
 it('keeps workspace navigation around nested route content', async () => {
   render(
-    <MemoryRouter initialEntries={['/projects']}>
+    <ThemeProvider><MemoryRouter initialEntries={['/projects']}>
       <Routes>
         <Route
           element={
@@ -24,7 +25,7 @@ it('keeps workspace navigation around nested route content', async () => {
           <Route path="projects" element={<h1>Proyectos</h1>} />
         </Route>
       </Routes>
-    </MemoryRouter>,
+    </MemoryRouter></ThemeProvider>,
   )
 
   expect(await screen.findByRole('link', { name: 'Nueva solicitud' })).toHaveAttribute('href', '/new')
@@ -41,7 +42,7 @@ it('keeps assignment successful and undoable when snapshot refresh fails', async
   const service = createMockWorkspaceService()
   const snapshot = await service.getSnapshot()
   service.getSnapshot = vi.fn().mockResolvedValueOnce(snapshot).mockRejectedValueOnce(new Error('Refresh failed')).mockResolvedValue(snapshot)
-  render(<MemoryRouter initialEntries={['/projects']}><Routes><Route element={<WorkspaceShell onSignOut={vi.fn()} service={service} userName="Antonio" />}><Route path="projects" element={<h1>Proyectos</h1>} /></Route></Routes></MemoryRouter>)
+  render(<ThemeProvider><MemoryRouter initialEntries={['/projects']}><Routes><Route element={<WorkspaceShell onSignOut={vi.fn()} service={service} userName="Antonio" />}><Route path="projects" element={<h1>Proyectos</h1>} /></Route></Routes></MemoryRouter></ThemeProvider>)
   await user.click(await screen.findByRole('button', { name: 'Mover a proyecto Divisor de voltaje' }))
   await user.click(screen.getByRole('menuitem', { name: 'Filtros analógicos' }))
   expect(await screen.findByRole('status')).toHaveTextContent('Conversación movida')

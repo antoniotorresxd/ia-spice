@@ -2,6 +2,7 @@ import type {
   ProjectInput,
   WorkspaceConversation,
   WorkspaceConversationDetail,
+  WorkspaceFileItem,
   WorkspaceProject,
   WorkspaceProjectDetail,
   WorkspaceSnapshot,
@@ -16,4 +17,7 @@ export type WorkspaceService = {
   continueConversation(conversationId: string, text: string): Promise<WorkspaceConversationDetail>
   assignConversation(conversationId: string, projectId: string): Promise<WorkspaceConversation>
   restoreConversationProject(conversationId: string, projectId: string | null): Promise<WorkspaceConversation>
+  deleteProject(projectId: string): Promise<void>
+  deleteConversation(conversationId: string): Promise<void>
+  getFiles(): Promise<WorkspaceFileItem[]>
 }

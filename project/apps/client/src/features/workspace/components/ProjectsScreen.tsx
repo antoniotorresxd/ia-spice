@@ -1,3 +1,4 @@
+import { CardSpotlight } from '@/components/ui/card-spotlight'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -95,22 +96,24 @@ export function ProjectsScreen({ service }: ProjectsScreenProps) {
       {snapshot && snapshot.projects.length === 0 && <p className={styles.state}>Todavía no hay proyectos.</p>}
       {snapshot && snapshot.projects.length > 0 && projects.length === 0 && <p className={styles.state}>No hay proyectos que coincidan con tu búsqueda.</p>}
       {projects.length > 0 && (
-        <div className={styles.tableWrap}>
-          <table>
-            <thead><tr><th>Proyecto</th><th>Conversaciones</th><th>Archivos</th><th>Actualizado</th></tr></thead>
-            <tbody>{projects.map((project) => (
-              <tr key={project.id}>
-                <td data-label="Proyecto">
+        <section aria-label="Lista de proyectos" className={styles.projectGrid}>
+          {projects.map((project) => (
+            <article aria-labelledby={`project-${project.id}`} key={project.id}>
+              <CardSpotlight className={styles.projectCard}>
+                <div className={styles.cardHeading}>
                   <span aria-hidden="true" className={styles.projectIcon}>◇</span>
-                  <span><Link to={`/projects/${project.id}`}>{project.name}</Link><small>{project.description || 'Sin descripción'}</small></span>
-                </td>
-                <td data-label="Conversaciones"><strong>{project.conversationIds.length}</strong> conversaciones</td>
-                <td data-label="Archivos"><strong>{project.fileCount}</strong> archivos</td>
-                <td data-label="Actualizado"><time dateTime={project.updatedAt}>{dateFormatter.format(new Date(project.updatedAt))}</time></td>
-              </tr>
-            ))}</tbody>
-          </table>
-        </div>
+                  <h2 id={`project-${project.id}`}><Link to={`/projects/${project.id}`}>{project.name}</Link></h2>
+                </div>
+                <p className={styles.description}>{project.description || 'Sin descripción'}</p>
+                <div className={styles.cardMetrics}>
+                  <span><strong>{project.conversationIds.length}</strong> conversaciones</span>
+                  <span><strong>{project.fileCount}</strong> archivos</span>
+                </div>
+                <p className={styles.updated}>Actualizado <time dateTime={project.updatedAt}>{dateFormatter.format(new Date(project.updatedAt))}</time></p>
+              </CardSpotlight>
+            </article>
+          ))}
+        </section>
       )}
 
       {dialogOpen && <CreateProjectDialog createProject={(input) => service.createProject(input)} onClose={closeDialog} onCreated={handleCreated} />}

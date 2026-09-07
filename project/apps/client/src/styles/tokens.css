@@ -1,23 +1,31 @@
+/* Bench premium: legacy mint names = copper brand; violet names = cyan success/positive metrics only. */
 :root {
-  --background: #07090e;
+  --theme-color-scheme: dark;
+  --body-glow-mint: rgba(200, 121, 61, 0.045);
+  --body-glow-violet: rgba(69, 214, 196, 0.16);
+  --selection-background: rgba(200, 121, 61, 0.25);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
+  --color-overlay: rgba(11, 13, 16, 0.65);
+  --background: #0b0d10;
   --foreground: #f3f5f8;
 
-  --card: #0e121b;
+  --card: #12151a;
   --card-foreground: #f3f5f8;
 
-  --popover: #0e121b;
+  --popover: #12151a;
   --popover-foreground: #f3f5f8;
 
-  --primary: #72e2c6;
-  --primary-foreground: #07090e;
+  --primary: #c8793d;
+  --primary-foreground: #0b0d10;
 
-  --secondary: #161c28;
+  --secondary: #1b1f25;
   --secondary-foreground: #f3f5f8;
 
-  --muted: #141a26;
+  --muted: #181c22;
   --muted-foreground: #8b95a5;
 
-  --accent: #1e2638;
+  --accent: #252b33;
   --accent-foreground: #f3f5f8;
 
   --destructive: #f43f5e;
@@ -25,23 +33,23 @@
 
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.12);
-  --ring: #72e2c6;
+  --ring: #c8793d;
 
   --radius: 0.75rem;
 
   /* Legacy & App Token Aliases */
-  --color-bg: #07090e;
-  --color-surface: #0e131d;
-  --color-surface-strong: #0a0d14;
+  --color-bg: #0b0d10;
+  --color-surface: #12151a;
+  --color-surface-strong: #0e1014;
   --color-border: rgba(255, 255, 255, 0.08);
   --color-border-subtle: rgba(255, 255, 255, 0.05);
   --color-border-hover: rgba(255, 255, 255, 0.18);
   --color-text: #f3f5f8;
   --color-text-muted: #8b95a5;
-  --color-mint: #72e2c6;
-  --color-mint-dim: rgba(114, 226, 198, 0.15);
-  --color-violet: #9b8cff;
-  --color-violet-dim: rgba(155, 140, 255, 0.15);
+  --color-mint: #c8793d;
+  --color-mint-dim: rgba(200, 121, 61, 0.15);
+  --color-violet: #45d6c4;
+  --color-violet-dim: rgba(69, 214, 196, 0.15);
   --color-blue: #4d8dff;
   --color-blue-dim: rgba(77, 141, 255, 0.15);
   --color-danger: #ff6b7d;
@@ -50,12 +58,74 @@
   --radius-panel: 1rem;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-panel: 0 1.5rem 4rem -0.75rem rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  --shadow-glow-mint: 0 0 25px -5px rgba(114, 226, 198, 0.35);
-  --shadow-glow-violet: 0 0 25px -5px rgba(155, 140, 255, 0.35);
+  --shadow-glow-mint: 0 0 25px -5px rgba(200, 121, 61, 0.18);
+  --shadow-glow-violet: 0 0 25px -5px rgba(69, 214, 196, 0.35);
 
   --duration-fast: 180ms;
   --duration-automaton: 1400ms;
   --font-sans:
     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
     Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+
+  /* Glass & atmospheric tokens */
+  --glass-surface: rgba(14, 18, 25, 0.85);
+  --glass-surface-hover: rgba(22, 28, 38, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.16);
+}
+
+/* Bench premium light: shared geometry and timing inherit from :root. */
+:root.light,
+html.light {
+  --theme-color-scheme: light;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #c8793d;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #e11d48;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.12);
+  --ring: #c8793d;
+
+  --color-bg: var(--background);
+  --color-surface: var(--card);
+  --color-surface-strong: #ffffff;
+  --color-border: var(--border);
+  --color-border-subtle: rgba(0, 0, 0, 0.04);
+  --color-border-hover: rgba(0, 0, 0, 0.15);
+  --color-text: var(--foreground);
+  --color-text-muted: var(--muted-foreground);
+  --color-mint: #c8793d;
+  --color-mint-dim: rgba(200, 121, 61, 0.12);
+  --color-violet: #0d9488;
+  --color-violet-dim: rgba(13, 148, 136, 0.12);
+  --color-blue: #2563c7;
+  --color-blue-dim: rgba(37, 99, 199, 0.08);
+  --color-danger: var(--destructive);
+
+  --glass-surface: rgba(255, 255, 255, 0.92);
+  --glass-surface-hover: #ffffff;
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-hover: rgba(0, 0, 0, 0.15);
+
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+  --shadow-panel: 0 1rem 3rem -0.5rem rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-glow-mint: 0 0 25px -5px rgba(200, 121, 61, 0.12);
+  --shadow-glow-violet: 0 0 25px -5px rgba(13, 148, 136, 0.12);
+  --body-glow-mint: rgba(200, 121, 61, 0.035);
+  --body-glow-violet: rgba(13, 148, 136, 0.05);
+  --selection-background: rgba(200, 121, 61, 0.20);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.14);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.24);
 }

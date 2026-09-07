@@ -1,3 +1,4 @@
+import { ThemeProvider } from '@/lib/theme'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
@@ -14,7 +15,7 @@ function Location() {
 
 function renderSidebar(onSignOut = vi.fn().mockResolvedValue(undefined), onClose = vi.fn()) {
   render(
-    <MemoryRouter>
+    <ThemeProvider><MemoryRouter>
       <HomeSidebar
         conversations={[]}
         isOpen
@@ -23,7 +24,7 @@ function renderSidebar(onSignOut = vi.fn().mockResolvedValue(undefined), onClose
         userName="Antonio"
       />
       <Location />
-    </MemoryRouter>,
+    </MemoryRouter></ThemeProvider>,
   )
 
   return { onSignOut, onClose }
@@ -32,7 +33,7 @@ function renderSidebar(onSignOut = vi.fn().mockResolvedValue(undefined), onClose
 it('renders route-aware workspace navigation and collapsed projects', async () => {
   const user = userEvent.setup()
   render(
-    <MemoryRouter>
+    <ThemeProvider><MemoryRouter>
       <HomeSidebar
         conversations={workspaceConversationFixtures}
         isOpen
@@ -41,7 +42,7 @@ it('renders route-aware workspace navigation and collapsed projects', async () =
         projects={workspaceProjectFixtures}
         userName="Antonio"
       />
-    </MemoryRouter>,
+    </MemoryRouter></ThemeProvider>,
   )
 
   expect(screen.getByRole('link', { name: 'Nueva solicitud' })).toHaveAttribute('href', '/new')
@@ -67,9 +68,9 @@ it('does not retain the profile menu after mobile navigation closes and reopens'
   const user = userEvent.setup()
   const onClose = vi.fn()
   const { rerender } = render(
-    <MemoryRouter>
+    <ThemeProvider><MemoryRouter>
       <HomeSidebar conversations={[]} isOpen onClose={onClose} onSignOut={vi.fn()} userName="Antonio" />
-    </MemoryRouter>,
+    </MemoryRouter></ThemeProvider>,
   )
 
   await user.click(screen.getByRole('button', { name: 'Perfil de Antonio' }))
@@ -77,14 +78,14 @@ it('does not retain the profile menu after mobile navigation closes and reopens'
   expect(onClose).toHaveBeenCalledOnce()
 
   rerender(
-    <MemoryRouter>
+    <ThemeProvider><MemoryRouter>
       <HomeSidebar conversations={[]} isOpen={false} onClose={onClose} onSignOut={vi.fn()} userName="Antonio" />
-    </MemoryRouter>,
+    </MemoryRouter></ThemeProvider>,
   )
   rerender(
-    <MemoryRouter>
+    <ThemeProvider><MemoryRouter>
       <HomeSidebar conversations={[]} isOpen onClose={onClose} onSignOut={vi.fn()} userName="Antonio" />
-    </MemoryRouter>,
+    </MemoryRouter></ThemeProvider>,
   )
   expect(screen.queryByRole('menu')).not.toBeInTheDocument()
 })
@@ -164,7 +165,7 @@ it('provides drag data and keyboard project assignment for conversations', async
   const user = userEvent.setup()
   const onAssignConversation = vi.fn().mockResolvedValue(undefined)
   render(
-    <MemoryRouter>
+    <ThemeProvider><MemoryRouter>
       <HomeSidebar
         conversations={workspaceConversationFixtures}
         isOpen
@@ -174,7 +175,7 @@ it('provides drag data and keyboard project assignment for conversations', async
         projects={workspaceProjectFixtures}
         userName="Antonio"
       />
-    </MemoryRouter>,
+    </MemoryRouter></ThemeProvider>,
   )
   const item = screen.getByText('Divisor de voltaje').closest('[draggable="true"]')
   const setData = vi.fn()

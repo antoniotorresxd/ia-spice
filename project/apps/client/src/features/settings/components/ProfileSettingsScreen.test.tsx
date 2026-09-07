@@ -1,3 +1,4 @@
+import { ThemeProvider } from '@/lib/theme'
 import { cleanup, render as renderComponent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
@@ -14,7 +15,7 @@ const profile = {
 }
 
 function render(component: ReactNode) {
-  return renderComponent(<MemoryRouter>{component}</MemoryRouter>)
+  return renderComponent(<ThemeProvider><MemoryRouter>{component}</MemoryRouter></ThemeProvider>)
 }
 
 function makeService(

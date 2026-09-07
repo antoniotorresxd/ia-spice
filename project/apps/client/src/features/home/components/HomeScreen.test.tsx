@@ -1,3 +1,4 @@
+import { ThemeProvider } from '@/lib/theme'
 import { cleanup, render as renderComponent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
@@ -10,7 +11,7 @@ import { HomeScreen } from './HomeScreen'
 afterEach(cleanup)
 
 function render(component: ReactNode) {
-  return renderComponent(<MemoryRouter>{component}</MemoryRouter>)
+  return renderComponent(<ThemeProvider><MemoryRouter>{component}</MemoryRouter></ThemeProvider>)
 }
 
 it('loads the operational overview through the service', async () => {
@@ -81,4 +82,46 @@ it('shows a safe load error and retries the current period', async () => {
 
   await user.click(screen.getByRole('button', { name: 'Reintentar' }))
   expect(await screen.findByText('Datos de demostración')).toBeVisible()
+})
+
+
+it('focuses the existing composer from the welcome CTA without submitting', async () => {
+  const service = createMockHomeService()
+  const submit = vi.spyOn(service, 'submitPrompt')
+  const user = userEvent.setup()
+  render(<HomeScreen service={service} userName="Ada" onSignOut={vi.fn()} />)
+  await screen.findByText('Datos de demostración')
+
+  const composer = screen.getByLabelText('Describe qué quieres diseñar')
+  await user.type(composer, 'Filtro RC')
+  await user.click(screen.getByRole('button', { name: 'Nueva solicitud' }))
+
+  expect(composer).toHaveFocus()
+  expect(composer).toHaveValue('Filtro RC')
+  expect(submit).not.toHaveBeenCalled()
+  expect(screen.getByRole('link', { name: 'Ver proyectos' })).toHaveAttribute('href', '/projects')
+})
+
+it('opens the search stub, contains keyboard focus and closes on Escape or backdrop click', async () => {
+  const user = userEvent.setup()
+  render(<HomeScreen service={createMockHomeService()} userName="Ada" onSignOut={vi.fn()} />)
+  await screen.findByText('Datos de demostración')
+  const trigger = screen.getByRole('button', { name: 'Buscar' })
+  await user.click(trigger)
+  expect(screen.getByRole('dialog', { name: 'Buscar' })).toBeVisible()
+  const input = screen.getByRole('searchbox')
+  expect(input).toHaveFocus()
+  await user.type(input, 'Filtro')
+  expect(screen.getByText('Búsqueda próximamente')).toBeVisible()
+  await user.tab({ shift: true })
+  expect(screen.getByRole('button', { name: 'Cerrar buscador' })).toHaveFocus()
+  await user.tab()
+  expect(input).toHaveFocus()
+  await user.keyboard('{Escape}')
+  expect(screen.queryByRole('dialog', { name: 'Buscar' })).not.toBeInTheDocument()
+  expect(trigger).toHaveFocus()
+  await user.click(trigger)
+  await user.click(screen.getByRole('button', { name: 'Cerrar búsqueda' }))
+  expect(screen.queryByRole('dialog', { name: 'Buscar' })).not.toBeInTheDocument()
+  expect(trigger).toHaveFocus()
 })

@@ -52,6 +52,9 @@ function serviceWith(overrides: Partial<WorkspaceService> = {}): WorkspaceServic
     continueConversation: vi.fn(),
     assignConversation: vi.fn(),
     restoreConversationProject: vi.fn(),
+    deleteProject: vi.fn().mockResolvedValue(undefined),
+    deleteConversation: vi.fn().mockResolvedValue(undefined),
+    getFiles: vi.fn().mockResolvedValue([]),
     ...overrides,
   }
 }
@@ -67,26 +70,26 @@ function CurrentPath() { return useLocation().pathname }
 it('renders a searchable, newest-first project directory', async () => {
   const { user } = renderScreen()
 
-  expect(await screen.findByRole('row', { name: /Filtros analógicos/ })).toHaveTextContent('12 conversaciones')
-  expect(screen.getByRole('row', { name: /Filtros analógicos/ })).toHaveTextContent('38 archivos')
-  const rows = screen.getAllByRole('row').slice(1)
+  expect(await screen.findByRole('article', { name: /Filtros analógicos/ })).toHaveTextContent('12 conversaciones')
+  expect(screen.getByRole('article', { name: /Filtros analógicos/ })).toHaveTextContent('38 archivos')
+  const rows = screen.getAllByRole('article')
   expect(within(rows[0]).getByText('Filtros analógicos')).toBeVisible()
   expect(within(rows[1]).getByText('Fuente regulada')).toBeVisible()
 
   await user.selectOptions(screen.getByRole('combobox', { name: 'Ordenar proyectos' }), 'name')
-  const alphabeticalRows = screen.getAllByRole('row').slice(1)
+  const alphabeticalRows = screen.getAllByRole('article')
   expect(within(alphabeticalRows[0]).getByText('Amplificador BJT')).toBeVisible()
   expect(within(alphabeticalRows[1]).getByText('Filtros analógicos')).toBeVisible()
 
   await user.type(screen.getByRole('searchbox', { name: 'Buscar proyectos' }), 'fuente')
-  expect(screen.queryByRole('row', { name: /Filtros analógicos/ })).not.toBeInTheDocument()
-  expect(screen.getByRole('row', { name: /Fuente regulada/ })).toBeVisible()
+  expect(screen.queryByRole('article', { name: /Filtros analógicos/ })).not.toBeInTheDocument()
+  expect(screen.getByRole('article', { name: /Fuente regulada/ })).toBeVisible()
 })
 
 it('creates a project and opens its route', async () => {
   const { service, user } = renderScreen()
 
-  await screen.findByRole('table')
+  await screen.findByRole('region', { name: 'Lista de proyectos' })
   await user.click(screen.getByRole('button', { name: 'Nuevo proyecto' }))
   await user.type(screen.getByLabelText('Nombre'), 'Sensores')
   await user.click(screen.getByRole('button', { name: 'Crear proyecto' }))
@@ -105,7 +108,7 @@ it('invokes createProject with its service receiver', async () => {
     })
   })
   const { user } = renderScreen(service)
-  await screen.findByRole('table')
+  await screen.findByRole('region', { name: 'Lista de proyectos' })
   await user.click(screen.getByRole('button', { name: 'Nuevo proyecto' }))
   await user.type(screen.getByLabelText('Nombre'), 'Proyecto ligado')
   await user.click(screen.getByRole('button', { name: 'Crear proyecto' }))
@@ -120,7 +123,7 @@ it('shows empty and filtered-empty states', async () => {
   cleanup()
 
   const second = renderScreen()
-  await screen.findByRole('table')
+  await screen.findByRole('region', { name: 'Lista de proyectos' })
   await second.user.type(screen.getByRole('searchbox', { name: 'Buscar proyectos' }), 'inexistente')
   expect(screen.getByText('No hay proyectos que coincidan con tu búsqueda.')).toBeVisible()
   void first
@@ -136,7 +139,7 @@ it('shows loading and retries a safe load error', async () => {
   const { user } = renderScreen(service)
   expect(screen.getByRole('status')).toHaveTextContent('Cargando proyectos…')
   resolve(snapshot)
-  await screen.findByRole('table')
+  await screen.findByRole('region', { name: 'Lista de proyectos' })
   cleanup()
 
   const failing = serviceWith({
@@ -146,14 +149,14 @@ it('shows loading and retries a safe load error', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos cargar los proyectos.')
   expect(screen.queryByText('database credentials')).not.toBeInTheDocument()
   await retry.user.click(screen.getByRole('button', { name: 'Reintentar' }))
-  expect(await screen.findByRole('table')).toBeVisible()
+  expect(await screen.findByRole('region', { name: 'Lista de proyectos' })).toBeVisible()
   void user
 })
 
 it('validates creation errors without exposing service details', async () => {
   const service = serviceWith({ createProject: vi.fn().mockRejectedValue(new Error('private provider error')) })
   const { user } = renderScreen(service)
-  await screen.findByRole('table')
+  await screen.findByRole('region', { name: 'Lista de proyectos' })
   await user.click(screen.getByRole('button', { name: 'Nuevo proyecto' }))
   await user.click(screen.getByRole('button', { name: 'Crear proyecto' }))
   expect(screen.getByRole('alert')).toHaveTextContent('Escribe un nombre para el proyecto.')
@@ -165,7 +168,7 @@ it('validates creation errors without exposing service details', async () => {
 
 it('traps focus, closes on Escape, and restores focus to the trigger', async () => {
   const { user } = renderScreen()
-  await screen.findByRole('table')
+  await screen.findByRole('region', { name: 'Lista de proyectos' })
   const trigger = screen.getByRole('button', { name: 'Nuevo proyecto' })
   await user.click(trigger)
   expect(screen.getByLabelText('Nombre')).toHaveFocus()

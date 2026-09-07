@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { AlertCircle, Camera, Check, Mail, ShieldCheck, Sparkles, User } from 'lucide-react'
 
 import type { UserProfile } from '../model/settings-types'
 import type { SettingsService } from '../services/settings-service'
 import { SettingsShell } from './SettingsShell'
-import styles from './SettingsShell.module.css'
+import styles from './ProfileSettingsScreen.module.css'
 
 type ProfileSettingsScreenProps = {
   service: SettingsService
@@ -134,7 +135,7 @@ export function ProfileSettingsScreen({
           {loadError ? (
             <>
               <p role="alert">No pudimos cargar tu perfil. Inténtalo de nuevo.</p>
-              <button onClick={() => setRetryKey((value) => value + 1)} type="button">
+              <button className={styles.retryBtn} onClick={() => setRetryKey((value) => value + 1)} type="button">
                 Reintentar
               </button>
             </>
@@ -143,51 +144,138 @@ export function ProfileSettingsScreen({
           )}
         </section>
       ) : (
-        <>
+        <div className={styles.container}>
           <header className={styles.pageHeader}>
-            <p>Cuenta personal</p>
-            <h1>Tu perfil</h1>
-            <span>Actualiza cómo apareces en el ecosistema.</span>
-            <strong className={styles.demoBadge}>Datos de demostración</strong>
+            <p className={styles.eyebrow}>Cuenta personal</p>
+            <div className={styles.titleRow}>
+              <h1>Tu perfil</h1>
+              <strong className={styles.demoBadge}>
+                <Sparkles size={12} />
+                Datos de demostración
+              </strong>
+            </div>
+            <span className={styles.subtitle}>Actualiza cómo apareces en el ecosistema.</span>
           </header>
-          <form className={styles.form} onSubmit={save}>
-        <section className={styles.avatarSection}>
-          <div>
-            <h2>Imagen de perfil</h2>
-            <p>Usa una imagen clara para identificar tu cuenta.</p>
+
+          {/* Hero Profile Card */}
+          <div className={styles.heroCard}>
+            <div className={styles.heroBanner} />
+            <div className={styles.heroContent}>
+              <div className={styles.heroIdentity}>
+                <div className={styles.avatarWrapper}>
+                  {avatarUrl ? (
+                    <img alt="Vista previa del avatar" className={styles.avatarImg} src={avatarUrl} />
+                  ) : (
+                    <span aria-hidden="true" className={styles.avatarFallback}>
+                      {name.slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div className={styles.heroDetails}>
+                  <h2 className={styles.heroName}>{name || 'Sin nombre'}</h2>
+                  <div className={styles.heroEmailRow}>
+                    <span>{saved.email}</span>
+                    <span className={styles.verifiedBadge}>
+                      <ShieldCheck size={13} />
+                      Verificado
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <label className={styles.heroUploadBtn}>
+                <Camera size={14} />
+                <span>Cambiar avatar</span>
+                <input
+                  accept="image/*"
+                  className={styles.fileInputHidden}
+                  disabled={isSaving}
+                  onChange={selectAvatar}
+                  type="file"
+                />
+              </label>
+            </div>
           </div>
-          <div className={styles.avatarControl}>
-            {avatarUrl ? (
-              <img alt="Vista previa del avatar" src={avatarUrl} />
-            ) : (
-              <span aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>
-            )}
-            <label>
-              Cambiar avatar
-              <input accept="image/*" disabled={isSaving} onChange={selectAvatar} type="file" />
-            </label>
-          </div>
-        </section>
-        <section className={styles.fields}>
-          <label>
-            <span>Nombre</span>
-            <input disabled={isSaving} onChange={(event) => setName(event.target.value)} value={name} />
-          </label>
-          <label>
-            <span>Correo electrónico</span>
-            <input disabled type="email" value={saved.email} />
-          </label>
-        </section>
-        {error ? <p className={styles.error} role="alert">{error}</p> : null}
-        {message ? <p className={styles.status} role="status">{message}</p> : null}
-        <div className={styles.actions}>
-          <button disabled={isSaving} onClick={discard} type="button">Descartar</button>
-          <button disabled={isSaving} type="submit">
-            {isSaving ? 'Guardando…' : 'Guardar cambios'}
-          </button>
-        </div>
+
+          <form onSubmit={save}>
+            <div className={styles.settingsCard}>
+              <div className={styles.cardHeader}>
+                <div className={styles.cardIconBadge}>
+                  <User size={18} />
+                </div>
+                <div className={styles.cardHeaderTitle}>
+                  <h2>Información personal</h2>
+                  <p>Tu nombre público visible en solicitudes y ejecuciones.</p>
+                </div>
+              </div>
+
+              <div className={styles.fieldsGrid}>
+                <div className={styles.inputGroup}>
+                  <label htmlFor="profile-name">Nombre</label>
+                  <div className={styles.inputWrapper}>
+                    <User className={styles.inputIcon} size={16} />
+                    <input
+                      className={styles.inputControl}
+                      disabled={isSaving}
+                      id="profile-name"
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder="Tu nombre completo"
+                      value={name}
+                    />
+                  </div>
+                  <p className={styles.fieldHint}>Visible para tus colaboradores en el ecosistema multiagente.</p>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label htmlFor="profile-email">Correo electrónico</label>
+                  <div className={styles.inputWrapper}>
+                    <Mail className={styles.inputIcon} size={16} />
+                    <input
+                      className={styles.inputControl}
+                      disabled
+                      id="profile-email"
+                      type="email"
+                      value={saved.email}
+                    />
+                  </div>
+                  <p className={styles.fieldHint}>El correo está vinculado a tu cuenta y no puede modificarse.</p>
+                </div>
+              </div>
+            </div>
+
+            {error ? (
+              <div className={styles.alertError} role="alert" style={{ marginTop: '1rem' }}>
+                <AlertCircle size={16} />
+                <span>{error}</span>
+              </div>
+            ) : null}
+
+            {message ? (
+              <div className={styles.alertSuccess} role="status" style={{ marginTop: '1rem' }}>
+                <Check size={16} />
+                <span>{message}</span>
+              </div>
+            ) : null}
+
+            <div className={styles.actionsBar} style={{ marginTop: '1.25rem' }}>
+              <button
+                className={styles.discardBtn}
+                disabled={isSaving}
+                onClick={discard}
+                type="button"
+              >
+                Descartar
+              </button>
+              <button
+                className={styles.saveBtn}
+                disabled={isSaving}
+                type="submit"
+              >
+                <Check size={15} />
+                <span>{isSaving ? 'Guardando…' : 'Guardar cambios'}</span>
+              </button>
+            </div>
           </form>
-        </>
+        </div>
       )}
     </SettingsShell>
   )

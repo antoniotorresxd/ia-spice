@@ -88,6 +88,9 @@ export function createMockSettingsService(): SettingsService {
       }
       return ok ? { ok: true } : { ok: false, error: 'Sin credencial' }
     },
+    async listConnectionModels() {
+      return ['openai/gpt-oss-20b', 'google/gemma-4-12b', 'gpt-4o-mini']
+    },
     async listAgentAssignments() {
       return structuredClone(assignments)
     },

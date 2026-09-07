@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -38,6 +38,24 @@ describe('ConversationScreen', () => {
     expect(screen.queryByLabelText('Lista de conversaciones')).not.toBeInTheDocument()
   })
 
+  it('fades scrolled history and lets readers return to the latest content', async () => {
+    renderScreen(createMockWorkspaceService())
+    const history = await screen.findByRole('region', { name: 'Historial de conversación' })
+    Object.defineProperties(history, {
+      scrollHeight: { configurable: true, value: 1200 },
+      clientHeight: { configurable: true, value: 400 },
+    })
+    history.scrollTop = 200
+    fireEvent.scroll(history)
+    expect(history).toHaveAttribute('data-scrolled', 'true')
+    fireEvent.click(screen.getByRole('button', { name: 'Ir al final' }))
+    expect(history.scrollTop).toBe(1200)
+    expect(screen.queryByRole('button', { name: 'Ir al final' })).not.toBeInTheDocument()
+    history.scrollTop = 0
+    fireEvent.scroll(history)
+    expect(history).toHaveAttribute('data-scrolled', 'false')
+  })
+
   it('shows a safe missing state', async () => {
     renderScreen(createMockWorkspaceService(), 'missing')
     expect(await screen.findByRole('alert')).toHaveTextContent('No encontramos esta conversación')
@@ -52,7 +70,7 @@ describe('ConversationScreen', () => {
     const detail = await service.getConversation('conversation-rc')
     vi.spyOn(service, 'getConversation').mockResolvedValue({ ...detail, executionStatus: status, execution: { ...detail.execution, status } })
     renderScreen(service)
-    expect(await screen.findByText(label)).toBeVisible()
+    expect(await screen.findByText(label, { selector: 'dd' })).toBeVisible()
   })
 
   it('validates empty continuation text', async () => {
@@ -104,10 +122,10 @@ describe('ConversationScreen', () => {
 
     renderScreen(service)
 
-    expect(await screen.findByText('En curso')).toBeVisible()
+    expect(await screen.findByText('En curso', { selector: 'dd' })).toBeVisible()
 
     await vi.advanceTimersByTimeAsync(2000)
-    expect(await screen.findByText('Completada')).toBeVisible()
+    expect(await screen.findByText('Completada', { selector: 'dd' })).toBeVisible()
 
     const callsAfterCompletion = getConversation.mock.calls.length
     await vi.advanceTimersByTimeAsync(6000)

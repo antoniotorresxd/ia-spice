@@ -1,3 +1,4 @@
+import { Plus, Send, Sparkles } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -44,15 +45,21 @@ export function NewRequestScreen({ service }: NewRequestScreenProps) {
 
   return (
     <section className={styles.screen}>
+      <div className={styles.spotlight} aria-hidden="true" />
       <div className={styles.request}>
         <header className={styles.intro}>
-          <h2>Nueva solicitud</h2>
-          <h1>¿Qué quieres diseñar?</h1>
+          <div className={styles.badge}>
+            <span className={styles.badgeDot} aria-hidden="true" />
+            <h2>Nueva solicitud</h2>
+          </div>
+          <h1 className={styles.headline}>¿Qué quieres diseñar?</h1>
           <p>Describe el circuito, restricciones o resultado que necesitas.</p>
         </header>
 
         <form className={styles.composer} onSubmit={handleSubmit}>
-          <label className={styles.srOnly} htmlFor="new-request-prompt">Describe qué quieres diseñar</label>
+          <label className={styles.srOnly} htmlFor="new-request-prompt">
+            Describe qué quieres diseñar
+          </label>
           <textarea
             aria-describedby={error ? 'new-request-error' : undefined}
             disabled={isSubmitting}
@@ -64,26 +71,38 @@ export function NewRequestScreen({ service }: NewRequestScreenProps) {
           />
           <div className={styles.tools}>
             <button className={styles.context} disabled={isSubmitting} type="button">
-              <span aria-hidden="true">＋</span> Contexto
+              <Plus aria-hidden="true" size={15} /> Contexto
             </button>
-            <span className={styles.mode}><span aria-hidden="true">✦</span> Automático</span>
+            <span className={styles.mode}>
+              <Sparkles aria-hidden="true" size={14} /> Automático
+            </span>
             <button className={styles.submit} disabled={isSubmitting} type="submit">
-              {isSubmitting ? 'Enviando…' : 'Enviar solicitud'} <span aria-hidden="true">↑</span>
+              {isSubmitting ? 'Enviando…' : 'Enviar solicitud'}{' '}
+              <Send aria-hidden="true" size={15} />
             </button>
           </div>
         </form>
 
-        {error ? <p className={styles.error} id="new-request-error" role="alert">{error}</p> : null}
+        {error ? (
+          <p className={styles.error} id="new-request-error" role="alert">
+            {error}
+          </p>
+        ) : null}
 
         <div aria-label="Ejemplos de solicitudes" className={styles.examples}>
+          <span className={styles.examplesTitle}>Plantillas rápidas:</span>
           {examples.map((example) => (
             <button
               aria-label={`Usar ejemplo: ${example.label}`}
               disabled={isSubmitting}
               key={example.label}
-              onClick={() => { setText(example.prompt); setError(null) }}
+              onClick={() => {
+                setText(example.prompt)
+                setError(null)
+              }}
               type="button"
             >
+              <span className={styles.exampleChipDot} aria-hidden="true" />
               {example.label}
             </button>
           ))}

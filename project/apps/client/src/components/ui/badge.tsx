@@ -9,7 +9,7 @@ export const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-[#72e2c6]/15 text-[#72e2c6] shadow-sm",
+          "border-transparent bg-[var(--color-mint)]/15 text-[var(--color-mint)] shadow-sm",
         secondary:
           "border-white/10 bg-white/[0.05] text-zinc-300",
         destructive:
@@ -17,7 +17,7 @@ export const badgeVariants = cva(
         outline:
           "border-white/10 text-zinc-300",
         violet:
-          "border-purple-500/20 bg-purple-500/10 text-[#9b8cff]",
+          "border-[var(--color-mint)]/20 bg-[var(--color-mint-dim)] text-[var(--color-mint)]",
         blue:
           "border-blue-500/20 bg-blue-500/10 text-[#4d8dff]",
       },

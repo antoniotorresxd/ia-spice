@@ -1,12 +1,110 @@
 .viewport {
+  position: relative;
   width: 100%;
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 9%);
-  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
   background:
-    radial-gradient(circle at 64% 35%, rgb(132 94 247 / 11%), transparent 32%),
-    linear-gradient(145deg, #0e151c, #080d13 72%);
-  scrollbar-color: rgb(113 231 195 / 35%) transparent;
+    radial-gradient(ellipse 60% 50% at 20% 15%, rgba(200, 121, 61, 0.09) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 85% 85%, rgba(69, 214, 196, 0.08) 0%, transparent 50%),
+    linear-gradient(165deg, rgba(16, 20, 27, 0.95), rgba(10, 12, 16, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 20px 40px -12px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+}
+
+:global(.light) .viewport {
+  border-color: rgba(0, 0, 0, 0.07);
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 15%, rgba(200, 121, 61, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 85% 85%, rgba(69, 214, 196, 0.05) 0%, transparent 50%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.96), rgba(246, 248, 251, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 12px 28px -8px rgba(0, 0, 0, 0.05);
+}
+
+.hudHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem 0.55rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:global(.light) .hudHeader {
+  border-bottom-color: rgba(0, 0, 0, 0.05);
+}
+
+.hudBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.livePulse {
+  position: relative;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--color-mint);
+  box-shadow: 0 0 10px var(--color-mint);
+}
+
+.livePulse::after {
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 1px solid var(--color-mint);
+  content: '';
+  animation: pulse-ring 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+}
+
+.hudBadgeText {
+  color: var(--color-mint);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hudTag {
+  padding: 0.15rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted-foreground);
+  font-family: monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+:global(.light) .hudTag {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.hudMetrics {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.hudLatency {
+  color: var(--color-violet);
+  font-family: monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.hudStepCounter {
+  color: var(--muted-foreground);
+  font-family: monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
 }
 
 .canvas {
@@ -14,7 +112,15 @@
   width: 100%;
   height: auto;
   color: #71808d;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans, Inter, system-ui, sans-serif);
+}
+
+.circuitGridLines {
+  color: #4b5863;
+}
+
+:global(.light) .circuitGridLines {
+  color: #cbd5e1;
 }
 
 .edge {
@@ -22,100 +128,205 @@
 }
 
 .edgeTrack,
-.edgePulse {
+.edgePulse,
+.edgeGlow {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
+/* Razor-sharp fine circuit trace */
 .edgeTrack {
-  stroke: #4b5863;
-  stroke-width: 2;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1.25;
+}
+
+:global(.light) .edgeTrack {
+  stroke: rgba(0, 0, 0, 0.12);
 }
 
 .trackArrow {
-  fill: #4b5863;
+  fill: rgba(255, 255, 255, 0.2);
 }
 
+:global(.light) .trackArrow {
+  fill: rgba(0, 0, 0, 0.2);
+}
+
+/* Wide soft ambient glow */
+.edgeGlow {
+  opacity: 0;
+  stroke: currentColor;
+  stroke-width: 5;
+  stroke-dasharray: 0.2 0.8;
+  filter: blur(2px);
+  transition: opacity 220ms ease;
+}
+
+.edge[data-active='true'] .edgeGlow {
+  opacity: 0.5;
+  animation: travel 850ms linear infinite;
+}
+
+/* Fine intense core pulse */
 .edgePulse {
   opacity: 0;
-  stroke: currentcolor;
-  stroke-width: 3;
+  stroke: currentColor;
+  stroke-width: 2;
   stroke-dasharray: 0.14 0.86;
+  filter: drop-shadow(0 0 3px currentColor);
   transition: opacity 180ms ease;
 }
 
 .edge[data-active='true'] .edgePulse {
   opacity: 1;
-  animation: travel 900ms linear infinite;
+  animation: travel 850ms linear infinite;
 }
 
 .edge[data-active='true'].main,
 .edge[data-active='true'].terminal {
-  color: #71e7c3;
+  color: #e5985b;
 }
 
 .edge[data-active='true'].violet {
-  color: #a78bfa;
+  color: #45d6c4;
 }
 
 .edge[data-active='true'].muted {
-  color: #9aa6af;
+  color: #94a3b8;
+}
+
+.junctionDot {
+  fill: rgba(255, 255, 255, 0.15);
+  transition: fill 180ms ease, filter 180ms ease;
+}
+
+.edge[data-active='true'] .junctionDot {
+  fill: currentColor;
+  filter: drop-shadow(0 0 4px currentColor);
 }
 
 .edgeLabel {
-  fill: #93a0aa;
-  stroke: #0a1016;
-  stroke-width: 5px;
+  fill: #94a3b8;
+  stroke: #0a0d12;
+  stroke-width: 3.5px;
   paint-order: stroke fill;
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.01em;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   transition: fill 180ms ease;
 }
 
+:global(.light) .edgeLabel {
+  fill: #64748b;
+  stroke: #ffffff;
+}
+
 .edge[data-active='true'] .edgeLabel {
-  fill: currentcolor;
+  fill: currentColor;
 }
 
 .state {
   color: #71808d;
 }
 
+/* Active diffuse breathing aura behind the node */
+.activeAura {
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.7);
+  transition:
+    opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.state[data-active='true'] .activeAura {
+  opacity: 1;
+  transform: scale(1);
+  animation: aura-breathe 2.4s ease-in-out infinite alternate;
+}
+
 .stateBody,
 .terminalRing {
-  fill: #111b23;
-  stroke: #5d6a75;
-  stroke-width: 1.5;
+  fill: rgba(18, 22, 29, 0.82);
+  stroke: rgba(255, 255, 255, 0.09);
+  stroke-width: 1;
   transition:
     fill 220ms ease,
-    filter 220ms ease,
-    stroke 220ms ease;
+    stroke 220ms ease,
+    filter 220ms ease;
+}
+
+:global(.light) .stateBody,
+:global(.light) .terminalRing {
+  fill: rgba(255, 255, 255, 0.92);
+  stroke: rgba(0, 0, 0, 0.09);
 }
 
 .terminalRing {
   fill: none;
-  stroke: #66747f;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-dasharray: 4 3;
+}
+
+:global(.light) .terminalRing {
+  stroke: rgba(0, 0, 0, 0.12);
+}
+
+.stateSheen {
+  pointer-events: none;
+}
+
+.notchMark {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1;
+  stroke-linecap: round;
+  pointer-events: none;
+  transition: stroke 220ms ease;
+}
+
+:global(.light) .notchMark {
+  stroke: rgba(0, 0, 0, 0.15);
+}
+
+.nodeBeacon {
+  fill: rgba(255, 255, 255, 0.2);
+  transition: fill 220ms ease, filter 220ms ease;
+}
+
+.state[data-active='true'] .nodeBeacon {
+  fill: currentColor;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.state[data-active='true'] .notchMark {
+  stroke: currentColor;
+  opacity: 0.8;
 }
 
 .state[data-active='true'].main .stateBody,
-.state[data-active='true'].terminal .stateBody,
+.state[data-active='true'].terminal .stateBody {
+  fill: rgba(200, 121, 61, 0.12);
+  stroke: #e5985b;
+  filter: drop-shadow(0 0 14px rgba(200, 121, 61, 0.4));
+}
+
 .state[data-active='true'].terminal .terminalRing {
-  fill: #102a26;
-  stroke: #71e7c3;
-  filter: drop-shadow(0 0 9px rgb(113 231 195 / 42%));
+  stroke: #e5985b;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 12px rgba(200, 121, 61, 0.35));
 }
 
 .state[data-active='true'].violet .stateBody {
-  fill: #211b38;
-  stroke: #a78bfa;
-  filter: drop-shadow(0 0 9px rgb(167 139 250 / 42%));
+  fill: rgba(69, 214, 196, 0.12);
+  stroke: #45d6c4;
+  filter: drop-shadow(0 0 14px rgba(69, 214, 196, 0.45));
 }
 
 .state[data-active='true'].muted .stateBody {
-  fill: #1b2329;
-  stroke: #9aa6af;
-  filter: drop-shadow(0 0 7px rgb(154 166 175 / 30%));
+  fill: rgba(148, 163, 184, 0.08);
+  stroke: #94a3b8;
+  filter: drop-shadow(0 0 8px rgba(148, 163, 184, 0.25));
 }
 
 .stateLabel,
@@ -125,36 +336,105 @@
 }
 
 .stateLabel {
-  fill: #e8eef2;
-  font-size: 15px;
-  font-weight: 720;
+  fill: #f8fafc;
+  font-size: 13.5px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+:global(.light) .stateLabel {
+  fill: #0f172a;
 }
 
 .stateCaption {
-  fill: #8e9ba5;
-  font-size: 9px;
-  font-weight: 750;
-  letter-spacing: 0.13em;
+  fill: #8b95a5;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+:global(.light) .stateCaption {
+  fill: #64748b;
 }
 
 .main {
-  color: #71e7c3;
-  fill: #71e7c3;
+  color: #e5985b;
+  fill: #e5985b;
 }
 
 .violet {
-  color: #a78bfa;
-  fill: #a78bfa;
+  color: #45d6c4;
+  fill: #45d6c4;
 }
 
 .terminal {
-  color: #71e7c3;
-  fill: #71e7c3;
+  color: #e5985b;
+  fill: #e5985b;
 }
 
 .muted {
-  color: #87949e;
-  fill: #87949e;
+  color: #94a3b8;
+  fill: #94a3b8;
+}
+
+.telemetryBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 0.72rem;
+}
+
+:global(.light) .telemetryBar {
+  border-top-color: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.telemetryIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.telemetryDot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: var(--color-violet);
+  box-shadow: 0 0 8px var(--color-violet);
+  flex-shrink: 0;
+}
+
+.telemetryText {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.telemetrySignalMeter {
+  display: flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 12px;
+}
+
+.meterBar {
+  width: 2.5px;
+  border-radius: 1px;
+  background: var(--color-violet);
+  opacity: 0.7;
+}
+
+.meterLabel {
+  margin-left: 4px;
+  color: var(--color-violet);
+  font-family: monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 @keyframes travel {
@@ -163,16 +443,47 @@
   }
 }
 
+@keyframes aura-breathe {
+  from {
+    transform: scale(0.95);
+    opacity: 0.75;
+  }
+  to {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .edgePulse,
+  .edgeGlow,
   .edgeLabel,
   .stateBody,
-  .terminalRing {
+  .terminalRing,
+  .nodeBeacon,
+  .activeAura {
     transition: none;
   }
 
-  .edge[data-active='true'] .edgePulse {
+  .edge[data-active='true'] .edgePulse,
+  .edge[data-active='true'] .edgeGlow {
     animation: none;
     stroke-dasharray: none;
+  }
+
+  .livePulse::after,
+  .state[data-active='true'] .activeAura {
+    animation: none;
   }
 }

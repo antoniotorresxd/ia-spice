@@ -14,6 +14,7 @@ vi.mock('better-auth/react', () => ({
 }))
 
 import App from './App'
+import { ThemeProvider } from './lib/theme'
 
 const session = {
   session: {
@@ -94,7 +95,9 @@ function stubWorkspaceFetch() {
         ? workspaceSnapshot
         : url.includes('/projects/')
           ? { ...workspaceSnapshot.projects[0], conversations: workspaceSnapshot.conversations }
-          : conversationDetail
+          : url.includes('/files')
+            ? []
+            : conversationDetail
       return new Response(JSON.stringify(body), {
         status: 200,
         headers: { 'content-type': 'application/json' },
@@ -122,7 +125,7 @@ afterEach(() => {
 it('shows a busy preparation state while the session is pending', () => {
   setSessionState({ data: null, isPending: true })
 
-  render(<App />)
+  render(<App />, { wrapper: ThemeProvider })
 
   expect(screen.getByRole('main')).toHaveAttribute('aria-busy', 'true')
   expect(screen.getByText('Preparando tu espacio…')).toBeVisible()
@@ -131,7 +134,7 @@ it('shows a busy preparation state while the session is pending', () => {
 it('shows the real authentication experience without a session', () => {
   setSessionState({ data: null })
 
-  render(<App />)
+  render(<App />, { wrapper: ThemeProvider })
 
   expect(
     screen.getByRole('region', { name: 'Acceso a SPICE' }),
@@ -143,7 +146,7 @@ it('shows the Ecosistema Multiagente home with a session', async () => {
   const user = userEvent.setup()
   setSessionState({ data: session })
 
-  render(<App />)
+  render(<App />, { wrapper: ThemeProvider })
 
   expect(await screen.findByText('Ecosistema Multiagente')).toBeVisible()
   await user.click(screen.getByRole('button', { name: 'Perfil de Ada Lovelace' }))
@@ -160,7 +163,7 @@ it.each([
   window.history.pushState({}, '', path)
   setSessionState({ data: session })
 
-  render(<App />)
+  render(<App />, { wrapper: ThemeProvider })
 
   expect(await screen.findByRole('heading', { name: heading })).toBeVisible()
 })
@@ -171,17 +174,17 @@ it.each([
   ['/projects/project-filters', 'Filtros analógicos'],
   ['/conversations', 'Conversaciones'],
   ['/conversations/conversation-filter', 'Detalle de la conversación'],
-  ['/files', 'Archivos'],
+  ['/files', /Archivos/],
   ['/executions', 'Ejecuciones'],
 ])('renders workspace route %s for authenticated users', async (path, heading) => {
   window.history.pushState({}, '', path)
   setSessionState({ data: session })
 
-  render(<App />)
+  render(<App />, { wrapper: ThemeProvider })
 
   expect(await screen.findByRole('heading', { name: heading })).toBeVisible()
   expect(screen.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible()
-  if (path === '/files' || path === '/executions') {
+  if (path === '/executions') {
     expect(screen.getByText('Próximamente')).toBeVisible()
   }
 })
@@ -190,7 +193,7 @@ it('redirects unknown authenticated routes home', async () => {
   window.history.pushState({}, '', '/unknown')
   setSessionState({ data: session })
 
-  render(<App />)
+  render(<App />, { wrapper: ThemeProvider })
 
   expect(
     await screen.findByRole('heading', { name: /buenos días/i }),
@@ -201,7 +204,7 @@ it('delegates sign-out through the authentication service', async () => {
   const user = userEvent.setup()
   setSessionState({ data: session })
 
-  render(<App />)
+  render(<App />, { wrapper: ThemeProvider })
   await user.click(await screen.findByRole('button', { name: 'Perfil de Ada Lovelace' }))
   await user.click(screen.getByRole('menuitem', { name: 'Cerrar sesión' }))
 
@@ -215,7 +218,7 @@ it('shows a safe inline error when sign-out fails', async () => {
   )
   setSessionState({ data: session })
 
-  render(<App />)
+  render(<App />, { wrapper: ThemeProvider })
   await user.click(await screen.findByRole('button', { name: 'Perfil de Ada Lovelace' }))
   await user.click(screen.getByRole('menuitem', { name: 'Cerrar sesión' }))
 

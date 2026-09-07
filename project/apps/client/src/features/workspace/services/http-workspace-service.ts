@@ -76,6 +76,18 @@ export function createHttpWorkspaceService(options: Options = {}): WorkspaceServ
     async restoreConversationProject(conversationId, projectId): Promise<WorkspaceConversation> {
       return move(conversationId, projectId)
     },
+
+    async deleteProject(projectId): Promise<void> {
+      await request(`/api/workspace/projects/${projectId}`, { method: 'DELETE' })
+    },
+
+    async deleteConversation(conversationId): Promise<void> {
+      await request(`/api/workspace/conversations/${conversationId}`, { method: 'DELETE' })
+    },
+
+    async getFiles() {
+      return request('/api/workspace/files')
+    },
   }
 }
 

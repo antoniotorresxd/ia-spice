@@ -7,7 +7,7 @@ import env from "@/lib/env";
 import { requireAuth } from "@/middleware/session";
 
 import { AGENT_IDS, type AgentId } from "./llm.model";
-import { probeConnection } from "./llm.providers";
+import { fetchConnectionModels, probeConnection } from "./llm.providers";
 import {
   agentIdSchema,
   createConnectionSchema,
@@ -87,6 +87,23 @@ export const llmRouter = createRouter()
     await recordConnectionTest(userId, row.id, result.ok ? "ok" : "failed");
     // 200 siempre: es un diagnóstico, no un fallo de la petición.
     return c.json(result);
+  })
+  .get("/api/llm/connections/:id/models", requireAuth, async (c) => {
+    const { id: userId } = c.get("user")!;
+    const row = await getConnection(userId, c.req.param("id"));
+    if (!row) return c.json({ error: "Not Found", models: [] }, 404);
+
+    const credentials = await getConnectionCredentials(userId, row.id);
+    const result = await fetchConnectionModels({
+      provider: row.provider,
+      apiKey: credentials?.apiKey ?? null,
+      baseUrl: row.baseUrl,
+    });
+
+    if (!result.ok) {
+      return c.json({ error: result.error, models: [] }, 200);
+    }
+    return c.json({ models: result.models }, 200);
   })
   .get("/api/llm/assignments", requireAuth, async (c) => {
     const { id: userId } = c.get("user")!;

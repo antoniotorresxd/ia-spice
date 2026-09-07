@@ -14,6 +14,7 @@ import { ProjectsScreen } from './features/workspace/components/ProjectsScreen'
 import { ProjectScreen } from './features/workspace/components/ProjectScreen'
 import { ConversationsScreen } from './features/workspace/components/ConversationsScreen'
 import { ConversationScreen } from './features/workspace/components/ConversationScreen'
+import { FilesScreen } from './features/workspace/components/FilesScreen'
 import { httpWorkspaceService } from './features/workspace/services/http-workspace-service'
 import './App.css'
 
@@ -35,7 +36,7 @@ function App() {
     const result = await authService.signOut()
 
     if (!result.ok) {
-      throw new Error(result.message)
+      throw new Error('message' in result ? (result as { message: string }).message : 'Error al cerrar sesión')
     }
   }
 
@@ -63,6 +64,7 @@ function App() {
             <HomeScreen
               onSignOut={handleSignOut}
               service={mockHomeService}
+              workspaceService={workspaceService}
               userName={session.user.name}
             />
           }
@@ -99,7 +101,7 @@ function App() {
           <Route path="/projects/:projectId" element={<ProjectScreen service={workspaceService} />} />
           <Route path="/conversations" element={<ConversationsScreen service={workspaceService} />} />
           <Route path="/conversations/:conversationId" element={<ConversationScreen service={workspaceService} />} />
-          <Route path="/files" element={<UpcomingScreen heading="Archivos" />} />
+          <Route path="/files" element={<FilesScreen service={workspaceService} />} />
           <Route path="/executions" element={<UpcomingScreen heading="Ejecuciones" />} />
         </Route>
         <Route path="*" element={<Navigate replace to="/" />} />

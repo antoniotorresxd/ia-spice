@@ -10,3 +10,5 @@ temp/*
 *.tmp
 # Variables del compose
 project/.env
+.aider*
+graphify-out/

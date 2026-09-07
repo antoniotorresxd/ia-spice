@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { ArrowRight, Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
 
 import {
   EMPTY_AUTH_FORM,
@@ -65,7 +66,9 @@ export function AuthForm({ service }: AuthFormProps) {
               password: values.password,
             })
 
-      if (!result.ok) setFormError(result.message)
+      if (result.ok === false) {
+        setFormError(result.message)
+      }
     } finally {
       setPending(false)
     }
@@ -78,7 +81,9 @@ export function AuthForm({ service }: AuthFormProps) {
     setPending(true)
     try {
       const result = await service.signInWithProvider(provider)
-      if (!result.ok) setFormError(result.message)
+      if (result.ok === false) {
+        setFormError(result.message)
+      }
     } finally {
       setPending(false)
     }
@@ -88,13 +93,37 @@ export function AuthForm({ service }: AuthFormProps) {
 
   return (
     <section aria-labelledby="auth-title" className={styles.root}>
+      {/* Segmented Tab Switcher */}
+      <div className={styles.tabSwitcher} role="tablist" aria-label="Modo de autenticación">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'sign-in'}
+          className={`${styles.tabButton} ${mode === 'sign-in' ? styles.tabButtonActive : ''}`}
+          onClick={() => switchMode('sign-in')}
+          disabled={pending}
+        >
+          Iniciar sesión
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'sign-up'}
+          className={`${styles.tabButton} ${mode === 'sign-up' ? styles.tabButtonActive : ''}`}
+          onClick={() => switchMode('sign-up')}
+          disabled={pending}
+        >
+          Crear cuenta
+        </button>
+      </div>
+
       <h2 className={styles.title} id="auth-title">
         {mode === 'sign-in' ? 'Inicia sesión' : 'Crea tu cuenta'}
       </h2>
       <p className={styles.subtitle}>
         {mode === 'sign-in'
-          ? 'Continúa diseñando con tu equipo de agentes.'
-          : 'Crea tu espacio para diseñar y validar circuitos.'}
+          ? 'Continúa diseñando con tu equipo de agentes autónomos.'
+          : 'Crea tu espacio para diseñar y validar circuitos con ngspice.'}
       </p>
 
       <SocialAuthButtons disabled={pending} onProvider={submitProvider} />
@@ -107,16 +136,20 @@ export function AuthForm({ service }: AuthFormProps) {
             <label className={styles.label} htmlFor="name">
               Nombre
             </label>
-            <input
-              className={styles.input}
-              id="name"
-              name="name"
-              autoComplete="name"
-              value={values.name}
-              onChange={updateField('name')}
-              aria-invalid={Boolean(errors.name)}
-              aria-describedby={describedBy('name')}
-            />
+            <div className={styles.inputWrapper}>
+              <User aria-hidden="true" className={styles.inputIcon} size={17} />
+              <input
+                className={styles.input}
+                id="name"
+                name="name"
+                autoComplete="name"
+                placeholder="Ada Lovelace"
+                value={values.name}
+                onChange={updateField('name')}
+                aria-invalid={Boolean(errors.name)}
+                aria-describedby={describedBy('name')}
+              />
+            </div>
             {errors.name && (
               <p className={styles.fieldError} id="name-error">
                 {errors.name}
@@ -129,17 +162,21 @@ export function AuthForm({ service }: AuthFormProps) {
           <label className={styles.label} htmlFor="email">
             Correo electrónico
           </label>
-          <input
-            className={styles.input}
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            value={values.email}
-            onChange={updateField('email')}
-            aria-invalid={Boolean(errors.email)}
-            aria-describedby={describedBy('email')}
-          />
+          <div className={styles.inputWrapper}>
+            <Mail aria-hidden="true" className={styles.inputIcon} size={17} />
+            <input
+              className={styles.input}
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="tu@ingenieria.com"
+              value={values.email}
+              onChange={updateField('email')}
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={describedBy('email')}
+            />
+          </div>
           {errors.email && (
             <p className={styles.fieldError} id="email-error">
               {errors.email}
@@ -152,17 +189,21 @@ export function AuthForm({ service }: AuthFormProps) {
             Contraseña
           </label>
           <div className={styles.passwordControl}>
-            <input
-              className={styles.input}
-              id="password"
-              name="password"
-              type={passwordVisible ? 'text' : 'password'}
-              autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
-              value={values.password}
-              onChange={updateField('password')}
-              aria-invalid={Boolean(errors.password)}
-              aria-describedby={describedBy('password')}
-            />
+            <div className={styles.inputWrapper}>
+              <Lock aria-hidden="true" className={styles.inputIcon} size={17} />
+              <input
+                className={`${styles.input} ${styles.inputWithToggle}`}
+                id="password"
+                name="password"
+                type={passwordVisible ? 'text' : 'password'}
+                autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+                placeholder="••••••••"
+                value={values.password}
+                onChange={updateField('password')}
+                aria-invalid={Boolean(errors.password)}
+                aria-describedby={describedBy('password')}
+              />
+            </div>
             <button
               className={styles.passwordToggle}
               type="button"
@@ -170,7 +211,11 @@ export function AuthForm({ service }: AuthFormProps) {
               aria-pressed={passwordVisible}
               onClick={() => setPasswordVisible((visible) => !visible)}
             >
-              {passwordVisible ? 'Ocultar' : 'Mostrar'}
+              {passwordVisible ? (
+                <EyeOff size={16} aria-hidden="true" />
+              ) : (
+                <Eye size={16} aria-hidden="true" />
+              )}
             </button>
           </div>
           {errors.password && (
@@ -185,17 +230,21 @@ export function AuthForm({ service }: AuthFormProps) {
             <label className={styles.label} htmlFor="confirmPassword">
               Confirmar contraseña
             </label>
-            <input
-              className={styles.input}
-              id="confirmPassword"
-              name="confirmPassword"
-              type={passwordVisible ? 'text' : 'password'}
-              autoComplete="new-password"
-              value={values.confirmPassword}
-              onChange={updateField('confirmPassword')}
-              aria-invalid={Boolean(errors.confirmPassword)}
-              aria-describedby={describedBy('confirmPassword')}
-            />
+            <div className={styles.inputWrapper}>
+              <Lock aria-hidden="true" className={styles.inputIcon} size={17} />
+              <input
+                className={styles.input}
+                id="confirmPassword"
+                name="confirmPassword"
+                type={passwordVisible ? 'text' : 'password'}
+                autoComplete="new-password"
+                placeholder="••••••••"
+                value={values.confirmPassword}
+                onChange={updateField('confirmPassword')}
+                aria-invalid={Boolean(errors.confirmPassword)}
+                aria-describedby={describedBy('confirmPassword')}
+              />
+            </div>
             {errors.confirmPassword && (
               <p className={styles.fieldError} id="confirmPassword-error">
                 {errors.confirmPassword}
@@ -205,7 +254,10 @@ export function AuthForm({ service }: AuthFormProps) {
         )}
 
         <button className={styles.submit} type="submit" disabled={pending}>
-          {mode === 'sign-in' ? 'Iniciar sesión' : 'Crear cuenta'}
+          <span className={styles.submitText}>
+            {mode === 'sign-in' ? 'Iniciar sesión' : 'Crear cuenta'}
+          </span>
+          <ArrowRight className={styles.submitIcon} size={16} aria-hidden="true" />
         </button>
       </form>
 

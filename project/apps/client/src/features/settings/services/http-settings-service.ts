@@ -94,6 +94,15 @@ export function createHttpSettingsService(options: Options = {}): SettingsServic
       })
     },
 
+    async listConnectionModels(id): Promise<string[]> {
+      try {
+        const res = await request<{ models: string[]; error?: string }>(`/api/llm/connections/${id}/models`)
+        return res.models ?? []
+      } catch {
+        return []
+      }
+    },
+
     async listAgentAssignments(): Promise<AgentAssignment[]> {
       const rows = await request<
         { agentId: AgentId; connectionId: string | null; model: string }[]

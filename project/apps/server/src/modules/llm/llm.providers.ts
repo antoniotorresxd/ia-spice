@@ -77,3 +77,44 @@ export async function probeConnection(
     return { ok: false, error: "No se pudo alcanzar al proveedor." };
   }
 }
+
+export async function fetchConnectionModels(
+  input: ProbeInput,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ ok: true; models: string[] } | { ok: false; error: string }> {
+  const request = buildProbeRequest(input);
+  if (!request) {
+    return { ok: false, error: "Falta la credencial o URL base que este proveedor requiere." };
+  }
+
+  try {
+    const response = await fetchImpl(request.url, {
+      method: "GET",
+      headers: request.headers,
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!response.ok) {
+      return { ok: false, error: `El proveedor respondió ${response.status}.` };
+    }
+
+    const body = (await response.json()) as any;
+    const modelList: string[] = [];
+
+    if (Array.isArray(body?.data)) {
+      for (const item of body.data) {
+        if (typeof item?.id === "string") modelList.push(item.id);
+      }
+    } else if (Array.isArray(body?.models)) {
+      for (const item of body.models) {
+        if (typeof item?.name === "string") modelList.push(item.name.replace(/^models\//, ""));
+        else if (typeof item?.id === "string") modelList.push(item.id);
+      }
+    }
+
+    return { ok: true, models: modelList };
+  } catch {
+    return { ok: false, error: "No se pudo alcanzar al proveedor." };
+  }
+}
+

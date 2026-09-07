@@ -13,9 +13,12 @@ import {
   appendUserMessage,
   createConversationWithRequest,
   createProject,
+  deleteConversation,
+  deleteProject,
   getConversationDetail,
   getProjectDetail,
   getSnapshot,
+  listUserFiles,
   makeDbSink,
   moveConversation,
 } from "./workspace.services";
@@ -106,4 +109,20 @@ export const workspaceRouter = createRouter()
     const summary = await moveConversation(userId, c.req.param("id"), parsed.data.projectId);
     if (!summary) return c.json({ error: "Not Found" }, 404);
     return c.json(summary);
+  })
+  .delete("/api/workspace/projects/:id", requireAuth, async (c) => {
+    const { id: userId } = c.get("user")!;
+    const deleted = await deleteProject(userId, c.req.param("id"));
+    if (!deleted) return c.json({ error: "Not Found" }, 404);
+    return c.json({ success: true, id: deleted.id });
+  })
+  .delete("/api/workspace/conversations/:id", requireAuth, async (c) => {
+    const { id: userId } = c.get("user")!;
+    const deleted = await deleteConversation(userId, c.req.param("id"));
+    if (!deleted) return c.json({ error: "Not Found" }, 404);
+    return c.json({ success: true, id: deleted.id });
+  })
+  .get("/api/workspace/files", requireAuth, async (c) => {
+    const { id: userId } = c.get("user")!;
+    return c.json(await listUserFiles(userId));
   });

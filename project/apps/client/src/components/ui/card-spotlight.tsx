@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 export function CardSpotlight({
   children,
   radius = 350,
-  color = "rgba(114, 226, 198, 0.12)",
+  color = "var(--color-mint-dim)",
   className,
   ...props
 }: {
@@ -30,7 +30,7 @@ export function CardSpotlight({
   return (
     <div
       className={cn(
-        "group/spotlight relative rounded-xl border border-white/[0.08] bg-[#0c1017]/90 p-6 shadow-sm backdrop-blur-md transition-colors hover:border-white/[0.16]",
+        "group/spotlight relative rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm backdrop-blur-md transition-colors hover:border-[var(--color-border-hover)] focus-within:border-[var(--ring)] motion-reduce:transition-none",
         className
       )}
       onMouseMove={handleMouseMove}
@@ -39,7 +39,8 @@ export function CardSpotlight({
       {...props}
     >
       <motion.div
-        className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition duration-300 group-hover/spotlight:opacity-100"
+        aria-hidden="true"
+        className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition duration-300 group-hover/spotlight:opacity-100 group-focus-within/spotlight:opacity-100 motion-reduce:hidden"
         style={{
           backgroundColor: isHovering ? "transparent" : undefined,
           background: useMotionTemplate`

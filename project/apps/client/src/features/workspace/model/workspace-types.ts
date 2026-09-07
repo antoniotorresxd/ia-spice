@@ -21,6 +21,17 @@ export type WorkspaceFile = {
   status: 'complete' | 'partial'
 }
 
+export type WorkspaceFileItem = {
+  id: string
+  conversationId: string
+  name: string
+  language: string
+  status: 'complete' | 'partial'
+  createdAt: string
+  conversationTitle: string
+  projectId: string | null
+}
+
 export type WorkspaceConversation = {
   id: string
   projectId: string | null

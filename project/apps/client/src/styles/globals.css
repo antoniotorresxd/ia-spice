@@ -7,7 +7,7 @@
 html {
   min-width: 320px;
   min-height: 100%;
-  color-scheme: dark;
+  color-scheme: var(--theme-color-scheme);
   background: var(--color-bg);
   font-family: var(--font-sans);
   font-synthesis: none;
@@ -25,8 +25,8 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(114, 226, 198, 0.07), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(155, 140, 255, 0.04), transparent);
+    radial-gradient(ellipse 80% 50% at 50% -20%, var(--body-glow-mint), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 90%, var(--body-glow-mint), transparent);
   background-attachment: fixed;
 }
 
@@ -46,8 +46,8 @@ button {
 }
 
 ::selection {
-  background: rgba(114, 226, 198, 0.25);
-  color: #ffffff;
+  background: var(--selection-background);
+  color: var(--foreground);
 }
 
 :focus-visible {
@@ -66,12 +66,12 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--scrollbar-thumb);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--scrollbar-thumb-hover);
 }
 
 @media (prefers-reduced-motion: reduce) {
