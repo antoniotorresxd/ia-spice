@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from agents.config import get_config
 
@@ -109,6 +109,19 @@ class CircuitSpec(BaseModel):
     tolerance: float = Field(
         default_factory=lambda: get_config()["curador"]["tolerance"], gt=0
     )
+
+    @field_validator("max_iterations")
+    @classmethod
+    def _max_iterations_dentro_del_limite(cls, v: int) -> int:
+        # ge=1 en el Field de arriba no pone techo. Sin este límite, una
+        # extracción del LLM (o un circuit_spec estructurado) que pida un
+        # número grande deja correr el lazo del curador sin freno real: con
+        # temperature=0, una reparación que no logra avanzar se repite
+        # idéntica hasta agotar lo que se le haya dado, no los 5 del default.
+        limite = get_config()["curador"]["max_iterations_cap"]
+        if v > limite:
+            raise ValueError(f"max_iterations ({v}) supera el límite configurado ({limite})")
+        return v
 
     @model_validator(mode="after")
     def _unique_block_ids(self):

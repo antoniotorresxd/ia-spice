@@ -236,6 +236,7 @@ def test_max_iterations_and_tolerance_come_from_the_config(tmp_path, monkeypatch
                     "reject_reward": -50.0,
                     "accept_tolerance_slack": 1.5,
                     "max_iterations": 9,
+                    "max_iterations_cap": 10,
                     "tolerance": 0.02,
                 },
                 "calculo": {
@@ -286,6 +287,45 @@ def test_the_caller_can_still_override_what_the_config_proposes(tmp_path, monkey
 
     assert spec.max_iterations == 2
     assert spec.tolerance == 0.1
+
+
+def test_max_iterations_no_puede_superar_el_limite_configurado():
+    """Sin techo, una extracción del LLM (o un circuit_spec estructurado) que
+    pida un número grande deja correr el lazo del curador sin freno real: el
+    bug que lo motivó fue un bloque genérico reparándose 60 veces con
+    temperature=0 sin cambiar nunca nada."""
+    from pydantic import ValidationError
+
+    from agents.orquestador.schema import CircuitSpec
+
+    with pytest.raises(ValidationError, match="max_iterations"):
+        CircuitSpec.model_validate(
+            {
+                "blocks": [
+                    {
+                        "id": "div1",
+                        "type": "voltage_divider",
+                        "params": {"v_in": 5.0, "v_out": 3.3},
+                    }
+                ],
+                "max_iterations": 60,
+            }
+        )
+
+
+def test_max_iterations_igual_al_limite_configurado_se_acepta():
+    from agents.orquestador.schema import CircuitSpec
+
+    spec = CircuitSpec.model_validate(
+        {
+            "blocks": [
+                {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+            ],
+            "max_iterations": 10,
+        }
+    )
+
+    assert spec.max_iterations == 10
 
 
 def test_noninverting_amp_block_is_accepted_and_gets_its_goal():

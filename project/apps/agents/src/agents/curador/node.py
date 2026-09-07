@@ -185,7 +185,16 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
             except (LlmSettingsError, ReparacionError) as exc:
                 reparaciones_fallidas.append(f"{bid}: {exc}")
             else:
-                adjusted[bid] = {"netlist": nuevo_netlist}
+                # repair_netlist ya reintenta una vez internamente si el
+                # primer intento no cambia nada; si ni así avanzó, seguir
+                # ajustando gastaría el resto de las iteraciones repitiendo
+                # el mismo netlist roto.
+                if nuevo_netlist.strip() == values["netlist"].strip():
+                    reparaciones_fallidas.append(
+                        f"{bid}: el modelo no logró corregir el netlist tras reintentarlo"
+                    )
+                else:
+                    adjusted[bid] = {"netlist": nuevo_netlist}
         elif status == "error":
             adjusted[bid] = perturb(values)
         else:

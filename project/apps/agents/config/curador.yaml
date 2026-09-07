@@ -41,6 +41,13 @@ curador:
   max_iterations: 5
   tolerance: 0.05
 
+  # Techo absoluto para max_iterations, incluso si el LLM del orquestador (o
+  # un circuit_spec estructurado) pide más. Sin esto, la extracción decide el
+  # límite real del lazo del curador, no este archivo: con temperature=0 en
+  # la reparación de bloques genéricos, un intento que no logra avanzar se
+  # repite idéntico hasta agotar lo que se le haya dado, no los 5 de arriba.
+  max_iterations_cap: 10
+
 calculo:
   r1_default: 1000.0
   r_rc_default: 1000.0

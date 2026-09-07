@@ -454,6 +454,88 @@ def test_adjust_noninverting_amp_solves_rf_exactly():
     assert values["rg"] == 1000.0
 
 
+def _generic_state(netlist, sim_results, iteration=0, max_iterations=5):
+    return {
+        "circuit_spec": {},
+        "request_text": None,
+        "normalized_spec": {
+            "blocks": [
+                {
+                    "id": "gen1",
+                    "type": "generic",
+                    "params": {
+                        "description": "algo fuera del catálogo",
+                        "metric": "v_out",
+                        "target": 5.0,
+                    },
+                    "goal": {"metric": "v_out", "target": 5.0, "tolerance": 0.05},
+                },
+            ],
+            "max_iterations": max_iterations,
+        },
+        "pending_blocks": ["gen1"],
+        "component_values": {"gen1": {"netlist": netlist}},
+        "netlists": {},
+        "sim_results": sim_results,
+        "iteration": iteration,
+        "history": [],
+        "verdict": None,
+    }
+
+
+def test_curador_rejects_a_generic_block_whose_repair_did_not_change_anything(monkeypatch):
+    """repair_netlist ya reintenta una vez internamente (ver test_reparacion.py);
+    si ni así avanzó, seguir ajustando gastaría el resto de las iteraciones
+    repitiendo el mismo netlist roto en vez de decir por qué se rindió."""
+    netlist_roto = "* roto\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+
+    import agents.curador.node as curador_module
+
+    monkeypatch.setattr(
+        curador_module,
+        "reparar_netlist_del_bloque",
+        lambda block, values, sim_result, config: values["netlist"],
+        raising=False,
+    )
+
+    result = curador_node(
+        _generic_state(
+            netlist_roto,
+            {"gen1": {"metrics": None, "converged": False, "sim_error": "boom"}},
+        )
+    )
+
+    assert result["verdict"]["status"] == "rejected"
+    assert "gen1" in result["verdict"]["reason"]
+    assert "no logró corregir" in result["verdict"]["reason"]
+    # se rindió en la primera vuelta, no gastó las iteraciones que quedaban
+    assert len(result["history"]) == 1
+
+
+def test_curador_accepts_a_generic_block_whose_repair_changed_something(monkeypatch):
+    netlist_roto = "* roto\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+    netlist_corregido = "* corregido\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+
+    import agents.curador.node as curador_module
+
+    monkeypatch.setattr(
+        curador_module,
+        "reparar_netlist_del_bloque",
+        lambda block, values, sim_result, config: netlist_corregido,
+        raising=False,
+    )
+
+    result = curador_node(
+        _generic_state(
+            netlist_roto,
+            {"gen1": {"metrics": None, "converged": False, "sim_error": "boom"}},
+        )
+    )
+
+    assert "verdict" not in result
+    assert result["component_values"]["gen1"]["netlist"] == netlist_corregido
+
+
 def test_adjust_noninverting_amp_guards_against_nonpositive_actual():
     values = ADJUST_RULES["noninverting_amp"](
         {"rg": 1000.0, "rf": 2000.0}, target=4.0, actual=0.0

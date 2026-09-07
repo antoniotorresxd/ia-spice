@@ -73,6 +73,21 @@ def _resultado_medicion(metric: str, measured: float | None, sim_error: str | No
     return f"Se midió {metric} = {measured}"
 
 
+# Con temperature=0 (config/curador.yaml) el modelo es determinista: si el
+# primer intento no cambia nada, mandarle exactamente el mismo mensaje otra
+# vez produce exactamente la misma respuesta rota, para siempre. Este texto
+# cambia la entrada lo suficiente para que la segunda pasada no sea un calco
+# de la primera, en vez de dejar que el lazo del curador lo repita en
+# silencio hasta agotar max_iterations.
+_RETRY_HINT = (
+    "\n\nTu intento anterior devolvió exactamente el mismo netlist y el "
+    "problema sigue igual. No repitas la misma respuesta: revisá si algún "
+    "parámetro o nombre de modelo que usaste existe de verdad en ngspice "
+    "(por ejemplo, un diodo no tiene los mismos parámetros que un "
+    "transistor), y proponé un cambio estructural distinto."
+)
+
+
 def repair_netlist(
     chat_model,
     *,
@@ -86,29 +101,37 @@ def repair_netlist(
     """Le pide al modelo un netlist corregido, dado lo que se midió (o el
     error de simulación) contra la meta declarada.
 
-    Devuelve el netlist corregido como texto. Cualquier fallo del modelo se
-    tipa como `ReparacionError`, igual que `extract_circuit_spec` tipa los
-    suyos como `ExtractionError`.
+    Si el primer intento devuelve el netlist sin cambios, reintenta una vez
+    con una indicación explícita de que no avanzó. Devuelve el netlist
+    corregido como texto (el del reintento si hizo falta, si no el del primer
+    intento). Cualquier fallo del modelo se tipa como `ReparacionError`,
+    igual que `extract_circuit_spec` tipa los suyos como `ExtractionError`.
     """
-    user_content = (
-        f"Circuito: {description}\n"
-        f"Meta: {metric} = {target}\n"
-        f"{_resultado_medicion(metric, measured, sim_error)}\n\n"
-        f"Netlist actual:\n{netlist}"
-    )
 
-    structured_model = chat_model.with_structured_output(NetlistReparado)
-    try:
-        result = structured_model.invoke(
-            [
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user", "content": user_content},
-            ]
+    def _pedir(extra: str) -> str:
+        user_content = (
+            f"Circuito: {description}\n"
+            f"Meta: {metric} = {target}\n"
+            f"{_resultado_medicion(metric, measured, sim_error)}\n\n"
+            f"Netlist actual:\n{netlist}"
+            f"{extra}"
         )
-    except Exception as exc:  # noqa: BLE001 - cualquier fallo del LLM se tipa
-        raise ReparacionError(f"LLM repair failed: {exc}") from exc
+        structured_model = chat_model.with_structured_output(NetlistReparado)
+        try:
+            result = structured_model.invoke(
+                [
+                    {"role": "system", "content": _SYSTEM_PROMPT},
+                    {"role": "user", "content": user_content},
+                ]
+            )
+        except Exception as exc:  # noqa: BLE001 - cualquier fallo del LLM se tipa
+            raise ReparacionError(f"LLM repair failed: {exc}") from exc
 
-    if not isinstance(result, NetlistReparado):
-        raise ReparacionError(f"LLM returned unexpected type: {type(result)}")
+        if not isinstance(result, NetlistReparado):
+            raise ReparacionError(f"LLM returned unexpected type: {type(result)}")
+        return result.netlist
 
-    return result.netlist
+    propuesta = _pedir("")
+    if propuesta.strip() == netlist.strip():
+        propuesta = _pedir(_RETRY_HINT)
+    return propuesta

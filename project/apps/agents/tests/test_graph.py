@@ -389,6 +389,49 @@ def test_un_bloque_generico_fuera_de_meta_se_repara_y_converge(monkeypatch):
     assert final["sim_results"]["gen1"]["metrics"]["v_out"] == pytest.approx(5.0, rel=0.01)
 
 
+def test_un_generico_cuyo_modelo_repite_el_mismo_netlist_se_rechaza_sin_agotar_iteraciones(
+    monkeypatch,
+):
+    """El bug real: con temperature=0, un modelo que se equivoca de
+    diagnóstico devuelve el mismo netlist roto en cada reparación. Antes eso
+    corría hasta max_iterations gastando una llamada al LLM por vuelta; ahora
+    se rinde en la primera, con un motivo legible."""
+    fuera_de_meta = (
+        "* primera version\nVinput vin 0 10.0\nR1 vin vout 1000\nR2 vout 0 2000\n"
+        ".control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+    )
+
+    import agents.curador.node as curador_module
+
+    monkeypatch.setattr(
+        curador_module,
+        "reparar_netlist_del_bloque",
+        lambda block, values, sim_result, config: values["netlist"],
+        raising=False,
+    )
+
+    spec = {
+        "blocks": [
+            {
+                "id": "gen1",
+                "type": "generic",
+                "params": {
+                    "description": "un divisor resistivo",
+                    "metric": "v_out",
+                    "target": 5.0,
+                    "netlist": fuera_de_meta,
+                },
+            }
+        ]
+    }
+
+    final = _run(spec, "e2e-generico-se-repite")
+
+    assert final["verdict"]["status"] == "rejected"
+    assert "no logró corregir" in final["verdict"]["reason"]
+    assert len(final["history"]) == 1
+
+
 def test_sin_llm_un_generico_fuera_de_meta_termina_con_un_motivo_legible():
     """Degradar tiene que ser explícito: sin modelo configurado no se puede
     reparar, y el usuario merece leer por qué en lugar de una excepción."""
