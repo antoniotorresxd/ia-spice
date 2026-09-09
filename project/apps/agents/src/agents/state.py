@@ -25,6 +25,9 @@ class CircuitState(TypedDict):
     netlists: Annotated[dict, merge_dicts]
     sim_results: Annotated[dict, merge_dicts]
 
+    # Escrito por 'documentador', keyed por block_id
+    documentation: Annotated[dict, merge_dicts]
+
     # Escrito por 'curador'
     iteration: int
     history: Annotated[list, operator.add]

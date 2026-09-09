@@ -49,6 +49,7 @@ it('renders route-aware workspace navigation and collapsed projects', async () =
   expect(screen.getByRole('link', { name: 'Proyectos' })).toHaveAttribute('href', '/projects')
   expect(screen.getByRole('link', { name: 'Archivos' })).toHaveAttribute('href', '/files')
   expect(screen.getByRole('link', { name: 'Ejecuciones' })).toHaveAttribute('href', '/executions')
+  expect(screen.getByRole('link', { name: 'Visualizador' })).toHaveAttribute('href', '/visualizer')
   expect(screen.getByRole('link', { name: 'Sin proyecto' })).toHaveAttribute('href', '/conversations')
 
   const disclosure = screen.getByRole('button', { name: 'Expandir Filtros analógicos' })

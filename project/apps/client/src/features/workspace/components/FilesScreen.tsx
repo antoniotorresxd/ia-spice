@@ -199,14 +199,26 @@ export function FilesScreen({ service }: { service: WorkspaceService }) {
                       </time>
                     </td>
                     <td>
-                      <Link
-                        to={`/conversations/${file.conversationId}`}
-                        className={styles.actionBtn}
-                        title="Ver en conversación"
-                      >
-                        <span>Ver</span>
-                        <ArrowUpRight size={13} />
-                      </Link>
+                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        {kind === 'spice' && (
+                          <Link
+                            to={`/visualizer?conversationId=${file.conversationId}&fileId=${file.id}`}
+                            className={styles.actionBtn}
+                            title="Visualizar circuito esquemático"
+                          >
+                            <span>Visualizar</span>
+                            <ArrowUpRight size={13} />
+                          </Link>
+                        )}
+                        <Link
+                          to={`/conversations/${file.conversationId}`}
+                          className={styles.actionBtn}
+                          title="Ver en conversación"
+                        >
+                          <span>Ver</span>
+                          <ArrowUpRight size={13} />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 )

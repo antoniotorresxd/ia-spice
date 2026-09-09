@@ -521,6 +521,123 @@
   gap: 1.25rem;
 }
 
+.screen .circuits {
+  display: grid;
+  gap: 1rem;
+}
+
+.screen .circuits h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.circuitCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.85rem 1.15rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  transition: border-color 0.2s ease;
+}
+
+.circuitCard:hover {
+  border-color: var(--color-border-hover);
+}
+
+.circuitCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.circuitCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.circuitCardIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(69, 214, 196, 0.1);
+  color: var(--color-mint);
+  border: 1px solid rgba(69, 214, 196, 0.2);
+}
+
+.circuitCardDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.circuitCardName {
+  font-size: 0.925rem;
+  font-weight: 650;
+  color: var(--color-text);
+}
+
+.circuitCardBadge {
+  font-size: 0.725rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: var(--color-text-muted);
+}
+
+.circuitCardActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.circuitPreviewBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 550;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.circuitPreviewBtn:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-hover);
+}
+
+.circuitOpenBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-mint);
+  background: rgba(69, 214, 196, 0.08);
+  border: 1px solid rgba(69, 214, 196, 0.25);
+  border-radius: 0.375rem;
+  padding: 0.35rem 0.75rem;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.circuitOpenBtn:hover {
+  background: rgba(69, 214, 196, 0.16);
+  border-color: rgba(69, 214, 196, 0.45);
+}
+
 .screen .scrollLatest {
   position: absolute;
   bottom: 1rem;

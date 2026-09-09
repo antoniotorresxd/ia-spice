@@ -118,6 +118,10 @@ const artifactRow = {
   language: "spice",
   content: "* divisor\nR1 in out 1k\n",
   status: "complete" as const,
+  summary: "Divide el voltaje de entrada.",
+  tags: ["divisor", "resistivo"],
+  components: { R1: "Resistencia de entrada." },
+  measurementExplanation: "Mide el voltaje de salida.",
   createdAt: new Date("2026-07-29T12:00:05Z"),
 };
 
@@ -158,6 +162,10 @@ describe("toConversationDetail", () => {
         language: "spice",
         content: "* divisor\nR1 in out 1k\n",
         status: "complete",
+        summary: "Divide el voltaje de entrada.",
+        tags: ["divisor", "resistivo"],
+        components: { R1: "Resistencia de entrada." },
+        measurementExplanation: "Mide el voltaje de salida.",
       },
     ]);
     expect(detail.execution).toEqual({
@@ -165,6 +173,27 @@ describe("toConversationDetail", () => {
       status: "completed",
       summary: "all blocks within tolerance",
     });
+  });
+
+  test("conserva los campos null de un artefacto sin documentación", () => {
+    const detail = toConversationDetail(conversationRow, messageRows, [{
+      ...artifactRow,
+      summary: null,
+      tags: null,
+      components: null,
+      measurementExplanation: null,
+    }], executionRow);
+    expect(detail.files).toEqual([{
+      id: "art-1",
+      name: "block-1.cir",
+      language: "spice",
+      content: "* divisor\nR1 in out 1k\n",
+      status: "complete",
+      summary: null,
+      tags: null,
+      components: null,
+      measurementExplanation: null,
+    }]);
   });
 
   test("sin ejecución sintetiza una fallida en lugar de romperse", () => {

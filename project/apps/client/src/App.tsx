@@ -15,6 +15,7 @@ import { ProjectScreen } from './features/workspace/components/ProjectScreen'
 import { ConversationsScreen } from './features/workspace/components/ConversationsScreen'
 import { ConversationScreen } from './features/workspace/components/ConversationScreen'
 import { FilesScreen } from './features/workspace/components/FilesScreen'
+import { VisualizerScreen } from './features/workspace/components/VisualizerScreen'
 import { httpWorkspaceService } from './features/workspace/services/http-workspace-service'
 import './App.css'
 
@@ -103,6 +104,7 @@ function App() {
           <Route path="/conversations/:conversationId" element={<ConversationScreen service={workspaceService} />} />
           <Route path="/files" element={<FilesScreen service={workspaceService} />} />
           <Route path="/executions" element={<UpcomingScreen heading="Ejecuciones" />} />
+          <Route path="/visualizer" element={<VisualizerScreen service={workspaceService} />} />
         </Route>
         <Route path="*" element={<Navigate replace to="/" />} />
       </Routes>

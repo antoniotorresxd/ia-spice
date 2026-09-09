@@ -1,4 +1,4 @@
-import { ArrowDown, Send, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUpRight, ChevronDown, ChevronUp, Cpu, Send, Trash2 } from 'lucide-react'
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 
@@ -9,6 +9,7 @@ import { useConversationPolling } from '../model/use-conversation-polling'
 import type { WorkspaceConversationDetail, WorkspaceSnapshot } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
 import styles from './ConversationScreen.module.css'
+import { NetlistDiagram } from './NetlistDiagram'
 
 const statusLabels = { active: 'En curso', completed: 'Completada', failed: 'Fallida' } as const
 
@@ -22,6 +23,7 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const [text, setText] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [pending, setPending] = useState(false)
+  const [previewFileId, setPreviewFileId] = useState<string | null>(null)
 
   const messagesRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -132,6 +134,7 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   if (loadError) return <section className={`${styles.state} ${styles.detailState}`}><h1>No encontramos esta conversación</h1><p role="alert">No encontramos esta conversación. Puede que ya no exista.</p><Link to="/conversations">Volver a conversaciones</Link></section>
   if (!conversation || !timeline) return <p aria-live="polite">Cargando conversación…</p>
   const project = snapshot?.projects.find(({ id }) => id === conversation.projectId)
+  const netlistFiles = conversation.files.filter((file) => file.language === 'spice' && file.content.trim())
 
   return (
     <article className={styles.screen}>
@@ -181,6 +184,51 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
               ))}
             </section>
             <ActivityTimeline execution={timeline} heading="Progreso de la ejecución" />
+            {netlistFiles.length ? (
+              <section aria-labelledby="circuits-title" className={styles.circuits}>
+                <h2 id="circuits-title">Circuitos generados</h2>
+                {netlistFiles.map((file) => {
+                  const isExpanded = previewFileId === file.id
+                  return (
+                    <div key={file.id} className={styles.circuitCard}>
+                      <div className={styles.circuitCardHeader}>
+                        <div className={styles.circuitCardMeta}>
+                          <div className={styles.circuitCardIcon}>
+                            <Cpu size={18} />
+                          </div>
+                          <div className={styles.circuitCardDetails}>
+                            <span className={styles.circuitCardName}>{file.name}</span>
+                            <span className={styles.circuitCardBadge}>Netlist SPICE</span>
+                          </div>
+                        </div>
+                        <div className={styles.circuitCardActions}>
+                          <button
+                            type="button"
+                            className={styles.circuitPreviewBtn}
+                            onClick={() => setPreviewFileId(isExpanded ? null : file.id)}
+                            aria-expanded={isExpanded}
+                          >
+                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                            <span>{isExpanded ? 'Ocultar esquema' : 'Vista previa'}</span>
+                          </button>
+                          <Link
+                            to={`/visualizer?conversationId=${conversation.id}&fileId=${file.id}`}
+                            className={styles.circuitOpenBtn}
+                            title="Abrir en pantalla completa en el visualizador"
+                          >
+                            <span>Abrir en Visualizador</span>
+                            <ArrowUpRight size={13} />
+                          </Link>
+                        </div>
+                      </div>
+                      {isExpanded ? (
+                        <NetlistDiagram netlistText={file.content} title={file.name} />
+                      ) : null}
+                    </div>
+                  )
+                })}
+              </section>
+            ) : null}
           </div>
         </div>
         {awayFromLatest ? (

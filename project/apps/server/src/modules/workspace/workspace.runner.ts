@@ -14,6 +14,12 @@ export type AgentsRunResult = {
   netlists: Record<string, { path: string; text: string }>;
   sim_results: Record<string, { metrics: Record<string, number> | null; sim_error: string | null }>;
   component_values: Record<string, Record<string, number>>;
+  documentation: Record<string, {
+    summary: string;
+    tags: string[];
+    components: Record<string, string>;
+    measurement_explanation: string;
+  } | null> | null;
   history: unknown[];
   iteration: number;
 };
@@ -24,6 +30,10 @@ export type ArtifactDraft = {
   language: string;
   content: string;
   status: ArtifactStatus;
+  summary: string | null;
+  tags: string[] | null;
+  components: Record<string, string> | null;
+  measurementExplanation: string | null;
 };
 
 const LLM_UNAVAILABLE_PREFIX = "llm_settings_unavailable";
@@ -52,15 +62,22 @@ export function mapVerdictToStatus(verdict: AgentsVerdict | null): {
 }
 
 export function toArtifactDrafts(result: AgentsRunResult): ArtifactDraft[] {
-  return Object.entries(result.netlists ?? {}).map(([blockId, netlist]) => ({
-    blockId,
-    name: `${blockId}.cir`,
-    language: "spice",
-    content: netlist.text,
-    // parcial cuando ngspice no pudo medir ese bloque: el netlist existe,
-    // la validación no
-    status: result.sim_results?.[blockId]?.sim_error == null ? "complete" : "partial",
-  }));
+  return Object.entries(result.netlists ?? {}).map(([blockId, netlist]) => {
+    const documentation = result.documentation?.[blockId];
+    return {
+      blockId,
+      name: `${blockId}.cir`,
+      language: "spice",
+      content: netlist.text,
+      // parcial cuando ngspice no pudo medir ese bloque: el netlist existe,
+      // la validación no
+      status: result.sim_results?.[blockId]?.sim_error == null ? "complete" : "partial",
+      summary: documentation?.summary ?? null,
+      tags: documentation?.tags ?? null,
+      components: documentation?.components ?? null,
+      measurementExplanation: documentation?.measurement_explanation ?? null,
+    };
+  });
 }
 
 export function toAssistantMessage(result: AgentsRunResult): string {

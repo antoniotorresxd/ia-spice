@@ -3,13 +3,14 @@ import { describe, expect, test } from "bun:test";
 import { fillAssignmentGaps } from "./llm.services";
 
 describe("fillAssignmentGaps", () => {
-  test("devuelve los cuatro agentes aunque no haya ninguna fila", () => {
+  test("devuelve los cinco agentes aunque no haya ninguna fila", () => {
     const result = fillAssignmentGaps([]);
     expect(result.map((r) => r.agentId)).toEqual([
       "orchestrator",
       "calculation",
       "writer",
       "curator",
+      "documenter",
     ]);
     expect(result.every((r) => r.connectionId === null && r.model === "")).toBe(true);
   });
@@ -18,7 +19,7 @@ describe("fillAssignmentGaps", () => {
     const result = fillAssignmentGaps([
       { agentId: "orchestrator", connectionId: "conn-1", model: "gpt-5" },
     ]);
-    expect(result).toHaveLength(4);
+    expect(result).toHaveLength(5);
     expect(result.find((r) => r.agentId === "orchestrator")).toEqual({
       agentId: "orchestrator",
       connectionId: "conn-1",
@@ -41,6 +42,7 @@ describe("fillAssignmentGaps", () => {
       "calculation",
       "writer",
       "curator",
+      "documenter",
     ]);
   });
 });

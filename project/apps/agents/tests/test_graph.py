@@ -4,7 +4,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import agents.documentador.node as documentador_module
 import agents.orquestador.node as orquestador_module
+from agents.documentador.schema import CircuitDocumentation
 from agents.graph import build_graph
 from agents.orquestador.schema import CircuitSpec
 
@@ -21,6 +23,7 @@ def _initial_state(circuit_spec):
         "iteration": 0,
         "history": [],
         "verdict": None,
+        "documentation": {},
     }
 
 
@@ -150,6 +153,7 @@ def test_request_text_end_to_end_with_fake_llm(monkeypatch):
         "iteration": 0,
         "history": [],
         "verdict": None,
+        "documentation": {},
     }
 
     final = graph.invoke(initial_state, config)
@@ -178,6 +182,7 @@ def test_request_text_end_to_end_with_live_llm():
         "iteration": 0,
         "history": [],
         "verdict": None,
+        "documentation": {},
     }
 
     final = graph.invoke(initial_state, config)
@@ -458,3 +463,53 @@ def test_sin_llm_un_generico_fuera_de_meta_termina_con_un_motivo_legible():
 
     assert final["verdict"]["status"] == "rejected"
     assert "gen1" in final["verdict"]["reason"]
+
+
+def test_sin_llm_el_divisor_termina_aceptado_sin_documentacion():
+    spec = {
+        "blocks": [
+            {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+        ]
+    }
+
+    final = _run(spec, "e2e-documentador-sin-llm")
+
+    assert final["verdict"]["status"] == "accepted"
+    assert "documentation" in final
+    assert isinstance(final["documentation"], dict)
+    assert final["documentation"] == {"div1": None}
+
+
+def test_el_grafo_documenta_el_divisor_y_descarta_componentes_inventados(monkeypatch):
+    class _ModeloFalso:
+        def with_structured_output(self, schema):
+            return self
+
+        def invoke(self, mensajes):
+            return CircuitDocumentation(
+                summary="Reduce el voltaje de entrada",
+                tags=["divisor"],
+                components={"R1": "resistencia superior", "FAKE99": "inventado"},
+                measurement_explanation="Mide el voltaje de salida",
+            )
+
+    monkeypatch.setattr(documentador_module, "get_chat_model", lambda user_id: _ModeloFalso())
+    spec = {
+        "blocks": [
+            {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+        ]
+    }
+    graph = build_graph()
+    final = graph.invoke(
+        _initial_state(spec),
+        {"configurable": {"thread_id": "e2e-documentador", "user_id": "u1"}},
+    )
+
+    assert final["verdict"]["status"] == "accepted"
+    assert any(line.startswith("R1 ") for line in final["netlists"]["div1"]["text"].splitlines())
+    assert final["documentation"]["div1"] == {
+        "summary": "Reduce el voltaje de entrada",
+        "tags": ["divisor"],
+        "components": {"R1": "resistencia superior"},
+        "measurement_explanation": "Mide el voltaje de salida",
+    }

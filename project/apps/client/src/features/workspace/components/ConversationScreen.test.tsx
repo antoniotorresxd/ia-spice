@@ -25,7 +25,7 @@ describe('ConversationScreen', () => {
     const detail: WorkspaceConversationDetail = {
       ...original,
       title: 'Filtro RC de 1 kHz',
-      files: [{ id: 'report', name: 'report.pdf', language: 'pdf', content: '', status: 'complete' }],
+      files: [{ id: 'report', name: 'report.pdf', language: 'pdf', content: '', status: 'complete', summary: null, tags: null, components: null, measurementExplanation: null }],
     }
     vi.spyOn(service, 'getConversation').mockResolvedValue(detail)
     renderScreen(service)

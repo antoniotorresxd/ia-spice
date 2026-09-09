@@ -19,6 +19,10 @@ export type WorkspaceFile = {
   language: string
   content: string
   status: 'complete' | 'partial'
+  summary: string | null
+  tags: string[] | null
+  components: Record<string, string> | null
+  measurementExplanation: string | null
 }
 
 export type WorkspaceFileItem = {

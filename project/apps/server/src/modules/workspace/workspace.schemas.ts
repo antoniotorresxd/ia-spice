@@ -87,6 +87,10 @@ export function toConversationDetail(
       language: item.language,
       content: item.content,
       status: item.status,
+      summary: item.summary,
+      tags: item.tags,
+      components: item.components,
+      measurementExplanation: item.measurementExplanation,
     })),
     execution: {
       id: latestExecution?.id ?? `${row.id}-execution`,

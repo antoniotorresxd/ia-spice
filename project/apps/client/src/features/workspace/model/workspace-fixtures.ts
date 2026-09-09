@@ -60,8 +60,15 @@ const conversation = (
       id: `${id}-file-1`,
       name: `${id}.cir`,
       language: 'spice',
-      content: fileStatus === 'complete' ? '* Netlist listo\n.end' : '* Netlist en progreso',
+      content:
+        fileStatus === 'complete'
+          ? `.title ${title}\nR1 in out 1000\nR2 out 0 1000\n.end`
+          : '* Netlist en progreso',
       status: fileStatus,
+      summary: null,
+      tags: null,
+      components: null,
+      measurementExplanation: null,
     },
   ],
   execution: { id: `${id}-execution`, status, summary: `Ejecución ${status}` },

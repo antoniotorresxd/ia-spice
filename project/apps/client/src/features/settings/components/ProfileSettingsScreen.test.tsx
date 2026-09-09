@@ -32,6 +32,7 @@ function makeService(
     updateConnection: vi.fn(),
     deleteConnection: vi.fn(),
     testConnection: vi.fn(),
+    listConnectionModels: vi.fn(),
     listAgentAssignments: vi.fn(),
     updateAgentAssignment: vi.fn(),
     ...overrides,

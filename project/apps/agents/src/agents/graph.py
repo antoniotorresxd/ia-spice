@@ -4,6 +4,7 @@ from langgraph.graph import END, StateGraph
 
 from agents.calculo.graph import build_calculo_graph
 from agents.curador.node import curador_node, route_after_curador
+from agents.documentador.node import documentador_node
 from agents.orquestador.node import orquestador_node, route_after_orquestador
 from agents.sintesis.graph import build_sintesis_graph
 from agents.state import CircuitState
@@ -36,6 +37,7 @@ def build_graph(checkpointer=None):
     builder.add_node("calculo", _calculo_node)
     builder.add_node("sintesis", _sintesis_node)
     builder.add_node("curador", curador_node)
+    builder.add_node("documentador", documentador_node)
 
     builder.set_entry_point("orquestador")
     builder.add_conditional_edges(
@@ -48,8 +50,9 @@ def build_graph(checkpointer=None):
     builder.add_conditional_edges(
         "curador",
         route_after_curador,
-        {"adjust": "sintesis", "done": END},
+        {"adjust": "sintesis", "done": "documentador"},
     )
+    builder.add_edge("documentador", END)
 
     # El checkpointer se inyecta para que quien construye el grafo decida
     # dónde vive el estado: en producción, la base; en las pruebas, memoria.

@@ -15,6 +15,7 @@ const accepted: AgentsRunResult = {
   netlists: { "block-1": { path: "/tmp/circuit.cir", text: "* divisor\nR1 in out 1k\n" } },
   sim_results: { "block-1": { metrics: { v_out: 5.01 }, sim_error: null } },
   component_values: { "block-1": { r1: 1000, r2: 714 } },
+  documentation: null,
   history: [],
   iteration: 0,
 };
@@ -65,9 +66,61 @@ describe("toArtifactDrafts", () => {
         language: "spice",
         content: "* divisor\nR1 in out 1k\n",
         status: "complete",
+        summary: null,
+        tags: null,
+        components: null,
+        measurementExplanation: null,
       },
     ]);
   });
+
+  test("mergea la documentación por bloque sin cambiar el estado de simulación", () => {
+    const drafts = toArtifactDrafts({
+      ...accepted,
+      documentation: {
+        "block-1": {
+          summary: "Divide el voltaje de entrada.",
+          tags: ["divisor", "resistivo"],
+          components: { R1: "Resistencia de entrada." },
+          measurement_explanation: "Mide el voltaje de salida.",
+        },
+      },
+      sim_results: { "block-1": { metrics: null, sim_error: "ngspice exited 1" } },
+    });
+    expect(drafts[0]).toMatchObject({
+      summary: "Divide el voltaje de entrada.",
+      tags: ["divisor", "resistivo"],
+      components: { R1: "Resistencia de entrada." },
+      measurementExplanation: "Mide el voltaje de salida.",
+      status: "partial",
+    });
+  });
+
+  for (const [label, documentation] of [
+    ["entrada nula", { "block-1": null }],
+    ["bloque ausente", {}],
+    ["documentación nula", null],
+  ] as const) {
+    test(`${label}: todos los campos de documentación quedan null`, () => {
+      const drafts = toArtifactDrafts({
+        ...accepted,
+        netlists: {
+          ...accepted.netlists,
+          "block-2": { path: "/tmp/other.cir", text: "* otro bloque" },
+        },
+        documentation,
+      });
+      expect(drafts).toHaveLength(2);
+      for (const draft of drafts) {
+        expect(draft).toMatchObject({
+          summary: null,
+          tags: null,
+          components: null,
+          measurementExplanation: null,
+        });
+      }
+    });
+  }
 
   test("un bloque con error de simulación queda parcial", () => {
     const drafts = toArtifactDrafts({

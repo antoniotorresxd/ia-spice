@@ -41,6 +41,7 @@ const navigation = [
   ['Conversaciones', '◫', '/conversations'],
   ['Archivos', '▱', '/files'],
   ['Ejecuciones', '◌', '/executions'],
+  ['Visualizador', '⏚', '/visualizer'],
 ] as const
 
 export function HomeSidebar({

@@ -102,6 +102,10 @@ export function createMockWorkspaceService(): WorkspaceService {
             language: 'spice',
             content: '* divisor\nR1 in out 1k\nR2 out 0 714\n',
             status: 'complete',
+            summary: null,
+            tags: null,
+            components: null,
+            measurementExplanation: null,
           },
         ]
         conversation.messages.push({

@@ -176,6 +176,7 @@ it.each([
   ['/conversations/conversation-filter', 'Detalle de la conversación'],
   ['/files', /Archivos/],
   ['/executions', 'Ejecuciones'],
+  ['/visualizer', 'De netlist a diagrama que se entiende'],
 ])('renders workspace route %s for authenticated users', async (path, heading) => {
   window.history.pushState({}, '', path)
   setSessionState({ data: session })

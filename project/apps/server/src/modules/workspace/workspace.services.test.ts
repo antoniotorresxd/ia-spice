@@ -146,6 +146,7 @@ const runResult: AgentsRunResult = {
   netlists: { "block-1": { path: "/tmp/circuit.cir", text: "* divisor\nR1 in out 1k\n" } },
   sim_results: { "block-1": { metrics: { v_out: 5.01 }, sim_error: null } },
   component_values: { "block-1": { r1: 1000, r2: 714 } },
+  documentation: null,
   history: [{ iteration: 0, decision: "accept" }],
   iteration: 0,
 };

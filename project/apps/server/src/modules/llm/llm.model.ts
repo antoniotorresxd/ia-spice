@@ -7,7 +7,7 @@ export type LlmProvider = (typeof LLM_PROVIDERS)[number];
 
 // Los agentes que pueden tener un LLM asignado. `shell` no aparece: ejecuta
 // ngspice, no consume un modelo.
-export const AGENT_IDS = ["orchestrator", "calculation", "writer", "curator"] as const;
+export const AGENT_IDS = ["orchestrator", "calculation", "writer", "curator", "documenter"] as const;
 export type AgentId = (typeof AGENT_IDS)[number];
 
 export const TEST_STATUSES = ["ok", "failed"] as const;
