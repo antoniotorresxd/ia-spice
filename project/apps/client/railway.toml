@@ -1,6 +1,0 @@
-[build]
-builder = "RAILPACK"
-buildCommand = "bun run build:client"
-
-[deploy]
-startCommand = "bun run start:client"
