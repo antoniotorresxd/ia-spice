@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../../lib/api-base'
 import type {
   ProjectInput,
   WorkspaceConversation,
@@ -13,7 +14,7 @@ type Options = { fetchImpl?: typeof fetch }
 export function createHttpWorkspaceService(options: Options = {}): WorkspaceService {
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const fetchImpl = options.fetchImpl ?? fetch
-    const response = await fetchImpl(path, {
+    const response = await fetchImpl(`${API_BASE_URL}${path}`, {
       credentials: 'include',
       headers: init.body ? { 'content-type': 'application/json' } : undefined,
       ...init,
