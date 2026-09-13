@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowUpRight, Cpu, FileSpreadsheet, FileText, Folder } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
+import { FilesTableSkeleton } from '@/components/ui/Skeleton'
 
 import type { WorkspaceFileItem, WorkspaceSnapshot } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
@@ -24,8 +25,10 @@ function getFileKindLabel(kind: 'spice' | 'pdf' | 'data'): string {
 }
 
 export function FilesScreen({ service }: { service: WorkspaceService }) {
+  const outlet = useOutletContext<{ snapshot?: WorkspaceSnapshot | null } | null>()
   const [files, setFiles] = useState<WorkspaceFileItem[] | null>(null)
-  const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
+  const [localSnapshot, setLocalSnapshot] = useState<WorkspaceSnapshot | null>(null)
+  const snapshot = outlet?.snapshot ?? localSnapshot
   const [loadError, setLoadError] = useState(false)
   const [query, setQuery] = useState('')
   const [kindFilter, setKindFilter] = useState<'all' | 'spice' | 'pdf' | 'data'>('all')
@@ -33,11 +36,14 @@ export function FilesScreen({ service }: { service: WorkspaceService }) {
 
   useEffect(() => {
     let current = true
-    Promise.all([service.getFiles(), service.getSnapshot()]).then(
+    const filesPromise = service.getFiles()
+    const snapshotPromise = snapshot ? Promise.resolve(snapshot) : service.getSnapshot()
+
+    Promise.all([filesPromise, snapshotPromise]).then(
       ([nextFiles, nextSnapshot]) => {
         if (current) {
           setFiles(nextFiles)
-          setSnapshot(nextSnapshot)
+          if (!snapshot) setLocalSnapshot(nextSnapshot)
         }
       },
       () => {
@@ -45,7 +51,7 @@ export function FilesScreen({ service }: { service: WorkspaceService }) {
       },
     )
     return () => { current = false }
-  }, [service])
+  }, [service, snapshot])
 
   const rows = useMemo(() => {
     if (!Array.isArray(files)) return []
@@ -137,7 +143,7 @@ export function FilesScreen({ service }: { service: WorkspaceService }) {
         </label>
       </div>
 
-      {!files && !loadError ? <p role="status">Cargando archivos…</p> : null}
+      {!files && !loadError ? <FilesTableSkeleton tableWrapClass={styles.tableWrap} /> : null}
       {loadError ? <p role="alert">No pudimos cargar los archivos.</p> : null}
       {files && rows.length === 0 ? (
         <div className={styles.emptyState}>

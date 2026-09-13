@@ -142,8 +142,28 @@ export function computeDepths(elements: NetlistElement[]): Record<string, number
     }
   }
 
-  const vSource = elements.find((e) => e.kind === 'V' || e.kind === 'I')
-  let start = vSource?.nodes.find((n) => n !== GROUND) ?? null
+  // Priorizar fuentes de señal (AC, SIN, PULSE, o nodos con 'in'/'input'/'vin')
+  const signalSource = elements.find((e) => {
+    if (e.kind !== 'V' && e.kind !== 'I') return false
+    const upperExtra = e.extra.toUpperCase()
+    const upperName = e.name.toUpperCase()
+    const isAcOrSin = upperExtra.includes('SIN') || upperExtra.includes('AC') || upperExtra.includes('PULSE')
+    const hasInNode = e.nodes.some((n) => /^(in|vin|inp|input|sig|signal)/i.test(n))
+    return isAcOrSin || hasInNode || upperName.startsWith('VIN') || upperName.startsWith('VSIG')
+  })
+
+  // Si no hay fuente de señal explícita, evitar empezar en rieles de alimentación DC (Vcc, Vdd, Vee, Vss) si hay otra fuente
+  const anySource =
+    signalSource ??
+    elements.find((e) => {
+      if (e.kind !== 'V' && e.kind !== 'I') return false
+      const upperName = e.name.toUpperCase()
+      const isDcRail = /^(VCC|VDD|VEE|VSS|VBAT|V\+|V-)/i.test(upperName)
+      return !isDcRail
+    }) ??
+    elements.find((e) => e.kind === 'V' || e.kind === 'I')
+
+  let start = anySource?.nodes.find((n) => n !== GROUND) ?? null
   if (!start) start = Object.keys(adj)[0] ?? null
 
   const depth: Record<string, number> = {}
@@ -195,6 +215,7 @@ export function fmtOhms(raw: string): string {
   if (!isFinite(n)) return raw
   if (n >= 1e6) return `${trimNum(n / 1e6)} MΩ`
   if (n >= 1e3) return `${trimNum(n / 1e3)} kΩ`
+  if (n < 1e-3) return `${trimNum(n * 1e6)} µΩ`
   if (n < 1) return `${trimNum(n * 1e3)} mΩ`
   return `${trimNum(n)} Ω`
 }
@@ -320,6 +341,11 @@ export function describeCircuit(parsed: ParsedNetlist): string {
     return 'Es un LED con resistencia limitadora: la resistencia fija cuánta corriente puede pasar por el LED para que no se queme — el LED en sí no limita la corriente por su cuenta.'
   }
 
+  // Rectificador de onda completa (puente de diodos Graetz)
+  if (dElements.length >= 4 && (cElements.length >= 1 || rElements.length >= 1)) {
+    return 'Es un rectificador de onda completa en puente de diodos (puente de Graetz) con filtro: los 4 diodos alternan conducción en cada semiciclo para convertir la corriente alterna (AC) en corriente continua pulsante (DC), y el capacitor de filtro suaviza el rizado entregando tensión continua a la carga.'
+  }
+
   // Circuito genérico dinámico
   const parts: string[] = []
   if (rElements.length) parts.push(`${rElements.length} resistencia(s)`)
@@ -370,8 +396,11 @@ export function componentValue(e: NetlistElement): string {
   }
 }
 
-export const RAIL_Y = 130
-export const GROUND_Y = 250
+export const VCC_Y = 60
+export const COL_ROUTE_Y = 120
+export const RAIL_Y = 200
+export const EMI_Y = 275
+export const GROUND_Y = 390
 export const BRANCH_SPACING = 120
 export const SERIES_SPACING = 155
 export const MARGIN_X = 70
@@ -396,15 +425,26 @@ export type LayoutSymbol =
       pointingUp: boolean
     }
   | { type: 'sourceV'; x: number; y1: number; y2: number; name: string; value: string; isAc: boolean }
+  | { type: 'sourceH'; x1: number; x2: number; y: number; name: string; value: string; isAc: boolean }
   | { type: 'opamp'; cx: number; inTopX: number; inBotX: number; outX: number }
-  | { type: 'bjt'; collectorX: number; baseX: number; emitterX: number; name: string; value: string }
+  | { type: 'bjt'; cx: number; collectorX: number; baseX: number; emitterX: number; name: string; value: string }
   | { type: 'wireH'; x1: number; x2: number; y: number; name: string; value: string }
+  | { type: 'wireV'; x: number; y1: number; y2: number }
+  | { type: 'wireHopH'; x1: number; x2: number; y: number; hopX: number }
 
 export type NodeBus = {
   node: string
   xStart: number
   xEnd: number
   branches: number[]
+  y?: number
+}
+
+export type TopRailSpan = {
+  xStart: number
+  xEnd: number
+  label: string
+  drops: number[]
 }
 
 export type Diagram = {
@@ -412,6 +452,7 @@ export type Diagram = {
   nodeXs: Record<string, number>
   nodeBuses: NodeBus[]
   groundDrops: number[]
+  topRailSpan: TopRailSpan | null
   usedSymbols: Set<
     'resistor' | 'capacitor' | 'inductor' | 'source' | 'led' | 'diode' | 'zener' | 'opamp' | 'bjt' | 'ground'
   >
@@ -419,11 +460,369 @@ export type Diagram = {
   height: number
 }
 
-export function buildDiagram(parsed: ParsedNetlist): Diagram {
-  const depth = computeDepths(parsed.elements)
+function findSupplyRails(elements: NetlistElement[]): {
+  rails: Set<string>
+  railSources: Record<string, NetlistElement>
+} {
+  const rails = new Set<string>()
+  const railSources: Record<string, NetlistElement> = {}
+  for (const e of elements) {
+    if (e.kind === 'V') {
+      const [pos, neg] = e.nodes
+      if (neg === GROUND) {
+        const upperName = e.name.toUpperCase()
+        const upperPos = pos.toUpperCase()
+        const isDcNamed =
+          /^(VCC|VDD|VEE|VSS|VBAT|VPOS|V\+)/i.test(upperName) ||
+          /^(VCC|VDD|VEE|VSS|VBAT|VPOS|V\+)/i.test(upperPos)
+        const hasOtherSignal = elements.some(
+          (other) =>
+            other !== e &&
+            (other.kind === 'V' || other.kind === 'I') &&
+            (other.extra.toUpperCase().includes('AC') ||
+              other.extra.toUpperCase().includes('SIN') ||
+              other.extra.toUpperCase().includes('PULSE') ||
+              /^(in|vin)/i.test(other.nodes[0])),
+        )
+        if (isDcNamed || hasOtherSignal) {
+          rails.add(pos)
+          railSources[pos] = e
+        }
+      }
+    }
+  }
+  return { rails, railSources }
+}
 
-  // Separar componentes que tocan tierra (shunts / fuentes verticales) vs serie horizontal
+export type DiodeBridge = {
+  d1: NetlistElement
+  d4: NetlistElement
+  d3: NetlistElement
+  d2: NetlistElement
+  dcPos: string
+  dcNeg: string
+  ac1: string
+  ac2: string
+}
+
+export function findDiodeBridge(elements: NetlistElement[]): DiodeBridge | null {
+  const diodes = elements.filter((e) => e.kind === 'D' && e.nodes.length >= 2)
+  if (diodes.length < 4) return null
+
+  const cathodeCount: Record<string, NetlistElement[]> = {}
+  const anodeCount: Record<string, NetlistElement[]> = {}
+
+  for (const d of diodes) {
+    const [anode, cathode] = d.nodes
+    ;(cathodeCount[cathode] ??= []).push(d)
+    ;(anodeCount[anode] ??= []).push(d)
+  }
+
+  const posCandidates = Object.keys(cathodeCount).filter((n) => cathodeCount[n].length === 2)
+  const negCandidates = Object.keys(anodeCount).filter((n) => anodeCount[n].length === 2)
+
+  for (const dcPos of posCandidates) {
+    for (const dcNeg of negCandidates) {
+      if (dcPos === dcNeg) continue
+      const topDiodes = cathodeCount[dcPos]
+      const botDiodes = anodeCount[dcNeg]
+
+      const topAnodes = topDiodes.map((d) => (d.nodes[0] === dcPos ? d.nodes[1] : d.nodes[0]))
+      const botCathodes = botDiodes.map((d) => (d.nodes[1] === dcNeg ? d.nodes[0] : d.nodes[1]))
+
+      const topSet = new Set(topAnodes)
+      const botSet = new Set(botCathodes)
+
+      if (topSet.size === 2 && botSet.size === 2 && topAnodes.every((n) => botSet.has(n))) {
+        const [ac1, ac2] = topAnodes
+        const d1 = topDiodes.find((d) => d.nodes.includes(ac1))
+        const d3 = topDiodes.find((d) => d.nodes.includes(ac2))
+        const d4 = botDiodes.find((d) => d.nodes.includes(ac1))
+        const d2 = botDiodes.find((d) => d.nodes.includes(ac2))
+
+        if (d1 && d4 && d3 && d2) {
+          return { d1, d4, d3, d2, dcPos, dcNeg, ac1, ac2 }
+        }
+      }
+    }
+  }
+  return null
+}
+
+export function buildDiodeBridgeDiagram(parsed: ParsedNetlist, bridge: DiodeBridge): Diagram {
+  let ac1 = bridge.ac1
+  let ac2 = bridge.ac2
+  let d1 = bridge.d1
+  let d4 = bridge.d4
+  let d3 = bridge.d3
+  let d2 = bridge.d2
+  const { dcPos, dcNeg } = bridge
+
+  const bridgeDiodes = new Set([d1, d4, d3, d2])
+
+  const acSources = parsed.elements.filter(
+    (e) =>
+      (e.kind === 'V' || e.kind === 'I') &&
+      ((e.nodes.includes(ac1) && e.nodes.includes(ac2)) ||
+        (e.nodes.includes(ac1) && e.nodes.includes(GROUND)) ||
+        (e.nodes.includes(ac2) && e.nodes.includes(GROUND))),
+  )
+
+  // Asegurar que la rama 1 corresponda al primer nodo (positivo) de la fuente Vac
+  if (acSources.length > 0) {
+    const src = acSources[0]
+    if (src.nodes[0] === ac2) {
+      ac1 = bridge.ac2
+      ac2 = bridge.ac1
+      d1 = bridge.d3
+      d4 = bridge.d2
+      d3 = bridge.d1
+      d2 = bridge.d4
+    }
+  }
+
+  const dcParallel = parsed.elements.filter(
+    (e) =>
+      !bridgeDiodes.has(e) &&
+      !acSources.includes(e) &&
+      ((e.nodes.includes(dcPos) && e.nodes.includes(dcNeg)) ||
+        (dcNeg === GROUND && e.nodes.includes(dcPos) && e.nodes.includes(GROUND))),
+  )
+
+  const groundElements = parsed.elements.filter(
+    (e) =>
+      !bridgeDiodes.has(e) &&
+      !dcParallel.includes(e) &&
+      !acSources.includes(e) &&
+      e.nodes.includes(dcNeg) &&
+      e.nodes.includes(GROUND),
+  )
+
+  const handled = new Set([...bridgeDiodes, ...acSources, ...dcParallel, ...groundElements])
+  const remaining = parsed.elements.filter((e) => !handled.has(e))
+
+  const Y_TOP = 60
+  const Y_MID_TOP = 108
+  const Y_AC1 = 145
+  const Y_AC2 = 205
+  const Y_MID_BOT = 242
+  const Y_BOT = 285
+
+  const hasSource = acSources.length > 0
+  const X_SRC = hasSource ? MARGIN_X + 15 : MARGIN_X
+  const X_LEG1 = hasSource ? X_SRC + 135 : MARGIN_X + 70
+  const X_LEG2 = X_LEG1 + 120
+
+  const symbols: LayoutSymbol[] = []
+  const usedSymbols: Diagram['usedSymbols'] = new Set(['diode'])
+  const groundDrops: number[] = []
+
+  if (hasSource) {
+    const src = acSources[0]
+    symbols.push({
+      type: 'sourceV',
+      x: X_SRC,
+      y1: Y_AC1,
+      y2: Y_AC2,
+      name: src.name,
+      value: fmtSource(src.extra),
+      isAc: true,
+    })
+    usedSymbols.add('source')
+
+    // Conexión horizontal limpia de la terminal superior de Vac hacia rama 1 (in_pos)
+    symbols.push({ type: 'wireH', x1: X_SRC, x2: X_LEG1, y: Y_AC1, name: '', value: '' })
+
+    // Conexión de terminal inferior de Vac hacia rama 2 (in_neg) con puente de cruce sobre la rama 1 (sin conexión física)
+    symbols.push({ type: 'wireHopH', x1: X_SRC, x2: X_LEG2, y: Y_AC2, hopX: X_LEG1 })
+  }
+
+  // RAMA 1: D1 superior (in_pos -> vdc) y D4 inferior (gnd_rect -> in_pos)
+  // En disposición vertical de puente rectificador, los 4 diodos apuntan hacia arriba hacia el bus vdc:
+  // D1: ánodo en in_pos (abajo), cátodo en vdc (arriba) -> pointingUp: true
+  // D4: ánodo en gnd_rect (abajo), cátodo en in_pos (arriba) -> pointingUp: true
+  symbols.push({
+    type: 'diodeV',
+    x: X_LEG1,
+    y1: Y_TOP,
+    y2: Y_MID_TOP,
+    name: d1.name,
+    value: d1.extra || 'Diodo',
+    isLed: false,
+    isZener: false,
+    pointingUp: true,
+  })
+
+  // Cable vertical en Rama 1 (nodo in_pos):
+  // Segmento superior que llega hasta justo antes del salto del cable AC2
+  symbols.push({ type: 'wireV', x: X_LEG1, y1: Y_MID_TOP, y2: Y_AC2 - 11 })
+  // Segmento inferior que continúa después del salto hacia D4 (dejando brecha libre bajo el arco del puente de cruce)
+  symbols.push({ type: 'wireV', x: X_LEG1, y1: Y_AC2 + 11, y2: Y_MID_BOT })
+
+  symbols.push({
+    type: 'diodeV',
+    x: X_LEG1,
+    y1: Y_MID_BOT,
+    y2: Y_BOT,
+    name: d4.name,
+    value: d4.extra || 'Diodo',
+    isLed: false,
+    isZener: false,
+    pointingUp: true,
+  })
+
+  // RAMA 2: D3 superior (in_neg -> vdc) y D2 inferior (gnd_rect -> in_neg)
+  // Ambos diodos apuntan hacia arriba:
+  // D3: ánodo en in_neg (abajo), cátodo en vdc (arriba) -> pointingUp: true
+  // D2: ánodo en gnd_rect (abajo), cátodo en in_neg (arriba) -> pointingUp: true
+  symbols.push({
+    type: 'diodeV',
+    x: X_LEG2,
+    y1: Y_TOP,
+    y2: Y_MID_TOP,
+    name: d3.name,
+    value: d3.extra || 'Diodo',
+    isLed: false,
+    isZener: false,
+    pointingUp: true,
+  })
+
+  // Cable vertical en Rama 2 (nodo in_neg)
+  symbols.push({ type: 'wireV', x: X_LEG2, y1: Y_MID_TOP, y2: Y_MID_BOT })
+
+  symbols.push({
+    type: 'diodeV',
+    x: X_LEG2,
+    y1: Y_MID_BOT,
+    y2: Y_BOT,
+    name: d2.name,
+    value: d2.extra || 'Diodo',
+    isLed: false,
+    isZener: false,
+    pointingUp: true,
+  })
+
+  let curX = X_LEG2
+  const dcXs: number[] = []
+  const allParallel = [...dcParallel, ...remaining]
+
+  for (const e of allParallel) {
+    curX += 115
+    dcXs.push(curX)
+
+    if (e.kind === 'C') {
+      symbols.push({
+        type: 'capacitorV',
+        x: curX,
+        y1: Y_TOP,
+        y2: Y_BOT,
+        name: e.name,
+        value: fmtFarads(e.extra),
+      })
+      usedSymbols.add('capacitor')
+    } else if (e.kind === 'R') {
+      symbols.push({
+        type: 'resistorV',
+        x: curX,
+        y1: Y_TOP,
+        y2: Y_BOT,
+        name: e.name,
+        value: fmtOhms(e.extra),
+      })
+      usedSymbols.add('resistor')
+    } else if (e.kind === 'L') {
+      symbols.push({
+        type: 'inductorV',
+        x: curX,
+        y1: Y_TOP,
+        y2: Y_BOT,
+        name: e.name,
+        value: fmtHenries(e.extra),
+      })
+      usedSymbols.add('inductor')
+    } else if (e.kind === 'D') {
+      symbols.push({
+        type: 'diodeV',
+        x: curX,
+        y1: Y_TOP,
+        y2: Y_BOT,
+        name: e.name,
+        value: e.extra || 'Diodo',
+        isLed: false,
+        isZener: false,
+        pointingUp: true,
+      })
+      usedSymbols.add('diode')
+    }
+  }
+
+  const X_END_RAIL = curX > X_LEG2 ? curX + 25 : X_LEG2 + 50
+
+  const gndX = dcXs[0] ?? X_LEG2
+  if (groundElements.length > 0) {
+    const gndElem = groundElements[0]
+    if (gndElem.kind === 'R') {
+      symbols.push({
+        type: 'resistorV',
+        x: gndX,
+        y1: Y_BOT,
+        y2: GROUND_Y,
+        name: gndElem.name,
+        value: fmtOhms(gndElem.extra),
+      })
+      usedSymbols.add('resistor')
+    }
+    groundDrops.push(gndX)
+    usedSymbols.add('ground')
+  } else if (dcNeg === GROUND) {
+    groundDrops.push(X_LEG1, ...(dcXs.length ? [dcXs[dcXs.length - 1]] : [X_LEG2]))
+    usedSymbols.add('ground')
+  }
+
+  const topBranches = [X_LEG1, X_LEG2, ...dcXs]
+  const botBranches = [X_LEG1, X_LEG2, ...dcXs]
+
+  const nodeBuses: NodeBus[] = [
+    { node: ac1, xStart: X_LEG1, xEnd: X_LEG1, branches: [X_LEG1], y: Y_AC1 },
+    { node: ac2, xStart: X_LEG2, xEnd: X_LEG2, branches: [X_LEG2], y: Y_AC2 },
+    { node: dcPos, xStart: X_LEG1, xEnd: X_END_RAIL, branches: topBranches, y: Y_TOP },
+    { node: dcNeg, xStart: X_LEG1, xEnd: X_END_RAIL, branches: botBranches, y: Y_BOT },
+  ]
+
+  const nodeXs: Record<string, number> = {
+    [ac1]: X_LEG1,
+    [ac2]: X_LEG2,
+    [dcPos]: X_END_RAIL,
+    [dcNeg]: X_END_RAIL,
+  }
+
+  return {
+    symbols,
+    nodeXs,
+    nodeBuses,
+    groundDrops,
+    topRailSpan: null,
+    usedSymbols,
+    width: X_END_RAIL + 80,
+    height: (groundDrops.length > 0 ? GROUND_Y : Y_BOT) + 50,
+  }
+}
+
+export function buildDiagram(parsed: ParsedNetlist): Diagram {
+  const bridge = findDiodeBridge(parsed.elements)
+  if (bridge) {
+    return buildDiodeBridgeDiagram(parsed, bridge)
+  }
+
+  const depth = computeDepths(parsed.elements)
+  const { rails: supplyRails, railSources } = findSupplyRails(parsed.elements)
+
+  // Separar componentes:
+  // 1. Shunts a tierra (nodo -> 0)
+  // 2. Shunts al raíl superior VCC (VCC -> nodo)
+  // 3. Componentes serie (nodoA -> nodoB)
   const nodeShunts: Record<string, NetlistElement[]> = {}
+  const topShunts: Record<string, NetlistElement[]> = {}
   const seriesElements: NetlistElement[] = []
   const opampElements: NetlistElement[] = []
   const bjtElements: NetlistElement[] = []
@@ -438,6 +837,23 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
       continue
     }
     const [a, b] = e.nodes
+
+    // La propia fuente Vcc a tierra define el raíl
+    if (supplyRails.has(a) && b === GROUND) {
+      continue
+    }
+
+    // Drop desde el raíl superior de alimentación VCC
+    if (supplyRails.has(a) && b !== GROUND && !supplyRails.has(b)) {
+      ;(topShunts[b] ??= []).push(e)
+      continue
+    }
+    if (supplyRails.has(b) && a !== GROUND && !supplyRails.has(a)) {
+      ;(topShunts[a] ??= []).push(e)
+      continue
+    }
+
+    // Shunts a tierra
     if (a === GROUND || b === GROUND) {
       const node = a === GROUND ? b : a
       ;(nodeShunts[node] ??= []).push(e)
@@ -446,8 +862,17 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     }
   }
 
-  // Ordenar nodos por profundidad topológica
-  const sortedNodes = Object.keys(depth).sort((a, b) => depth[a] - depth[b])
+  // Ordenar nodos por profundidad topológica; si coinciden, emitter va antes que collector
+  const sortedNodes = Object.keys(depth)
+    .filter((n) => !supplyRails.has(n))
+    .sort((a, b) => {
+      if (depth[a] !== depth[b]) return depth[a] - depth[b]
+      const aIsEmi = /^(emi|e)/i.test(a)
+      const bIsEmi = /^(emi|e)/i.test(b)
+      if (aIsEmi && !bIsEmi) return -1
+      if (!aIsEmi && bIsEmi) return 1
+      return a.localeCompare(b)
+    })
 
   // Asignar coordenadas X a cada nodo garantizando espacio para todas sus ramas en paralelo
   const nodeStartX: Record<string, number> = {}
@@ -490,23 +915,32 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
   const usedSymbols: Diagram['usedSymbols'] = new Set()
   const groundDrops: number[] = []
 
+  const emitterNodes = new Set<string>()
+  for (const e of parsed.elements) {
+    if (e.kind === 'Q' && e.nodes[2]) {
+      emitterNodes.add(e.nodes[2])
+    }
+  }
+
   // 1. Ubicar shunts y fuentes verticales
   for (const n of sortedNodes) {
     const shunts = nodeShunts[n] ?? []
     const branches = nodeBranches[n] ?? []
+    const isEmi = emitterNodes.has(n)
+    const shuntY1 = isEmi ? EMI_Y : RAIL_Y
 
     shunts.forEach((e, idx) => {
       const x = branches[idx] ?? nodeStartX[n]
       groundDrops.push(x)
 
       if (e.kind === 'R') {
-        symbols.push({ type: 'resistorV', x, y1: RAIL_Y, y2: GROUND_Y, name: e.name, value: fmtOhms(e.extra) })
+        symbols.push({ type: 'resistorV', x, y1: shuntY1, y2: GROUND_Y, name: e.name, value: fmtOhms(e.extra) })
         usedSymbols.add('resistor')
       } else if (e.kind === 'C') {
-        symbols.push({ type: 'capacitorV', x, y1: RAIL_Y, y2: GROUND_Y, name: e.name, value: fmtFarads(e.extra) })
+        symbols.push({ type: 'capacitorV', x, y1: shuntY1, y2: GROUND_Y, name: e.name, value: fmtFarads(e.extra) })
         usedSymbols.add('capacitor')
       } else if (e.kind === 'L') {
-        symbols.push({ type: 'inductorV', x, y1: RAIL_Y, y2: GROUND_Y, name: e.name, value: fmtHenries(e.extra) })
+        symbols.push({ type: 'inductorV', x, y1: shuntY1, y2: GROUND_Y, name: e.name, value: fmtHenries(e.extra) })
         usedSymbols.add('inductor')
       } else if (e.kind === 'D') {
         const isLed = e.extra.toUpperCase().includes('LED') || e.name.toUpperCase().startsWith('DLED')
@@ -552,7 +986,9 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     })
   }
 
-  // 2. Ubicar componentes serie horizontales
+  // 2. Ubicar componentes serie horizontales con prevención de colisiones en pistas Y
+  const placedHorizontal: { x1: number; x2: number; y: number }[] = []
+
   for (const e of seriesElements) {
     const [a, b] = e.nodes
     const xa = (nodeStartX[a] ?? MARGIN_X) < (nodeStartX[b] ?? MARGIN_X) ? (nodeEndX[a] ?? MARGIN_X) : (nodeStartX[a] ?? MARGIN_X)
@@ -561,14 +997,41 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     const x1 = Math.min(xa, xb)
     const x2 = Math.max(xa, xb)
 
+    // Encontrar una pista Y libre si dos elementos horizontales se cruzan
+    let targetY = RAIL_Y
+    const yTracks = [
+      RAIL_Y,
+      RAIL_Y - 46,
+      RAIL_Y + 46,
+      RAIL_Y - 92,
+      RAIL_Y + 92,
+      RAIL_Y - 138,
+      RAIL_Y + 138,
+    ]
+    let foundTrack = false
+    for (const track of yTracks) {
+      const collides = placedHorizontal.some(
+        (p) => p.y === track && !(x2 <= p.x1 + 10 || x1 >= p.x2 - 10),
+      )
+      if (!collides) {
+        targetY = track
+        foundTrack = true
+        break
+      }
+    }
+    if (!foundTrack) {
+      targetY = RAIL_Y - (placedHorizontal.length + 1) * 35
+    }
+    placedHorizontal.push({ x1, x2, y: targetY })
+
     if (e.kind === 'R') {
-      symbols.push({ type: 'resistorH', x1, x2, y: RAIL_Y, name: e.name, value: fmtOhms(e.extra) })
+      symbols.push({ type: 'resistorH', x1, x2, y: targetY, name: e.name, value: fmtOhms(e.extra) })
       usedSymbols.add('resistor')
     } else if (e.kind === 'C') {
-      symbols.push({ type: 'capacitorH', x1, x2, y: RAIL_Y, name: e.name, value: fmtFarads(e.extra) })
+      symbols.push({ type: 'capacitorH', x1, x2, y: targetY, name: e.name, value: fmtFarads(e.extra) })
       usedSymbols.add('capacitor')
     } else if (e.kind === 'L') {
-      symbols.push({ type: 'inductorH', x1, x2, y: RAIL_Y, name: e.name, value: fmtHenries(e.extra) })
+      symbols.push({ type: 'inductorH', x1, x2, y: targetY, name: e.name, value: fmtHenries(e.extra) })
       usedSymbols.add('inductor')
     } else if (e.kind === 'D') {
       const isLed = e.extra.toUpperCase().includes('LED') || e.name.toUpperCase().startsWith('DLED')
@@ -577,15 +1040,32 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
         type: 'diodeH',
         x1,
         x2,
-        y: RAIL_Y,
+        y: targetY,
         name: e.name,
         value: e.extra || 'Diodo',
         isLed,
         pointingRight,
       })
       usedSymbols.add(isLed ? 'led' : 'diode')
+    } else if (e.kind === 'V' || e.kind === 'I') {
+      const upper = e.extra.toUpperCase()
+      const isAc =
+        upper.includes('AC') ||
+        upper.includes('SIN') ||
+        upper.includes('SINE') ||
+        upper.includes('PULSE')
+      symbols.push({
+        type: 'sourceH',
+        x1,
+        x2,
+        y: targetY,
+        name: e.name,
+        value: fmtSource(e.extra),
+        isAc,
+      })
+      usedSymbols.add('source')
     } else {
-      symbols.push({ type: 'wireH', x1, x2, y: RAIL_Y, name: e.name, value: e.extra })
+      symbols.push({ type: 'wireH', x1, x2, y: targetY, name: e.name, value: e.extra })
     }
   }
 
@@ -603,11 +1083,16 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
   // 4. Ubicar transistores BJT (Q)
   for (const e of bjtElements) {
     const [col, base, emi] = e.nodes
+    const bx = nodeStartX[base] ?? MARGIN_X
+    const ex = nodeStartX[emi] ?? MARGIN_X
+    const bEnd = nodeEndX[base] ?? bx
+    const cx = Math.max(bEnd + 120, (bx + ex) / 2)
     symbols.push({
       type: 'bjt',
+      cx,
       collectorX: nodeStartX[col] ?? MARGIN_X,
-      baseX: nodeStartX[base] ?? MARGIN_X,
-      emitterX: nodeStartX[emi] ?? MARGIN_X,
+      baseX: bx,
+      emitterX: ex,
       name: e.name,
       value: e.extra || 'BJT',
     })
@@ -616,18 +1101,79 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
 
   if (groundDrops.length) usedSymbols.add('ground')
 
+  // Ubicar shunts verticales desde el raíl superior VCC (R1, Rc, etc.)
+  const topRailDrops: number[] = []
+  for (const n of sortedNodes) {
+    const shunts = topShunts[n] ?? []
+    for (const e of shunts) {
+      const x = nodeStartX[n] ?? MARGIN_X
+      topRailDrops.push(x)
+
+      if (e.kind === 'R') {
+        symbols.push({
+          type: 'resistorV',
+          x,
+          y1: VCC_Y,
+          y2: RAIL_Y,
+          name: e.name,
+          value: fmtOhms(e.extra),
+        })
+        usedSymbols.add('resistor')
+      } else if (e.kind === 'C') {
+        symbols.push({
+          type: 'capacitorV',
+          x,
+          y1: VCC_Y,
+          y2: RAIL_Y,
+          name: e.name,
+          value: fmtFarads(e.extra),
+        })
+        usedSymbols.add('capacitor')
+      } else if (e.kind === 'L') {
+        symbols.push({
+          type: 'inductorV',
+          x,
+          y1: VCC_Y,
+          y2: RAIL_Y,
+          name: e.name,
+          value: fmtHenries(e.extra),
+        })
+        usedSymbols.add('inductor')
+      }
+    }
+  }
+
+  let topRailSpan: TopRailSpan | null = null
+  if (topRailDrops.length > 0) {
+    const minTopX = Math.min(...topRailDrops)
+    const maxTopX = Math.max(...topRailDrops)
+    const railName = Array.from(supplyRails)[0] ?? 'VCC'
+    const railSrc = railSources[railName]
+    const railVolt = railSrc ? fmtSource(railSrc.extra) : ''
+    const label = railVolt ? `${railName.toUpperCase()} (+${railVolt})` : railName.toUpperCase()
+
+    topRailSpan = {
+      xStart: minTopX,
+      xEnd: maxTopX,
+      label,
+      drops: topRailDrops,
+    }
+  }
+
   // Construir descripción de buses de nodos para renderizado limpio de rieles
   const nodeBuses: NodeBus[] = sortedNodes.map((n) => ({
     node: n,
     xStart: nodeStartX[n] ?? MARGIN_X,
     xEnd: nodeEndX[n] ?? MARGIN_X,
     branches: nodeBranches[n] ?? [],
+    y: emitterNodes.has(n) ? EMI_Y : RAIL_Y,
   }))
 
   const allXs = [
     ...Object.values(nodeStartX),
     ...Object.values(nodeEndX),
     ...groundDrops,
+    ...topRailDrops,
     ...symbols.map((s) =>
       'x' in s
         ? s.x
@@ -636,7 +1182,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
           : 'outX' in s
             ? s.outX
             : 'collectorX' in s
-              ? Math.max(s.collectorX, s.baseX, s.emitterX) + 50
+              ? Math.max(s.collectorX, s.baseX, s.emitterX, s.cx) + 50
               : MARGIN_X,
     ),
   ]
@@ -648,6 +1194,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     nodeXs: nodeStartX,
     nodeBuses,
     groundDrops,
+    topRailSpan,
     usedSymbols,
     width,
     height: GROUND_Y + 50,

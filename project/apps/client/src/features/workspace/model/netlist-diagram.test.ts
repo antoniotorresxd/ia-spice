@@ -214,3 +214,65 @@ it('aplica anti-colisión cuando múltiples componentes van a tierra desde el mi
   expect(outDrops).toHaveLength(2)
   expect(outDrops[0]).not.toBe(outDrops[1])
 })
+
+it('reconoce y genera el esquema limpio de puente rectificador de onda completa', () => {
+  const bridgeCode = [
+    '.title Rectificador en puente',
+    'Vac in_pos in_neg SIN(0 16.97 60)',
+    'D1 in_pos vdc D1N4007',
+    'D2 gnd_rect in_neg D1N4007',
+    'D3 in_neg vdc D1N4007',
+    'D4 gnd_rect in_pos D1N4007',
+    'Rgnd gnd_rect 0 1u',
+    'Cfilt vdc gnd_rect 470uF',
+    'Rload vdc gnd_rect 100',
+    '.end',
+  ].join('\n')
+
+  const parsed = parseNetlist(bridgeCode)
+  expect(describeCircuit(parsed)).toContain('puente de diodos')
+
+  const diagram = buildDiagram(parsed)
+  expect(diagram.usedSymbols.has('diode')).toBe(true)
+  expect(diagram.usedSymbols.has('source')).toBe(true)
+  expect(diagram.usedSymbols.has('capacitor')).toBe(true)
+  expect(diagram.usedSymbols.has('resistor')).toBe(true)
+
+  // Los 4 diodos son verticales para formar las ramas del puente y TODOS apuntan hacia arriba
+  const diodes = diagram.symbols.filter((s) => s.type === 'diodeV')
+  expect(diodes).toHaveLength(4)
+  for (const d of diodes) {
+    if (d.type === 'diodeV') {
+      expect(d.pointingUp).toBe(true)
+    }
+  }
+
+  // D1 y D4 comparten la coordenada X de la rama izquierda (in_pos)
+  const d1 = diodes.find((d) => 'name' in d && d.name === 'D1')
+  const d4 = diodes.find((d) => 'name' in d && d.name === 'D4')
+  const d3 = diodes.find((d) => 'name' in d && d.name === 'D3')
+  const d2 = diodes.find((d) => 'name' in d && d.name === 'D2')
+  expect(d1 && d4 && d3 && d2).toBeTruthy()
+  if (d1 && d4 && d3 && d2 && 'x' in d1 && 'x' in d4 && 'x' in d3 && 'x' in d2) {
+    expect(d1.x).toBe(d4.x)
+    expect(d3.x).toBe(d2.x)
+    expect(d1.x).toBeLessThan(d3.x)
+  }
+
+  // La conexión de Vac al nodo in_neg tiene puente de cruce sobre la rama 1 (in_pos)
+  const hop = diagram.symbols.find((s) => s.type === 'wireHopH')
+  expect(hop).toBeDefined()
+  if (hop && hop.type === 'wireHopH' && d1 && 'x' in d1) {
+    expect(hop.hopX).toBe(d1.x)
+  }
+
+  // Cfilt y Rload se ubican como ramas verticales separadas
+  const cap = diagram.symbols.find((s) => 'name' in s && s.name === 'Cfilt')
+  const load = diagram.symbols.find((s) => 'name' in s && s.name === 'Rload')
+  expect(cap?.type).toBe('capacitorV')
+  expect(load?.type).toBe('resistorV')
+  if (cap && load && 'x' in cap && 'x' in load) {
+    expect(cap.x).toBeLessThan(load.x)
+  }
+})
+

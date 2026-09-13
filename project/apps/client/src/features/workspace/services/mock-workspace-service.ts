@@ -129,6 +129,16 @@ export function createMockWorkspaceService(): WorkspaceService {
       projects.push(project)
       return clone(project)
     },
+    async updateProject(projectId, input) {
+      const project = getProjectRecord(projectId)
+      project.name = input.name
+      project.description = input.description
+      project.updatedAt = '2026-07-15T12:05:00.000Z'
+      return clone({
+        ...project,
+        conversations: project.conversationIds.map((id) => summary(getConversationRecord(id))),
+      })
+    },
     async submitRequest(text) {
       const id = `conversation-created-${conversationSequence++}`
       const created: WorkspaceConversationDetail = {
@@ -142,7 +152,7 @@ export function createMockWorkspaceService(): WorkspaceService {
           { id: `${id}-message-1`, role: 'user', content: text, createdAt: '2026-07-15T12:00:00.000Z' },
         ],
         files: [],
-        execution: { id: `${id}-execution`, status: 'active', summary: 'Diseño en progreso' },
+        execution: { id: `${id}-execution`, status: 'active', summary: 'Pensando...' },
       }
       conversations.push(created)
       awaitingCompletion.add(id)
@@ -157,6 +167,12 @@ export function createMockWorkspaceService(): WorkspaceService {
       )
       conversation.preview = text
       conversation.updatedAt = '2026-07-15T12:01:01.000Z'
+      return clone(conversation)
+    },
+    async renameConversation(conversationId, title) {
+      const conversation = getConversationRecord(conversationId)
+      conversation.title = title
+      conversation.updatedAt = '2026-07-15T12:05:00.000Z'
       return clone(conversation)
     },
     async assignConversation(conversationId, projectId) {

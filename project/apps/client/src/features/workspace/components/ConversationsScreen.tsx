@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Trash2, X } from 'lucide-react'
+import { Pencil, Trash2, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { ConversationsTableSkeleton } from '@/components/ui/Skeleton'
 import { Link, useOutletContext } from 'react-router-dom'
 
 import type { WorkspaceSnapshot } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
 import { ConfirmDeleteModal } from '@/components/ui/ConfirmDeleteModal'
+import { RenameConversationDialog } from './RenameConversationDialog'
 import styles from './ConversationScreen.module.css'
 
 const labels = { active: 'En curso', completed: 'Completada', failed: 'Fallida' } as const
@@ -13,22 +15,29 @@ const normalize = (value: string) => value.normalize('NFD').replace(/\p{Diacriti
 const dateFormatter = new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
 
 export function ConversationsScreen({ service }: { service: WorkspaceService }) {
-  const outlet = useOutletContext<{ refreshSnapshot?: () => Promise<void>; deleteConversation?: (id: string) => Promise<void> } | null>()
-  const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
+  const outlet = useOutletContext<{
+    snapshot?: WorkspaceSnapshot | null
+    refreshSnapshot?: () => Promise<void>
+    deleteConversation?: (id: string) => Promise<void>
+  } | null>()
+  const [localSnapshot, setLocalSnapshot] = useState<WorkspaceSnapshot | null>(null)
+  const snapshot = outlet?.snapshot ?? localSnapshot
   const [loadError, setLoadError] = useState(false)
   const [query, setQuery] = useState('')
   const [project, setProject] = useState('all')
   const [status, setStatus] = useState('all')
 
   useEffect(() => {
+    if (snapshot) return
     let current = true
     service.getSnapshot().then(
-      (next) => { if (current) setSnapshot(next) },
+      (next) => { if (current) setLocalSnapshot(next) },
       () => { if (current) setLoadError(true) },
     )
     return () => { current = false }
-  }, [service])
+  }, [service, snapshot])
 
+  const [conversationPendingRename, setConversationPendingRename] = useState<{ id: string; title: string } | null>(null)
   const [conversationPendingDelete, setConversationPendingDelete] = useState<{ id: string; title: string } | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -42,9 +51,9 @@ export function ConversationsScreen({ service }: { service: WorkspaceService }) 
         await outlet.deleteConversation(conversationPendingDelete.id)
       } else {
         await service.deleteConversation(conversationPendingDelete.id)
+        const next = await service.getSnapshot()
+        setLocalSnapshot(next)
       }
-      const next = await service.getSnapshot()
-      setSnapshot(next)
       setConversationPendingDelete(null)
     } catch {
       setDeleteError('No se pudo eliminar la conversación. Inténtalo de nuevo.')
@@ -101,7 +110,7 @@ export function ConversationsScreen({ service }: { service: WorkspaceService }) 
           </div>
         </div>
       </div>
-      {!snapshot && !loadError ? <p role="status">Cargando conversaciones…</p> : null}
+      {!snapshot && !loadError ? <ConversationsTableSkeleton tableWrapClass={styles.tableWrap} /> : null}
       {loadError ? <p role="alert">No pudimos cargar las conversaciones.</p> : null}
       {snapshot && rows.length === 0 ? <p>No hay conversaciones que coincidan con los filtros.</p> : null}
       {rows.length > 0 ? <div className={styles.tableWrap}><table><thead><tr><th>Conversación</th><th>Proyecto</th><th>Estado</th><th>Actualizada</th><th>Acciones</th></tr></thead><tbody>{rows.map((conversation) => {
@@ -125,6 +134,17 @@ export function ConversationsScreen({ service }: { service: WorkspaceService }) 
                 <Link to={`/conversations/${conversation.id}`} className={styles.rowActionBtn} title="Abrir conversación">
                   Abrir
                 </Link>
+                <button
+                  type="button"
+                  className={styles.rowEditBtn}
+                  onClick={() => {
+                    setConversationPendingRename({ id: conversation.id, title: conversation.title })
+                  }}
+                  aria-label={`Renombrar conversación ${conversation.title}`}
+                  title="Renombrar conversación"
+                >
+                  <Pencil size={15} />
+                </button>
                 <button
                   type="button"
                   className={styles.rowDeleteBtn}
@@ -154,6 +174,22 @@ export function ConversationsScreen({ service }: { service: WorkspaceService }) 
         }}
         onConfirm={() => void confirmDelete()}
       />
+      {conversationPendingRename && (
+        <RenameConversationDialog
+          initialTitle={conversationPendingRename.title}
+          renameConversation={(title) => service.renameConversation(conversationPendingRename.id, title)}
+          onClose={() => setConversationPendingRename(null)}
+          onRenamed={async () => {
+            setConversationPendingRename(null)
+            if (outlet?.refreshSnapshot) {
+              await outlet.refreshSnapshot()
+            } else {
+              const next = await service.getSnapshot()
+              setLocalSnapshot(next)
+            }
+          }}
+        />
+      )}
     </section>
   )
 }

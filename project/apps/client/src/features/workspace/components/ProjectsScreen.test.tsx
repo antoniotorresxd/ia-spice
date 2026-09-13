@@ -46,6 +46,10 @@ function serviceWith(overrides: Partial<WorkspaceService> = {}): WorkspaceServic
     createProject: vi.fn().mockResolvedValue({
       id: 'sensors', name: 'Sensores', description: '', conversationIds: [], fileCount: 0, updatedAt: '2026-07-15T16:00:00.000Z',
     }),
+    updateProject: vi.fn().mockResolvedValue({
+      id: 'sensors', name: 'Sensores', description: '', conversationIds: [], fileCount: 0, updatedAt: '2026-07-15T16:00:00.000Z', conversations: [],
+    }),
+    renameConversation: vi.fn(),
     getProject: vi.fn(),
     getConversation: vi.fn(),
     submitRequest: vi.fn(),
@@ -56,7 +60,7 @@ function serviceWith(overrides: Partial<WorkspaceService> = {}): WorkspaceServic
     deleteConversation: vi.fn().mockResolvedValue(undefined),
     getFiles: vi.fn().mockResolvedValue([]),
     ...overrides,
-  }
+  } as WorkspaceService
 }
 
 function renderScreen(service = serviceWith()) {
@@ -113,7 +117,7 @@ it('invokes createProject with its service receiver', async () => {
   await user.type(screen.getByLabelText('Nombre'), 'Proyecto ligado')
   await user.click(screen.getByRole('button', { name: 'Crear proyecto' }))
 
-  expect(await screen.findByLabelText('Ruta actual')).toHaveTextContent('/projects/bound')
+  await waitFor(() => expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/projects/bound'))
 })
 
 it('shows empty and filtered-empty states', async () => {

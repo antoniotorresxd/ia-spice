@@ -4,6 +4,9 @@ import { AlertCircle, Camera, Check, Mail, ShieldCheck, Sparkles, User } from 'l
 import type { UserProfile } from '../model/settings-types'
 import type { SettingsService } from '../services/settings-service'
 import { SettingsShell } from './SettingsShell'
+import { ProfileSettingsSkeleton } from '@/components/ui/Skeleton'
+import { useMascotSettings } from '@/lib/mascot-preferences'
+import { BotSvg, CatSvg, DogSvg, SparkySvg } from '@/components/layout/MascotRenderers'
 import styles from './ProfileSettingsScreen.module.css'
 
 type ProfileSettingsScreenProps = {
@@ -34,6 +37,7 @@ export function ProfileSettingsScreen({
   const [isSaving, setIsSaving] = useState(false)
   const previewUrlRef = useRef<string | null>(null)
   const selectedAvatarRef = useRef<File | null>(null)
+  const { settings: mascotSettings, updateSettings: updateMascotSettings, catalog } = useMascotSettings()
 
   useEffect(() => {
     let current = true
@@ -131,18 +135,16 @@ export function ProfileSettingsScreen({
       userName={saved?.name ?? 'Cuenta'}
     >
       {!saved ? (
-        <section className={styles.loadState}>
-          {loadError ? (
-            <>
-              <p role="alert">No pudimos cargar tu perfil. Inténtalo de nuevo.</p>
-              <button className={styles.retryBtn} onClick={() => setRetryKey((value) => value + 1)} type="button">
-                Reintentar
-              </button>
-            </>
-          ) : (
-            <p aria-busy="true">Cargando perfil…</p>
-          )}
-        </section>
+        loadError ? (
+          <section className={styles.loadState}>
+            <p role="alert">No pudimos cargar tu perfil. Inténtalo de nuevo.</p>
+            <button className={styles.retryBtn} onClick={() => setRetryKey((value) => value + 1)} type="button">
+              Reintentar
+            </button>
+          </section>
+        ) : (
+          <ProfileSettingsSkeleton />
+        )
       ) : (
         <div className={styles.container}>
           <header className={styles.pageHeader}>
@@ -240,6 +242,85 @@ export function ProfileSettingsScreen({
                   <p className={styles.fieldHint}>El correo está vinculado a tu cuenta y no puede modificarse.</p>
                 </div>
               </div>
+            </div>
+
+            {/* Mascot Configuration Card */}
+            <div className={`${styles.settingsCard} ${styles.mascotSection}`}>
+              <div className={styles.cardHeader}>
+                <div
+                  className={styles.cardIconBadge}
+                  style={{
+                    borderColor: 'rgba(69, 214, 196, 0.3)',
+                    background: 'rgba(69, 214, 196, 0.1)',
+                    color: 'var(--color-mint, #45d6c4)',
+                  }}
+                >
+                  <Sparkles size={18} />
+                </div>
+                <div className={styles.cardHeaderTitle}>
+                  <h2>Mascota interactiva del footer</h2>
+                  <p>Configura o desactiva la mascota que recorre el pie de página siguiendo tu cursor.</p>
+                </div>
+              </div>
+
+              <div className={styles.toggleRow}>
+                <div className={styles.toggleInfo}>
+                  <span className={styles.toggleTitle}>Mostrar mascota en el pie de página</span>
+                  <span className={styles.toggleDesc}>
+                    {mascotSettings.enabled
+                      ? 'Activado: la mascota te acompaña en la barra inferior.'
+                      : 'Desactivado: pie de página limpio sin animación.'}
+                  </span>
+                </div>
+                <label className={styles.toggleSwitch} aria-label="Habilitar mascota en el footer">
+                  <input
+                    type="checkbox"
+                    checked={mascotSettings.enabled}
+                    onChange={(e) => updateMascotSettings({ enabled: e.target.checked })}
+                  />
+                  <span className={styles.toggleSlider} />
+                </label>
+              </div>
+
+              {mascotSettings.enabled && (
+                <div className={styles.mascotGrid} role="radiogroup" aria-label="Seleccionar mascota">
+                  {catalog.map((mascot) => {
+                    const isSelected = mascotSettings.mascotId === mascot.id
+                    return (
+                      <div
+                        key={mascot.id}
+                        className={styles.mascotCard}
+                        data-selected={isSelected}
+                        onClick={() => updateMascotSettings({ mascotId: mascot.id })}
+                        role="radio"
+                        aria-checked={isSelected}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === ' ' || e.key === 'Enter') {
+                            e.preventDefault()
+                            updateMascotSettings({ mascotId: mascot.id })
+                          }
+                        }}
+                      >
+                        {isSelected && (
+                          <div className={styles.selectedCheckBadge}>
+                            <Check size={12} />
+                          </div>
+                        )}
+                        <div className={styles.mascotPreview}>
+                          {mascot.id === 'cat' && <CatSvg />}
+                          {mascot.id === 'dog' && <DogSvg />}
+                          {mascot.id === 'bot' && <BotSvg />}
+                          {mascot.id === 'sparky' && <SparkySvg />}
+                        </div>
+                        <div className={styles.mascotCardTitle}>{mascot.name}</div>
+                        <div className={styles.mascotCardTagline}>{mascot.tagline}</div>
+                        <div className={styles.mascotCardDesc}>{mascot.description}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {error ? (

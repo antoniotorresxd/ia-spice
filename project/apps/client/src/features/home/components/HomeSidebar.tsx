@@ -15,6 +15,7 @@ import type { ConversationSummary } from '../model/home-types'
 import type { WorkspaceProject } from '../../workspace/model/workspace-types'
 import { ConversationActions } from '../../workspace/components/ConversationActions'
 import { ConfirmDeleteModal } from '@/components/ui/ConfirmDeleteModal'
+import { useStoredNumber } from '@/lib/layout-preferences'
 import styles from './HomeSidebar.module.css'
 
 type SidebarConversation = Pick<ConversationSummary, 'id' | 'projectId' | 'title' | 'updatedAt'>
@@ -30,9 +31,13 @@ type HomeSidebarProps = {
   onDeleteConversation?: (conversationId: string) => Promise<void> | void
   userName: string
   isCollapsed?: boolean
+  isLoading?: boolean
 }
 
 const workspaceConversationMime = 'application/x-workspace-conversation'
+const DEFAULT_SIDEBAR_WIDTH = 240
+const MIN_SIDEBAR_WIDTH = 200
+const MAX_SIDEBAR_WIDTH = 440
 
 const navigation = [
   ['Inicio', '⌂', '/'],
@@ -55,7 +60,9 @@ export function HomeSidebar({
   projects = [],
   userName,
   isCollapsed = false,
+  isLoading = false,
 }: HomeSidebarProps) {
+
   const reducedMotion = useReducedMotion()
   const navigate = useNavigate()
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
@@ -65,6 +72,45 @@ export function HomeSidebar({
   const [projectPendingDelete, setProjectPendingDelete] = useState<{ id: string; name: string } | null>(null)
   const profileMenuRef = useRef<HTMLDivElement>(null)
   const profileTriggerRef = useRef<HTMLButtonElement>(null)
+
+  const [sidebarWidth, setSidebarWidth] = useStoredNumber('spice_sidebar_width', DEFAULT_SIDEBAR_WIDTH)
+  const [isResizing, setIsResizing] = useState(false)
+
+  useEffect(() => {
+    const clamped = Math.min(Math.max(sidebarWidth, MIN_SIDEBAR_WIDTH), MAX_SIDEBAR_WIDTH)
+    document.documentElement.style.setProperty('--sidebar-width', `${clamped}px`)
+  }, [sidebarWidth])
+
+  const startResizing = (mouseDownEvent: React.PointerEvent) => {
+    mouseDownEvent.preventDefault()
+    setIsResizing(true)
+    document.documentElement.setAttribute('data-sidebar-resizing', 'true')
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const newWidth = Math.min(Math.max(e.clientX, MIN_SIDEBAR_WIDTH), MAX_SIDEBAR_WIDTH)
+      setSidebarWidth(newWidth)
+      document.documentElement.style.setProperty('--sidebar-width', `${newWidth}px`)
+    }
+
+    const handlePointerUp = () => {
+      setIsResizing(false)
+      document.documentElement.removeAttribute('data-sidebar-resizing')
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+    }
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+  }
+
+  const handleDoubleClickResizer = () => {
+    setSidebarWidth(DEFAULT_SIDEBAR_WIDTH)
+    document.documentElement.style.setProperty('--sidebar-width', `${DEFAULT_SIDEBAR_WIDTH}px`)
+  }
 
   useEffect(() => {
     if (!isProfileMenuOpen) return
@@ -137,9 +183,10 @@ export function HomeSidebar({
         <NavLink
           className="home-conversation-link"
           onClick={closeNavigation}
+          title={conversation.title}
           to={`/conversations/${conversation.id}`}
         >
-          <MessageSquare aria-hidden="true" className="home-conversation-icon" size={13} />
+          <MessageSquare aria-hidden="true" className="home-conversation-icon" size={12} />
           <span className="home-conversation-title">{conversation.title}</span>
         </NavLink>
         <ConversationActions
@@ -153,6 +200,7 @@ export function HomeSidebar({
       </div>
     </li>
   )
+
 
   const sortedProjects = [...projects].sort((a, b) => {
     const timeA = a.updatedAt ? Date.parse(a.updatedAt) : 0
@@ -181,7 +229,12 @@ export function HomeSidebar({
           <ul>
             {navigation.map(([label, icon, path]) => (
               <li className={styles.navItem} key={label}>
-                <NavLink end={path === '/'} onClick={closeNavigation} to={path}>
+                <NavLink
+                  data-tour={path === '/new' ? 'new-request' : undefined}
+                  end={path === '/'}
+                  onClick={closeNavigation}
+                  to={path}
+                >
                   {({ isActive }) => (
                     <>
                       {isActive && (reducedMotion ? (
@@ -206,134 +259,165 @@ export function HomeSidebar({
         </LayoutGroup>
       </nav>
 
-      <section aria-labelledby="workspace-projects-title" className="home-recents home-project-tree">
+      <section
+        aria-labelledby="workspace-projects-title"
+        className="home-recents home-project-tree"
+        data-tour="projects-tree"
+      >
         <div className="home-workspace-header">
-          <h2 id="workspace-projects-title">Espacio</h2>
-          <span className="home-drag-hint" title="Arrastra conversaciones a las carpetas">Drag & drop</span>
+          <div className={styles.workspaceHeaderLeft}>
+            <h2 id="workspace-projects-title">Espacio</h2>
+            {isLoading && (
+              <span className={styles.loadingBadge} title="Sincronizando espacio…">
+                <span aria-hidden="true" className={styles.loadingPulse} />
+                Sincronizando…
+              </span>
+            )}
+          </div>
+          {!isLoading && (
+            <span className="home-drag-hint" title="Arrastra conversaciones a las carpetas">Drag & drop</span>
+          )}
         </div>
 
-        <ul>
-          {sortedProjects.map((project) => {
-            const isExpanded = expandedProjectIds.includes(project.id)
-            const children = [...conversations]
-              .filter(({ projectId }) => projectId === project.id)
-              .sort((a, b) => Date.parse(b.updatedAt ?? '') - Date.parse(a.updatedAt ?? ''))
-            const isDragOver = dragOverFolderId === project.id
+        {isLoading && sortedProjects.length === 0 && unassignedConversations.length === 0 ? (
+          <div aria-busy="true" aria-label="Cargando espacio" className={styles.skeletonTree}>
+            <div className={styles.skeletonNode}>
+              <div aria-hidden="true" className={styles.skeletonIcon} />
+              <div aria-hidden="true" className={styles.skeletonBar} style={{ width: '65%' }} />
+            </div>
+            <div className={styles.skeletonNode}>
+              <div aria-hidden="true" className={styles.skeletonIcon} />
+              <div aria-hidden="true" className={styles.skeletonBar} style={{ width: '80%' }} />
+            </div>
+            <div className={styles.skeletonNode}>
+              <div aria-hidden="true" className={styles.skeletonIcon} />
+              <div aria-hidden="true" className={styles.skeletonBar} style={{ width: '50%' }} />
+            </div>
+          </div>
+        ) : (
+          <ul>
+            {sortedProjects.map((project) => {
+              const isExpanded = expandedProjectIds.includes(project.id)
+              const children = [...conversations]
+                .filter(({ projectId }) => projectId === project.id)
+                .sort((a, b) => Date.parse(b.updatedAt ?? '') - Date.parse(a.updatedAt ?? ''))
+              const isDragOver = dragOverFolderId === project.id
 
-            return (
-              <li
-                className="home-folder-node"
-                data-drag-over={isDragOver}
-                key={project.id}
-                onDragLeave={() => setDragOverFolderId((id) => (id === project.id ? null : id))}
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  setDragOverFolderId(project.id)
-                }}
-                onDrop={(e) => handleDropOnProject(project.id, e)}
-              >
-                <div className={`home-project-row ${isDragOver ? 'home-project-drop-target' : ''}`}>
-                  <button
-                    aria-expanded={isExpanded}
-                    aria-label={`${isExpanded ? 'Contraer' : 'Expandir'} ${project.name}`}
-                    className="home-folder-toggle"
-                    onClick={() =>
-                      setExpandedProjectIds((current) =>
-                        isExpanded ? current.filter((id) => id !== project.id) : [...current, project.id],
-                      )
-                    }
-                    type="button"
-                  >
-                    <span aria-hidden="true" className="home-chevron-wrapper">
-                      {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-                      <span className="home-chevron-text-fallback">{isExpanded ? '⌄' : '›'}</span>
-                    </span>
-                  </button>
-
-                  <NavLink className="home-folder-link" onClick={closeNavigation} to={`/projects/${project.id}`}>
-                    {isExpanded ? (
-                      <FolderOpen aria-hidden="true" className="home-folder-icon is-active" size={14} />
-                    ) : (
-                      <Folder aria-hidden="true" className="home-folder-icon" size={14} />
-                    )}
-                    <span className="home-folder-name">{project.name}</span>
-                  </NavLink>
-
-                  <span className="home-folder-count">{children.length}</span>
-
-                  {onDeleteProject && (
+              return (
+                <li
+                  className="home-folder-node"
+                  data-drag-over={isDragOver}
+                  key={project.id}
+                  onDragLeave={() => setDragOverFolderId((id) => (id === project.id ? null : id))}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setDragOverFolderId(project.id)
+                  }}
+                  onDrop={(e) => handleDropOnProject(project.id, e)}
+                >
+                  <div className={`home-project-row ${isDragOver ? 'home-project-drop-target' : ''}`}>
                     <button
-                      aria-label={`Eliminar proyecto ${project.name}`}
-                      className="home-folder-delete"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setProjectPendingDelete(project)
-                      }}
-                      title={`Eliminar proyecto ${project.name}`}
+                      aria-expanded={isExpanded}
+                      aria-label={`${isExpanded ? 'Contraer' : 'Expandir'} ${project.name}`}
+                      className="home-folder-toggle"
+                      onClick={() =>
+                        setExpandedProjectIds((current) =>
+                          isExpanded ? current.filter((id) => id !== project.id) : [...current, project.id],
+                        )
+                      }
                       type="button"
                     >
-                      <Trash2 aria-hidden="true" size={12} />
+                      <span aria-hidden="true" className="home-chevron-wrapper">
+                        {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                        <span className="home-chevron-text-fallback">{isExpanded ? '⌄' : '›'}</span>
+                      </span>
                     </button>
-                  )}
-                </div>
 
-                <div
-                  aria-hidden={!isExpanded}
-                  className={styles.projectExpansion}
-                  data-expanded={isExpanded}
-                  inert={!isExpanded}
-                >
-                  <div className={styles.projectExpansionInner}>
-                    <ul className="home-project-conversations">
-                      {children.slice(0, 5).map(conversationItem)}
-                    </ul>
+                    <NavLink className="home-folder-link" onClick={closeNavigation} title={project.name} to={`/projects/${project.id}`}>
+                      {isExpanded ? (
+                        <FolderOpen aria-hidden="true" className="home-folder-icon is-active" size={13} />
+                      ) : (
+                        <Folder aria-hidden="true" className="home-folder-icon" size={13} />
+                      )}
+                      <span className="home-folder-name">{project.name}</span>
+                    </NavLink>
+
+                    <span className="home-folder-count">{children.length}</span>
+
+                    {onDeleteProject && (
+                      <button
+                        aria-label={`Eliminar proyecto ${project.name}`}
+                        className="home-folder-delete"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setProjectPendingDelete(project)
+                        }}
+                        title={`Eliminar proyecto ${project.name}`}
+                        type="button"
+                      >
+                        <Trash2 aria-hidden="true" size={12} />
+                      </button>
+                    )}
                   </div>
-                </div>
-              </li>
-            )
-          })}
 
-          <li
-            className="home-folder-node"
-            data-drag-over={dragOverFolderId === 'unassigned'}
-            onDragLeave={() => setDragOverFolderId((id) => (id === 'unassigned' ? null : id))}
-            onDragOver={(e) => {
-              e.preventDefault()
-              setDragOverFolderId('unassigned')
-            }}
-            onDrop={(e) => handleDropOnProject(null, e)}
-          >
-            <div className="home-folder-header">
-              <button
-                aria-expanded={isUnassignedExpanded}
-                aria-label={`${isUnassignedExpanded ? 'Contraer' : 'Expandir'} Sin proyecto`}
-                className="home-folder-toggle"
-                onClick={() => setIsUnassignedExpanded((prev) => !prev)}
-                type="button"
-              >
-                <span aria-hidden="true" className="home-chevron-wrapper">
-                  {isUnassignedExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-                  <span className="home-chevron-text-fallback">{isUnassignedExpanded ? '⌄' : '›'}</span>
+                  <div
+                    aria-hidden={!isExpanded}
+                    className={styles.projectExpansion}
+                    data-expanded={isExpanded}
+                    inert={!isExpanded}
+                  >
+                    <div className={styles.projectExpansionInner}>
+                      <ul className="home-project-conversations">
+                        {children.slice(0, 5).map(conversationItem)}
+                      </ul>
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+
+            <li
+              className="home-folder-node"
+              data-drag-over={dragOverFolderId === 'unassigned'}
+              onDragLeave={() => setDragOverFolderId((id) => (id === 'unassigned' ? null : id))}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setDragOverFolderId('unassigned')
+              }}
+              onDrop={(e) => handleDropOnProject(null, e)}
+            >
+              <div className="home-folder-header">
+                <button
+                  aria-expanded={isUnassignedExpanded}
+                  aria-label={`${isUnassignedExpanded ? 'Contraer' : 'Expandir'} Sin proyecto`}
+                  className="home-folder-toggle"
+                  onClick={() => setIsUnassignedExpanded((prev) => !prev)}
+                  type="button"
+                >
+                  <span aria-hidden="true" className="home-chevron-wrapper">
+                    {isUnassignedExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                    <span className="home-chevron-text-fallback">{isUnassignedExpanded ? '⌄' : '›'}</span>
+                  </span>
+                </button>
+                <NavLink className="home-folder-link" onClick={closeNavigation} title="Sin proyecto" to="/conversations">
+                  <Layers aria-hidden="true" className="home-folder-icon" size={13} />
+                  <span>Sin proyecto</span>
+                </NavLink>
+                <span className="home-folder-count">
+                  {unassignedConversations.length}
                 </span>
-              </button>
-              <NavLink className="home-folder-link" onClick={closeNavigation} to="/conversations">
-                <Layers aria-hidden="true" className="home-folder-icon" size={14} />
-                <span>Sin proyecto</span>
-              </NavLink>
-              <span className="home-folder-count">
-                {unassignedConversations.length}
-              </span>
-            </div>
-            {isUnassignedExpanded && (
-              <ul className="home-project-conversations">
-                {unassignedConversations.slice(0, 5).map(conversationItem)}
-              </ul>
-            )}
-          </li>
-        </ul>
+              </div>
+              {isUnassignedExpanded && (
+                <ul className="home-project-conversations">
+                  {unassignedConversations.slice(0, 5).map(conversationItem)}
+                </ul>
+              )}
+            </li>
+          </ul>
+        )}
       </section>
 
-      <div className="home-user-menu" ref={profileMenuRef}>
+      <div className="home-user-menu" data-tour="sidebar-footer" ref={profileMenuRef}>
         {isProfileMenuOpen && (
           <div aria-label="Menú de perfil" className="home-profile-menu" role="menu">
             <button onClick={() => goToSettings('/settings/profile')} role="menuitem" type="button">Configuración</button>
@@ -369,6 +453,18 @@ export function HomeSidebar({
           }
         }}
       />
+
+      {!isCollapsed && (
+        <div
+          aria-hidden="true"
+          className={styles.resizer}
+          data-resizing={isResizing}
+          onDoubleClick={handleDoubleClickResizer}
+          onPointerDown={startResizing}
+          title="Arrastra para redimensionar (doble clic para restablecer)"
+        />
+      )}
     </aside>
+
   )
 }

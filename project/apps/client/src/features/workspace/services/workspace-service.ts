@@ -13,8 +13,10 @@ export type WorkspaceService = {
   getProject(projectId: string): Promise<WorkspaceProjectDetail>
   getConversation(conversationId: string): Promise<WorkspaceConversationDetail>
   createProject(input: ProjectInput): Promise<WorkspaceProject>
+  updateProject(projectId: string, input: ProjectInput): Promise<WorkspaceProjectDetail>
   submitRequest(text: string): Promise<WorkspaceConversationDetail>
   continueConversation(conversationId: string, text: string): Promise<WorkspaceConversationDetail>
+  renameConversation(conversationId: string, title: string): Promise<WorkspaceConversationDetail>
   assignConversation(conversationId: string, projectId: string): Promise<WorkspaceConversation>
   restoreConversationProject(conversationId: string, projectId: string | null): Promise<WorkspaceConversation>
   deleteProject(projectId: string): Promise<void>

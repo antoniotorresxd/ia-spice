@@ -20,14 +20,14 @@
 
 .directory h1 {
   margin: 0.25rem 0 0.5rem;
-  color: #ffffff;
+  color: var(--foreground);
   font-size: clamp(2rem, 4vw, 3.2rem);
   font-weight: 700;
   letter-spacing: -0.04em;
 }
 
 .directory header > p:last-child {
-  color: #9aa2b1;
+  color: var(--muted-foreground);
   font-size: 0.92rem;
 }
 
@@ -220,6 +220,27 @@
   color: var(--color-mint) !important;
 }
 
+.rowEditBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rowEditBtn:hover {
+  border-color: rgba(69, 214, 196, 0.4);
+  background: rgba(69, 214, 196, 0.1);
+  color: var(--color-mint);
+}
+
 .rowDeleteBtn {
   display: inline-flex;
   align-items: center;
@@ -392,6 +413,33 @@
 :global(.light) .screen .topNavRow {
   border-bottom-color: rgba(0, 0, 0, 0.06);
   background: rgba(255, 255, 255, 0.75);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editConversationBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editConversationBtn:hover {
+  border-color: rgba(69, 214, 196, 0.4);
+  background: rgba(69, 214, 196, 0.1);
+  color: var(--color-mint);
 }
 
 .deleteConversationBtn {
@@ -901,3 +949,89 @@
 .filterSummary button:hover:not(:disabled) { background: var(--color-mint-dim); }
 .filterSummary button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .filterSummary button:disabled { opacity: 0.5; cursor: default; }
+
+/* Light Mode Overrides */
+:global(.light) .filters input {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+:global(.light) .filters select {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+:global(.light) .filters select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+:global(.light) .tableWrap {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+:global(.light) .tableWrap th {
+  color: #64748b;
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .tableWrap td {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+:global(.light) .tableWrap a {
+  color: #0f172a;
+}
+
+:global(.light) .tableWrap a:hover {
+  color: var(--color-mint);
+}
+
+:global(.light) .rowActionBtn {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #0f172a !important;
+}
+
+:global(.light) .rowActionBtn:hover {
+  background: color-mix(in srgb, var(--color-mint) 12%, transparent);
+  border-color: var(--color-mint);
+  color: var(--color-mint) !important;
+}
+
+:global(.light) .rowDeleteBtn {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .circuitCard {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .circuitCardName {
+  color: #0f172a;
+}
+
+:global(.light) .circuitCardIcon {
+  background: color-mix(in srgb, var(--color-mint) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-mint) 25%, transparent);
+  color: var(--color-mint);
+}
+
+:global(.light) .circuitPreviewBtn {
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #475569;
+}
+
+:global(.light) .circuitPreviewBtn:hover {
+  border-color: rgba(0, 0, 0, 0.25);
+  color: #0f172a;
+}
+

@@ -1,14 +1,23 @@
-import { ArrowUpRight, Play } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import {
+  ArrowUpRight,
+  Check,
+  ChevronDown,
+  FileCode2,
+  PanelLeft,
+  PanelLeftClose,
+  Play,
+} from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
+import { parseNetlist } from '../model/netlist-diagram'
 import type {
   WorkspaceConversationDetail,
   WorkspaceFileItem,
   WorkspaceSnapshot,
 } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
-import { NetlistDiagram } from './NetlistDiagram'
+import { CircuitExplanation, NetlistDiagram } from './NetlistDiagram'
 import styles from './VisualizerScreen.module.css'
 
 const DEFAULT_CIRCUIT = `.title Divisor de voltaje
@@ -19,6 +28,144 @@ R2 out 0 2200.0
 op
 .endc
 .end`
+
+function WorkspaceFileSelect({
+  files,
+  activeFileId,
+  onSelect,
+  projects,
+}: {
+  files: WorkspaceFileItem[]
+  activeFileId: string
+  onSelect: (fileId: string) => void
+  projects?: { id: string; name: string }[]
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleOutsideClick)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+    }
+  }, [isOpen])
+
+  const selectedFile = files.find((f) => f.id === activeFileId)
+
+  return (
+    <div ref={dropdownRef} className={styles.customSelectWrapper}>
+      {/* Hidden/accessible select for form & tests */}
+      <select
+        id="workspace-file-select"
+        aria-label="Seleccionar netlist"
+        className={styles.srOnlySelect}
+        value={activeFileId}
+        onChange={(e) => onSelect(e.target.value)}
+      >
+        <option value="">
+          {!activeFileId
+            ? '✏️ Código personalizado (o elegir archivo)...'
+            : 'Seleccionar netlist del workspace...'}
+        </option>
+        {files.map((file) => {
+          const proj = projects?.find((p) => p.id === file.projectId)?.name ?? 'Sin proyecto'
+          return (
+            <option key={file.id} value={file.id}>
+              {file.name} — {file.conversationTitle} ({proj})
+            </option>
+          )
+        })}
+      </select>
+
+      {/* Visual trigger button */}
+      <button
+        type="button"
+        className={`${styles.customSelectTrigger} ${isOpen ? styles.customSelectTriggerActive : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+      >
+        <div className={styles.triggerContent}>
+          {selectedFile ? (
+            <>
+              <FileCode2 size={16} className={styles.fileIcon} />
+              <div className={styles.selectedFileMeta}>
+                <span className={styles.selectedFileName}>{selectedFile.name}</span>
+                <span className={styles.selectedFileSub}>{selectedFile.conversationTitle}</span>
+              </div>
+            </>
+          ) : (
+            <span className={styles.placeholderText}>
+              Código manual (o elegir de conversaciones)...
+            </span>
+          )}
+        </div>
+        <ChevronDown size={15} className={`${styles.chevron} ${isOpen ? styles.chevronOpen : ''}`} />
+      </button>
+
+      {/* Visual dropdown list */}
+      {isOpen && (
+        <div className={styles.customDropdownMenu}>
+          <div className={styles.dropdownHeader}>
+            <span>Archivos SPICE ({files.length})</span>
+          </div>
+
+          <button
+            type="button"
+            className={`${styles.dropdownItem} ${!activeFileId ? styles.dropdownItemActive : ''}`}
+            onClick={() => {
+              onSelect('')
+              setIsOpen(false)
+            }}
+          >
+            <div className={styles.itemMain}>
+              <span className={styles.itemTitle}>Código manual / pegado</span>
+              <span className={styles.itemSubtitle}>Escribí o pegá código SPICE libremente</span>
+            </div>
+            {!activeFileId && <Check size={14} className={styles.itemCheck} />}
+          </button>
+
+          {files.length > 0 ? (
+            <div className={styles.dropdownItemList}>
+              {files.map((file) => {
+                const isSelected = file.id === activeFileId
+                const proj = projects?.find((p) => p.id === file.projectId)?.name
+                return (
+                  <button
+                    key={file.id}
+                    type="button"
+                    className={`${styles.dropdownItem} ${isSelected ? styles.dropdownItemActive : ''}`}
+                    onClick={() => {
+                      onSelect(file.id)
+                      setIsOpen(false)
+                    }}
+                  >
+                    <div className={styles.itemMain}>
+                      <div className={styles.itemTitleRow}>
+                        <span className={styles.itemTitle}>{file.name}</span>
+                        {proj && <span className={styles.itemProjectBadge}>{proj}</span>}
+                      </div>
+                      <span className={styles.itemSubtitle}>{file.conversationTitle}</span>
+                    </div>
+                    {isSelected && <Check size={14} className={styles.itemCheck} />}
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <div className={styles.emptyDropdown}>No hay archivos SPICE en el workspace</div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function VisualizerScreen({ service }: { service: WorkspaceService }) {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -32,6 +179,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
   const [selectedWorkspaceFileId, setSelectedWorkspaceFileId] = useState<string>('')
   const [activeFileSummary, setActiveFileSummary] = useState<string | null>(null)
   const [cache, setCache] = useState<Record<string, WorkspaceConversationDetail>>({})
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false)
 
   // Cargar lista de archivos y snapshot
   useEffect(() => {
@@ -159,95 +307,124 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
     [spiceFiles, activeWorkspaceFileId],
   )
 
-  const isCustomCode = !activeWorkspaceFileId
+  const parsedNetlist = useMemo(() => {
+    try {
+      return parseNetlist(drawnNetlist)
+    } catch {
+      return null
+    }
+  }, [drawnNetlist])
 
   return (
     <article className={styles.container}>
       <header className={styles.header}>
-        <span className={styles.eyebrow}>SPICE → ESQUEMÁTICO</span>
-        <h1 className={styles.title}>De netlist a diagrama que se entiende</h1>
+        <div className={styles.headerRow}>
+          <div className={styles.headerTop}>
+            <span className={styles.eyebrow}>SPICE → ESQUEMÁTICO</span>
+            <h1 className={styles.title}>De netlist a diagrama que se entiende</h1>
+          </div>
+
+          <button
+            type="button"
+            className={styles.togglePanelBtn}
+            onClick={() => setIsPanelCollapsed((prev) => !prev)}
+            title={isPanelCollapsed ? 'Mostrar panel de control' : 'Ocultar panel (pantalla completa)'}
+            aria-label={isPanelCollapsed ? 'Mostrar panel lateral' : 'Ocultar panel lateral'}
+          >
+            {isPanelCollapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
+            <span>{isPanelCollapsed ? 'Mostrar panel' : 'Ocultar panel'}</span>
+          </button>
+        </div>
         <p className={styles.subtitle}>
           Pegá el .cir que genera el agente de síntesis y mirá qué circuito describe, sin saber leer SPICE.
         </p>
       </header>
 
-      <div className={styles.workbenchGrid}>
-        {/* Left Column: NETLIST Card */}
-        <aside className={styles.netlistCard} aria-label="Editor y selector de netlist">
-          <p className={styles.cardEyebrow}>NETLIST</p>
+      <div className={`${styles.workbenchGrid} ${isPanelCollapsed ? styles.workbenchGridCollapsed : ''}`}>
+        {/* Left Column: Unified Studio Inspector Panel */}
+        {!isPanelCollapsed && (
+          <aside className={styles.sidebarPanel} aria-label="Editor y selector de netlist">
+          <div className={styles.sidebarTop}>
+            <div className={styles.editorHead}>
+              <p className={styles.cardEyebrow}>NETLIST</p>
+              {currentWorkspaceFile && (
+                <Link
+                  to={`/conversations/${currentWorkspaceFile.conversationId}`}
+                  className={styles.originLink}
+                >
+                  <span>Ver conversación</span>
+                  <ArrowUpRight size={11} />
+                </Link>
+              )}
+            </div>
 
-          {/* Selector de archivos del workspace */}
-          <div className={styles.workspaceImportRow}>
-            <label htmlFor="workspace-file-select" className={styles.importLabel}>
-              Importar de conversaciones:
-            </label>
-            <select
-              id="workspace-file-select"
-              aria-label="Seleccionar netlist"
-              className={styles.workspaceSelect}
-              value={activeWorkspaceFileId}
-              onChange={(e) => handleSelectWorkspaceFile(e.target.value)}
+            {/* Selector de archivos del workspace */}
+            <div className={styles.workspaceImportRow}>
+              <label htmlFor="workspace-file-select" className={styles.importLabel}>
+                Importar de conversaciones:
+              </label>
+              <WorkspaceFileSelect
+                files={spiceFiles}
+                activeFileId={activeWorkspaceFileId}
+                onSelect={handleSelectWorkspaceFile}
+                projects={snapshot?.projects}
+              />
+            </div>
+
+            {/* Textarea */}
+            <div className={styles.textareaWrap}>
+              <label htmlFor="spice-code-textarea" className={styles.textareaLabel}>
+                Código netlist SPICE
+              </label>
+              <textarea
+                id="spice-code-textarea"
+                aria-label="Código netlist SPICE"
+                className={styles.textarea}
+                value={code}
+                placeholder="Pegá aquí el código SPICE (.cir)..."
+                onChange={(e) => handleTextareaChange(e.target.value)}
+                spellCheck={false}
+                rows={6}
+              />
+            </div>
+
+            {/* Action Button */}
+            <button
+              type="button"
+              className={styles.drawButton}
+              onClick={handleDraw}
             >
-              <option value="">
-                {isCustomCode
-                  ? '✏️ Código personalizado (o elegir archivo)...'
-                  : 'Seleccionar netlist del workspace...'}
-              </option>
-              {spiceFiles.map((file) => {
-                const proj = snapshot?.projects.find((p) => p.id === file.projectId)?.name ?? 'Sin proyecto'
-                return (
-                  <option key={file.id} value={file.id}>
-                    {file.name} — {file.conversationTitle} ({proj})
-                  </option>
-                )
-              })}
-            </select>
-            {currentWorkspaceFile && (
-              <Link
-                to={`/conversations/${currentWorkspaceFile.conversationId}`}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.3rem',
-                  fontSize: '0.75rem',
-                  color: '#ea8144',
-                  textDecoration: 'none',
-                  marginTop: '0.2rem',
-                }}
-              >
-                <span>Ver conversación de origen</span>
-                <ArrowUpRight size={12} />
-              </Link>
+              <Play size={15} fill="currentColor" />
+              <span>Dibujar circuito</span>
+            </button>
+          </div>
+
+          <div className={styles.sidebarDivider} />
+
+          {/* Bottom Section: Explanation & Components */}
+          <div className={styles.sidebarBottom} aria-label="Análisis del circuito">
+            {parsedNetlist ? (
+              <CircuitExplanation
+                netlist={parsedNetlist}
+                workspaceSummary={activeFileSummary}
+                compact
+              />
+            ) : (
+              <div className={styles.inspectorPlaceholder}>
+                <p>Presioná "Dibujar circuito" para actualizar el análisis esquemático.</p>
+              </div>
             )}
           </div>
-
-          {/* Textarea */}
-          <div className={styles.textareaWrap}>
-            <textarea
-              aria-label="Código netlist SPICE"
-              className={styles.textarea}
-              value={code}
-              placeholder="Pegá aquí el código SPICE (.cir)..."
-              onChange={(e) => handleTextareaChange(e.target.value)}
-              spellCheck={false}
-              rows={16}
-            />
-          </div>
-
-          {/* Action Button */}
-          <button
-            type="button"
-            className={styles.drawButton}
-            onClick={handleDraw}
-          >
-            <Play size={16} fill="currentColor" />
-            <span>Dibujar circuito</span>
-          </button>
         </aside>
+        )}
 
-        {/* Right Column: Display Area */}
+        {/* Right Column: Full-Height Canvas Viewport */}
         <section className={styles.displayColumn} aria-label="Visualización y análisis del circuito">
-          <NetlistDiagram netlistText={drawnNetlist} workspaceSummary={activeFileSummary} />
+          <NetlistDiagram
+            netlistText={drawnNetlist}
+            workspaceSummary={activeFileSummary}
+            showExplanation={false}
+          />
         </section>
       </div>
     </article>

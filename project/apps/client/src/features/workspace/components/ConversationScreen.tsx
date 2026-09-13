@@ -1,13 +1,15 @@
-import { ArrowDown, ArrowUpRight, ChevronDown, ChevronUp, Cpu, Send, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUpRight, ChevronDown, ChevronUp, Cpu, Pencil, Send, Trash2 } from 'lucide-react'
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 
 import { ConfirmDeleteModal } from '@/components/ui/ConfirmDeleteModal'
+import { ConversationDetailSkeleton } from '@/components/ui/Skeleton'
 import { ActivityTimeline } from '../../home/components/ActivityTimeline'
 import type { ConversationExecution } from '../../home/model/home-types'
 import { useConversationPolling } from '../model/use-conversation-polling'
 import type { WorkspaceConversationDetail, WorkspaceSnapshot } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
+import { RenameConversationDialog } from './RenameConversationDialog'
 import styles from './ConversationScreen.module.css'
 import { NetlistDiagram } from './NetlistDiagram'
 
@@ -16,7 +18,7 @@ const statusLabels = { active: 'En curso', completed: 'Completada', failed: 'Fal
 export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const { conversationId = '' } = useParams()
   const navigate = useNavigate()
-  const outlet = useOutletContext<{ deleteConversation?: (id: string) => Promise<void> } | null>()
+  const outlet = useOutletContext<{ refreshSnapshot?: () => Promise<void>; deleteConversation?: (id: string) => Promise<void> } | null>()
   const [conversation, setConversation] = useState<WorkspaceConversationDetail | null>(null)
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
   const [loadError, setLoadError] = useState(false)
@@ -24,6 +26,7 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const [submitError, setSubmitError] = useState('')
   const [pending, setPending] = useState(false)
   const [previewFileId, setPreviewFileId] = useState<string | null>(null)
+  const [isRenaming, setIsRenaming] = useState(false)
 
   const messagesRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -132,9 +135,14 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   }
 
   if (loadError) return <section className={`${styles.state} ${styles.detailState}`}><h1>No encontramos esta conversación</h1><p role="alert">No encontramos esta conversación. Puede que ya no exista.</p><Link to="/conversations">Volver a conversaciones</Link></section>
-  if (!conversation || !timeline) return <p aria-live="polite">Cargando conversación…</p>
+  if (!conversation || !timeline) return <ConversationDetailSkeleton />
   const project = snapshot?.projects.find(({ id }) => id === conversation.projectId)
   const netlistFiles = conversation.files.filter((file) => file.language === 'spice' && file.content.trim())
+  const isDesignExecution =
+    conversation.execution.mode === 'design' ||
+    (conversation.execution.mode !== 'chat' &&
+      conversation.execution.mode !== 'clarify' &&
+      conversation.files.length > 0)
 
   return (
     <article className={styles.screen}>
@@ -144,19 +152,31 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
           <span aria-hidden="true">/</span>
           {project ? <Link to={`/projects/${project.id}`}>{project.name}</Link> : <span>Sin proyecto</span>}
         </nav>
-        <button
-          type="button"
-          className={styles.deleteConversationBtn}
-          onClick={() => {
-            setDeleteError(null)
-            setIsConfirmingDelete(true)
-          }}
-          aria-label="Eliminar conversación"
-          title="Eliminar conversación"
-        >
-          <Trash2 size={15} />
-          <span>Eliminar conversación</span>
-        </button>
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.editConversationBtn}
+            onClick={() => setIsRenaming(true)}
+            aria-label={`Renombrar conversación ${conversation.title}`}
+            title="Renombrar conversación"
+          >
+            <Pencil size={15} />
+            <span>Renombrar</span>
+          </button>
+          <button
+            type="button"
+            className={styles.deleteConversationBtn}
+            onClick={() => {
+              setDeleteError(null)
+              setIsConfirmingDelete(true)
+            }}
+            aria-label="Eliminar conversación"
+            title="Eliminar conversación"
+          >
+            <Trash2 size={15} />
+            <span>Eliminar conversación</span>
+          </button>
+        </div>
       </div>
       <header className={styles.hero}>
         <div className={styles.heroHeader}>
@@ -165,7 +185,9 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
             <h1>{conversation.title}</h1>
           </div>
           <span className={styles.statusBadge} data-status={conversation.executionStatus}>
-            {statusLabels[conversation.executionStatus]}
+            {isDesignExecution
+              ? statusLabels[conversation.executionStatus]
+              : (conversation.executionStatus === 'active' ? 'Pensando…' : 'Conversación')}
           </span>
         </div>
         <p>{conversation.preview}</p>
@@ -182,8 +204,16 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                   <p>{message.content}</p>
                 </article>
               ))}
+              {(pending || conversation.executionStatus === 'active') && (
+                <article className={styles.message} data-role="assistant" aria-live="polite">
+                  <p className={styles.role}>Asistente</p>
+                  <p>Pensando…</p>
+                </article>
+              )}
             </section>
-            <ActivityTimeline execution={timeline} heading="Progreso de la ejecución" />
+            {isDesignExecution && timeline ? (
+              <ActivityTimeline execution={timeline} heading="Progreso de la ejecución" />
+            ) : null}
             {netlistFiles.length ? (
               <section aria-labelledby="circuits-title" className={styles.circuits}>
                 <h2 id="circuits-title">Circuitos generados</h2>
@@ -260,6 +290,18 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
         }}
         onConfirm={() => void handleDelete()}
       />
+      {isRenaming && (
+        <RenameConversationDialog
+          initialTitle={conversation.title}
+          renameConversation={(title) => service.renameConversation(conversation.id, title)}
+          onClose={() => setIsRenaming(false)}
+          onRenamed={async (updated) => {
+            setConversation(updated)
+            setIsRenaming(false)
+            await outlet?.refreshSnapshot?.()
+          }}
+        />
+      )}
     </article>
   )
 }

@@ -1,10 +1,15 @@
-import { useMemo } from 'react'
+import { Maximize2, Move, ZoomIn, ZoomOut } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
+  COL_ROUTE_Y,
+  EMI_Y,
   GROUND_Y,
   type LayoutSymbol,
   NetlistParseError,
+  type ParsedNetlist,
   RAIL_Y,
+  VCC_Y,
   buildDiagram,
   componentValue,
   describeCircuit,
@@ -45,10 +50,23 @@ function ResistorZigzag({ x1, x2, y }: { x1: number; x2: number; y: number }) {
   )
 }
 
+function DropLegs({ x1, x2, y }: { x1: number; x2: number; y: number }) {
+  if (y === RAIL_Y) return null
+  return (
+    <g>
+      <line x1={x1} y1={RAIL_Y} x2={x1} y2={y} className={styles.wire} />
+      <line x1={x2} y1={y} x2={x2} y2={RAIL_Y} className={styles.wire} />
+      <circle cx={x1} cy={RAIL_Y} r={3} className={styles.nodeDot} />
+      <circle cx={x2} cy={RAIL_Y} r={3} className={styles.nodeDot} />
+    </g>
+  )
+}
+
 function ResistorH({ x1, x2, y, name, value }: { x1: number; x2: number; y: number; name: string; value: string }) {
   const mx = (x1 + x2) / 2
   return (
     <g>
+      <DropLegs x1={x1} x2={x2} y={y} />
       <ResistorZigzag x1={x1} x2={x2} y={y} />
       <text x={mx} y={y - 18} textAnchor="middle" className={styles.lbl}>
         {name} · {value}
@@ -58,16 +76,18 @@ function ResistorH({ x1, x2, y, name, value }: { x1: number; x2: number; y: numb
 }
 
 function ResistorV({ x, y1, y2, name, value }: { x: number; y1: number; y2: number; name: string; value: string }) {
-  const lead = 20
-  const amp = 9
+  // Fixed-size body, centered — wires extend to the rails
   const segs = 6
-  const zy1 = y1 + lead
-  const zy2 = y2 - lead
-  const step = (zy2 - zy1) / segs
+  const amp = 10
+  const segH = 9
+  const bodyH = segs * segH          // ~54 px
+  const my = (y1 + y2) / 2
+  const zy1 = my - bodyH / 2
+  const zy2 = my + bodyH / 2
+  const step = segH
   const points: string[] = [`${x},${zy1}`]
   for (let i = 1; i < segs; i++) points.push(`${x + (i % 2 ? -amp : amp)},${zy1 + i * step}`)
   points.push(`${x},${zy2}`)
-  const my = (y1 + y2) / 2
   return (
     <g>
       <line x1={x} y1={y1} x2={x} y2={zy1} className={styles.wire} />
@@ -89,6 +109,7 @@ function CapacitorH({ x1, x2, y, name, value }: { x1: number; x2: number; y: num
   const gap = 4
   return (
     <g>
+      <DropLegs x1={x1} x2={x2} y={y} />
       <line x1={x1} y1={y} x2={mx - gap} y2={y} className={styles.wire} />
       <line x1={mx + gap} y1={y} x2={x2} y2={y} className={styles.wire} />
       <line x1={mx - gap} y1={y - plateH} x2={mx - gap} y2={y + plateH} className={styles.symbolStroke} />
@@ -134,6 +155,7 @@ function InductorH({ x1, x2, y, name, value }: { x1: number; x2: number; y: numb
   }
   return (
     <g>
+      <DropLegs x1={x1} x2={x2} y={y} />
       <line x1={x1} y1={y} x2={lx1} y2={y} className={styles.wire} />
       <line x1={lx2} y1={y} x2={x2} y2={y} className={styles.wire} />
       {paths.map((p, idx) => (
@@ -147,16 +169,18 @@ function InductorH({ x1, x2, y, name, value }: { x1: number; x2: number; y: numb
 }
 
 function InductorV({ x, y1, y2, name, value }: { x: number; y1: number; y2: number; name: string; value: string }) {
-  const lead = 20
+  // Fixed-size body, centered — wires extend to the rails
   const loops = 4
-  const ly1 = y1 + lead
-  const ly2 = y2 - lead
-  const step = (ly2 - ly1) / loops
-  const r = step / 2
+  const loopH = 17           // px per loop
+  const bodyH = loops * loopH  // ~68 px
+  const my = (y1 + y2) / 2
+  const ly1 = my - bodyH / 2
+  const ly2 = my + bodyH / 2
+  const r = loopH / 2
   const paths: string[] = []
   for (let i = 0; i < loops; i++) {
-    const start = ly1 + i * step
-    const end = start + step
+    const start = ly1 + i * loopH
+    const end = start + loopH
     paths.push(`M ${x} ${start} A ${r * 1.2} ${r} 0 0 1 ${x} ${end}`)
   }
   return (
@@ -166,10 +190,10 @@ function InductorV({ x, y1, y2, name, value }: { x: number; y1: number; y2: numb
       {paths.map((p, idx) => (
         <path key={idx} d={p} className={styles.symbolStroke} fill="none" />
       ))}
-      <text x={x + 22} y={(y1 + y2) / 2 - 2} textAnchor="start" className={styles.lbl}>
+      <text x={x + 22} y={my - 2} textAnchor="start" className={styles.lbl}>
         {name}
       </text>
-      <text x={x + 22} y={(y1 + y2) / 2 + 13} textAnchor="start" className={styles.lblSub}>
+      <text x={x + 22} y={my + 13} textAnchor="start" className={styles.lblSub}>
         {value}
       </text>
     </g>
@@ -199,6 +223,7 @@ function DiodeH({
   const pTip = pointingRight ? mx + size : mx - size
   return (
     <g>
+      <DropLegs x1={x1} x2={x2} y={y} />
       <line x1={x1} y1={y} x2={mx - size} y2={y} className={styles.wire} />
       <line x1={mx + size} y1={y} x2={x2} y2={y} className={styles.wire} />
       <polygon
@@ -348,6 +373,69 @@ function SourceV({
   )
 }
 
+function SourceH({
+  x1,
+  x2,
+  y,
+  name,
+  value,
+  isAc,
+}: {
+  x1: number
+  x2: number
+  y: number
+  name: string
+  value: string
+  isAc: boolean
+}) {
+  const mx = (x1 + x2) / 2
+  const r = 17
+  return (
+    <g>
+      <DropLegs x1={x1} x2={x2} y={y} />
+      <line x1={x1} y1={y} x2={mx - r} y2={y} className={styles.wire} />
+      <line x1={mx + r} y1={y} x2={x2} y2={y} className={styles.wire} />
+      <circle cx={mx} cy={y} r={r} className={styles.symbolStroke} fill="none" />
+      {isAc ? (
+        <path d={`M ${mx - 9} ${y} q 4.5 -8 9 0 q 4.5 8 9 0`} className={styles.symbolStroke} fill="none" />
+      ) : (
+        <>
+          <line x1={mx - 6} y1={y - 7} x2={mx + 6} y2={y - 7} className={styles.symbolStroke} />
+          <line x1={mx} y1={y - 12} x2={mx} y2={y - 2} className={styles.symbolStroke} />
+          <line x1={mx - 6} y1={y + 7} x2={mx + 6} y2={y + 7} className={styles.symbolStroke} />
+        </>
+      )}
+      <text x={mx} y={y - 22} textAnchor="middle" className={styles.lbl}>
+        {name} · {value}
+      </text>
+    </g>
+  )
+}
+
+function WireHopH({ x1, x2, y, hopX }: { x1: number; x2: number; y: number; hopX: number }) {
+  const r = 10
+  return (
+    <g>
+      <line x1={x1} y1={y} x2={hopX - r} y2={y} className={styles.wire} />
+      {/* Máscara de fondo bajo el arco para asegurar que ningún trazo posterior se cruce */}
+      <rect
+        x={hopX - r}
+        y={y - r - 2}
+        width={r * 2}
+        height={r + 4}
+        fill="#090d13"
+      />
+      <path
+        d={`M ${hopX - r},${y} A ${r},${r} 0 0,1 ${hopX + r},${y}`}
+        className={styles.wire}
+        fill="none"
+        strokeWidth={1.8}
+      />
+      <line x1={hopX + r} y1={y} x2={x2} y2={y} className={styles.wire} />
+    </g>
+  )
+}
+
 function Opamp({ cx, inTopX, inBotX, outX }: { cx: number; inTopX: number; inBotX: number; outX: number }) {
   const w = 64
   const h = 56
@@ -379,39 +467,64 @@ function Opamp({ cx, inTopX, inBotX, outX }: { cx: number; inTopX: number; inBot
 }
 
 function Bjt({
+  cx,
   collectorX,
   baseX,
   emitterX,
   name,
   value,
 }: {
+  cx: number
   collectorX: number
   baseX: number
   emitterX: number
   name: string
   value: string
 }) {
-  // El cuerpo del transistor se dibuja a la derecha de la base, sobre el
-  // mismo raíl RAIL_Y: la base entra horizontal, colector y emisor salen en
-  // diagonal hacia sus propios nodos, sean cuales sean sus posiciones X
-  // relativas (no asume que colector/emisor caigan a la derecha de base).
-  const bodyX = baseX + 22
+  const bodyX = cx - 10
   const spineTop = RAIL_Y - 26
   const spineBot = RAIL_Y + 26
+  const colTermX = bodyX + 20
+  const colTermY = spineTop - 8
+  const emiTermX = bodyX + 20
+  const emiTermY = spineBot + 8
+
   return (
     <g>
+      {/* Pin de Base */}
       <line x1={baseX} y1={RAIL_Y} x2={bodyX} y2={RAIL_Y} className={styles.wire} />
+      <circle cx={baseX} cy={RAIL_Y} r={3} className={styles.nodeDot} />
+
+      {/* Espina del transistor */}
       <line x1={bodyX} y1={spineTop} x2={bodyX} y2={spineBot} className={styles.symbolStroke} />
-      <line x1={bodyX} y1={spineTop + 6} x2={bodyX + 20} y2={spineTop - 8} className={styles.symbolStroke} />
-      <line x1={bodyX + 20} y1={spineTop - 8} x2={collectorX} y2={RAIL_Y} className={styles.wire} />
-      <line x1={bodyX} y1={spineBot - 6} x2={bodyX + 20} y2={spineBot + 8} className={styles.symbolStroke} />
-      <line x1={bodyX + 20} y1={spineBot + 8} x2={emitterX} y2={RAIL_Y} className={styles.wire} />
+      <line x1={bodyX} y1={spineTop + 6} x2={colTermX} y2={colTermY} className={styles.symbolStroke} />
+
+      {/* Enrutamiento colector hacia collectorX por la pista aérea COL_ROUTE_Y (sin tocar el texto del transistor) */}
+      <polyline
+        points={`${colTermX},${colTermY} ${colTermX},${COL_ROUTE_Y} ${collectorX},${COL_ROUTE_Y} ${collectorX},${RAIL_Y}`}
+        className={styles.wire}
+        fill="none"
+      />
+      <circle cx={collectorX} cy={RAIL_Y} r={3} className={styles.nodeDot} />
+
+      {/* Terminal emisor y flecha NPN */}
+      <line x1={bodyX} y1={spineBot - 6} x2={emiTermX} y2={emiTermY} className={styles.symbolStroke} />
       <polygon
         points={`${bodyX + 11},${spineBot - 1} ${bodyX + 21},${spineBot + 3} ${bodyX + 13},${spineBot + 9}`}
         className={styles.symbolStroke}
       />
-      <circle cx={bodyX + 6} cy={RAIL_Y} r={28} className={styles.symbolStroke} fill="none" />
-      <text x={bodyX + 6} y={spineTop - 16} textAnchor="middle" className={styles.lblSub}>
+
+      {/* Enrutamiento emisor hacia emitterX en su capa EMI_Y */}
+      <polyline
+        points={`${emiTermX},${emiTermY} ${emiTermX},${EMI_Y} ${emitterX},${EMI_Y}`}
+        className={styles.wire}
+        fill="none"
+      />
+      <circle cx={emitterX} cy={EMI_Y} r={3} className={styles.nodeDot} />
+
+      {/* Cuerpo circular del BJT */}
+      <circle cx={cx} cy={RAIL_Y} r={26} className={styles.symbolStroke} fill="none" />
+      <text x={cx} y={RAIL_Y - 34} textAnchor="middle" className={styles.lblSub}>
         {name} · {value}
       </text>
     </g>
@@ -479,11 +592,23 @@ function Symbol({ symbol }: { symbol: LayoutSymbol }) {
           isAc={symbol.isAc}
         />
       )
+    case 'sourceH':
+      return (
+        <SourceH
+          x1={symbol.x1}
+          x2={symbol.x2}
+          y={symbol.y}
+          name={symbol.name}
+          value={symbol.value}
+          isAc={symbol.isAc}
+        />
+      )
     case 'opamp':
       return <Opamp cx={symbol.cx} inTopX={symbol.inTopX} inBotX={symbol.inBotX} outX={symbol.outX} />
     case 'bjt':
       return (
         <Bjt
+          cx={symbol.cx}
           collectorX={symbol.collectorX}
           baseX={symbol.baseX}
           emitterX={symbol.emitterX}
@@ -502,7 +627,58 @@ function Symbol({ symbol }: { symbol: LayoutSymbol }) {
           )}
         </g>
       )
+    case 'wireV':
+      return <line x1={symbol.x} y1={symbol.y1} x2={symbol.x} y2={symbol.y2} className={styles.wire} />
+    case 'wireHopH':
+      return <WireHopH x1={symbol.x1} x2={symbol.x2} y={symbol.y} hopX={symbol.hopX} />
   }
+}
+
+export function CircuitExplanation({
+  netlist,
+  workspaceSummary,
+  compact = false,
+}: {
+  netlist: ParsedNetlist
+  workspaceSummary?: string | null
+  compact?: boolean
+}) {
+  return (
+    <section aria-label="Descripción del circuito" className={`${styles.explainCard} ${compact ? styles.compactExplain : ''}`}>
+      <h5 className={styles.explainTitle}>¿QUÉ HACE ESTE CIRCUITO?</h5>
+      <p className={styles.explainText}>{workspaceSummary || describeCircuit(netlist)}</p>
+
+      {netlist.measurements.length > 0 ? (
+        <div className={styles.measureCallout}>
+          <span className={styles.measurePrefix}>El sistema mide</span>
+          <span className={styles.measureContent}>
+            {measurementText(netlist.measurements)}
+          </span>
+        </div>
+      ) : null}
+
+      <div className={styles.tableScrollWrap}>
+        <table className={styles.componentTable}>
+          <thead>
+            <tr>
+              <th>Componente</th>
+              <th>Entre nodos</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {netlist.elements.map((e) => (
+              <tr key={e.name}>
+                <td>{e.name}</td>
+                <td>{e.nodes.join(' → ')}</td>
+                <td>{componentValue(e)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
 }
 
 export function NetlistDiagram({
@@ -527,16 +703,127 @@ export function NetlistDiagram({
     }
   }, [netlistText])
 
-  if (parsed.error || !parsed.data) {
+  const netlist = parsed.data
+  const diagram = useMemo(() => (netlist ? buildDiagram(netlist) : null), [netlist])
+
+  const [zoom, setZoom] = useState(1)
+  const [pan, setPan] = useState({ x: 30, y: 30 })
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStartRef = useRef({ x: 0, y: 0 })
+  const canvasWrapRef = useRef<HTMLDivElement>(null)
+  const autoCenteredRef = useRef(false)
+
+  // Auto-centrar el diagrama en el lienzo
+  const centerDiagram = useCallback(() => {
+    const el = canvasWrapRef.current
+    if (!el || !diagram) {
+      setZoom(1)
+      setPan({ x: 30, y: 30 })
+      return
+    }
+    const rect = el.getBoundingClientRect()
+    const fitScale = Math.min(
+      (rect.width - 60) / diagram.width,
+      (rect.height - 60) / diagram.height,
+      1.0,
+    )
+    const initialZoom = Math.max(0.45, Number(fitScale.toFixed(2)))
+    const initialPanX = Math.round((rect.width - diagram.width * initialZoom) / 2)
+    const initialPanY = Math.round((rect.height - diagram.height * initialZoom) / 2)
+    setZoom(initialZoom)
+    setPan({ x: initialPanX, y: initialPanY })
+  }, [diagram])
+
+  // Centrar automáticamente cuando el diagrama esté disponible
+  useEffect(() => {
+    if (autoCenteredRef.current || !diagram) return
+    autoCenteredRef.current = true
+    const timer = setTimeout(centerDiagram, 40)
+    return () => clearTimeout(timer)
+  }, [diagram, centerDiagram])
+
+  // Manejo de zoom por rueda con anclaje al puntero (focal zoom) y prevención estricta de zoom del navegador
+  useEffect(() => {
+    const el = canvasWrapRef.current
+    if (!el) return
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      const rect = el.getBoundingClientRect()
+      const mouseX = e.clientX - rect.left
+      const mouseY = e.clientY - rect.top
+
+      const zoomFactor = e.deltaY < 0 ? 1.12 : 0.88
+
+      setZoom((currentZoom) => {
+        const nextZoom = Math.min(Math.max(0.35, Number((currentZoom * zoomFactor).toFixed(2))), 3.5)
+        if (nextZoom === currentZoom) return currentZoom
+
+        setPan((currentPan) => {
+          const scaleChange = nextZoom / currentZoom
+          const nextPanX = mouseX - (mouseX - currentPan.x) * scaleChange
+          const nextPanY = mouseY - (mouseY - currentPan.y) * scaleChange
+          return { x: Math.round(nextPanX), y: Math.round(nextPanY) }
+        })
+
+        return nextZoom
+      })
+    }
+
+    el.addEventListener('wheel', handleWheel, { passive: false })
+    return () => {
+      el.removeEventListener('wheel', handleWheel)
+    }
+  }, [diagram])
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Only drag on primary button
+    if (e.button !== 0) return
+    setIsDragging(true)
+    dragStartRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return
+    setPan({
+      x: e.clientX - dragStartRef.current.x,
+      y: e.clientY - dragStartRef.current.y,
+    })
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) {
+      setIsDragging(false)
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      } catch {
+        // Pointer capture release safety
+      }
+    }
+  }
+
+  const handleZoomIn = () => {
+    setZoom((prev) => Math.min(3.5, Number((prev + 0.15).toFixed(2))))
+  }
+
+  const handleZoomOut = () => {
+    setZoom((prev) => Math.max(0.35, Number((prev - 0.15).toFixed(2))))
+  }
+
+  const handleReset = () => {
+    centerDiagram()
+  }
+
+  if (parsed.error || !netlist || !diagram) {
     return (
       <p role="alert" className={styles.parseError}>
         {parsed.error}
       </p>
     )
   }
-
-  const netlist = parsed.data
-  const diagram = buildDiagram(netlist)
 
   // Encontrar qué items de leyenda se usan
   const activeLegend = LEGEND_ITEMS.filter((item) =>
@@ -548,83 +835,153 @@ export function NetlistDiagram({
       {/* Card 1: Canvas Card */}
       <section aria-label="Lienzo esquemático del circuito" className={styles.canvasCard}>
         <div className={styles.head}>
-          <h4>{title ?? netlist.title}</h4>
-          <span className={styles.badge}>
-            {Object.keys(diagram.nodeXs).length} nodos · {netlist.elements.length} componentes
-          </span>
+          <div className={styles.titleInfo}>
+            <h4>{title ?? netlist.title}</h4>
+            <span className={styles.badge}>
+              {Object.keys(diagram.nodeXs).length} nodos · {netlist.elements.length} componentes
+            </span>
+          </div>
+
+          <div className={styles.canvasControls} role="toolbar" aria-label="Controles del lienzo">
+            <button
+              type="button"
+              className={styles.canvasControlBtn}
+              onClick={handleZoomOut}
+              title="Alejar (-)"
+              aria-label="Alejar"
+            >
+              <ZoomOut size={15} />
+            </button>
+            <span className={styles.zoomIndicator}>{Math.round(zoom * 100)}%</span>
+            <button
+              type="button"
+              className={styles.canvasControlBtn}
+              onClick={handleZoomIn}
+              title="Acercar (+)"
+              aria-label="Acercar"
+            >
+              <ZoomIn size={15} />
+            </button>
+            <button
+              type="button"
+              className={`${styles.canvasControlBtn} ${styles.resetBtn}`}
+              onClick={handleReset}
+              title="Restablecer vista"
+              aria-label="Restablecer vista"
+            >
+              <Maximize2 size={14} />
+              <span>100%</span>
+            </button>
+          </div>
         </div>
 
-        <div className={styles.canvasWrap}>
+        <div
+          ref={canvasWrapRef}
+          className={`${styles.canvasWrap} ${isDragging ? styles.canvasWrapDragging : ''}`}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+        >
           <svg
-            viewBox={`0 0 ${diagram.width} ${diagram.height}`}
             className={styles.svg}
+            shapeRendering="geometricPrecision"
+            textRendering="geometricPrecision"
             role="img"
             aria-label={`Diagrama del circuito ${netlist.title}`}
           >
-            <defs>
-              <pattern id="schematic-grid" width="24" height="24" patternUnits="userSpaceOnUse">
-                <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#1c2433" strokeWidth="0.8" />
-              </pattern>
-            </defs>
-            <rect width={diagram.width} height={diagram.height} fill="url(#schematic-grid)" />
-
-            {/* Raíles horizontales de señal por nodo (solo conectan ramas pertenecientes al mismo bus) */}
-            {diagram.nodeBuses.map((bus) => {
-              const hasMultiple = bus.branches.length > 1
-              const midX = (bus.xStart + bus.xEnd) / 2
-              return (
-                <g key={bus.node}>
-                  {hasMultiple ? (
-                    <line
-                      x1={bus.xStart}
-                      y1={RAIL_Y}
-                      x2={bus.xEnd}
-                      y2={RAIL_Y}
-                      className={styles.wire}
-                    />
-                  ) : null}
-
-                  {bus.branches.map((bx, idx) => (
-                    <circle key={idx} cx={bx} cy={RAIL_Y} r={3.2} className={styles.nodeDot} />
+            <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+              {/* Raíl de alimentación continuo superior (VCC) */}
+              {diagram.topRailSpan && (
+                <g>
+                  <line
+                    x1={diagram.topRailSpan.xStart - 18}
+                    y1={VCC_Y}
+                    x2={diagram.topRailSpan.xEnd + 18}
+                    y2={VCC_Y}
+                    className={styles.wire}
+                    strokeWidth={2}
+                  />
+                  {diagram.topRailSpan.drops.map((x, idx) => (
+                    <circle key={idx} cx={x} cy={VCC_Y} r={3.2} className={styles.nodeDot} />
                   ))}
-
-                  {bus.branches.length === 0 ? (
-                    <circle cx={bus.xStart} cy={RAIL_Y} r={3.2} className={styles.nodeDot} />
-                  ) : null}
-
                   <text
-                    x={hasMultiple ? midX : bus.xStart}
-                    y={RAIL_Y - 24}
-                    textAnchor="middle"
+                    x={diagram.topRailSpan.xStart - 24}
+                    y={VCC_Y + 4}
+                    textAnchor="end"
                     className={styles.lblNode}
+                    fontWeight="bold"
                   >
-                    {bus.node}
+                    {diagram.topRailSpan.label}
                   </text>
                 </g>
-              )
-            })}
+              )}
 
-            {/* Símbolos del circuito */}
-            {diagram.symbols.map((symbol, index) => (
-              <Symbol key={index} symbol={symbol} />
-            ))}
+              {/* Raíles horizontales de señal por nodo (solo conectan ramas pertenecientes al mismo bus) */}
+              {diagram.nodeBuses.map((bus) => {
+                const busY = bus.y ?? RAIL_Y
+                const hasMultiple = bus.branches.length > 1
+                const midX = (bus.xStart + bus.xEnd) / 2
+                return (
+                  <g key={bus.node}>
+                    {hasMultiple ? (
+                      <line
+                        x1={bus.xStart}
+                        y1={busY}
+                        x2={bus.xEnd}
+                        y2={busY}
+                        className={styles.wire}
+                      />
+                    ) : null}
 
-            {/* Raíl de tierra horizontal continuo */}
-            {diagram.groundDrops.length ? (
-              <line
-                x1={Math.min(...diagram.groundDrops) - 25}
-                y1={GROUND_Y}
-                x2={Math.max(...diagram.groundDrops) + 25}
-                y2={GROUND_Y}
-                className={styles.groundRail}
-              />
-            ) : null}
+                    {bus.branches.map((bx, idx) => (
+                      <circle key={idx} cx={bx} cy={busY} r={3.2} className={styles.nodeDot} />
+                    ))}
 
-            {/* Símbolos de tierra */}
-            {diagram.groundDrops.map((x, index) => (
-              <Ground key={index} x={x} y={GROUND_Y} />
-            ))}
+                    {bus.branches.length === 0 ? (
+                      <circle cx={bus.xStart} cy={busY} r={3.2} className={styles.nodeDot} />
+                    ) : null}
+
+                    {/* Etiqueta de nodo posicionada limpia a la izquierda del nodo para no tapar pistas verticales */}
+                    <text
+                      x={hasMultiple ? midX : bus.xStart - 10}
+                      y={hasMultiple ? busY - 14 : busY - 10}
+                      textAnchor={hasMultiple ? 'middle' : 'end'}
+                      className={styles.lblNode}
+                    >
+                      {bus.node}
+                    </text>
+                  </g>
+                )
+              })}
+
+              {/* Símbolos del circuito */}
+              {diagram.symbols.map((symbol, index) => (
+                <Symbol key={index} symbol={symbol} />
+              ))}
+
+              {/* Raíl de tierra horizontal continuo */}
+              {diagram.groundDrops.length ? (
+                <line
+                  x1={Math.min(...diagram.groundDrops) - 25}
+                  y1={GROUND_Y}
+                  x2={Math.max(...diagram.groundDrops) + 25}
+                  y2={GROUND_Y}
+                  className={styles.groundRail}
+                />
+              ) : null}
+
+              {/* Símbolos de tierra */}
+              {diagram.groundDrops.map((x, index) => (
+                <Ground key={index} x={x} y={GROUND_Y} />
+              ))}
+            </g>
           </svg>
+
+          <div className={styles.panHint}>
+            <Move size={12} />
+            <span>Arrastra para mover el lienzo · Rueda para zoom</span>
+          </div>
         </div>
 
         {activeLegend.length > 0 && (
@@ -641,38 +998,7 @@ export function NetlistDiagram({
 
       {/* Card 2: Explanation Card */}
       {showExplanation && (
-        <section aria-label="Descripción del circuito" className={styles.explainCard}>
-          <h5 className={styles.explainTitle}>¿QUÉ HACE ESTE CIRCUITO?</h5>
-          <p className={styles.explainText}>{workspaceSummary || describeCircuit(netlist)}</p>
-
-          {netlist.measurements.length > 0 ? (
-            <div className={styles.measureCallout}>
-              <span className={styles.measurePrefix}>El sistema mide</span>
-              <span className={styles.measureContent}>
-                {measurementText(netlist.measurements)}
-              </span>
-            </div>
-          ) : null}
-
-          <table className={styles.componentTable}>
-            <thead>
-              <tr>
-                <th>Componente</th>
-                <th>Entre nodos</th>
-                <th>Valor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {netlist.elements.map((e) => (
-                <tr key={e.name}>
-                  <td>{e.name}</td>
-                  <td>{e.nodes.join(' → ')}</td>
-                  <td>{componentValue(e)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+        <CircuitExplanation netlist={netlist} workspaceSummary={workspaceSummary} />
       )}
 
       {showExplanation && (

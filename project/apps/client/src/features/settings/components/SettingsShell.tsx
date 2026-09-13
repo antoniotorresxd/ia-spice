@@ -1,10 +1,12 @@
 import { PanelLeft, PanelLeftClose } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 
-import { AssistantPanel } from '../../home/components/AssistantPanel'
 import { HomeSidebar } from '../../home/components/HomeSidebar'
+import { GuidedTourSpotlight, TutorialTriggerButton, usePageTutorial, type TutorialPageKey } from '../../tutorial'
+import { InteractiveCatFooter } from '@/components/layout/InteractiveCatFooter'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+
 import { useStoredBoolean } from '@/lib/layout-preferences'
 import type { ConversationSummary } from '../../home/model/home-types'
 import '../../home/components/HomeScreen.module.css'
@@ -25,8 +27,13 @@ export function SettingsShell({
   onSignOut,
   conversations = [],
 }: SettingsShellProps) {
+  const location = useLocation()
+  const pageKey: TutorialPageKey = location.pathname.includes('/models') ? 'models' : 'profile'
+  const tutorial = usePageTutorial(pageKey)
+
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useStoredBoolean('spice_sidebar_collapsed', false)
+
 
   return (
     <main className={styles.workspace} data-collapsed={isSidebarCollapsed}>
@@ -75,6 +82,7 @@ export function SettingsShell({
             <strong>{userEmail}</strong>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <TutorialTriggerButton onClick={tutorial.openTutorial} />
             <ThemeToggle />
           </div>
         </header>
@@ -105,10 +113,23 @@ export function SettingsShell({
               </NavLink>
             </nav>
           </aside>
-          <div className={styles.content}>{children}</div>
+          <div className={styles.contentScroll}>
+            <div className={styles.content}>{children}</div>
+          </div>
         </div>
+        <InteractiveCatFooter onOpenTour={tutorial.openTutorial} />
       </section>
-      <AssistantPanel />
+      {/* Botón de asistente de IA oculto temporalmente por solicitud */}
+
+      <GuidedTourSpotlight
+        config={tutorial.tutorialConfig}
+        dontShowAgain={tutorial.dontShowAgain}
+        isOpen={tutorial.isOpen}
+        onClose={tutorial.closeTutorial}
+        onDismiss={tutorial.dismiss}
+        onToggleDontShowAgain={tutorial.setDontShowAgain}
+      />
     </main>
   )
 }
+

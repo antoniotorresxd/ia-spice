@@ -11,6 +11,7 @@ export type WorkspaceExecution = {
   id: string
   status: WorkspaceExecutionStatus
   summary: string
+  mode?: 'chat' | 'clarify' | 'design'
 }
 
 export type WorkspaceFile = {

@@ -1,10 +1,13 @@
 import { CardSpotlight } from '@/components/ui/card-spotlight'
+import { ProjectsGridSkeleton } from '@/components/ui/Skeleton'
+import { Pencil } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 
 import type { WorkspaceProject, WorkspaceSnapshot } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
 import { CreateProjectDialog } from './CreateProjectDialog'
+import { EditProjectDialog } from './EditProjectDialog'
 import styles from './ProjectsScreen.module.css'
 
 type ProjectsScreenProps = { service: WorkspaceService }
@@ -13,32 +16,36 @@ type SortMode = 'updated' | 'name'
 const dateFormatter = new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
 
 export function ProjectsScreen({ service }: ProjectsScreenProps) {
+  const outlet = useOutletContext<{ snapshot?: WorkspaceSnapshot | null; refreshSnapshot?: () => Promise<void> } | null>()
   const navigate = useNavigate()
   const createTriggerRef = useRef<HTMLButtonElement>(null)
-  const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
+  const [localSnapshot, setLocalSnapshot] = useState<WorkspaceSnapshot | null>(null)
+  const snapshot = outlet?.snapshot ?? localSnapshot
   const [loadError, setLoadError] = useState(false)
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<SortMode>('updated')
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [projectPendingEdit, setProjectPendingEdit] = useState<WorkspaceProject | null>(null)
 
   async function retryLoad() {
     setLoadError(false)
     try {
-      setSnapshot(await service.getSnapshot())
+      setLocalSnapshot(await service.getSnapshot())
     } catch {
-      setSnapshot(null)
+      setLocalSnapshot(null)
       setLoadError(true)
     }
   }
 
   useEffect(() => {
+    if (snapshot) return
     let isCurrent = true
     service.getSnapshot().then(
-      (data) => { if (isCurrent) setSnapshot(data) },
+      (data) => { if (isCurrent) setLocalSnapshot(data) },
       () => { if (isCurrent) setLoadError(true) },
     )
     return () => { isCurrent = false }
-  }, [service])
+  }, [service, snapshot])
 
   const projects = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase('es')
@@ -85,7 +92,7 @@ export function ProjectsScreen({ service }: ProjectsScreenProps) {
         </label>
       </div>
 
-      {!snapshot && !loadError && <p className={styles.state} role="status">Cargando proyectos…</p>}
+      {!snapshot && !loadError && <ProjectsGridSkeleton />}
       {loadError && (
         <div className={styles.state} role="alert">
           <strong>No pudimos cargar los proyectos.</strong>
@@ -103,6 +110,15 @@ export function ProjectsScreen({ service }: ProjectsScreenProps) {
                 <div className={styles.cardHeading}>
                   <span aria-hidden="true" className={styles.projectIcon}>◇</span>
                   <h2 id={`project-${project.id}`}><Link to={`/projects/${project.id}`}>{project.name}</Link></h2>
+                  <button
+                    type="button"
+                    className={styles.cardEditBtn}
+                    onClick={() => setProjectPendingEdit(project)}
+                    aria-label={`Editar proyecto ${project.name}`}
+                    title="Editar proyecto"
+                  >
+                    <Pencil size={14} />
+                  </button>
                 </div>
                 <p className={styles.description}>{project.description || 'Sin descripción'}</p>
                 <div className={styles.cardMetrics}>
@@ -117,6 +133,23 @@ export function ProjectsScreen({ service }: ProjectsScreenProps) {
       )}
 
       {dialogOpen && <CreateProjectDialog createProject={(input) => service.createProject(input)} onClose={closeDialog} onCreated={handleCreated} />}
+      {projectPendingEdit && (
+        <EditProjectDialog
+          initialName={projectPendingEdit.name}
+          initialDescription={projectPendingEdit.description}
+          updateProject={(input) => service.updateProject(projectPendingEdit.id, input)}
+          onClose={() => setProjectPendingEdit(null)}
+          onUpdated={async () => {
+            setProjectPendingEdit(null)
+            if (outlet?.refreshSnapshot) {
+              await outlet.refreshSnapshot()
+            } else {
+              const next = await service.getSnapshot()
+              setLocalSnapshot(next)
+            }
+          }}
+        />
+      )}
     </section>
   )
 }

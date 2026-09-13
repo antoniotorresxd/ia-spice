@@ -186,3 +186,42 @@ it('provides drag data and keyboard project assignment for conversations', async
   await user.click(screen.getByRole('menuitem', { name: 'Filtros analógicos' }))
   expect(onAssignConversation).toHaveBeenCalledWith('conversation-unassigned', 'project-filters', null)
 })
+
+it('displays loading state and skeletons when isLoading is true and space is empty', () => {
+  render(
+    <ThemeProvider><MemoryRouter>
+      <HomeSidebar
+        conversations={[]}
+        isOpen
+        isLoading
+        onClose={vi.fn()}
+        onSignOut={vi.fn()}
+        projects={[]}
+        userName="Antonio"
+      />
+    </MemoryRouter></ThemeProvider>,
+  )
+
+  expect(screen.getByText('Sincronizando…')).toBeInTheDocument()
+  expect(screen.getByLabelText('Cargando espacio')).toBeInTheDocument()
+})
+
+it('renders resizer handle when not collapsed and handles double-click to reset width', () => {
+  render(
+    <ThemeProvider><MemoryRouter>
+      <HomeSidebar
+        conversations={[]}
+        isOpen
+        onClose={vi.fn()}
+        onSignOut={vi.fn()}
+        userName="Antonio"
+      />
+    </MemoryRouter></ThemeProvider>,
+  )
+
+  const resizer = screen.getByTitle('Arrastra para redimensionar (doble clic para restablecer)')
+  expect(resizer).toBeInTheDocument()
+  fireEvent.doubleClick(resizer)
+  expect(document.documentElement.style.getPropertyValue('--sidebar-width')).toBe('240px')
+})
+

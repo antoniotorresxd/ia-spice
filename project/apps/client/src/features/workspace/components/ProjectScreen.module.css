@@ -9,6 +9,33 @@
   gap: 1.5rem;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editProjectBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editProjectBtn:hover {
+  border-color: rgba(69, 214, 196, 0.4);
+  background: rgba(69, 214, 196, 0.1);
+  color: var(--color-mint);
+}
+
 .deleteProjectBtn {
   display: inline-flex;
   align-items: center;
@@ -179,3 +206,35 @@
   font-size: 0.72rem;
   font-weight: 500;
 }
+
+/* Light Mode Overrides */
+:global(.light) .list li {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+:global(.light) .list li:hover {
+  background: #ffffff;
+  border-color: var(--color-mint);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .list span {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .deleteProjectBtn {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .tabs {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .tabs button:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+

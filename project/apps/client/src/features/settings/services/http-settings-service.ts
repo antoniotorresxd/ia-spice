@@ -12,8 +12,9 @@ import {
   type UserProfile,
 } from '../model/settings-types'
 import type { SettingsService } from './settings-service'
+import { QueryCache, globalQueryCache } from '@/lib/query-cache'
 
-type Options = { fetchImpl?: typeof fetch }
+type Options = { fetchImpl?: typeof fetch; cache?: QueryCache }
 
 // El server valida apiKey con .min(1) y baseUrl con z.url(); mandar '' sería
 // un 400. El formulario usa cadenas vacías para "sin valor".
@@ -31,6 +32,7 @@ function omitEmpty(input: ConnectionInput): Record<string, string> {
 
 export function createHttpSettingsService(options: Options = {}): SettingsService {
   const fetchImpl = options.fetchImpl ?? fetch
+  const cache = options.cache ?? new QueryCache()
 
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetchImpl(`${API_BASE_URL}${path}`, {
@@ -47,15 +49,22 @@ export function createHttpSettingsService(options: Options = {}): SettingsServic
 
   return {
     async getProfile(): Promise<UserProfile> {
-      const { data } = await authClient.getSession()
-      return {
-        name: data?.user.name ?? '',
-        email: data?.user.email ?? '',
-        avatarUrl: data?.user.image ?? null,
-      }
+      return cache.fetch(
+        'settings:profile',
+        async () => {
+          const { data } = await authClient.getSession()
+          return {
+            name: data?.user.name ?? '',
+            email: data?.user.email ?? '',
+            avatarUrl: data?.user.image ?? null,
+          }
+        },
+        { ttlMs: 60_000 },
+      )
     },
 
     async updateProfile(input) {
+      cache.invalidate('settings:profile')
       await authClient.updateUser({ name: input.name.trim(), image: input.avatarUrl })
       return {
         name: input.name.trim(),
@@ -65,10 +74,13 @@ export function createHttpSettingsService(options: Options = {}): SettingsServic
     },
 
     async listConnections() {
-      return request<LlmConnection[]>('/api/llm/connections')
+      return cache.fetch('settings:connections', () => request<LlmConnection[]>('/api/llm/connections'), {
+        ttlMs: 60_000,
+      })
     },
 
     async createConnection(input) {
+      cache.invalidate('settings:connections')
       return request<LlmConnection>('/api/llm/connections', {
         method: 'POST',
         body: JSON.stringify(omitEmpty(input)),
@@ -76,6 +88,8 @@ export function createHttpSettingsService(options: Options = {}): SettingsServic
     },
 
     async updateConnection(id, input) {
+      cache.invalidate('settings:connections')
+      cache.invalidate(`settings:connection-models:${id}`)
       // provider no es actualizable: cambiarlo invalidaría la credencial guardada
       const body = omitEmpty(input)
       delete body.provider
@@ -86,6 +100,9 @@ export function createHttpSettingsService(options: Options = {}): SettingsServic
     },
 
     async deleteConnection(id) {
+      cache.invalidate('settings:connections')
+      cache.invalidate('settings:assignments')
+      cache.invalidate(`settings:connection-models:${id}`)
       await request<{ deleted: string }>(`/api/llm/connections/${id}`, { method: 'DELETE' })
     },
 
@@ -96,31 +113,44 @@ export function createHttpSettingsService(options: Options = {}): SettingsServic
     },
 
     async listConnectionModels(id): Promise<string[]> {
-      try {
-        const res = await request<{ models: string[]; error?: string }>(`/api/llm/connections/${id}/models`)
-        return res.models ?? []
-      } catch {
-        return []
-      }
+      return cache.fetch(
+        `settings:connection-models:${id}`,
+        async () => {
+          try {
+            const res = await request<{ models: string[]; error?: string }>(`/api/llm/connections/${id}/models`)
+            return res.models ?? []
+          } catch {
+            return []
+          }
+        },
+        { ttlMs: 120_000 },
+      )
     },
 
     async listAgentAssignments(): Promise<AgentAssignment[]> {
-      const rows = await request<
-        { agentId: AgentId; connectionId: string | null; model: string }[]
-      >('/api/llm/assignments')
-      const byAgent = new Map(rows.map((row) => [row.agentId, row]))
-      return AGENT_ORDER.map((agentId) => {
-        const row = byAgent.get(agentId)
-        return {
-          agentId,
-          label: AGENT_LABELS[agentId],
-          connectionId: row?.connectionId ?? null,
-          model: row?.model ?? '',
-        }
-      })
+      return cache.fetch(
+        'settings:assignments',
+        async () => {
+          const rows = await request<
+            { agentId: AgentId; connectionId: string | null; model: string }[]
+          >('/api/llm/assignments')
+          const byAgent = new Map(rows.map((row) => [row.agentId, row]))
+          return AGENT_ORDER.map((agentId) => {
+            const row = byAgent.get(agentId)
+            return {
+              agentId,
+              label: AGENT_LABELS[agentId],
+              connectionId: row?.connectionId ?? null,
+              model: row?.model ?? '',
+            }
+          })
+        },
+        { ttlMs: 60_000 },
+      )
     },
 
     async updateAgentAssignment(agentId: AgentId, input: AgentAssignmentInput) {
+      cache.invalidate('settings:assignments')
       const row = await request<{ agentId: AgentId; connectionId: string | null; model: string }>(
         `/api/llm/assignments/${agentId}`,
         {
@@ -133,4 +163,4 @@ export function createHttpSettingsService(options: Options = {}): SettingsServic
   }
 }
 
-export const httpSettingsService = createHttpSettingsService()
+export const httpSettingsService = createHttpSettingsService({ cache: globalQueryCache })

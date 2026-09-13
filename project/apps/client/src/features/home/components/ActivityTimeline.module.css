@@ -313,3 +313,32 @@
   .stageCard > header { flex-wrap: wrap; }
   .stageMeta { justify-content: flex-start; }
 }
+
+/* Light Mode Overrides */
+:global(.light) .stageCard {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+:global(.light) .stage[data-status='active'] .stageCard {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-mint) 6%, transparent) 0%, #ffffff 60%);
+  border-color: color-mix(in srgb, var(--color-mint) 35%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-mint) 10%, transparent);
+}
+
+:global(.light) .stageCard p {
+  color: #334155;
+}
+
+:global(.light) .actorMark {
+  background: #f1f5f9;
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+}
+
+:global(.light) .files li {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+

@@ -401,6 +401,28 @@
   color: var(--color-mint);
 }
 
+.cardEditBtn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cardEditBtn:hover {
+  border-color: rgba(69, 214, 196, 0.4);
+  background: rgba(69, 214, 196, 0.1);
+  color: var(--color-mint);
+}
+
 .description {
   margin: 0.9rem 0 1.5rem;
   color: var(--muted-foreground);
@@ -445,3 +467,45 @@
 .dialog input:focus, .dialog textarea:focus {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 15%, transparent);
 }
+
+/* Light Mode Overrides */
+:global(.light) .toolbar {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+:global(.light) .sort select {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+:global(.light) .sort select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+:global(.light) .projectGrid .projectCard {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+:global(.light) .projectGrid .projectCard:hover {
+  border-color: var(--color-mint);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 0 20px rgba(200, 121, 61, 0.08);
+}
+
+:global(.light) .cardMetrics span {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: var(--muted-foreground);
+}
+
+:global(.light) .updated {
+  border-top-color: rgba(0, 0, 0, 0.06);
+}
+

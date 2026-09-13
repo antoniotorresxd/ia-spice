@@ -133,4 +133,35 @@ describe('ConversationScreen', () => {
 
     vi.useRealTimers()
   })
+
+  it('renders conversational chat without execution timeline when mode is chat', async () => {
+    const service = createMockWorkspaceService()
+    const detail: WorkspaceConversationDetail = {
+      id: 'conversation-chat',
+      projectId: null,
+      title: 'jelou',
+      preview: '¡Hola! ¿En qué puedo ayudarte?',
+      updatedAt: '2026-09-13T12:00:00Z',
+      executionStatus: 'completed',
+      messages: [
+        { id: 'm1', role: 'user', content: 'jelou', createdAt: '2026-09-13T12:00:00Z' },
+        { id: 'm2', role: 'assistant', content: '¡Hola! ¿En qué puedo ayudarte?', createdAt: '2026-09-13T12:00:01Z' },
+      ],
+      files: [],
+      execution: {
+        id: 'exec-chat',
+        status: 'completed',
+        summary: '¡Hola! ¿En qué puedo ayudarte?',
+        mode: 'chat',
+      },
+    }
+    vi.spyOn(service, 'getConversation').mockResolvedValue(detail)
+    renderScreen(service, 'conversation-chat')
+
+    expect(await screen.findByRole('heading', { name: 'jelou', level: 1 })).toBeVisible()
+    expect(screen.getAllByText('¡Hola! ¿En qué puedo ayudarte?')[0]).toBeVisible()
+    expect(screen.queryByText('Progreso de la ejecución')).not.toBeInTheDocument()
+    expect(screen.queryByText('Interpretación')).not.toBeInTheDocument()
+    expect(screen.getByText('Conversación', { selector: 'span' })).toBeVisible()
+  })
 })

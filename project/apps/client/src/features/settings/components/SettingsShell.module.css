@@ -1,19 +1,29 @@
 .workspace {
   display: grid;
   min-width: 320px;
-  min-height: 100dvh;
-  grid-template-columns: 15.5rem minmax(0, 1fr);
+  height: 100dvh;
+  overflow: hidden;
+  grid-template-columns: var(--sidebar-width, 15.5rem) minmax(0, 1fr);
   background: var(--background);
   color: var(--foreground);
   transition: grid-template-columns 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:global([data-sidebar-resizing='true']) .workspace {
+  transition: none !important;
 }
 
 .workspace[data-collapsed='true'] {
   grid-template-columns: 4.25rem minmax(0, 1fr);
 }
 
+
 .mainColumn {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  height: 100dvh;
+  min-height: 0;
   overflow: hidden;
   background: var(--background);
 }
@@ -21,6 +31,8 @@
 .topbar {
   display: flex;
   min-height: 3.5rem;
+  height: 3.5rem;
+  flex-shrink: 0;
   align-items: center;
   gap: 0.85rem;
   padding-inline: 1.5rem;
@@ -53,7 +65,9 @@
 
 .settingsWorkspace {
   display: grid;
-  min-height: calc(100dvh - 3.5rem);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
   grid-template-columns: 15rem minmax(0, 1fr);
 }
 
@@ -62,6 +76,8 @@
   border-right: 1px solid var(--border);
   background: var(--card);
   backdrop-filter: blur(16px);
+  overflow-y: auto;
+  height: 100%;
 }
 
 .backLink {
@@ -170,10 +186,17 @@
   color: var(--color-mint);
 }
 
+.contentScroll {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+
 .content {
   width: min(100% - 3.5rem, 58rem);
   margin-inline: auto;
-  padding-block: clamp(2.5rem, 6vw, 5rem) 7rem;
+  padding-block: clamp(2rem, 4vw, 3.5rem) 4rem;
 }
 
 .pageHeader {
@@ -395,20 +418,34 @@
 @media (max-width: 720px) {
   .workspace {
     display: block;
+    height: 100dvh;
+    overflow: hidden;
   }
 
   .mobileButton {
     display: inline-grid;
   }
 
+  .mainColumn {
+    height: 100dvh;
+    min-height: 0;
+  }
+
   .settingsWorkspace {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .settingsRail {
     padding: 0.85rem;
     border-right: 0;
     border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    height: auto;
+    overflow: visible;
   }
 
   .settingsRailHeading {
@@ -432,9 +469,16 @@
     justify-content: center;
   }
 
+  .contentScroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
   .content {
     width: calc(100% - 1.75rem);
-    padding-top: 2rem;
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
   }
 
   .avatarSection {

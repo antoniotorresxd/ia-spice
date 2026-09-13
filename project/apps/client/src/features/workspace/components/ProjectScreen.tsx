@@ -1,11 +1,13 @@
 import { type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 
 import type { WorkspaceConversationDetail, WorkspaceProjectDetail } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
 import { ConversationDropTarget, type ConversationDragPayload } from './ConversationDropTarget'
 import { ConfirmDeleteModal } from '@/components/ui/ConfirmDeleteModal'
+import { ProjectDetailSkeleton, SkeletonBar } from '@/components/ui/Skeleton'
+import { EditProjectDialog } from './EditProjectDialog'
 import styles from './ProjectScreen.module.css'
 
 type AssignmentState =
@@ -94,6 +96,7 @@ function ProjectScreenContent({ projectId, service }: { projectId: string; servi
     await refreshAfterMutation()
   }
 
+  const [isEditingProject, setIsEditingProject] = useState(false)
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -135,7 +138,7 @@ function ProjectScreenContent({ projectId, service }: { projectId: string; servi
   }
 
   if (loadError) return <p role="alert">No pudimos cargar el proyecto.</p>
-  if (!project) return <p aria-live="polite">Cargando proyecto…</p>
+  if (!project) return <ProjectDetailSkeleton listClass={styles.list} />
   const files = details.flatMap((conversation) => conversation.files.map((file) => ({ file, conversation })))
 
   return (
@@ -146,19 +149,31 @@ function ProjectScreenContent({ projectId, service }: { projectId: string; servi
             <p>Proyecto</p>
             <h1>{project.name}</h1>
           </div>
-          <button
-            type="button"
-            className={styles.deleteProjectBtn}
-            onClick={() => {
-              setDeleteError(null)
-              setIsConfirmingDelete(true)
-            }}
-            aria-label={`Eliminar proyecto ${project.name}`}
-            title="Eliminar proyecto"
-          >
-            <Trash2 size={15} />
-            <span>Eliminar proyecto</span>
-          </button>
+          <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.editProjectBtn}
+              onClick={() => setIsEditingProject(true)}
+              aria-label={`Editar proyecto ${project.name}`}
+              title="Editar proyecto"
+            >
+              <Pencil size={15} />
+              <span>Editar proyecto</span>
+            </button>
+            <button
+              type="button"
+              className={styles.deleteProjectBtn}
+              onClick={() => {
+                setDeleteError(null)
+                setIsConfirmingDelete(true)
+              }}
+              aria-label={`Eliminar proyecto ${project.name}`}
+              title="Eliminar proyecto"
+            >
+              <Trash2 size={15} />
+              <span>Eliminar proyecto</span>
+            </button>
+          </div>
         </div>
         <p>{project.description}</p>
       </header>
@@ -167,7 +182,7 @@ function ProjectScreenContent({ projectId, service }: { projectId: string; servi
         <button aria-controls={filesPanelId} aria-selected={tab === 'files'} id={filesTabId} onClick={() => selectTab('files')} onKeyDown={handleTabKey} ref={filesTabRef} role="tab" tabIndex={tab === 'files' ? 0 : -1} type="button">Archivos {project.fileCount}</button>
       </div>
       {tab === 'conversations' ? <section aria-labelledby={conversationsTabId} id={conversationsPanelId} role="tabpanel"><ul className={styles.list}>{project.conversations.map((conversation) => <li key={conversation.id}><Link to={`/conversations/${conversation.id}`}>{conversation.title}</Link><p>{conversation.preview}</p></li>)}</ul>{project.conversations.length === 0 ? <p>Este proyecto todavía no tiene conversaciones.</p> : null}</section> : null}
-      {tab === 'files' ? <section aria-labelledby={filesTabId} id={filesPanelId} role="tabpanel">{filesLoading ? <p aria-live="polite">Cargando archivos…</p> : <><ul className={styles.list}>{files.map(({ file, conversation }) => <li key={file.id}><Link to={`/conversations/${conversation.id}`}>{file.name}</Link><span>{conversation.title}</span></li>)}</ul>{filesLoaded && files.length === 0 ? <p>Este proyecto todavía no tiene archivos.</p> : null}</>}{filesPartial ? <p role="status">Algunos archivos no se pudieron cargar.</p> : null}</section> : null}
+      {tab === 'files' ? <section aria-labelledby={filesTabId} id={filesPanelId} role="tabpanel">{filesLoading ? <ul className={styles.list} role="status">{Array.from({ length: 4 }, (_, i) => (<li key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', pointerEvents: 'none' }}><SkeletonBar height={16} width={['55%', '70%', '45%', '60%'][i]} /><SkeletonBar height={12} style={{ opacity: 0.55 }} width={['80%', '90%', '65%', '75%'][i]} /></li>))}</ul> : <><ul className={styles.list}>{files.map(({ file, conversation }) => <li key={file.id}><Link to={`/conversations/${conversation.id}`}>{file.name}</Link><span>{conversation.title}</span></li>)}</ul>{filesLoaded && files.length === 0 ? <p>Este proyecto todavía no tiene archivos.</p> : null}</>}{filesPartial ? <p role="status">Algunos archivos no se pudieron cargar.</p> : null}</section> : null}
       {assignment.status === 'saving' ? <p aria-live="polite">Moviendo conversación…</p> : null}
       {assignment.status === 'saved' ? <div aria-live="polite" role="status">Conversación movida a {project.name} <button onClick={() => void undo()} type="button">Deshacer</button></div> : null}
       {assignment.status === 'error' ? <p role="alert">{assignment.message}</p> : null}
@@ -184,6 +199,19 @@ function ProjectScreenContent({ projectId, service }: { projectId: string; servi
         }}
         onConfirm={() => void handleDeleteProject()}
       />
+      {isEditingProject && (
+        <EditProjectDialog
+          initialName={project.name}
+          initialDescription={project.description}
+          updateProject={(input) => service.updateProject(projectId, input)}
+          onClose={() => setIsEditingProject(false)}
+          onUpdated={async (updated) => {
+            setProject(updated)
+            setIsEditingProject(false)
+            await outlet?.refreshSnapshot?.()
+          }}
+        />
+      )}
     </ConversationDropTarget>
   )
 }

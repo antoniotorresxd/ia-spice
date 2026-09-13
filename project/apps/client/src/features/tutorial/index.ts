@@ -1,0 +1,6 @@
+export { GuidedTourSpotlight } from './components/GuidedTourSpotlight'
+export { PageTutorialModal } from './components/PageTutorialModal'
+export { TutorialTriggerButton } from './components/TutorialTriggerButton'
+export { usePageTutorial } from './hooks/usePageTutorial'
+export { TUTORIALS_REGISTRY } from './model/tutorial-content'
+export type { TutorialConfig, TutorialPageKey, TutorialStep } from './model/tutorial-content'

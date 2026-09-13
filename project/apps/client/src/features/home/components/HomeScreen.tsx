@@ -10,15 +10,17 @@ import type { HomeService } from '../services/home-service'
 import type { WorkspaceService } from '../../workspace/services/workspace-service'
 import type { WorkspaceSnapshot } from '../../workspace/model/workspace-types'
 import { ActivityTimeline } from './ActivityTimeline'
-import { AssistantPanel } from './AssistantPanel'
 import { ContextPanel } from './ContextPanel'
 import { HomeHero } from './HomeHero'
 import { HomeOverview } from './HomeOverview'
 import { HomeSidebar } from './HomeSidebar'
 import { NaturalLanguageComposer } from './NaturalLanguageComposer'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { GuidedTourSpotlight, TutorialTriggerButton, usePageTutorial } from '../../tutorial'
+import { InteractiveCatFooter } from '@/components/layout/InteractiveCatFooter'
 import { useStoredBoolean } from '@/lib/layout-preferences'
 import styles from './HomeScreen.module.css'
+
 
 type HomeScreenProps = {
   service: HomeService
@@ -70,6 +72,9 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
   const [signOutError, setSignOutError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
+  const [isWorkspaceLoading, setIsWorkspaceLoading] = useState(Boolean(workspaceService))
+  const tutorial = usePageTutorial('home')
+
 
   useEffect(() => {
     let isCurrent = true
@@ -97,11 +102,19 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
     if (!workspaceService) return
     let isCurrent = true
     workspaceService.getSnapshot().then(
-      (data) => { if (isCurrent) setSnapshot(data) },
-      () => {},
+      (data) => {
+        if (isCurrent) {
+          setSnapshot(data)
+          setIsWorkspaceLoading(false)
+        }
+      },
+      () => {
+        if (isCurrent) setIsWorkspaceLoading(false)
+      },
     )
     return () => { isCurrent = false }
   }, [workspaceService])
+
 
   const handleDeleteProject = async (projectId: string) => {
     if (!workspaceService) return
@@ -140,8 +153,12 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
     }
   }
 
-  const sidebarProjects = snapshot?.projects ?? overview?.recentProjects ?? []
-  const sidebarConversations = snapshot?.conversations ?? overview?.recentConversations ?? []
+  const sidebarProjects = workspaceService
+    ? (snapshot?.projects ?? [])
+    : (overview?.recentProjects ?? [])
+  const sidebarConversations = workspaceService
+    ? (snapshot?.conversations ?? [])
+    : (overview?.recentConversations ?? [])
 
   function changePeriod(nextPeriod: UsagePeriod) {
     setIsLoading(true)
@@ -165,6 +182,7 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
         conversations={sidebarConversations}
         isOpen={sidebarOpen}
         isCollapsed={isSidebarCollapsed}
+        isLoading={isWorkspaceLoading}
         onClose={() => setSidebarOpen(false)}
         onSignOut={signOut}
         projects={sidebarProjects}
@@ -216,6 +234,7 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
             ) : null}
           </div>
           <div className={styles.topbarActions}>
+            <TutorialTriggerButton onClick={tutorial.openTutorial} />
             <ThemeToggle />
             <button
               type="button"
@@ -234,6 +253,7 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
               Mostrar detalles
             </button>
           </div>
+
         </header>
 
         <div className={styles.contentScroll}>
@@ -245,7 +265,7 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
               }}
             />
 
-            <div ref={composerRef}>
+            <div data-tour="conversation-area" ref={composerRef}>
               <NaturalLanguageComposer onSubmit={submitPrompt} />
             </div>
 
@@ -271,6 +291,7 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
             ) : null}
           </div>
         </div>
+        <InteractiveCatFooter onOpenTour={tutorial.openTutorial} />
       </section>
 
       <ContextPanel
@@ -278,7 +299,7 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
         isOpen={contextOpen}
         onClose={() => setContextOpen(false)}
       />
-      <AssistantPanel defaultMode="minimized" />
+      {/* Botón de asistente de IA oculto temporalmente por solicitud */}
       {isSearchOpen && (
         <div className={styles.searchOverlay}>
           <button
@@ -301,6 +322,16 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
       <p aria-live="polite" className={styles.srOnly}>
         {announcement}
       </p>
+
+      <GuidedTourSpotlight
+        config={tutorial.tutorialConfig}
+        dontShowAgain={tutorial.dontShowAgain}
+        isOpen={tutorial.isOpen}
+        onClose={tutorial.closeTutorial}
+        onDismiss={tutorial.dismiss}
+        onToggleDontShowAgain={tutorial.setDontShowAgain}
+      />
     </main>
   )
 }
+
