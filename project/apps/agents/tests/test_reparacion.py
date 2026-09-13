@@ -183,3 +183,8 @@ def test_repair_netlist_devuelve_lo_mismo_si_el_reintento_tambien_repite():
 
     assert resultado == NETLIST_OK
     assert len(modelo.mensajes_por_llamada) == 2
+
+
+@pytest.fixture(autouse=True)
+def _fake_prompt(monkeypatch):
+    monkeypatch.setattr("agents.curador.reparacion.fetch_prompt", lambda name: "System prompt de prueba")

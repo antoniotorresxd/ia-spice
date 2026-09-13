@@ -171,3 +171,8 @@ def test_solo_se_documentan_bloques_con_netlist(monkeypatch):
 
     assert set(result["documentation"]) == {"b1"}
     assert len(modelo.mensajes_por_llamada) == 1
+
+
+@pytest.fixture(autouse=True)
+def _fake_prompt(monkeypatch):
+    monkeypatch.setattr("agents.documentador.node.fetch_prompt", lambda name: "System prompt de prueba")

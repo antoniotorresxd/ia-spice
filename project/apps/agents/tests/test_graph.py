@@ -501,6 +501,7 @@ def test_el_grafo_documenta_el_divisor_y_descarta_componentes_inventados(monkeyp
             )
 
     monkeypatch.setattr(documentador_module, "get_chat_model", lambda user_id: _ModeloFalso())
+    monkeypatch.setattr(documentador_module, "fetch_prompt", lambda name: "System prompt de prueba")
     spec = {
         "blocks": [
             {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}

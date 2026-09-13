@@ -10,6 +10,7 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Header, HTTPException
+from langfuse.langchain import CallbackHandler
 from pydantic import BaseModel
 
 from agents.checkpointer import checkpointer_url, open_checkpointer
@@ -27,6 +28,7 @@ async def lifespan(app: FastAPI):
     """
     with open_checkpointer() as checkpointer:
         app.state.graph = build_graph(checkpointer)
+        app.state.langfuse_handler = _langfuse_handler()
         app.state.persistente = checkpointer_url() is not None
         yield
 
@@ -46,6 +48,19 @@ def _graph():
         graph = build_graph()
         app.state.graph = graph
     return graph
+
+
+def _langfuse_handler() -> CallbackHandler | None:
+    """El handler del proceso, creado al arrancar o al vuelo en tests.
+
+    Sin las claves de Langfuse la observabilidad queda desactivada.
+    """
+    if not hasattr(app.state, "langfuse_handler"):
+        handler = None
+        if os.environ.get("LANGFUSE_PUBLIC_KEY") and os.environ.get("LANGFUSE_SECRET_KEY"):
+            handler = CallbackHandler()
+        app.state.langfuse_handler = handler
+    return app.state.langfuse_handler
 
 
 class RunRequest(BaseModel):
@@ -107,9 +122,17 @@ def create_run(body: RunRequest, authorization: str | None = Header(default=None
     # no un dato del circuito. El thread_id es la ejecución que abrió el
     # servidor, de modo que reenviarla retoma su checkpoint.
     thread_id = body.execution_id or str(uuid.uuid4())
+    config = {"configurable": {"user_id": body.user_id, "thread_id": thread_id}}
+    handler = _langfuse_handler()
+    if handler is not None:
+        config["callbacks"] = [handler]
+        config["metadata"] = {
+            "langfuse_session_id": thread_id,
+            "langfuse_user_id": body.user_id,
+        }
     final_state = _graph().invoke(
         initial_state,
-        config={"configurable": {"user_id": body.user_id, "thread_id": thread_id}},
+        config=config,
     )
 
     return {

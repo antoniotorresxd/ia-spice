@@ -11,6 +11,7 @@ medir. Que el modelo diga que lo arregló no cuenta.
 from pydantic import BaseModel, model_validator
 
 from agents.llm.factory import build_chat_model
+from agents.llm.prompts import fetch_prompt
 from agents.llm.settings_client import fetch_agent_llm
 
 # El agente al que corresponde este nodo, para pedir su configuración de LLM.
@@ -55,18 +56,6 @@ class ReparacionError(Exception):
     """El LLM no produjo un netlist reparado válido."""
 
 
-_SYSTEM_PROMPT = """\
-Eres un diseñador de circuitos analógicos. Recibes un netlist SPICE que no
-alcanza su meta y debes corregirlo.
-
-- Devuelve el netlist COMPLETO corregido, nunca un diff ni una explicación.
-- Conserva el bloque .control y que la medición se escriba en output.txt.
-- Cambia solo lo necesario para acercar la magnitud medida a la meta.
-- Si la simulación falló, corrige el error de sintaxis o de convergencia antes
-  de preocuparte por la meta.
-"""
-
-
 def _resultado_medicion(metric: str, measured: float | None, sim_error: str | None) -> str:
     if sim_error is not None:
         return f"La simulación falló: {sim_error}"
@@ -108,6 +97,11 @@ def repair_netlist(
     igual que `extract_circuit_spec` tipa los suyos como `ExtractionError`.
     """
 
+    try:
+        system_prompt = fetch_prompt("curador-reparacion-system")
+    except Exception as exc:  # noqa: BLE001 - incluye PromptFetchError
+        raise ReparacionError(f"LLM repair failed: {exc}") from exc
+
     def _pedir(extra: str) -> str:
         user_content = (
             f"Circuito: {description}\n"
@@ -120,7 +114,7 @@ def repair_netlist(
         try:
             result = structured_model.invoke(
                 [
-                    {"role": "system", "content": _SYSTEM_PROMPT},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_content},
                 ]
             )

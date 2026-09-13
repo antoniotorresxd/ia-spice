@@ -8,6 +8,7 @@ from langchain_core.runnables import RunnableConfig
 
 from agents.documentador.schema import CircuitDocumentation
 from agents.llm.factory import build_chat_model
+from agents.llm.prompts import fetch_prompt
 from agents.llm.settings_client import LlmSettingsError, fetch_agent_llm
 from agents.state import CircuitState
 
@@ -24,18 +25,6 @@ def get_chat_model(user_id: str):
     """
     config = fetch_agent_llm(AGENT_ID, user_id)
     return build_chat_model(config)
-
-
-_SYSTEM_PROMPT = """\
-Eres un diseñador de circuitos analógicos. Recibes el netlist SPICE final de
-un bloque y el resultado de su simulación. Explica el circuito en español.
-
-- Resume qué hace el circuito y devuelve tags cortos de topología o categoría.
-- Explica el rol de cada componente usando su nombre exacto en el netlist.
-- Explica qué mide el bloque .meas o la salida de medición, si existe.
-- Si la simulación falló, explica esa limitación sin inventar valores medidos.
-- No inventes componentes ni modifiques el netlist.
-"""
 
 
 def _resultado_medicion(metric: str, measured: float | None, sim_error: str | None) -> str:
@@ -57,6 +46,7 @@ def documentador_node(state: CircuitState, config: RunnableConfig | None = None)
         if not user_id:
             raise LlmSettingsError("missing user_id in run config")
         chat_model = get_chat_model(user_id)
+        system_prompt = fetch_prompt("documentador-system")
     except LlmSettingsError:
         return {"documentation": documentation}
     except Exception:  # noqa: BLE001 - construir el modelo también puede fallar
@@ -77,7 +67,7 @@ def documentador_node(state: CircuitState, config: RunnableConfig | None = None)
             )
             result = chat_model.with_structured_output(CircuitDocumentation).invoke(
                 [
-                    {"role": "system", "content": _SYSTEM_PROMPT},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_content},
                 ]
             )

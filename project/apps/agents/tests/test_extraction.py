@@ -66,3 +66,8 @@ def test_extract_orchestrator_outcome_wraps_failures():
     chat_model = _FakeChatModel(RuntimeError("boom"))
     with pytest.raises(ExtractionError, match="boom"):
         extract_orchestrator_outcome(chat_model, "algo")
+
+
+@pytest.fixture(autouse=True)
+def _fake_prompt(monkeypatch):
+    monkeypatch.setattr("agents.llm.extraction.fetch_prompt", lambda name: "System prompt de prueba")
