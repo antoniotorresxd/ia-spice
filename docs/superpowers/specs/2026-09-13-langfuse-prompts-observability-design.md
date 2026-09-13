@@ -69,9 +69,13 @@ def fetch_prompt(name: str) -> str:
 ```
 
 Implementación sobre el SDK oficial `langfuse` (Python), usando
-`langfuse_client.get_prompt(name)` y devolviendo `.prompt` (texto compilado).
-Un módulo separado de `settings_client.py` porque resuelve una cosa distinta
-(contenido de prompt vs. credencial de modelo) contra un servicio distinto.
+`langfuse_client.get_prompt(name, label="production")` y devolviendo
+`.prompt` (texto compilado). Un módulo separado de `settings_client.py`
+porque resuelve una cosa distinta (contenido de prompt vs. credencial de
+modelo) contra un servicio distinto.
+
+El label `production` es explícito y obligatorio: permite editar/probar una
+versión nueva en Langfuse sin que afecte al pipeline hasta promoverla.
 
 ### 2. Dependencias y config
 
@@ -83,12 +87,12 @@ Un módulo separado de `settings_client.py` porque resuelve una cosa distinta
 
 ### 3. Migración de los 3 prompts
 
-Antes de tocar código: crear en Langfuse (vía MCP, contenido idéntico al
-actual, cero cambio de comportamiento el día 1) tres prompts de texto:
+Ya creados en Langfuse (vía MCP, contenido idéntico al actual, cero cambio de
+comportamiento el día 1), con label `production`:
 
-- `orquestador-system`
-- `documentador-system`
-- `curador-reparacion-system`
+- `orquestador-system` (v1)
+- `documentador-system` (v1)
+- `curador-reparacion-system` (v1)
 
 ### 4. Cambios en los 3 call sites
 
