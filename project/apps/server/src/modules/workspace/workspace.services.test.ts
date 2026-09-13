@@ -141,6 +141,7 @@ describe("conversaciones (db)", () => {
 });
 
 const runResult: AgentsRunResult = {
+  outcome: null,
   verdict: { status: "accepted", reason: "all blocks within tolerance", best_iteration: 0 },
   normalized_spec: { blocks: [{ id: "block-1", type: "voltage_divider" }] },
   netlists: { "block-1": { path: "/tmp/circuit.cir", text: "* divisor\nR1 in out 1k\n" } },

@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   type AgentsRunResult,
   mapVerdictToStatus,
+  resolveRunOutcome,
   startRun,
   toArtifactDrafts,
   toAssistantMessage,
@@ -10,6 +11,7 @@ import {
 } from "./workspace.runner";
 
 const accepted: AgentsRunResult = {
+  outcome: null,
   verdict: { status: "accepted", reason: "all blocks within tolerance", best_iteration: 0 },
   normalized_spec: { blocks: [] },
   netlists: { "block-1": { path: "/tmp/circuit.cir", text: "* divisor\nR1 in out 1k\n" } },
@@ -149,6 +151,51 @@ describe("toAssistantMessage", () => {
       sim_results: { "block-1": { metrics: null, sim_error: "ngspice exited 1" } },
     });
     expect(content).toContain("block-1: ngspice exited 1");
+  });
+});
+
+describe("resolveRunOutcome", () => {
+  test("outcome chat -> completed con la respuesta, sin tocar artefactos ni el spec", () => {
+    const result = resolveRunOutcome({
+      ...accepted,
+      outcome: { mode: "chat", reply: "¡Hola! ¿Qué circuito querés diseñar?" },
+    });
+
+    expect(result).toEqual({
+      status: "completed",
+      summary: "¡Hola! ¿Qué circuito querés diseñar?",
+      assistantMessage: "¡Hola! ¿Qué circuito querés diseñar?",
+      normalizedSpec: null,
+      artifacts: null,
+    });
+  });
+
+  test("outcome clarify -> completed con la pregunta y el spec parcial reinyectable", () => {
+    const result = resolveRunOutcome({
+      ...accepted,
+      outcome: {
+        mode: "clarify",
+        question: "¿Qué voltaje de entrada y de salida necesitás?",
+        partial_spec: { type: "voltage_divider" },
+      },
+    });
+
+    expect(result).toEqual({
+      status: "completed",
+      summary: "¿Qué voltaje de entrada y de salida necesitás?",
+      assistantMessage: "¿Qué voltaje de entrada y de salida necesitás?",
+      normalizedSpec: { type: "voltage_divider" },
+      artifacts: null,
+    });
+  });
+
+  test("sin outcome (o outcome design) usa el camino de veredicto existente, artefactos incluidos", () => {
+    const result = resolveRunOutcome({ ...accepted, outcome: null });
+
+    expect(result.status).toBe("completed");
+    expect(result.summary).toBe("all blocks within tolerance");
+    expect(result.normalizedSpec).toEqual(accepted.normalized_spec);
+    expect(result.artifacts).toEqual(toArtifactDrafts(accepted));
   });
 });
 

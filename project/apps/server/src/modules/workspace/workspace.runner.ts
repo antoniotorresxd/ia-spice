@@ -8,7 +8,13 @@ export type AgentsVerdict = {
   best_iteration: number | null;
 };
 
+export type AgentsOutcome =
+  | { mode: "chat"; reply: string }
+  | { mode: "clarify"; question: string; partial_spec: unknown }
+  | { mode: "design" };
+
 export type AgentsRunResult = {
+  outcome: AgentsOutcome | null;
   verdict: AgentsVerdict | null;
   normalized_spec: unknown | null;
   netlists: Record<string, { path: string; text: string }>;
@@ -95,6 +101,48 @@ export function toAssistantMessage(result: AgentsRunResult): string {
   return lines.length > 0
     ? `${summary}\n\n${lines.join("\n")}\n${iterations}`
     : `${summary}\n\n${iterations}`;
+}
+
+export type RunOutcome = {
+  status: Extract<ExecutionStatus, "completed" | "failed">;
+  summary: string;
+  assistantMessage: string;
+  normalizedSpec: unknown | null;
+  // null = no tocar la tabla de artefactos (turno de chat/clarify sobre una
+  // conversación que ya tenía un diseño vigente); array = reemplazo
+  // completo, igual que el camino de diseño de siempre.
+  artifacts: ArtifactDraft[] | null;
+};
+
+export function resolveRunOutcome(result: AgentsRunResult): RunOutcome {
+  if (result.outcome?.mode === "chat") {
+    return {
+      status: "completed",
+      summary: result.outcome.reply,
+      assistantMessage: result.outcome.reply,
+      normalizedSpec: null,
+      artifacts: null,
+    };
+  }
+
+  if (result.outcome?.mode === "clarify") {
+    return {
+      status: "completed",
+      summary: result.outcome.question,
+      assistantMessage: result.outcome.question,
+      normalizedSpec: result.outcome.partial_spec,
+      artifacts: null,
+    };
+  }
+
+  const { status, summary } = mapVerdictToStatus(result.verdict);
+  return {
+    status,
+    summary,
+    assistantMessage: toAssistantMessage(result),
+    normalizedSpec: result.normalized_spec,
+    artifacts: toArtifactDrafts(result),
+  };
 }
 
 // El sumidero se inyecta para que todo el camino de red se pruebe en memoria:
