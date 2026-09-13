@@ -171,6 +171,24 @@ describe("escritura del resultado (db)", () => {
     expect(detail!.files[0]!.content).toContain("R1 in out 1k");
   });
 
+  t("un turno de chat no borra los artefactos de un diseño previo", async () => {
+    const created = await createConversationWithRequest(TEST_USER_ID, "un divisor de 12V a 5V");
+    createdConversationIds.push(created.conversation.id);
+
+    await makeDbSink(created.conversation.id, created.execution.id).onResult(runResult);
+
+    const followUp = await appendUserMessage(TEST_USER_ID, created.conversation.id, "hola");
+    await makeDbSink(created.conversation.id, followUp!.execution.id).onResult({
+      ...runResult,
+      outcome: { mode: "chat", reply: "¡Hola! ¿En qué circuito seguimos?" },
+    });
+
+    const detail = await getConversationDetail(TEST_USER_ID, created.conversation.id);
+    expect(detail!.executionStatus).toBe("completed");
+    expect(detail!.execution.summary).toBe("¡Hola! ¿En qué circuito seguimos?");
+    expect(detail!.files).toHaveLength(1);
+  });
+
   t("una corrida nueva reemplaza los artefactos, no los duplica", async () => {
     const created = await createConversationWithRequest(TEST_USER_ID, "un divisor de 12V a 5V");
     createdConversationIds.push(created.conversation.id);

@@ -12,9 +12,7 @@ import {
 } from "./workspace.schemas";
 import { composeRequestText } from "./workspace.context";
 import {
-  mapVerdictToStatus,
-  toArtifactDrafts,
-  toAssistantMessage,
+  resolveRunOutcome,
   type AgentsRunResult,
   type RunSink,
 } from "./workspace.runner";
@@ -357,30 +355,31 @@ export async function sweepStaleExecutions(): Promise<void> {
 export function makeDbSink(conversationId: string, executionId: string): RunSink {
   return {
     async onResult(result: AgentsRunResult) {
-      const { status, summary } = mapVerdictToStatus(result.verdict);
+      const outcome = resolveRunOutcome(result);
 
       await db.insert(message).values({
         conversationId,
         role: "assistant",
-        content: toAssistantMessage(result),
+        content: outcome.assistantMessage,
       });
 
-      // Los artefactos se reemplazan: son el netlist vigente, no un histórico.
-      await db.delete(artifact).where(eq(artifact.conversationId, conversationId));
-      const drafts = toArtifactDrafts(result);
-      if (drafts.length > 0) {
-        await db
-          .insert(artifact)
-          .values(drafts.map((draft) => ({ conversationId, ...draft })));
+      // artifacts === null: turno de chat/clarify, no toca lo que ya había.
+      if (outcome.artifacts !== null) {
+        await db.delete(artifact).where(eq(artifact.conversationId, conversationId));
+        if (outcome.artifacts.length > 0) {
+          await db
+            .insert(artifact)
+            .values(outcome.artifacts.map((draft) => ({ conversationId, ...draft })));
+        }
       }
 
       await db
         .update(execution)
         .set({
-          status,
-          summary,
+          status: outcome.status,
+          summary: outcome.summary,
           verdict: result.verdict,
-          normalizedSpec: result.normalized_spec,
+          normalizedSpec: outcome.normalizedSpec,
           history: result.history,
           finishedAt: new Date(),
         })
