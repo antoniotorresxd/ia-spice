@@ -44,6 +44,24 @@ describe("rutas del workspace sin sesión", () => {
     expect(res.status).toBe(401);
   });
 
+  test("PATCH /api/workspace/projects/:id -> 401", async () => {
+    const res = await app.request("/api/workspace/projects/p-1", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Filtros 2" }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  test("PATCH /api/workspace/conversations/:id -> 401", async () => {
+    const res = await app.request("/api/workspace/conversations/c-1", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ title: "Nuevo título" }),
+    });
+    expect(res.status).toBe(401);
+  });
+
   test("PATCH /api/workspace/conversations/:id/project -> 401", async () => {
     const res = await app.request("/api/workspace/conversations/c-1/project", {
       method: "PATCH",

@@ -22,11 +22,24 @@ export function derivePreview(lastMessageContent: string): string {
 }
 
 export const createProjectSchema = z.object({
-  name: z.string().min(1),
+  name: z.string().trim().min(1),
   description: z.string().default(""),
 });
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
+
+export const updateProjectSchema = z.object({
+  name: z.string().trim().min(1),
+  description: z.string().default(""),
+});
+
+export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
+
+export const renameConversationSchema = z.object({
+  title: z.string().trim().min(1).max(TITLE_MAX),
+});
+
+export type RenameConversationInput = z.infer<typeof renameConversationSchema>;
 
 export const submitTextSchema = z.object({
   text: z.string().trim().min(1),
@@ -67,6 +80,19 @@ export function toConversationSummary(
   };
 }
 
+export function deriveExecutionMode(
+  latestExecution: ExecutionRow | undefined,
+  artifactCount: number,
+): "chat" | "clarify" | "design" {
+  if (!latestExecution) return "chat";
+  const verdict = latestExecution.verdict as { mode?: string; status?: string } | null;
+  if (verdict?.mode === "chat") return "chat";
+  if (verdict?.mode === "clarify") return "clarify";
+  if (verdict?.status === "accepted" || verdict?.status === "rejected") return "design";
+  if (artifactCount > 0 || latestExecution.normalizedSpec !== null) return "design";
+  return "chat";
+}
+
 export function toConversationDetail(
   row: ConversationRow,
   messages: MessageRow[],
@@ -96,6 +122,7 @@ export function toConversationDetail(
       id: latestExecution?.id ?? `${row.id}-execution`,
       status: latestExecution?.status ?? ("failed" as const),
       summary: latestExecution?.summary ?? MISSING_EXECUTION_SUMMARY,
+      mode: deriveExecutionMode(latestExecution, artifacts.length),
     },
   };
 }

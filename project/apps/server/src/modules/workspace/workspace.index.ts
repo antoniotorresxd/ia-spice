@@ -7,7 +7,9 @@ import { startRun } from "./workspace.runner";
 import {
   createProjectSchema,
   moveConversationSchema,
+  renameConversationSchema,
   submitTextSchema,
+  updateProjectSchema,
 } from "./workspace.schemas";
 import {
   appendUserMessage,
@@ -21,6 +23,8 @@ import {
   listUserFiles,
   makeDbSink,
   moveConversation,
+  renameConversation,
+  updateProject,
 } from "./workspace.services";
 
 export const workspaceRouter = createRouter()
@@ -53,12 +57,32 @@ export const workspaceRouter = createRouter()
       201,
     );
   })
+  .patch("/api/workspace/projects/:id", requireAuth, async (c) => {
+    const { id: userId } = c.get("user")!;
+    const parsed = updateProjectSchema.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) {
+      return c.json({ error: z.treeifyError(parsed.error) }, 400);
+    }
+    const updated = await updateProject(userId, c.req.param("id"), parsed.data);
+    if (!updated) return c.json({ error: "Not Found" }, 404);
+    return c.json(updated);
+  })
   .get("/api/workspace/conversations/:id", requireAuth, async (c) => {
     const { id: userId } = c.get("user")!;
     const detail = await getConversationDetail(userId, c.req.param("id"));
     // 404 y no 403 para una conversación ajena: no se confirma que exista.
     if (!detail) return c.json({ error: "Not Found" }, 404);
     return c.json(detail);
+  })
+  .patch("/api/workspace/conversations/:id", requireAuth, async (c) => {
+    const { id: userId } = c.get("user")!;
+    const parsed = renameConversationSchema.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) {
+      return c.json({ error: z.treeifyError(parsed.error) }, 400);
+    }
+    const updated = await renameConversation(userId, c.req.param("id"), parsed.data.title);
+    if (!updated) return c.json({ error: "Not Found" }, 404);
+    return c.json(updated);
   })
   .post("/api/workspace/conversations", requireAuth, async (c) => {
     const { id: userId } = c.get("user")!;
@@ -92,7 +116,7 @@ export const workspaceRouter = createRouter()
 
     void startRun(
       { userId, requestText: appended.requestText, executionId: appended.execution.id },
-      makeDbSink(conversationId, appended.execution.id),
+      makeDbSink(conversationId, appended.execution.id, appended.previousNormalizedSpec),
     );
 
     const detail = await getConversationDetail(userId, conversationId);

@@ -9,6 +9,7 @@ import {
   toConversationSummary,
   type ConversationSummaryView,
   type CreateProjectInput,
+  type UpdateProjectInput,
 } from "./workspace.schemas";
 import { composeRequestText } from "./workspace.context";
 import {
@@ -23,6 +24,20 @@ export async function createProject(userId: string, input: CreateProjectInput) {
     .values({ userId, name: input.name, description: input.description })
     .returning();
   return row!;
+}
+
+export async function updateProject(userId: string, id: string, input: UpdateProjectInput) {
+  const [row] = await db
+    .update(project)
+    .set({
+      name: input.name,
+      description: input.description,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(project.id, id), eq(project.userId, userId)))
+    .returning();
+  if (!row) return null;
+  return getProjectDetail(userId, id);
 }
 
 export async function deleteProject(userId: string, id: string) {
@@ -146,7 +161,7 @@ export async function listConversationSummaries(
   });
 }
 
-const ACTIVE_SUMMARY = "Diseño en progreso";
+const ACTIVE_SUMMARY = "Pensando...";
 
 // El driver neon-http no soporta transacciones interactivas: hacen falta los
 // ids devueltos por cada INSERT, así que van secuenciales. Si el proceso muere
@@ -178,6 +193,19 @@ export async function createConversationWithRequest(userId: string, text: string
     execution: executionRow!,
     requestText: text,
   };
+}
+
+export async function renameConversation(userId: string, id: string, title: string) {
+  const [row] = await db
+    .update(conversation)
+    .set({
+      title,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(conversation.id, id), eq(conversation.userId, userId)))
+    .returning();
+  if (!row) return null;
+  return getConversationDetail(userId, id);
 }
 
 export async function deleteConversation(userId: string, id: string) {
@@ -284,7 +312,12 @@ export async function appendUserMessage(userId: string, id: string, text: string
 
   await db.update(conversation).set({ updatedAt: new Date() }).where(eq(conversation.id, id));
 
-  return { message: messageRow!, execution: executionRow!, requestText };
+  return {
+    message: messageRow!,
+    execution: executionRow!,
+    requestText,
+    previousNormalizedSpec: parts.latestExecution?.normalizedSpec ?? null,
+  };
 }
 
 // Cubre assignConversation y restoreConversationProject: ambas mueven la
@@ -352,10 +385,10 @@ export async function sweepStaleExecutions(): Promise<void> {
 
 // El sumidero real: traduce el resultado del grafo a filas. Se mantiene aparte
 // de startRun para que el camino de red se pruebe sin base de datos.
-export function makeDbSink(conversationId: string, executionId: string): RunSink {
+export function makeDbSink(conversationId: string, executionId: string, previousNormalizedSpec: unknown | null = null): RunSink {
   return {
     async onResult(result: AgentsRunResult) {
-      const outcome = resolveRunOutcome(result);
+      const outcome = resolveRunOutcome(result, previousNormalizedSpec);
 
       await db.insert(message).values({
         conversationId,
@@ -378,7 +411,7 @@ export function makeDbSink(conversationId: string, executionId: string): RunSink
         .set({
           status: outcome.status,
           summary: outcome.summary,
-          verdict: result.verdict,
+          verdict: result.verdict ?? (result.outcome ? { mode: result.outcome.mode } : null),
           normalizedSpec: outcome.normalizedSpec,
           history: result.history,
           finishedAt: new Date(),

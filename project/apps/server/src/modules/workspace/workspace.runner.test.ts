@@ -167,7 +167,21 @@ describe("resolveRunOutcome", () => {
       assistantMessage: "¡Hola! ¿Qué circuito querés diseñar?",
       normalizedSpec: null,
       artifacts: null,
+      mode: "chat",
     });
+  });
+
+  test("outcome chat conserva el spec parcial anterior", () => {
+    const previousNormalizedSpec = { type: "voltage_divider" };
+    const result: AgentsRunResult = {
+      ...accepted,
+      outcome: { mode: "chat", reply: "¡Hola!" },
+      normalized_spec: null,
+    };
+
+    expect(resolveRunOutcome(result, previousNormalizedSpec).normalizedSpec).toBe(previousNormalizedSpec);
+    expect(resolveRunOutcome(result).normalizedSpec).toBeNull();
+    expect(resolveRunOutcome(result, null).normalizedSpec).toBeNull();
   });
 
   test("outcome clarify -> completed con la pregunta y el spec parcial reinyectable", () => {
@@ -186,6 +200,7 @@ describe("resolveRunOutcome", () => {
       assistantMessage: "¿Qué voltaje de entrada y de salida necesitás?",
       normalizedSpec: { type: "voltage_divider" },
       artifacts: null,
+      mode: "clarify",
     });
   });
 
@@ -195,6 +210,7 @@ describe("resolveRunOutcome", () => {
     expect(result.status).toBe("completed");
     expect(result.summary).toBe("all blocks within tolerance");
     expect(result.normalizedSpec).toEqual(accepted.normalized_spec);
+    expect(result.mode).toBe("design");
     expect(result.artifacts).toEqual(toArtifactDrafts(accepted));
   });
 });

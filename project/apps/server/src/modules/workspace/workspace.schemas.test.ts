@@ -172,6 +172,7 @@ describe("toConversationDetail", () => {
       id: "exec-1",
       status: "completed",
       summary: "all blocks within tolerance",
+      mode: "design",
     });
   });
 
@@ -196,10 +197,23 @@ describe("toConversationDetail", () => {
     }]);
   });
 
-  test("sin ejecución sintetiza una fallida en lugar de romperse", () => {
+  test("sin ejecución sintetiza una fallida en lugar de romperse con mode chat", () => {
     const detail = toConversationDetail(conversationRow, messageRows, [], undefined);
     expect(detail.execution.status).toBe("failed");
     expect(detail.execution.summary).toBe("La ejecución no se pudo registrar.");
+    expect(detail.execution.mode).toBe("chat");
     expect(detail.executionStatus).toBe("failed");
+  });
+
+  test("deriva modo chat cuando el veredicto contiene mode chat", () => {
+    const chatExec = { ...executionRow, verdict: { mode: "chat" } };
+    const detail = toConversationDetail(conversationRow, messageRows, [], chatExec);
+    expect(detail.execution.mode).toBe("chat");
+  });
+
+  test("deriva modo clarify cuando el veredicto contiene mode clarify", () => {
+    const clarifyExec = { ...executionRow, verdict: { mode: "clarify" } };
+    const detail = toConversationDetail(conversationRow, messageRows, [], clarifyExec);
+    expect(detail.execution.mode).toBe("clarify");
   });
 });

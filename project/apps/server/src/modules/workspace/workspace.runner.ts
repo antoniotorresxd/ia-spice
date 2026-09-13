@@ -112,16 +112,18 @@ export type RunOutcome = {
   // conversación que ya tenía un diseño vigente); array = reemplazo
   // completo, igual que el camino de diseño de siempre.
   artifacts: ArtifactDraft[] | null;
+  mode: "chat" | "clarify" | "design";
 };
 
-export function resolveRunOutcome(result: AgentsRunResult): RunOutcome {
+export function resolveRunOutcome(result: AgentsRunResult, previousNormalizedSpec: unknown | null = null): RunOutcome {
   if (result.outcome?.mode === "chat") {
     return {
       status: "completed",
       summary: result.outcome.reply,
       assistantMessage: result.outcome.reply,
-      normalizedSpec: null,
+      normalizedSpec: previousNormalizedSpec,
       artifacts: null,
+      mode: "chat",
     };
   }
 
@@ -132,6 +134,7 @@ export function resolveRunOutcome(result: AgentsRunResult): RunOutcome {
       assistantMessage: result.outcome.question,
       normalizedSpec: result.outcome.partial_spec,
       artifacts: null,
+      mode: "clarify",
     };
   }
 
@@ -142,6 +145,7 @@ export function resolveRunOutcome(result: AgentsRunResult): RunOutcome {
     assistantMessage: toAssistantMessage(result),
     normalizedSpec: result.normalized_spec,
     artifacts: toArtifactDrafts(result),
+    mode: "design",
   };
 }
 

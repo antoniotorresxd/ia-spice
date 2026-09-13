@@ -189,6 +189,32 @@ describe("escritura del resultado (db)", () => {
     expect(detail!.files).toHaveLength(1);
   });
 
+  test.skipIf(!runDb || !process.env.TEST_USER_ID)("un turno de chat conserva el spec parcial de clarify", async () => {
+    const { db } = await import("@/db");
+    const { eq } = await import("drizzle-orm");
+    const { execution } = await import("./workspace.model");
+    const partialSpec = { type: "voltage_divider" };
+    const created = await createConversationWithRequest(TEST_USER_ID, "un divisor");
+    createdConversationIds.push(created.conversation.id);
+
+    await makeDbSink(created.conversation.id, created.execution.id).onResult({
+      ...runResult,
+      outcome: { mode: "clarify", question: "¿Qué voltaje necesitás?", partial_spec: partialSpec },
+      normalized_spec: null,
+    });
+
+    const followUp = await appendUserMessage(TEST_USER_ID, created.conversation.id, "hola");
+    expect(followUp!.previousNormalizedSpec).toEqual(partialSpec);
+    await makeDbSink(created.conversation.id, followUp!.execution.id, followUp!.previousNormalizedSpec).onResult({
+      ...runResult,
+      outcome: { mode: "chat", reply: "¡Hola!" },
+      normalized_spec: null,
+    });
+
+    const [row] = await db.select().from(execution).where(eq(execution.id, followUp!.execution.id));
+    expect(row!.normalizedSpec).toEqual(partialSpec);
+  });
+
   t("una corrida nueva reemplaza los artefactos, no los duplica", async () => {
     const created = await createConversationWithRequest(TEST_USER_ID, "un divisor de 12V a 5V");
     createdConversationIds.push(created.conversation.id);

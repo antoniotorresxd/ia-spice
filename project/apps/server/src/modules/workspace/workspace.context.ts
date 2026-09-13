@@ -10,9 +10,9 @@ export function composeRequestText(
 ): string {
   const parts: string[] = [];
 
-  const firstUserMessage = messages.find((item) => item.role === "user");
-  if (firstUserMessage) {
-    parts.push(`Solicitud original: ${firstUserMessage.content}`);
+  for (const message of messages) {
+    const roleLabel = message.role === "user" ? "Usuario" : "Asistente";
+    parts.push(`${roleLabel}: ${message.content}`);
   }
 
   if (lastSpec !== null && lastSpec !== undefined) {
