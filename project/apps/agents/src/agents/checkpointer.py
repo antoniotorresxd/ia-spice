@@ -51,9 +51,18 @@ def open_checkpointer():
     # Import perezoso: sin base configurada no hace falta psycopg ni pagar su
     # importación.
     from langgraph.checkpoint.postgres import PostgresSaver
+    from psycopg.rows import dict_row
+    from psycopg_pool import ConnectionPool
 
-    with PostgresSaver.from_conn_string(url) as saver:
-        yield saver
+    # Neon puede cerrar conexiones ociosas: el pool las comprueba al prestarlas.
+    with ConnectionPool(
+        url,
+        min_size=1,
+        max_size=4,
+        kwargs={"autocommit": True, "prepare_threshold": 0, "row_factory": dict_row},
+        check=ConnectionPool.check_connection,
+    ) as pool:
+        yield PostgresSaver(pool)
 
 
 def schema_from_url(url: str) -> str | None:

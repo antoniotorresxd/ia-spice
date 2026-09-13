@@ -1,4 +1,5 @@
 import os
+from unittest.mock import Mock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -27,6 +28,49 @@ def test_sin_url_configurada_cae_a_memoria():
     exigir una base. Lo que se pierde es la recuperabilidad, no el resultado."""
     with open_checkpointer() as saver:
         assert isinstance(saver, MemorySaver)
+
+
+@pytest.mark.parametrize("falla", [False, True])
+def test_postgres_usa_pool_con_comprobacion_y_lo_cierra(monkeypatch, falla):
+    from langgraph.checkpoint.postgres import PostgresSaver
+    from psycopg.rows import dict_row
+    import psycopg_pool
+
+    url = "postgresql://u:p@localhost/test"
+    monkeypatch.setenv("CHECKPOINTER_URL", url)
+    pool_class = psycopg_pool.ConnectionPool
+    # Un pool real sin conexiones mínimas no necesita una base para abrirse.
+    pool = pool_class(url, min_size=0, max_size=4, open=False)
+    constructor = Mock(return_value=pool)
+    constructor.check_connection = pool_class.check_connection
+    monkeypatch.setattr(psycopg_pool, "ConnectionPool", constructor)
+
+    class FalloDelConsumidor(Exception):
+        pass
+
+    def usar_checkpointer():
+        with open_checkpointer() as saver:
+            assert isinstance(saver, PostgresSaver)
+            assert isinstance(saver.conn, pool_class)
+            assert saver.conn is pool
+            assert not pool.closed
+            if falla:
+                raise FalloDelConsumidor
+
+    if falla:
+        with pytest.raises(FalloDelConsumidor):
+            usar_checkpointer()
+    else:
+        usar_checkpointer()
+
+    assert pool.closed
+    constructor.assert_called_once_with(
+        url,
+        min_size=1,
+        max_size=4,
+        kwargs={"autocommit": True, "prepare_threshold": 0, "row_factory": dict_row},
+        check=pool_class.check_connection,
+    )
 
 
 def test_checkpointer_url_vacia_cuenta_como_ausente(monkeypatch):
