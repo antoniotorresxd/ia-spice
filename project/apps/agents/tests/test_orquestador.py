@@ -89,13 +89,15 @@ def test_request_text_uses_llm_to_produce_normalized_spec(monkeypatch):
         "max_iterations": 5,
         "tolerance": 0.05,
     }
-    from agents.orquestador.schema import CircuitSpec
+    from agents.orquestador.schema import CircuitSpec, DesignOutcome
 
     monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
     monkeypatch.setattr(
         orquestador_module,
-        "extract_circuit_spec",
-        lambda chat_model, text: CircuitSpec.model_validate(fake_spec),
+        "extract_orchestrator_outcome",
+        lambda chat_model, text: DesignOutcome(
+            mode="design", spec=CircuitSpec.model_validate(fake_spec)
+        ),
     )
 
     result = orquestador_node(
@@ -132,7 +134,7 @@ def test_request_text_extraction_failure_is_rejected(monkeypatch):
     def _raise(chat_model, text):
         raise ExtractionError("LLM returned garbage")
 
-    monkeypatch.setattr(orquestador_module, "extract_circuit_spec", _raise)
+    monkeypatch.setattr(orquestador_module, "extract_orchestrator_outcome", _raise)
 
     result = orquestador_node(
         _state(request_text="algo"), {"configurable": {"user_id": "user-1"}}
@@ -468,3 +470,56 @@ def test_orchestrator_result_rejects_an_unknown_mode():
 
     with pytest.raises(ValidationError):
         OrchestratorResult.model_validate({"outcome": {"mode": "smalltalk", "reply": "hola"}})
+
+
+def test_request_text_chat_outcome_returns_a_reply_without_touching_the_pipeline(monkeypatch):
+    from agents.orquestador.schema import ChatOutcome
+
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
+    monkeypatch.setattr(
+        orquestador_module,
+        "extract_orchestrator_outcome",
+        lambda chat_model, text: ChatOutcome(mode="chat", reply="¡Hola! ¿Qué circuito querés diseñar?"),
+    )
+
+    result = orquestador_node(_state(request_text="hola"), {"configurable": {"user_id": "user-1"}})
+
+    assert result["outcome"] == {"mode": "chat", "reply": "¡Hola! ¿Qué circuito querés diseñar?"}
+    assert "normalized_spec" not in result
+    assert result.get("verdict") is None
+
+
+def test_request_text_clarify_outcome_carries_the_question_and_partial_spec(monkeypatch):
+    from agents.orquestador.schema import ClarifyOutcome
+
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
+    monkeypatch.setattr(
+        orquestador_module,
+        "extract_orchestrator_outcome",
+        lambda chat_model, text: ClarifyOutcome(
+            mode="clarify",
+            question="¿Qué voltaje de entrada y de salida necesitás?",
+            partial_spec={"type": "voltage_divider"},
+        ),
+    )
+
+    result = orquestador_node(_state(request_text="diseña una fuente"), {"configurable": {"user_id": "user-1"}})
+
+    assert result["outcome"] == {
+        "mode": "clarify",
+        "question": "¿Qué voltaje de entrada y de salida necesitás?",
+        "partial_spec": {"type": "voltage_divider"},
+    }
+    assert result.get("verdict") is None
+
+
+def test_route_after_orquestador_stops_on_chat_and_clarify():
+    assert route_after_orquestador({"verdict": None, "outcome": {"mode": "chat", "reply": "hola"}}) == "stop"
+    assert (
+        route_after_orquestador(
+            {"verdict": None, "outcome": {"mode": "clarify", "question": "x", "partial_spec": {}}}
+        )
+        == "stop"
+    )
+    assert route_after_orquestador({"verdict": None, "outcome": None}) == "continue"
+    assert route_after_orquestador({"verdict": None}) == "continue"

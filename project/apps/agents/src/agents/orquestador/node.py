@@ -1,7 +1,7 @@
 from langchain_core.runnables import RunnableConfig
 from pydantic import ValidationError
 
-from agents.llm.extraction import ExtractionError, extract_circuit_spec
+from agents.llm.extraction import ExtractionError, extract_orchestrator_outcome
 from agents.llm.factory import build_chat_model
 from agents.llm.settings_client import LlmSettingsError, fetch_agent_llm
 from agents.orquestador.schema import CircuitSpec
@@ -83,10 +83,23 @@ def orquestador_node(state: CircuitState, config: RunnableConfig | None = None) 
             return _rejected(f"llm_settings_unavailable: {exc}")
 
         try:
-            spec = extract_circuit_spec(chat_model, request_text)
+            outcome = extract_orchestrator_outcome(chat_model, request_text)
         except ExtractionError as exc:
             return _rejected(f"llm_extraction_failed: {exc}")
 
+        if outcome.mode == "chat":
+            return {"outcome": {"mode": "chat", "reply": outcome.reply}}
+
+        if outcome.mode == "clarify":
+            return {
+                "outcome": {
+                    "mode": "clarify",
+                    "question": outcome.question,
+                    "partial_spec": outcome.partial_spec,
+                }
+            }
+
+        spec = outcome.spec
         result = _normalize(spec)
         # se sobreescribe circuit_spec con lo que el LLM entendió, para que
         # history/depuración muestren la especificación resuelta
@@ -104,4 +117,9 @@ def orquestador_node(state: CircuitState, config: RunnableConfig | None = None) 
 
 
 def route_after_orquestador(state: CircuitState) -> str:
-    return "reject" if state["verdict"] is not None else "continue"
+    if state["verdict"] is not None:
+        return "reject"
+    outcome = state.get("outcome")
+    if outcome and outcome.get("mode") in ("chat", "clarify"):
+        return "stop"
+    return "continue"
