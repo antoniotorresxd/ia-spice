@@ -8,7 +8,7 @@ import agents.documentador.node as documentador_module
 import agents.orquestador.node as orquestador_module
 from agents.documentador.schema import CircuitDocumentation
 from agents.graph import build_graph
-from agents.orquestador.schema import CircuitSpec
+from agents.orquestador.schema import CircuitSpec, DesignOutcome
 
 
 def _initial_state(circuit_spec):
@@ -24,6 +24,7 @@ def _initial_state(circuit_spec):
         "history": [],
         "verdict": None,
         "documentation": {},
+        "outcome": None,
     }
 
 
@@ -136,7 +137,9 @@ def test_request_text_end_to_end_with_fake_llm(monkeypatch):
     )
     monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
     monkeypatch.setattr(
-        orquestador_module, "extract_circuit_spec", lambda chat_model, text: fake_spec
+        orquestador_module,
+        "extract_orchestrator_outcome",
+        lambda chat_model, text: DesignOutcome(mode="design", spec=fake_spec),
     )
 
     spec = {"blocks": []}  # circuit_spec vacio: se ignora porque hay request_text
@@ -154,6 +157,7 @@ def test_request_text_end_to_end_with_fake_llm(monkeypatch):
         "history": [],
         "verdict": None,
         "documentation": {},
+        "outcome": None,
     }
 
     final = graph.invoke(initial_state, config)
@@ -183,6 +187,7 @@ def test_request_text_end_to_end_with_live_llm():
         "history": [],
         "verdict": None,
         "documentation": {},
+        "outcome": None,
     }
 
     final = graph.invoke(initial_state, config)
@@ -333,7 +338,9 @@ def test_el_camino_generico_tambien_llega_desde_lenguaje_natural(monkeypatch):
     )
     monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
     monkeypatch.setattr(
-        orquestador_module, "extract_circuit_spec", lambda chat_model, text: fake_spec
+        orquestador_module,
+        "extract_orchestrator_outcome",
+        lambda chat_model, text: DesignOutcome(mode="design", spec=fake_spec),
     )
 
     graph = build_graph()
@@ -513,3 +520,55 @@ def test_el_grafo_documenta_el_divisor_y_descarta_componentes_inventados(monkeyp
         "components": {"R1": "resistencia superior"},
         "measurement_explanation": "Mide el voltaje de salida",
     }
+
+
+def test_chat_message_stops_before_calculo_and_reports_the_reply(monkeypatch):
+    from agents.orquestador.schema import ChatOutcome
+
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
+    monkeypatch.setattr(
+        orquestador_module,
+        "extract_orchestrator_outcome",
+        lambda chat_model, text: ChatOutcome(mode="chat", reply="¡Hola! ¿Qué circuito querés diseñar?"),
+    )
+
+    graph = build_graph()
+    initial = _initial_state({"blocks": []})
+    initial["request_text"] = "hola"
+
+    final = graph.invoke(
+        initial, {"configurable": {"thread_id": "e2e-chat", "user_id": "test-user"}}
+    )
+
+    assert final["outcome"] == {"mode": "chat", "reply": "¡Hola! ¿Qué circuito querés diseñar?"}
+    assert final["verdict"] is None
+    assert final["sim_results"] == {}
+    assert final["netlists"] == {}
+
+
+def test_insufficient_info_stops_with_a_clarifying_question(monkeypatch):
+    from agents.orquestador.schema import ClarifyOutcome
+
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
+    monkeypatch.setattr(
+        orquestador_module,
+        "extract_orchestrator_outcome",
+        lambda chat_model, text: ClarifyOutcome(
+            mode="clarify",
+            question="¿Qué voltaje de entrada y de salida necesitás?",
+            partial_spec={},
+        ),
+    )
+
+    graph = build_graph()
+    initial = _initial_state({"blocks": []})
+    initial["request_text"] = "diseña una fuente"
+
+    final = graph.invoke(
+        initial, {"configurable": {"thread_id": "e2e-clarify", "user_id": "test-user"}}
+    )
+
+    assert final["outcome"]["mode"] == "clarify"
+    assert final["outcome"]["question"] == "¿Qué voltaje de entrada y de salida necesitás?"
+    assert final["verdict"] is None
+    assert final["sim_results"] == {}

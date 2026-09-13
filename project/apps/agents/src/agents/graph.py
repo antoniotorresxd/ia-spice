@@ -43,7 +43,7 @@ def build_graph(checkpointer=None):
     builder.add_conditional_edges(
         "orquestador",
         route_after_orquestador,
-        {"continue": "calculo", "reject": END},
+        {"continue": "calculo", "stop": END, "reject": END},
     )
     builder.add_edge("calculo", "sintesis")
     builder.add_edge("sintesis", "curador")

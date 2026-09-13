@@ -100,6 +100,7 @@ def create_run(body: RunRequest, authorization: str | None = Header(default=None
         "iteration": 0,
         "history": [],
         "verdict": None,
+        "outcome": None,
     }
 
     # user_id viaja en el config, no en el estado: es identidad de la corrida,
@@ -113,6 +114,7 @@ def create_run(body: RunRequest, authorization: str | None = Header(default=None
 
     return {
         "verdict": final_state["verdict"],
+        "outcome": final_state["outcome"],
         "normalized_spec": final_state["normalized_spec"],
         "netlists": final_state["netlists"],
         "sim_results": final_state["sim_results"],

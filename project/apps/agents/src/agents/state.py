@@ -17,6 +17,11 @@ class CircuitState(TypedDict):
     normalized_spec: dict | None
     pending_blocks: list | None
 
+    # Escrito por 'orquestador' cuando el mensaje no llega a ser un diseño:
+    # charla (mode="chat") o falta información (mode="clarify", con lo que
+    # ya se pudo inferir en partial_spec). None en el camino de diseño.
+    outcome: dict | None
+
     # Escrito por los workers de 'calculo' (en paralelo) y mutado por 'curador'
     component_values: Annotated[dict, merge_dicts]
 
