@@ -1,7 +1,7 @@
 import pytest
 
-from agents.llm.extraction import ExtractionError, extract_circuit_spec
-from agents.orquestador.schema import CircuitSpec
+from agents.llm.extraction import ExtractionError, extract_orchestrator_outcome
+from agents.orquestador.schema import ChatOutcome, ClarifyOutcome, DesignOutcome, CircuitSpec, OrchestratorResult
 
 
 class _FakeStructuredModel:
@@ -19,7 +19,7 @@ class _FakeChatModel:
         self._result = result
 
     def with_structured_output(self, schema):
-        assert schema is CircuitSpec
+        assert schema is OrchestratorResult
         return _FakeStructuredModel(self._result)
 
 
@@ -30,13 +30,39 @@ FIXED_SPEC = CircuitSpec(
 )
 
 
-def test_extract_circuit_spec_returns_parsed_spec():
-    chat_model = _FakeChatModel(FIXED_SPEC)
-    result = extract_circuit_spec(chat_model, "dame un divisor de 5V a 3.3V")
-    assert result == FIXED_SPEC
+def test_extract_orchestrator_outcome_unwraps_a_chat_reply():
+    fixed = OrchestratorResult(outcome=ChatOutcome(mode="chat", reply="¡Hola!"))
+    chat_model = _FakeChatModel(fixed)
+
+    outcome = extract_orchestrator_outcome(chat_model, "hola")
+
+    assert isinstance(outcome, ChatOutcome)
+    assert outcome.reply == "¡Hola!"
 
 
-def test_extract_circuit_spec_wraps_failures():
+def test_extract_orchestrator_outcome_unwraps_a_clarify_question():
+    fixed = OrchestratorResult(
+        outcome=ClarifyOutcome(mode="clarify", question="¿Qué voltaje necesitás?", partial_spec={})
+    )
+    chat_model = _FakeChatModel(fixed)
+
+    outcome = extract_orchestrator_outcome(chat_model, "diseña una fuente")
+
+    assert isinstance(outcome, ClarifyOutcome)
+    assert outcome.question == "¿Qué voltaje necesitás?"
+
+
+def test_extract_orchestrator_outcome_unwraps_a_design_spec():
+    fixed = OrchestratorResult(outcome=DesignOutcome(mode="design", spec=FIXED_SPEC))
+    chat_model = _FakeChatModel(fixed)
+
+    outcome = extract_orchestrator_outcome(chat_model, "dame un divisor de 5V a 3.3V")
+
+    assert isinstance(outcome, DesignOutcome)
+    assert outcome.spec == FIXED_SPEC
+
+
+def test_extract_orchestrator_outcome_wraps_failures():
     chat_model = _FakeChatModel(RuntimeError("boom"))
     with pytest.raises(ExtractionError, match="boom"):
-        extract_circuit_spec(chat_model, "algo")
+        extract_orchestrator_outcome(chat_model, "algo")
