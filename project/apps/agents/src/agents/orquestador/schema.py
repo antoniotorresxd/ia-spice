@@ -129,3 +129,39 @@ class CircuitSpec(BaseModel):
         if len(ids) != len(set(ids)):
             raise ValueError("block ids must be unique")
         return self
+
+
+class ChatOutcome(BaseModel):
+    """El mensaje no era un pedido de diseño."""
+
+    mode: Literal["chat"]
+    reply: str = Field(min_length=1)
+
+
+class ClarifyOutcome(BaseModel):
+    """Hay intención de diseño pero falta información para completar un bloque."""
+
+    mode: Literal["clarify"]
+    question: str = Field(min_length=1)
+    partial_spec: dict = Field(default_factory=dict)
+
+
+class DesignOutcome(BaseModel):
+    """Hay suficiente información: la especificación completa de siempre."""
+
+    mode: Literal["design"]
+    spec: CircuitSpec
+
+
+class OrchestratorResult(BaseModel):
+    """Envoltorio de nivel superior para el structured output del LLM.
+
+    El discriminador vive en un campo (outcome.mode), no en la raíz: varios
+    proveedores no aceptan una unión suelta como schema de nivel superior
+    para tool calling, pero sí un objeto con un campo discriminado adentro.
+    """
+
+    outcome: Annotated[
+        ChatOutcome | ClarifyOutcome | DesignOutcome,
+        Field(discriminator="mode"),
+    ]

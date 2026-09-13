@@ -416,3 +416,55 @@ def test_generic_rechaza_un_netlist_que_no_mide_nada():
                 ]
             }
         )
+
+
+def test_orchestrator_result_parses_chat_outcome():
+    from agents.orquestador.schema import OrchestratorResult
+
+    result = OrchestratorResult.model_validate(
+        {"outcome": {"mode": "chat", "reply": "¡Hola! ¿Qué circuito querés diseñar?"}}
+    )
+    assert result.outcome.mode == "chat"
+    assert result.outcome.reply == "¡Hola! ¿Qué circuito querés diseñar?"
+
+
+def test_orchestrator_result_parses_clarify_outcome_with_empty_partial_spec():
+    from agents.orquestador.schema import OrchestratorResult
+
+    result = OrchestratorResult.model_validate(
+        {"outcome": {"mode": "clarify", "question": "¿Qué voltaje de entrada y salida necesitás?"}}
+    )
+    assert result.outcome.mode == "clarify"
+    assert result.outcome.partial_spec == {}
+
+
+def test_orchestrator_result_parses_design_outcome_with_a_full_spec():
+    from agents.orquestador.schema import OrchestratorResult
+
+    result = OrchestratorResult.model_validate(
+        {
+            "outcome": {
+                "mode": "design",
+                "spec": {
+                    "blocks": [
+                        {
+                            "id": "div1",
+                            "type": "voltage_divider",
+                            "params": {"v_in": 5.0, "v_out": 3.3},
+                        }
+                    ]
+                },
+            }
+        }
+    )
+    assert result.outcome.mode == "design"
+    assert result.outcome.spec.blocks[0].id == "div1"
+
+
+def test_orchestrator_result_rejects_an_unknown_mode():
+    from pydantic import ValidationError
+
+    from agents.orquestador.schema import OrchestratorResult
+
+    with pytest.raises(ValidationError):
+        OrchestratorResult.model_validate({"outcome": {"mode": "smalltalk", "reply": "hola"}})
