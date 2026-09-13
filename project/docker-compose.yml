@@ -1,14 +1,20 @@
 # Despliegue reproducible del sistema (RIMP-10).
 #
-# Levanta el subsistema de agentes y la API con un solo comando:
+# Levanta agents + server (+ client, en dev) con un solo comando:
 #
 #     docker compose up --build
 #
-# El valor de este archivo para la tesina no es la comodidad: es que la
-# ejecución de los artefactos que produce el modelo —código PySpice y netlists
-# que ngspice ejecuta— quede contenida dentro de un contenedor, que es el
-# control de seguridad que el diseño reclama. Sin esto, esa afirmación no se
-# sostiene.
+# El valor central de este archivo para la tesina no es la comodidad: es que
+# la ejecución de los artefactos que produce el modelo —código PySpice y
+# netlists que ngspice ejecuta— quede contenida dentro de un contenedor, que
+# es el control de seguridad que el diseño reclama. Sin esto, esa afirmación
+# no se sostiene.
+#
+# `client` es la excepción: va sin build propio (corre `vite dev` directo
+# sobre bind mounts) porque en producción no se despliega por Docker sino por
+# Railway (Railpack + bun run build:client/start:client, ver
+# apps/client/railway.toml). Acá solo está para que `docker compose up`
+# alcance para levantar todo en dev, hot reload incluido.
 
 name: spice
 
@@ -29,6 +35,17 @@ services:
       # para que sus migraciones y las de Drizzle no se estorben. Ver
       # .env.example.
       CHECKPOINTER_URL: ${CHECKPOINTER_URL:?define CHECKPOINTER_URL en .env}
+      # Los prompts de orquestador/documentador/curador viven solo en Langfuse
+      # (no hay copia local de fallback), así que sin estas dos claves ningún
+      # nodo con LLM tiene qué prompt usar y el pipeline entero queda inútil,
+      # no solo el tracing.
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:?define LANGFUSE_PUBLIC_KEY en .env}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:?define LANGFUSE_SECRET_KEY en .env}
+      # Default a la región US: es donde vive el proyecto de Langfuse de este
+      # repo (ver el host del MCP langfuse-spice). El SDK por defecto usa la
+      # región EU (cloud.langfuse.com) si no se especifica, lo que produce un
+      # 401 "invalid credentials" con keys válidas pero de otra región.
+      LANGFUSE_HOST: ${LANGFUSE_HOST:-https://us.cloud.langfuse.com}
     volumes:
       # Los pesos y umbrales del curador se montan, no se hornean: la tesina
       # exige poder ajustarlos durante la evaluación sin recompilar (RNF-04.2),
@@ -58,4 +75,28 @@ services:
     ports:
       - "3001:3001"
     depends_on:
-      - agents
+      agents:
+        condition: service_healthy
+
+  client:
+    image: oven/bun:1
+    working_dir: /app
+    # Todo el workspace, no solo apps/client: bun resuelve el lock desde la
+    # raíz. node_modules va en un volumen nombrado, no en el bind mount, para
+    # no pisar el de tu host (binarios nativos como @tailwindcss/oxide se
+    # resuelven por plataforma del contenedor, no la tuya).
+    volumes:
+      - .:/app
+      - client_node_modules:/app/node_modules
+    environment:
+      # Dentro de la red del compose el server no es localhost, es el
+      # hostname del servicio.
+      VITE_API_PROXY_TARGET: http://server:3001
+    command: sh -c "bun install --frozen-lockfile && bun run --cwd apps/client dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+
+volumes:
+  client_node_modules:
