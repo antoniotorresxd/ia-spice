@@ -16,6 +16,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:drop": "drizzle-kit drop",
+    "db:seed:circuits": "bun run src/modules/circuit/seed.ts",
     "test": "bun test"
   },
   "dependencies": {

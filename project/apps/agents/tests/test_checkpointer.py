@@ -12,7 +12,16 @@ from agents.graph import build_graph
 TOKEN = "token-de-prueba-suficientemente-largo"
 DIVISOR = {
     "blocks": [
-        {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+        {
+            "id": "div1",
+            "type": "catalog",
+            "params": {
+                "circuit_id": "voltage_divider",
+                "params": {"v_in": 5.0, "v_out": 3.3},
+                "metric": "v_out",
+                "target": 3.3,
+            },
+        }
     ]
 }
 

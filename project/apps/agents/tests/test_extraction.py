@@ -25,7 +25,16 @@ class _FakeChatModel:
 
 FIXED_SPEC = CircuitSpec(
     blocks=[
-        {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+        {
+            "id": "div1",
+            "type": "catalog",
+            "params": {
+                "circuit_id": "voltage_divider",
+                "params": {"v_in": 5.0, "v_out": 3.3},
+                "metric": "vout",
+                "target": 3.3,
+            },
+        }
     ]
 )
 
@@ -68,6 +77,38 @@ def test_extract_orchestrator_outcome_wraps_failures():
         extract_orchestrator_outcome(chat_model, "algo")
 
 
+@pytest.mark.parametrize("context", ["catálogo explícito", "", None])
+def test_extract_compiles_catalog_into_system_prompt(monkeypatch, context):
+    fixed = OrchestratorResult(outcome=ChatOutcome(mode="chat", reply="¡Hola!"))
+    seen = []
+    messages_seen = []
+
+    def fetch_prompt(name, **kwargs):
+        seen.append((name, kwargs))
+        return "System prompt compilado"
+
+    def unavailable_catalog():
+        raise RuntimeError("catalog unavailable")
+
+    def invoke(self, messages):
+        messages_seen.extend(messages)
+        return fixed
+
+    monkeypatch.setattr("agents.llm.extraction.fetch_prompt", fetch_prompt)
+    monkeypatch.setattr("agents.knowledge.circuit_client.fetch_circuit_catalog", unavailable_catalog)
+    monkeypatch.setattr(_FakeStructuredModel, "invoke", invoke)
+
+    assert extract_orchestrator_outcome(_FakeChatModel(fixed), "hola", context) == fixed.outcome
+    assert seen == [(
+        "orquestador-system",
+        {"retrieved_circuits_catalog": context or "(catálogo no disponible)"},
+    )]
+    assert messages_seen == [
+        {"role": "system", "content": "System prompt compilado"},
+        {"role": "user", "content": "hola"},
+    ]
+
+
 @pytest.fixture(autouse=True)
 def _fake_prompt(monkeypatch):
-    monkeypatch.setattr("agents.llm.extraction.fetch_prompt", lambda name: "System prompt de prueba")
+    monkeypatch.setattr("agents.llm.extraction.fetch_prompt", lambda name, **kwargs: "System prompt de prueba")

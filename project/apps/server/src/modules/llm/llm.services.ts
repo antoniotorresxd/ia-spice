@@ -50,6 +50,7 @@ export async function updateConnection(
 ) {
   const values: Partial<typeof llmConnection.$inferInsert> = {};
   if (input.label !== undefined) values.label = input.label;
+  if (input.provider !== undefined) values.provider = input.provider;
   if (input.baseUrl !== undefined) values.baseUrl = input.baseUrl;
   if (input.apiKey !== undefined) {
     values.apiKeyEncrypted = encryptApiKey(input.apiKey);

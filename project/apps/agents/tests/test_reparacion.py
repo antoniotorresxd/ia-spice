@@ -188,3 +188,10 @@ def test_repair_netlist_devuelve_lo_mismo_si_el_reintento_tambien_repite():
 @pytest.fixture(autouse=True)
 def _fake_prompt(monkeypatch):
     monkeypatch.setattr("agents.curador.reparacion.fetch_prompt", lambda name: "System prompt de prueba")
+
+
+def test_netlist_reparado_rechaza_placeholders_sin_param():
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError, match="RZ"):
+        NetlistReparado(netlist=NETLIST_OK.replace("1000", "{RZ}"))

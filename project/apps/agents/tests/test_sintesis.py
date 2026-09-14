@@ -12,23 +12,33 @@ def test_sintesis_generates_and_simulates_mixed_blocks():
             "blocks": [
                 {
                     "id": "div1",
-                    "type": "voltage_divider",
-                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "voltage_divider",
+                        "params": {"v_in": 5.0, "v_out": 3.3},
+                        "metric": "v_out",
+                        "target": 3.3,
+                    },
                     "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
                 },
                 {
                     "id": "rc1",
-                    "type": "rc_lowpass",
-                    "params": {"f_c": 1000.0},
-                    "goal": {"metric": "f_c", "target": 1000.0, "tolerance": 0.05},
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "rc_lowpass_passive",
+                        "params": {"f_c": 1000.0},
+                        "metric": "fc",
+                        "target": 1000.0,
+                    },
+                    "goal": {"metric": "fc", "target": 1000.0, "tolerance": 0.05},
                 },
             ],
             "max_iterations": 5,
         },
         "pending_blocks": ["div1", "rc1"],
         "component_values": {
-            "div1": {"r1": 1000.0, "r2": 1941.1764705882354},
-            "rc1": {"r": 1000.0, "c": 1.5915494309189535e-07},
+            "div1": {"R1": 1000.0, "R2": 1941.1764705882354},
+            "rc1": {"R": 1000.0, "C": 1.5915494309189535e-07},
         },
         "netlists": {},
         "sim_results": {},
@@ -46,8 +56,7 @@ def test_sintesis_generates_and_simulates_mixed_blocks():
 
     rc = final_state["sim_results"]["rc1"]
     assert rc["sim_error"] is None
-    # el punto -3 dB medido difiere ~0.3% del f_c analítico de primer orden
-    assert rc["metrics"]["f_c"] == pytest.approx(1000.0, rel=0.02)
+    assert rc["metrics"]["fc"] == pytest.approx(1000.0, rel=0.02)
 
 
 def test_sim_results_report_convergence():
@@ -58,8 +67,13 @@ def test_sim_results_report_convergence():
             "blocks": [
                 {
                     "id": "div1",
-                    "type": "voltage_divider",
-                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "voltage_divider",
+                        "params": {"v_in": 5.0, "v_out": 3.3},
+                        "metric": "v_out",
+                        "target": 3.3,
+                    },
                     "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
                 },
             ],
@@ -70,6 +84,5 @@ def test_sim_results_report_convergence():
 
     result = shell_node(state)
 
-    # el netlist no existe: ngspice falla y el bloque no converge
     assert result["sim_results"]["div1"]["sim_error"] is not None
     assert result["sim_results"]["div1"]["converged"] is False

@@ -149,9 +149,30 @@ export function resolveRunOutcome(result: AgentsRunResult, previousNormalizedSpe
   };
 }
 
+export type StageKind =
+  | "interpretation"
+  | "calculation"
+  | "simulation"
+  | "curation"
+  | "result";
+
+export type StageStatus = "pending" | "active" | "completed" | "failed";
+
+export type ExecutionStage = {
+  id: string;
+  kind: StageKind;
+  label: string;
+  actor: string;
+  status: StageStatus;
+  durationMs: number | null;
+  summary: string;
+  metrics: Array<{ label: string; value: string }>;
+};
+
 // El sumidero se inyecta para que todo el camino de red se pruebe en memoria:
 // sin él, comprobar la forma de la petición exigiría una base de datos.
 export type RunSink = {
+  onStageUpdate?(stage: ExecutionStage): Promise<void> | void;
   onResult(result: AgentsRunResult): Promise<void>;
   onFailure(summary: string): Promise<void>;
 };
@@ -169,6 +190,7 @@ export async function startRun(
       headers: {
         "content-type": "application/json",
         authorization: `Bearer ${env.AGENTS_API_TOKEN}`,
+        accept: "text/event-stream, application/json",
       },
       // executionId viaja como identidad estable de la corrida: agents lo usa
       // como thread_id de su checkpointer, así que reenviar una ejecución
@@ -187,9 +209,53 @@ export async function startRun(
       return;
     }
 
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("text/event-stream") && response.body) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let finalResult: AgentsRunResult | null = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        let currentEvent = "";
+        for (const line of lines) {
+          if (line.startsWith("event: ")) {
+            currentEvent = line.slice(7).trim();
+          } else if (line.startsWith("data: ")) {
+            const dataStr = line.slice(6).trim();
+            if (!dataStr) continue;
+            try {
+              const data = JSON.parse(dataStr);
+              if (currentEvent === "stage") {
+                await sink.onStageUpdate?.(data as ExecutionStage);
+              } else if (currentEvent === "done") {
+                finalResult = data as AgentsRunResult;
+              }
+            } catch {
+              // ignora fragmentos de JSON inválidos en el buffer
+            }
+          }
+        }
+      }
+
+      if (finalResult) {
+        await sink.onResult(finalResult);
+        return;
+      }
+      await sink.onFailure(RUN_FAILURE_SUMMARY);
+      return;
+    }
+
     const result = (await response.json()) as AgentsRunResult;
     await sink.onResult(result);
   } catch {
     await sink.onFailure(RUN_FAILURE_SUMMARY);
   }
 }
+

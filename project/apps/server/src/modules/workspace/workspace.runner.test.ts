@@ -285,4 +285,48 @@ describe("startRun", () => {
 
     expect(failures[0]).toBe("No pudimos ejecutar el diseño. Inténtalo de nuevo.");
   });
+
+  test("procesa eventos SSE llamando onStageUpdate y luego onResult", async () => {
+    const sseBody = [
+      'event: stage\ndata: {"id":"stage-interpretation","kind":"interpretation","label":"Interpretación","actor":"Orquestador","status":"active","durationMs":null,"summary":"Interpretando...","metrics":[]}\n\n',
+      'event: stage\ndata: {"id":"stage-interpretation","kind":"interpretation","label":"Interpretación","actor":"Orquestador","status":"completed","durationMs":500,"summary":"Listo","metrics":[]}\n\n',
+      `event: done\ndata: ${JSON.stringify(accepted)}\n\n`,
+    ].join("");
+
+    const fakeFetch = async () =>
+      new Response(sseBody, {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      });
+
+    const stages: any[] = [];
+    const results: any[] = [];
+    const failures: string[] = [];
+
+    const sink = {
+      onStageUpdate: (stage: any) => {
+        stages.push(stage);
+      },
+      onResult: async (res: any) => {
+        results.push(res);
+      },
+      onFailure: async (fail: string) => {
+        failures.push(fail);
+      },
+    };
+
+    await startRun(
+      { userId: "user-1", requestText: "un divisor", executionId: "exec-1" },
+      sink,
+      fakeFetch as unknown as typeof fetch,
+    );
+
+    expect(failures).toEqual([]);
+    expect(stages).toHaveLength(2);
+    expect(stages[0].kind).toBe("interpretation");
+    expect(stages[0].status).toBe("active");
+    expect(stages[1].status).toBe("completed");
+    expect(results).toEqual([accepted]);
+  });
 });
+

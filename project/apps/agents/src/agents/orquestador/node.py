@@ -7,15 +7,6 @@ from agents.llm.settings_client import LlmSettingsError, fetch_agent_llm
 from agents.orquestador.schema import CircuitSpec
 from agents.state import CircuitState
 
-# metric name y de qué parámetro sale el target, por tipo de circuito
-_GOALS = {
-    "voltage_divider": ("v_out", "v_out"),
-    "rc_lowpass": ("f_c", "f_c"),
-    "led_resistor": ("i_led", "i_led"),
-    "noninverting_amp": ("v_out", "v_out"),
-}
-
-
 # El agente al que corresponde este nodo, para pedir su configuración de LLM.
 AGENT_ID = "orchestrator"
 
@@ -38,15 +29,34 @@ def _rejected(reason: str) -> dict:
 
 
 def _goal_for(block, params: dict, tolerance: float) -> dict:
-    """La meta de un bloque.
+    """La meta de un bloque (métrica y target numérico deseado)."""
+    metric = params.get("metric", "vout")
+    target = float(params.get("target", 0.0))
 
-    Los tipos curados la derivan de sus parámetros por tabla; el genérico la
-    trae consigo, porque solo el LLM sabe qué magnitud eligió medir.
-    """
-    if block.type == "generic":
-        return {"metric": params["metric"], "target": params["target"], "tolerance": tolerance}
-    metric, target_param = _GOALS[block.type]
-    return {"metric": metric, "target": params[target_param], "tolerance": tolerance}
+    # Si el target es un valor absurdamente grande o infinito (alucinación del LLM >= 1e6),
+    # recuperamos el valor real de forma genérica a partir de los parámetros del bloque.
+    if abs(target) >= 1e6:
+        block_params = params.get("params", {})
+        norm_metric = metric.lower().replace("_", "")
+        # 1. Buscar si algún parámetro coincide con el nombre de la métrica
+        for k, v in block_params.items():
+            if k.lower().replace("_", "") == norm_metric and isinstance(v, (int, float)):
+                target = float(v)
+                break
+        else:
+            # 2. Buscar parámetros típicos de salida del catálogo (vout, vceq, fc, etc.)
+            for out_key in ("vout", "vceq", "target", "fc", "vclip", "vz"):
+                for k, v in block_params.items():
+                    if k.lower().replace("_", "") == out_key and isinstance(v, (int, float)):
+                        target = float(v)
+                        metric = k
+                        break
+
+    return {
+        "metric": metric,
+        "target": target,
+        "tolerance": tolerance,
+    }
 
 
 def _normalize(spec: CircuitSpec) -> dict:

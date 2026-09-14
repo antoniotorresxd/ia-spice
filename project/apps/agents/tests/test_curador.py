@@ -24,29 +24,32 @@ def test_evaluate_block_error_when_sim_failed():
     assert rel_err is None
 
 
-def test_adjust_voltage_divider_scales_r2_toward_target():
-    values = ADJUST_RULES["voltage_divider"](
-        {"r1": 1000.0, "r2": 1000.0}, target=3.3, actual=2.5
+def test_evaluate_block_gain_inverting_magnitude():
+    gain_goal = {"metric": "gain", "target": 100.0, "tolerance": 0.05}
+    # En amplificador inversor BJT, la ganancia simulada sale negativa (-99.78)
+    status, rel_err = evaluate_block(gain_goal, {"metrics": {"gain": -99.78}, "sim_error": None})
+    assert status == "ok"
+    assert rel_err == pytest.approx(0.22 / 100.0)
+
+
+def test_adjust_catalog_scales_r2_toward_target():
+    values = ADJUST_RULES["catalog"](
+        {"R1": 1000.0, "R2": 1000.0}, target=3.3, actual=2.5
     )
-    assert values["r2"] == pytest.approx(1000.0 * 3.3 / 2.5)
-    assert values["r1"] == 1000.0
+    assert values["R2"] == pytest.approx(1000.0 * 3.3 / 2.5)
+    assert values["R1"] == 1000.0
 
 
-def test_adjust_rc_lowpass_scales_c():
-    values = ADJUST_RULES["rc_lowpass"](
-        {"r": 1000.0, "c": 1e-7}, target=1000.0, actual=1200.0
+def test_adjust_catalog_zener_scales_rz():
+    values = ADJUST_RULES["catalog"](
+        {"RZ": 100.0, "RL": 180.0}, target=9.0, actual=10.0
     )
-    assert values["c"] == pytest.approx(1e-7 * 1200.0 / 1000.0)
-
-
-def test_adjust_led_resistor_scales_r():
-    values = ADJUST_RULES["led_resistor"]({"r": 150.0}, target=0.02, actual=0.0188)
-    assert values["r"] == pytest.approx(150.0 * 0.0188 / 0.02)
+    assert values["RZ"] == pytest.approx(100.0 / (9.0 / 10.0))
 
 
 def test_adjust_rules_guard_against_nonpositive_actual():
-    v = ADJUST_RULES["voltage_divider"]({"r1": 1000.0, "r2": 500.0}, target=3.3, actual=0.0)
-    assert v["r2"] == 1000.0  # duplica en vez de dividir por cero
+    v = ADJUST_RULES["catalog"]({"R1": 1000.0, "R2": 500.0}, target=3.3, actual=0.0)
+    assert v["R2"] == 525.0
 
 
 def test_perturb_scales_all_values():
@@ -64,15 +67,20 @@ def _state(sim_results, iteration=0, max_iterations=5, history=None):
             "blocks": [
                 {
                     "id": "div1",
-                    "type": "voltage_divider",
-                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "voltage_divider",
+                        "params": {"v_in": 5.0, "v_out": 3.3},
+                        "metric": "v_out",
+                        "target": 3.3,
+                    },
                     "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
                 },
             ],
             "max_iterations": max_iterations,
         },
         "pending_blocks": ["div1"],
-        "component_values": {"div1": {"r1": 1000.0, "r2": 1000.0}},
+        "component_values": {"div1": {"R1": 1000.0, "R2": 1000.0}},
         "netlists": {},
         "sim_results": sim_results,
         "iteration": iteration,
@@ -100,7 +108,7 @@ def test_curador_adjusts_failing_block_and_stays_unverdicted():
     assert "verdict" not in result
     assert result["iteration"] == 1
     assert result["pending_blocks"] == ["div1"]
-    assert result["component_values"]["div1"]["r2"] == pytest.approx(1000.0 * 3.3 / 2.5)
+    assert result["component_values"]["div1"]["R2"] == pytest.approx(1000.0 * 3.3 / 2.5)
     assert result["history"][0]["decision"] == "adjust"
 
 
@@ -108,7 +116,7 @@ def test_curador_perturbs_on_sim_error_with_iterations_left():
     result = curador_node(_state({"div1": {"metrics": None, "converged": False, "sim_error": "boom"}}))
 
     assert "verdict" not in result
-    assert result["component_values"]["div1"]["r2"] == pytest.approx(1050.0)
+    assert result["component_values"]["div1"]["R2"] == pytest.approx(1050.0)
     assert result["history"][0]["decision"] == "adjust"
 
 
@@ -360,14 +368,24 @@ def _two_block_state(sim_results):
             "blocks": [
                 {
                     "id": "holgado",
-                    "type": "voltage_divider",
-                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "voltage_divider",
+                        "params": {"v_in": 5.0, "v_out": 3.3},
+                        "metric": "v_out",
+                        "target": 3.3,
+                    },
                     "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
                 },
                 {
                     "id": "estricto",
-                    "type": "voltage_divider",
-                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "voltage_divider",
+                        "params": {"v_in": 5.0, "v_out": 3.3},
+                        "metric": "v_out",
+                        "target": 3.3,
+                    },
                     "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.001},
                 },
             ],
@@ -375,8 +393,8 @@ def _two_block_state(sim_results):
         },
         "pending_blocks": ["holgado", "estricto"],
         "component_values": {
-            "holgado": {"r1": 1000.0, "r2": 1000.0},
-            "estricto": {"r1": 1000.0, "r2": 1000.0},
+            "holgado": {"R1": 1000.0, "R2": 1000.0},
+            "estricto": {"R1": 1000.0, "R2": 1000.0},
         },
         "netlists": {},
         "sim_results": sim_results,
@@ -443,15 +461,6 @@ def test_converged_is_false_when_any_block_failed_to_simulate():
     assert result["history"][0]["converged"] is False
 
 
-def test_adjust_noninverting_amp_solves_rf_exactly():
-    # v_out = v_in·(rg+rf)/rg. Con rg=1k, rf=2k la salida es 3·v_in; para
-    # llevar 3.0 medido a 4.0 objetivo hace falta rf = (1k+2k)·4/3 - 1k = 3k
-    values = ADJUST_RULES["noninverting_amp"](
-        {"rg": 1000.0, "rf": 2000.0}, target=4.0, actual=3.0
-    )
-
-    assert values["rf"] == pytest.approx(3000.0)
-    assert values["rg"] == 1000.0
 
 
 def _generic_state(netlist, sim_results, iteration=0, max_iterations=5):
@@ -536,9 +545,4 @@ def test_curador_accepts_a_generic_block_whose_repair_changed_something(monkeypa
     assert result["component_values"]["gen1"]["netlist"] == netlist_corregido
 
 
-def test_adjust_noninverting_amp_guards_against_nonpositive_actual():
-    values = ADJUST_RULES["noninverting_amp"](
-        {"rg": 1000.0, "rf": 2000.0}, target=4.0, actual=0.0
-    )
 
-    assert values["rf"] == pytest.approx(4000.0)

@@ -31,6 +31,11 @@ def build_chat_model(config: AgentLlmConfig):
     # no exigen key); init_chat_model requiere un valor no vacío igual.
     kwargs["api_key"] = config.api_key or "not-required"
     if config.provider == "openai_compatible":
-        kwargs["base_url"] = config.base_url
+        base_url = config.base_url
+        if base_url:
+            base_url = base_url.strip().rstrip("/")
+            if base_url.endswith("/chat/completions"):
+                base_url = base_url[:-len("/chat/completions")].rstrip("/")
+        kwargs["base_url"] = base_url
 
     return init_chat_model(**kwargs)

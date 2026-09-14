@@ -33,6 +33,27 @@ def test_fetch_returns_prompt_and_production_label(monkeypatch):
     assert len(clients) == 1
 
 
+@pytest.mark.parametrize("label", ["production", "latest"])
+def test_fetch_compiles_variables(monkeypatch, label):
+    seen = []
+    compiled = []
+
+    def compile(**kwargs):
+        compiled.append(kwargs)
+        return f"Catálogo: {kwargs['retrieved_circuits_catalog']}"
+
+    def get_prompt(name, *, label):
+        seen.append((name, label))
+        return SimpleNamespace(prompt="uncompiled", compile=compile)
+
+    monkeypatch.setattr(prompts, "Langfuse", lambda: SimpleNamespace(get_prompt=get_prompt))
+    assert fetch_prompt(
+        "orquestador-system", label=label, retrieved_circuits_catalog="circuitos"
+    ) == "Catálogo: circuitos"
+    assert seen == [("orquestador-system", label)]
+    assert compiled == [{"retrieved_circuits_catalog": "circuitos"}]
+
+
 @pytest.mark.parametrize("missing", ["LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY"])
 def test_missing_env_raises_without_constructing_client(monkeypatch, missing):
     monkeypatch.delenv(missing)

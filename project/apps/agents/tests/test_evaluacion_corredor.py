@@ -6,7 +6,18 @@ CASO = {
     "id": "divisor-5-3v3",
     "descripcion": "un divisor de 5 V a 3.3 V",
     "spec": {
-        "blocks": [{"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}]
+        "blocks": [
+            {
+                "id": "div1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "metric": "v_out",
+                    "target": 3.3,
+                },
+            }
+        ]
     },
     "referencia": {"metrica": "v_out", "objetivo": 3.3, "componentes": {"r1": 1000.0}},
 }

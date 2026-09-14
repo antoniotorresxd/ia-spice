@@ -41,7 +41,10 @@ export function buildProbeRequest(input: ProbeInput): ProbeRequest | null {
       };
     case "openai_compatible": {
       if (!input.baseUrl) return null;
-      const base = input.baseUrl.replace(/\/+$/, "");
+      let base = input.baseUrl.replace(/\/+$/, "");
+      if (base.endsWith("/chat/completions")) {
+        base = base.slice(0, -"/chat/completions".length).replace(/\/+$/, "");
+      }
       return {
         url: `${base}/models`,
         // la key es opcional en endpoints locales

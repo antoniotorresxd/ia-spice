@@ -80,6 +80,8 @@ export function toConversationSummary(
   };
 }
 
+import type { ExecutionStage } from "./workspace.runner";
+
 export function deriveExecutionMode(
   latestExecution: ExecutionRow | undefined,
   artifactCount: number,
@@ -90,7 +92,148 @@ export function deriveExecutionMode(
   if (verdict?.mode === "clarify") return "clarify";
   if (verdict?.status === "accepted" || verdict?.status === "rejected") return "design";
   if (artifactCount > 0 || latestExecution.normalizedSpec !== null) return "design";
+  if (latestExecution.status === "active") return "design";
   return "chat";
+}
+
+export function deriveExecutionStages(
+  latestExecution: ExecutionRow | undefined,
+  artifacts: ArtifactRow[],
+): ExecutionStage[] {
+  if (!latestExecution) return [];
+
+  const verdict = latestExecution.verdict as {
+    mode?: string;
+    status?: string;
+    stages?: ExecutionStage[];
+  } | null;
+
+  if (Array.isArray(verdict?.stages) && verdict.stages.length > 0) {
+    return verdict.stages;
+  }
+
+  if (verdict?.mode === "chat" || verdict?.mode === "clarify") {
+    return [];
+  }
+
+  if (latestExecution.status === "active") {
+    return [
+      {
+        id: `${latestExecution.id}-interpretation`,
+        kind: "interpretation",
+        label: "Interpretación",
+        actor: "Orquestador",
+        status: "active",
+        durationMs: null,
+        summary: latestExecution.summary || "Interpretando requerimientos...",
+        metrics: [],
+      },
+      {
+        id: `${latestExecution.id}-calculation`,
+        kind: "calculation",
+        label: "Cálculo",
+        actor: "Cálculo",
+        status: "pending",
+        durationMs: null,
+        summary: "Pendiente de interpretar restricciones.",
+        metrics: [],
+      },
+      {
+        id: `${latestExecution.id}-simulation`,
+        kind: "simulation",
+        label: "Simulación",
+        actor: "Simulación",
+        status: "pending",
+        durationMs: null,
+        summary: "Pendiente de calcular componentes.",
+        metrics: [],
+      },
+      {
+        id: `${latestExecution.id}-curation`,
+        kind: "curation",
+        label: "Curación",
+        actor: "Curador",
+        status: "pending",
+        durationMs: null,
+        summary: "Pendiente de simular circuito.",
+        metrics: [],
+      },
+      {
+        id: `${latestExecution.id}-result`,
+        kind: "result",
+        label: "Documentación",
+        actor: "Documentador",
+        status: "pending",
+        durationMs: null,
+        summary: "Pendiente de validación.",
+        metrics: [],
+      },
+    ];
+  }
+
+  const isDesign =
+    verdict?.status === "accepted" ||
+    verdict?.status === "rejected" ||
+    artifacts.length > 0 ||
+    latestExecution.normalizedSpec !== null;
+
+  if (isDesign) {
+    const isCompleted = latestExecution.status === "completed";
+    return [
+      {
+        id: `${latestExecution.id}-interpretation`,
+        kind: "interpretation",
+        label: "Interpretación",
+        actor: "Orquestador",
+        status: "completed",
+        durationMs: 400,
+        summary: "Interpretó la solicitud y normalizó las restricciones.",
+        metrics: [],
+      },
+      {
+        id: `${latestExecution.id}-calculation`,
+        kind: "calculation",
+        label: "Cálculo",
+        actor: "Cálculo",
+        status: "completed",
+        durationMs: 800,
+        summary: "Seleccionó valores para los componentes.",
+        metrics: [],
+      },
+      {
+        id: `${latestExecution.id}-simulation`,
+        kind: "simulation",
+        label: "Simulación",
+        actor: "Simulación",
+        status: "completed",
+        durationMs: 1200,
+        summary: "Ejecutó la simulación SPICE con NGSpice.",
+        metrics: [],
+      },
+      {
+        id: `${latestExecution.id}-curation`,
+        kind: "curation",
+        label: "Curación",
+        actor: "Curador",
+        status: isCompleted ? "completed" : "failed",
+        durationMs: 600,
+        summary: latestExecution.summary,
+        metrics: [],
+      },
+      {
+        id: `${latestExecution.id}-result`,
+        kind: "result",
+        label: "Documentación",
+        actor: "Documentador",
+        status: isCompleted ? "completed" : "failed",
+        durationMs: 500,
+        summary: isCompleted ? "Circuito validado y entregado." : "Ejecución finalizada con observaciones.",
+        metrics: [],
+      },
+    ];
+  }
+
+  return [];
 }
 
 export function toConversationDetail(
@@ -98,6 +241,7 @@ export function toConversationDetail(
   messages: MessageRow[],
   artifacts: ArtifactRow[],
   latestExecution: ExecutionRow | undefined,
+  stages?: ExecutionStage[],
 ) {
   return {
     ...toConversationSummary(row, messages.at(-1), latestExecution),
@@ -123,9 +267,11 @@ export function toConversationDetail(
       status: latestExecution?.status ?? ("failed" as const),
       summary: latestExecution?.summary ?? MISSING_EXECUTION_SUMMARY,
       mode: deriveExecutionMode(latestExecution, artifacts.length),
+      stages: stages ?? deriveExecutionStages(latestExecution, artifacts),
     },
   };
 }
 
 export type ConversationSummaryView = ReturnType<typeof toConversationSummary>;
 export type ConversationDetailView = ReturnType<typeof toConversationDetail>;
+

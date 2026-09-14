@@ -20,8 +20,26 @@ def _state(circuit_spec=None, request_text=None):
 
 VALID_SPEC = {
     "blocks": [
-        {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}},
-        {"id": "led1", "type": "led_resistor", "params": {"v_in": 5.0, "v_f": 2.0, "i_led": 0.02}},
+        {
+            "id": "div1",
+            "type": "catalog",
+            "params": {
+                "circuit_id": "voltage_divider",
+                "params": {"v_in": 5.0, "v_out": 3.3},
+                "metric": "v_out",
+                "target": 3.3,
+            },
+        },
+        {
+            "id": "led1",
+            "type": "catalog",
+            "params": {
+                "circuit_id": "led_resistor",
+                "params": {"v_in": 5.0, "v_f": 2.0, "i_led": 0.02},
+                "metric": "i_led",
+                "target": 0.02,
+            },
+        },
     ]
 }
 
@@ -63,8 +81,26 @@ def test_empty_blocks_rejected():
 def test_duplicate_block_ids_rejected():
     dup = {
         "blocks": [
-            {"id": "b1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}},
-            {"id": "b1", "type": "rc_lowpass", "params": {"f_c": 1000.0}},
+            {
+                "id": "b1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "metric": "v_out",
+                    "target": 3.3,
+                },
+            },
+            {
+                "id": "b1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "rc_lowpass_passive",
+                    "params": {"f_c": 1000.0},
+                    "metric": "fc",
+                    "target": 1000.0,
+                },
+            },
         ]
     }
     result = orquestador_node(_state(dup))
@@ -84,7 +120,17 @@ import agents.orquestador.node as orquestador_module
 def test_request_text_uses_llm_to_produce_normalized_spec(monkeypatch):
     fake_spec = {
         "blocks": [
-            {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+            {
+                "id": "div1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "metric": "v_out",
+                    "target": 3.3,
+                    "description": "",
+                },
+            }
         ],
         "max_iterations": 5,
         "tolerance": 0.05,
@@ -202,8 +248,13 @@ def test_orquestador_con_circuit_spec_no_necesita_user_id():
                 "blocks": [
                     {
                         "id": "b1",
-                        "type": "voltage_divider",
-                        "params": {"v_in": 5.0, "v_out": 2.5},
+                        "type": "catalog",
+                        "params": {
+                            "circuit_id": "voltage_divider",
+                            "params": {"v_in": 5.0, "v_out": 2.5},
+                            "metric": "v_out",
+                            "target": 2.5,
+                        },
                     }
                 ],
                 "tolerance": 0.05,
@@ -259,8 +310,13 @@ def test_max_iterations_and_tolerance_come_from_the_config(tmp_path, monkeypatch
                 "blocks": [
                     {
                         "id": "div1",
-                        "type": "voltage_divider",
-                        "params": {"v_in": 5.0, "v_out": 3.3},
+                        "type": "catalog",
+                        "params": {
+                            "circuit_id": "voltage_divider",
+                            "params": {"v_in": 5.0, "v_out": 3.3},
+                            "metric": "v_out",
+                            "target": 3.3,
+                        },
                     }
                 ]
             }
@@ -280,7 +336,16 @@ def test_the_caller_can_still_override_what_the_config_proposes(tmp_path, monkey
     spec = CircuitSpec.model_validate(
         {
             "blocks": [
-                {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+                {
+                    "id": "div1",
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "voltage_divider",
+                        "params": {"v_in": 5.0, "v_out": 3.3},
+                        "metric": "v_out",
+                        "target": 3.3,
+                    },
+                }
             ],
             "max_iterations": 2,
             "tolerance": 0.1,
@@ -306,8 +371,13 @@ def test_max_iterations_no_puede_superar_el_limite_configurado():
                 "blocks": [
                     {
                         "id": "div1",
-                        "type": "voltage_divider",
-                        "params": {"v_in": 5.0, "v_out": 3.3},
+                        "type": "catalog",
+                        "params": {
+                            "circuit_id": "voltage_divider",
+                            "params": {"v_in": 5.0, "v_out": 3.3},
+                            "metric": "v_out",
+                            "target": 3.3,
+                        },
                     }
                 ],
                 "max_iterations": 60,
@@ -321,7 +391,16 @@ def test_max_iterations_igual_al_limite_configurado_se_acepta():
     spec = CircuitSpec.model_validate(
         {
             "blocks": [
-                {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+                {
+                    "id": "div1",
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "voltage_divider",
+                        "params": {"v_in": 5.0, "v_out": 3.3},
+                        "metric": "v_out",
+                        "target": 3.3,
+                    },
+                }
             ],
             "max_iterations": 10,
         }
@@ -330,7 +409,7 @@ def test_max_iterations_igual_al_limite_configurado_se_acepta():
     assert spec.max_iterations == 10
 
 
-def test_noninverting_amp_block_is_accepted_and_gets_its_goal():
+def test_catalog_amp_block_is_accepted_and_gets_its_goal():
     from agents.orquestador.node import _normalize
     from agents.orquestador.schema import CircuitSpec
 
@@ -339,8 +418,13 @@ def test_noninverting_amp_block_is_accepted_and_gets_its_goal():
             "blocks": [
                 {
                     "id": "amp1",
-                    "type": "noninverting_amp",
-                    "params": {"v_in": 1.0, "v_out": 3.0},
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "opamp_noninverting_amp",
+                        "params": {"v_in": 1.0, "v_out": 3.0},
+                        "metric": "v_out",
+                        "target": 3.0,
+                    },
                 }
             ]
         }
@@ -348,7 +432,7 @@ def test_noninverting_amp_block_is_accepted_and_gets_its_goal():
     result = _normalize(spec)
     block = result["normalized_spec"]["blocks"][0]
 
-    assert block["type"] == "noninverting_amp"
+    assert block["type"] == "catalog"
     assert block["goal"]["metric"] == "v_out"
     assert block["goal"]["target"] == 3.0
 
@@ -420,6 +504,54 @@ def test_generic_rechaza_un_netlist_que_no_mide_nada():
         )
 
 
+def test_generic_rechaza_placeholders_sin_param():
+    from pydantic import ValidationError
+
+    from agents.orquestador.schema import GenericParams
+
+    with pytest.raises(ValidationError, match="RZ"):
+        GenericParams(
+            description="regulador", metric="v_out", target=5.0,
+            netlist="* x\nRZ vin vout {RZ}\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n",
+        )
+
+
+@pytest.mark.parametrize("componentes", [
+    "R1 vin vout 1000\n",
+    ".param R1=1000\nR2 vin vout {2*R1}\n",
+    ".PARAM rz=1000\nRZ vin vout {RZ}\n",
+])
+def test_generic_acepta_valores_y_parametros_validos(componentes):
+    from agents.orquestador.schema import GenericParams
+
+    netlist = "* x\n" + componentes + ".control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
+    params = GenericParams(description="algo", metric="v_out", target=1.0, netlist=netlist)
+    assert params.netlist == netlist
+
+
+def test_generic_max_iterations_minimo_tres():
+    from agents.orquestador.schema import CircuitSpec
+
+    spec = CircuitSpec.model_validate({
+        "blocks": [{
+            "id": "x", "type": "generic",
+            "params": {
+                "description": "algo", "metric": "v_out", "target": 1.0,
+                "netlist": "* x\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n",
+            },
+        }],
+        "max_iterations": 1,
+    })
+    assert spec.max_iterations == 3
+
+
+def test_sin_generic_max_iterations_uno_no_cambia():
+    from agents.orquestador.schema import CircuitSpec
+
+    spec = CircuitSpec.model_validate({**VALID_SPEC, "max_iterations": 1})
+    assert spec.max_iterations == 1
+
+
 def test_orchestrator_result_parses_chat_outcome():
     from agents.orquestador.schema import OrchestratorResult
 
@@ -451,8 +583,13 @@ def test_orchestrator_result_parses_design_outcome_with_a_full_spec():
                     "blocks": [
                         {
                             "id": "div1",
-                            "type": "voltage_divider",
-                            "params": {"v_in": 5.0, "v_out": 3.3},
+                            "type": "catalog",
+                            "params": {
+                                "circuit_id": "voltage_divider",
+                                "params": {"v_in": 5.0, "v_out": 3.3},
+                                "metric": "v_out",
+                                "target": 3.3,
+                            },
                         }
                     ]
                 },
@@ -523,3 +660,32 @@ def test_route_after_orquestador_stops_on_chat_and_clarify():
     )
     assert route_after_orquestador({"verdict": None, "outcome": None}) == "continue"
     assert route_after_orquestador({"verdict": None}) == "continue"
+
+
+def test_orquestador_normalizes_catalog_block():
+    spec = {
+        "circuit_spec": {
+            "blocks": [
+                {
+                    "id": "zener1",
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "zener_regulated_power_supply",
+                        "params": {"v_z": 9.0, "i_l_max": 0.05, "v_sec_rms": 12.0},
+                        "metric": "vout",
+                        "target": 9.0,
+                    },
+                }
+            ],
+            "tolerance": 0.01,
+            "max_iterations": 3,
+        }
+    }
+    result = orquestador_node(spec, {"configurable": {}})
+    assert result.get("verdict") is None
+    assert result["pending_blocks"] == ["zener1"]
+    block = result["normalized_spec"]["blocks"][0]
+    assert block["type"] == "catalog"
+    assert block["goal"] == {"metric": "vout", "target": 9.0, "tolerance": 0.01}
+    assert block["params"]["circuit_id"] == "zener_regulated_power_supply"
+

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { streamSSE } from "hono/streaming";
+
 import { createRouter } from "@/lib/create-app";
 import { requireAuth } from "@/middleware/session";
 
@@ -24,6 +26,7 @@ import {
   makeDbSink,
   moveConversation,
   renameConversation,
+  subscribeConversationEvents,
   updateProject,
 } from "./workspace.services";
 
@@ -73,6 +76,51 @@ export const workspaceRouter = createRouter()
     // 404 y no 403 para una conversación ajena: no se confirma que exista.
     if (!detail) return c.json({ error: "Not Found" }, 404);
     return c.json(detail);
+  })
+  .get("/api/workspace/conversations/:id/events", requireAuth, async (c) => {
+    const { id: userId } = c.get("user")!;
+    const conversationId = c.req.param("id");
+    const detail = await getConversationDetail(userId, conversationId);
+    if (!detail) return c.json({ error: "Not Found" }, 404);
+
+    return streamSSE(c, async (stream) => {
+      await stream.writeSSE({
+        event: "init",
+        data: JSON.stringify({
+          status: detail.execution.status,
+          stages: detail.execution.stages,
+        }),
+      });
+
+      if (detail.execution.status !== "active") {
+        return;
+      }
+
+      const unsubscribe = subscribeConversationEvents(conversationId, async (event) => {
+        try {
+          await stream.writeSSE({
+            event: event.type,
+            data: JSON.stringify(event.data),
+          });
+        } catch {
+          // stream connection closed
+        }
+      });
+
+      stream.onAbort(() => {
+        unsubscribe();
+      });
+
+      while (!stream.aborted) {
+        await stream.sleep(15000);
+        try {
+          await stream.writeSSE({ event: "ping", data: "" });
+        } catch {
+          break;
+        }
+      }
+      unsubscribe();
+    });
   })
   .patch("/api/workspace/conversations/:id", requireAuth, async (c) => {
     const { id: userId } = c.get("user")!;

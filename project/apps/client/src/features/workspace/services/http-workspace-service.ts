@@ -51,12 +51,53 @@ export function createHttpWorkspaceService(options: Options = {}): WorkspaceServ
       })
     },
 
-    async getConversation(conversationId): Promise<WorkspaceConversationDetail> {
+    async getConversation(conversationId, options): Promise<WorkspaceConversationDetail> {
       return cache.fetch(
         `workspace:conversation:${conversationId}`,
         () => request<WorkspaceConversationDetail>(`/api/workspace/conversations/${conversationId}`),
-        { ttlMs: 10_000 },
+        { ttlMs: 10_000, bypassCache: options?.bypassCache },
       )
+    },
+
+    subscribeConversationEvents(conversationId, listener) {
+      if (typeof EventSource === 'undefined') {
+        return () => {}
+      }
+      const source = new EventSource(`${API_BASE_URL}/api/workspace/conversations/${conversationId}/events`, {
+        withCredentials: true,
+      })
+
+      const handleStage = (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data)
+          listener({ type: 'stage', data })
+        } catch {}
+      }
+
+      const handleDone = (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data)
+          listener({ type: 'done', data })
+        } catch {}
+      }
+
+      const handleError = (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data)
+          listener({ type: 'error', data })
+        } catch {}
+      }
+
+      source.addEventListener('stage', handleStage)
+      source.addEventListener('done', handleDone)
+      source.addEventListener('error', handleError)
+
+      return () => {
+        source.removeEventListener('stage', handleStage)
+        source.removeEventListener('done', handleDone)
+        source.removeEventListener('error', handleError)
+        source.close()
+      }
     },
 
     async createProject(input: ProjectInput): Promise<WorkspaceProject> {

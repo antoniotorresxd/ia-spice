@@ -3,63 +3,22 @@ import tempfile
 
 import pytest
 
-from agents.escritura.netlist import build_voltage_divider_netlist
-from agents.escritura.node import escritura_node
+from agents.calculo.catalog_solver import solve_catalog_circuit
 from agents.escritura.netlist import (
     NETLIST_BUILDERS,
-    build_led_resistor_netlist,
-    build_rc_lowpass_netlist,
+    build_catalog_netlist,
+    generate_writer_netlist,
 )
-
-
-def test_build_voltage_divider_netlist_contains_component_values():
-    netlist = build_voltage_divider_netlist(v_in=5.0, r1=1000, r2=2000)
-
-    assert "5.0" in netlist
-    assert "1000" in netlist
-    assert "2000" in netlist
-
-
-def test_build_voltage_divider_netlist_requests_vout_control_block():
-    netlist = build_voltage_divider_netlist(v_in=5.0, r1=1000, r2=2000)
-
-    assert ".control" in netlist
-    assert "wrdata" in netlist
-    assert "v(vout)" in netlist
-    assert ".endc" in netlist
-    assert netlist.strip().endswith(".end")
-
-
-def test_rc_lowpass_netlist_has_ac_analysis_and_meas():
-    netlist = build_rc_lowpass_netlist(r=1000.0, c=1.59155e-7)
-
-    assert "ac dec" in netlist
-    assert "meas ac fc" in netlist.lower()
-    assert "output.txt" in netlist
-    assert netlist.strip().endswith(".end")
-
-
-def test_led_resistor_netlist_has_diode_model_and_current_probe():
-    netlist = build_led_resistor_netlist(v_in=5.0, r=150.0)
-
-    assert ".model" in netlist.lower()
-    assert "iled" in netlist.lower()
-    assert "wrdata" in netlist
-    assert netlist.strip().endswith(".end")
+from agents.escritura.node import escritura_node
+from agents.knowledge.circuit_client import fetch_circuit_detail
+from agents.shell.ngspice_runner import parse_wrdata_scalar, run_ngspice
 
 
 def test_netlist_builders_registry_covers_all_types():
     assert set(NETLIST_BUILDERS.keys()) == {
-        "voltage_divider",
-        "rc_lowpass",
-        "led_resistor",
-        "noninverting_amp",
+        "catalog",
         "generic",
     }
-    netlist = NETLIST_BUILDERS["voltage_divider"](
-        {"v_in": 5.0, "v_out": 3.3}, {"r1": 1000.0, "r2": 1941.18}
-    )
-    assert "1941.18" in netlist
 
 
 def _pipeline_state():
@@ -69,24 +28,30 @@ def _pipeline_state():
         "normalized_spec": {
             "blocks": [
                 {
-                    "id": "div1",
-                    "type": "voltage_divider",
-                    "params": {"v_in": 5.0, "v_out": 3.3},
-                    "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
+                    "id": "zener1",
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "zener_regulated_power_supply",
+                        "params": {"v_z": 9.0},
+                    },
+                    "goal": {"metric": "vout", "target": 9.0, "tolerance": 0.05},
                 },
                 {
-                    "id": "led1",
-                    "type": "led_resistor",
-                    "params": {"v_in": 5.0, "v_f": 2.0, "i_led": 0.02},
-                    "goal": {"metric": "i_led", "target": 0.02, "tolerance": 0.05},
+                    "id": "rc1",
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "rc_lowpass_passive",
+                        "params": {"f_c": 1000.0},
+                    },
+                    "goal": {"metric": "fc", "target": 1000.0, "tolerance": 0.05},
                 },
             ],
             "max_iterations": 5,
         },
-        "pending_blocks": ["div1", "led1"],
+        "pending_blocks": ["zener1", "rc1"],
         "component_values": {
-            "div1": {"r1": 1000.0, "r2": 1941.18},
-            "led1": {"r": 150.0},
+            "zener1": {"Vin_min": 14.07, "RZ": 92.18, "RL": 180.0, "VZ": 9.0},
+            "rc1": {"R": 1000.0, "C": 1.59155e-7},
         },
         "netlists": {},
         "sim_results": {},
@@ -99,7 +64,7 @@ def _pipeline_state():
 def test_escritura_node_writes_one_netlist_per_pending_block():
     result = escritura_node(_pipeline_state())
 
-    assert set(result["netlists"].keys()) == {"div1", "led1"}
+    assert set(result["netlists"].keys()) == {"zener1", "rc1"}
     for entry in result["netlists"].values():
         assert os.path.exists(entry["path"])
         with open(entry["path"]) as f:
@@ -108,66 +73,84 @@ def test_escritura_node_writes_one_netlist_per_pending_block():
 
 def test_escritura_node_only_writes_pending_blocks():
     state = _pipeline_state()
-    state["pending_blocks"] = ["led1"]
+    state["pending_blocks"] = ["rc1"]
 
     result = escritura_node(state)
 
-    assert set(result["netlists"].keys()) == {"led1"}
+    assert set(result["netlists"].keys()) == {"rc1"}
 
 
-def test_noninverting_amp_netlist_simulates_to_the_expected_gain():
-    """Contra ngspice de verdad: ganancia 3 sobre 1 V debe medir ~3 V.
-    El desvío que quede es la ganancia finita en lazo abierto del macromodelo,
-    no ruido numérico."""
-    import os
-    import tempfile
+def test_catalog_netlist_zener_supply_simulates_cleanly():
+    """Verifica que el netlist del catálogo para la fuente Zener se sintetice
+    con título en la primera línea y que ngspice lo simule midiendo ~9.0 V."""
+    params = {"circuit_id": "zener_regulated_power_supply"}
+    values = {"Vin_min": 14.07, "RZ": 92.18, "RL": 180.0, "VZ": 9.0}
+    text = NETLIST_BUILDERS["catalog"](params, values)
 
-    from agents.escritura.netlist import NETLIST_BUILDERS
-    from agents.shell.ngspice_runner import parse_wrdata_scalar, run_ngspice
+    assert text.startswith("*")
+    assert "{" not in text and "}" not in text
 
-    text = NETLIST_BUILDERS["noninverting_amp"](
-        {"v_in": 1.0, "v_out": 3.0}, {"rg": 1000.0, "rf": 2000.0}
+    work_dir = tempfile.mkdtemp(prefix="agents-test-zener-")
+    path = os.path.join(work_dir, "circuit.cir")
+    with open(path, "w") as fh:
+        fh.write(text)
+
+    output_path, error = run_ngspice(path)
+    assert error is None
+    measured = parse_wrdata_scalar(output_path)
+    assert measured == pytest.approx(9.0, abs=0.1)
+
+
+def test_catalog_netlist_bjt_ce_amp_simulates_cleanly():
+    """Verifica que el netlist del catálogo para el amplificador BJT se sintetice
+    sin placeholders sin resolver y que ngspice lo simule sin error fatal."""
+    circuit_id = "bjt_common_emitter_amp"
+    params = {
+        "circuit_id": circuit_id,
+        "params": {
+            "v_cc": 12.0,
+            "i_cq": 0.002,
+            "v_ceq": 6.0,
+            "beta": 100,
+            "r_l": 10000,
+            "f_low": 20,
+        },
+    }
+    values = solve_catalog_circuit(circuit_id, params["params"])
+    text = NETLIST_BUILDERS["catalog"](params, values)
+
+    assert text.startswith("*")
+    assert "{" not in text and "}" not in text
+
+    work_dir = tempfile.mkdtemp(prefix="agents-test-bjt-ce-")
+    path = os.path.join(work_dir, "circuit.cir")
+    with open(path, "w") as fh:
+        fh.write(text)
+
+    output_path, error = run_ngspice(path)
+    assert error is None
+    measured = parse_wrdata_scalar(output_path)
+    assert abs(measured) > 1.0
+
+
+def test_generate_writer_netlist_calls_chat_model():
+    """Prueba que generate_writer_netlist invoque el modelo estructurado."""
+    from unittest.mock import MagicMock
+
+    circuit = fetch_circuit_detail("rc_lowpass_passive")
+    mock_model = MagicMock()
+    mock_structured = MagicMock()
+    mock_structured.invoke.return_value = {
+        "netlist": "* Custom Lowpass\nVin vin 0 DC 0 AC 1\nR1 vin vout 1k\nC1 vout 0 10n\n.control\nac dec 10 1 100k\nwrdata output.txt v(vout)\n.endc\n.end"
+    }
+    mock_model.with_structured_output.return_value = mock_structured
+
+    netlist = generate_writer_netlist(
+        mock_model,
+        circuit=circuit,
+        params={"f_c": 1000.0},
+        goal={"metric": "fc", "target": 1000.0},
     )
-    assert ".subckt opamp" in text
-    assert "X1" in text
-
-    work_dir = tempfile.mkdtemp(prefix="agents-test-amp-")
-    path = os.path.join(work_dir, "circuit.cir")
-    with open(path, "w") as fh:
-        fh.write(text)
-
-    output_path, error = run_ngspice(path)
-
-    assert error is None
-    assert parse_wrdata_scalar(output_path) == pytest.approx(3.0, rel=0.001)
-
-
-def test_rc_netlist_measures_the_true_minus_three_db_point():
-    """El corte se define donde |H| = 1/sqrt(2) = -3.0103 dB, no -3.000.
-
-    Medir en -3 exactos encontraba una frecuencia 0.24 % mas baja, con un
-    sesgo sistematico identico en las cinco decadas del banco de evaluacion.
-    Era un error del instrumento, no del circuito."""
-    import math
-    import os
-    import tempfile
-
-    from agents.escritura.netlist import NETLIST_BUILDERS
-    from agents.shell.ngspice_runner import parse_wrdata_scalar, run_ngspice
-
-    f_c = 1000.0
-    r = 1000.0
-    c = 1.0 / (2 * math.pi * r * f_c)
-    text = NETLIST_BUILDERS["rc_lowpass"]({"f_c": f_c}, {"r": r, "c": c})
-
-    assert "-3.0103" in text, "volvio el sesgo de medir en -3 dB exactos"
-
-    work_dir = tempfile.mkdtemp(prefix="agents-test-rc-")
-    path = os.path.join(work_dir, "circuit.cir")
-    with open(path, "w") as fh:
-        fh.write(text)
-
-    output_path, error = run_ngspice(path)
-
-    assert error is None
-    assert parse_wrdata_scalar(output_path) == pytest.approx(f_c, rel=0.001)
+    assert "* " in netlist
+    assert ".control" in netlist
+    assert "wrdata output.txt" in netlist

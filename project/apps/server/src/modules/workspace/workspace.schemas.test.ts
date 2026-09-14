@@ -168,12 +168,16 @@ describe("toConversationDetail", () => {
         measurementExplanation: "Mide el voltaje de salida.",
       },
     ]);
-    expect(detail.execution).toEqual({
-      id: "exec-1",
-      status: "completed",
-      summary: "all blocks within tolerance",
-      mode: "design",
-    });
+    expect(detail.execution.id).toBe("exec-1");
+    expect(detail.execution.status).toBe("completed");
+    expect(detail.execution.summary).toBe("all blocks within tolerance");
+    expect(detail.execution.mode).toBe("design");
+    expect(detail.execution.stages).toHaveLength(5);
+    expect(detail.execution.stages[0].kind).toBe("interpretation");
+    expect(detail.execution.stages[1].kind).toBe("calculation");
+    expect(detail.execution.stages[2].kind).toBe("simulation");
+    expect(detail.execution.stages[3].kind).toBe("curation");
+    expect(detail.execution.stages[4].kind).toBe("result");
   });
 
   test("conserva los campos null de un artefacto sin documentación", () => {

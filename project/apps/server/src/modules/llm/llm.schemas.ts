@@ -34,6 +34,7 @@ export type CreateConnectionInput = z.infer<typeof createConnectionSchema>;
 
 export const updateConnectionSchema = z.object({
   label: z.string().min(1).optional(),
+  provider: providerSchema.optional(),
   apiKey: z.string().min(1).optional(),
   baseUrl: z.url().nullable().optional(),
 });

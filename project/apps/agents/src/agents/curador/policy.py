@@ -7,47 +7,42 @@ def evaluate_block(goal: dict, sim_result: dict) -> tuple[str, float | None]:
     if sim_result["sim_error"] is not None:
         return "error", None
     actual = sim_result["metrics"][goal["metric"]]
-    rel_err = abs(actual - goal["target"]) / abs(goal["target"])
+    target = goal["target"]
+    denom = abs(target) if abs(target) > 1e-12 else 1.0
+    metric_name = str(goal.get("metric", "")).lower()
+    if "gain" in metric_name or metric_name in ("av", "a_v"):
+        rel_err = abs(abs(actual) - abs(target)) / denom
+    else:
+        rel_err = abs(actual - target) / denom
     return ("ok" if rel_err <= goal["tolerance"] else "off"), rel_err
 
 
-def _adjust_voltage_divider(values: dict, target: float, actual: float) -> dict:
-    r_min = get_config()["calculo"]["r_min"]
-    if actual <= 0:
-        return {**values, "r2": values["r2"] * 2}
-    return {**values, "r2": max(values["r2"] * target / actual, r_min)}
+def _adjust_catalog(values: dict, target: float, actual: float) -> dict:
+    """Ajuste paramétrico para circuitos del catálogo."""
+    if abs(actual) < 1e-9:
+        return perturb(values)
+    ratio = abs(target) / abs(actual)
+    new_values = dict(values)
+    if "RZ" in new_values:
+        new_values["RZ"] = max(new_values["RZ"] / ratio, 1.0)
+    elif "R" in new_values and "C" in new_values:
+        new_values["R"] = max(new_values["R"] / ratio, 1.0)
+    elif "R2" in new_values:
+        new_values["R2"] = max(new_values["R2"] * ratio, 1.0)
+    elif "Rf" in new_values:
+        new_values["Rf"] = max(new_values["Rf"] * ratio, 1.0)
+    elif "RC" in new_values:
+        new_values["RC"] = max(new_values["RC"] * ratio, 1.0)
+    else:
+        for k in list(new_values.keys()):
+            if k.upper().startswith("R") and isinstance(new_values[k], (int, float)):
+                new_values[k] = max(new_values[k] * ratio, 1.0)
+                break
+    return new_values
 
 
-def _adjust_rc_lowpass(values: dict, target: float, actual: float) -> dict:
-    if actual <= 0:
-        return {**values, "c": values["c"] / 2}
-    return {**values, "c": values["c"] * actual / target}
-
-
-def _adjust_led_resistor(values: dict, target: float, actual: float) -> dict:
-    r_min = get_config()["calculo"]["r_min"]
-    if actual <= 0:
-        return {**values, "r": max(values["r"] / 2, r_min)}
-    return {**values, "r": max(values["r"] * actual / target, r_min)}
-
-
-def _adjust_noninverting_amp(values: dict, target: float, actual: float) -> dict:
-    # v_out = v_in·(rg+rf)/rg, así que (rg+rf_nuevo)/(rg+rf) = target/actual.
-    # El despeje es exacto, no proporcional como en los otros bloques.
-    r_min = get_config()["calculo"]["r_min"]
-    rg, rf = values["rg"], values["rf"]
-    if actual <= 0:
-        return {**values, "rf": max(rf * 2, r_min)}
-    return {**values, "rf": max((rg + rf) * target / actual - rg, r_min)}
-
-
-# Regla de ajuste por tipo de circuito. Las tres primeras son proporcionales
-# sobre el componente dominante; la del no inversor es un despeje exacto.
 ADJUST_RULES = {
-    "voltage_divider": _adjust_voltage_divider,
-    "rc_lowpass": _adjust_rc_lowpass,
-    "led_resistor": _adjust_led_resistor,
-    "noninverting_amp": _adjust_noninverting_amp,
+    "catalog": _adjust_catalog,
 }
 
 

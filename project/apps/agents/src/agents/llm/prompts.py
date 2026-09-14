@@ -24,15 +24,20 @@ def _get_client() -> Langfuse:
     return _client
 
 
-def fetch_prompt(name: str) -> str:
-    """Obtiene un system prompt con label production y cache del SDK.
+def fetch_prompt(name: str, label: str = "production", **variables: str) -> str:
+    """Obtiene un system prompt y compila las variables si se proporcionan.
+
+    Usa el label production por defecto y la cache del SDK.
 
     Punto de indirección a nivel de módulo: los tests lo sustituyen
     (monkeypatch) para no depender de red ni de Langfuse.
     """
     try:
         client = _get_client()
-        return client.get_prompt(name, label="production").prompt
+        prompt_obj = client.get_prompt(name, label=label)
+        if variables:
+            return prompt_obj.compile(**variables)
+        return prompt_obj.prompt
     except PromptFetchError:
         raise
     except Exception as exc:  # noqa: BLE001 - cualquier fallo del SDK se tipa

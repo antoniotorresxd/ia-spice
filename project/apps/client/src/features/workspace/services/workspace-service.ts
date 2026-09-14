@@ -8,10 +8,18 @@ import type {
   WorkspaceSnapshot,
 } from '../model/workspace-types'
 
+export type ConversationEvent = {
+  type: 'stage' | 'done' | 'error'
+  data: unknown
+}
+
 export type WorkspaceService = {
   getSnapshot(): Promise<WorkspaceSnapshot>
   getProject(projectId: string): Promise<WorkspaceProjectDetail>
-  getConversation(conversationId: string): Promise<WorkspaceConversationDetail>
+  getConversation(
+    conversationId: string,
+    options?: { bypassCache?: boolean },
+  ): Promise<WorkspaceConversationDetail>
   createProject(input: ProjectInput): Promise<WorkspaceProject>
   updateProject(projectId: string, input: ProjectInput): Promise<WorkspaceProjectDetail>
   submitRequest(text: string): Promise<WorkspaceConversationDetail>
@@ -22,4 +30,9 @@ export type WorkspaceService = {
   deleteProject(projectId: string): Promise<void>
   deleteConversation(conversationId: string): Promise<void>
   getFiles(): Promise<WorkspaceFileItem[]>
+  subscribeConversationEvents?(
+    conversationId: string,
+    listener: (event: ConversationEvent) => void,
+  ): () => void
 }
+

@@ -1,3 +1,5 @@
+import type { ExecutionStage } from '@/features/home/model/home-types'
+
 export type WorkspaceExecutionStatus = 'active' | 'completed' | 'failed'
 
 export type WorkspaceMessage = {
@@ -12,6 +14,7 @@ export type WorkspaceExecution = {
   status: WorkspaceExecutionStatus
   summary: string
   mode?: 'chat' | 'clarify' | 'design'
+  stages?: ExecutionStage[]
 }
 
 export type WorkspaceFile = {

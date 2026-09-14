@@ -1,119 +1,150 @@
-from PySpice.Spice.Netlist import Circuit
+import json
+import re
+from typing import Any
+
+from pydantic import BaseModel, model_validator
+
+from agents.knowledge.circuit_client import CircuitKnowledgeItem, fetch_circuit_detail
+from agents.orquestador.schema import find_unresolved_placeholders
 
 
-# Macromodelo de un polo: resistencia de entrada, ganancia en lazo abierto,
-# red RC del polo dominante y etapa de salida. Describe el comportamiento en
-# los terminales sin modelar transistores, que es lo que los límites de la
-# tesina entienden por macromodelo. En continua el capacitor está abierto, así
-# que el polo no altera el punto de operación.
-OPAMP_SUBCKT = (
-    ".subckt opamp inp inn out\n"
-    "Rin inp inn 1e6\n"
-    "Egain n1 0 inp inn 1e5\n"
-    "Rp n1 n2 1k\n"
-    "Cp n2 0 159n\n"
-    "Eout out 0 n2 0 1\n"
-    ".ends\n"
-)
+class WriterNetlist(BaseModel):
+    """Salida del agente de escritura: netlist SPICE completo y ejecutable."""
+
+    netlist: str
+
+    @model_validator(mode="after")
+    def _validate_netlist(self):
+        if "output.txt" not in self.netlist:
+            raise ValueError(
+                "el netlist debe escribir su medición en output.txt "
+                "(wrdata output.txt ..., o echo $&var > output.txt)"
+            )
+        if ".control" not in self.netlist:
+            raise ValueError("el netlist debe traer un bloque .control que ejecute el análisis")
+        unresolved = find_unresolved_placeholders(self.netlist)
+        if unresolved:
+            raise ValueError(
+                f"placeholders sin resolver: {', '.join(unresolved)}; deben sustituirse "
+                "por el valor numérico calculado o definirse mediante .param antes de "
+                "usarse en el netlist final"
+            )
+        return self
 
 
-def build_voltage_divider_netlist(v_in: float, r1: float, r2: float) -> str:
-    """Build a resistive voltage-divider netlist ready for ngspice batch mode.
+def _ensure_title_line(netlist: str, title: str = "Circuit") -> str:
+    """SPICE trata obligatoriamente la primera línea como título.
+    Si el netlist no empieza con '*', anteponer una línea de título
+    para evitar que ngspice descarte el primer componente."""
+    stripped = netlist.lstrip()
+    if not stripped.startswith("*"):
+        return f"* {title}\n" + netlist
+    return netlist
 
-    Appends a .control block that runs an operating-point analysis and
-    writes v(vout) via wrdata, so the caller only needs to run
-    `ngspice -b` on the returned text and read the wrdata output file.
-    """
-    circuit = Circuit("Voltage Divider")
-    circuit.V("input", "vin", circuit.gnd, v_in)
-    circuit.R(1, "vin", "vout", r1)
-    circuit.R(2, "vout", circuit.gnd, r2)
 
-    control_block = (
-        ".control\n"
-        "op\n"
-        "wrdata output.txt v(vout)\n"
-        ".endc\n"
-        ".end\n"
+def _format_spice_value(val: Any) -> str:
+    if isinstance(val, (int, float)):
+        val_f = float(val)
+        if val_f == int(val_f) and abs(val_f) < 1e9:
+            return str(int(val_f))
+        if 0 < abs(val_f) < 1e-3 or abs(val_f) >= 1e6:
+            return f"{val_f:.4e}"
+        return f"{val_f:.4f}".rstrip("0").rstrip(".")
+    return str(val)
+
+
+def build_catalog_netlist(params: dict, values: dict) -> str:
+    """Construye el netlist a partir del spiceTemplate de la topología en el catálogo."""
+    circuit_id = params["circuit_id"]
+    circuit = fetch_circuit_detail(circuit_id)
+    if not circuit or not circuit.spiceTemplate:
+        raise ValueError(f"Topología '{circuit_id}' no encontrada en el catálogo o sin spiceTemplate")
+
+    template = circuit.spiceTemplate
+    combined = dict(values)
+    for k, v in params.get("params", {}).items():
+        if k not in combined:
+            combined[k] = v
+
+    def _replace_match(m: re.Match) -> str:
+        name = m.group(1)
+        if name in combined:
+            return _format_spice_value(combined[name])
+        for k, v in combined.items():
+            if k.lower().replace("_", "") == name.lower().replace("_", ""):
+                return _format_spice_value(v)
+        return m.group(0)
+
+    netlist = re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)\}", _replace_match, template)
+    unresolved = re.findall(r"\{([A-Za-z_][A-Za-z0-9_]*)\}", netlist)
+    if unresolved:
+        raise ValueError(
+            f"Topología '{circuit_id}' tiene parámetros sin resolver en su plantilla SPICE: {', '.join(unresolved)}"
+        )
+    return _ensure_title_line(netlist, circuit.name)
+
+
+def generate_writer_netlist(
+    chat_model,
+    *,
+    circuit: CircuitKnowledgeItem,
+    params: dict[str, Any],
+    goal: dict[str, Any],
+    computed_values: dict[str, Any] | None = None,
+) -> str:
+    """Invoca al LLM asignado al rol de escritor (writer) para redactar el netlist SPICE."""
+    structured_model = chat_model.with_structured_output(WriterNetlist)
+    computed_str = (
+        f"Valores de componentes ya calculados:\n{json.dumps(computed_values, indent=2)}\n\n"
+        if computed_values
+        else ""
     )
-    return str(circuit) + control_block
-
-
-def build_rc_lowpass_netlist(r: float, c: float) -> str:
-    """RC pasa-bajas con análisis AC; mide la frecuencia de corte (-3 dB)
-    con `meas` y la escribe a output.txt vía redirección de echo."""
-    circuit = Circuit("RC Lowpass")
-    circuit.V("input", "vin", circuit.gnd, "DC 0 AC 1")
-    circuit.R(1, "vin", "vout", r)
-    circuit.C(1, "vout", circuit.gnd, c)
-
-    control_block = (
-        ".control\n"
-        "ac dec 100 1 1e9\n"
-        # El corte se define donde |H| = 1/√2, que son -3.0103 dB y no
-        # -3.000. Medir en -3 exactos encuentra una frecuencia 0.24 % más
-        # baja, con un sesgo sistemático idéntico en todas las décadas.
-        "meas ac fc WHEN vdb(vout)=-3.0103\n"
-        "echo $&fc > output.txt\n"
-        ".endc\n"
-        ".end\n"
+    user_prompt = (
+        f"Eres un ingeniero experto en diseño de circuitos electrónicos analógicos y SPICE (ngspice).\n"
+        f"Tu tarea es redactar el netlist SPICE completo y ejecutable para el siguiente circuito:\n\n"
+        f"Nombre: {circuit.name} (id: {circuit.id})\n"
+        f"Categoría: {circuit.category}\n"
+        f"Descripción: {circuit.description}\n"
+        f"Topología: {circuit.topologySummary}\n\n"
+        f"Plantilla SPICE de referencia:\n```spice\n{circuit.spiceTemplate}\n```\n\n"
+        f"Parámetros solicitados por el usuario:\n{json.dumps(params, indent=2)}\n\n"
+        f"{computed_str}"
+        f"Meta de diseño:\nMétrica: {goal.get('metric')}\nObjetivo numérico: {goal.get('target')}\n\n"
+        f"Reglas estrictas:\n"
+        f"1. Sustituye TODOS los marcadores entre llaves {{...}} por su valor numérico real (usando los valores calculados provistos). NO dejes ningún placeholder {{...}}.\n"
+        f"2. La primera línea debe ser un comentario de título (* ...).\n"
+        f"3. Conserva o adapta el bloque .control con la medición requerida hacia output.txt. Si la métrica es ganancia (gain), mide la magnitud positiva (ej. let gain = mag(v(vout)[...]) / ... o abs(...)).\n"
+        f"4. Sé directo: emite el netlist sin razonamientos extensos para evitar truncamiento.\n"
     )
-    return str(circuit) + control_block
+
+    messages = [
+        {"role": "system", "content": "Genera el netlist SPICE final ejecutable siguiendo la plantilla y requerimientos."},
+        {"role": "user", "content": user_prompt},
+    ]
+    try:
+        result = structured_model.invoke(messages)
+    except Exception as exc:
+        if "structured outputs not support" in str(exc).lower() or "json_schema" in str(exc).lower():
+            try:
+                fallback_model = chat_model.with_structured_output(
+                    WriterNetlist, method="function_calling"
+                )
+                result = fallback_model.invoke(messages)
+            except Exception as fallback_exc:
+                raise ValueError(f"Fallo en generación de netlist con LLM: {fallback_exc}") from fallback_exc
+        else:
+            raise
+
+    if isinstance(result, WriterNetlist):
+        return _ensure_title_line(result.netlist, circuit.name)
+    if isinstance(result, dict) and "netlist" in result:
+        return _ensure_title_line(result["netlist"], circuit.name)
+    raise ValueError(f"Respuesta inesperada del LLM escritor: {result}")
 
 
-def build_led_resistor_netlist(v_in: float, r: float) -> str:
-    """LED (diodo con modelo fijo) + resistencia limitadora; mide la
-    corriente del lazo en el punto de operación."""
-    circuit = Circuit("LED Resistor")
-    circuit.V("input", "vin", circuit.gnd, v_in)
-    circuit.R(1, "vin", "vled", r)
-    circuit.D(1, "vled", circuit.gnd, model="LED")
-    circuit.model("LED", "D", IS=1e-20, N=2)
-
-    control_block = (
-        ".control\n"
-        "op\n"
-        "let iled = -i(vinput)\n"
-        "wrdata output.txt iled\n"
-        ".endc\n"
-        ".end\n"
-    )
-    return str(circuit) + control_block
-
-
-def build_noninverting_amp_netlist(v_in: float, rf: float, rg: float) -> str:
-    """Amplificador no inversor con macromodelo de operacional; mide la salida
-    en el punto de operación. La ganancia es 1 + Rf/Rg."""
-    circuit = Circuit("Non-inverting Amplifier")
-    circuit.V("input", "vin", circuit.gnd, v_in)
-    circuit.X("1", "opamp", "vin", "vfb", "vout")
-    circuit.R("f", "vout", "vfb", rf)
-    circuit.R("g", "vfb", circuit.gnd, rg)
-
-    control_block = (
-        ".control\n"
-        "op\n"
-        "wrdata output.txt v(vout)\n"
-        ".endc\n"
-        ".end\n"
-    )
-    return str(circuit) + OPAMP_SUBCKT + control_block
-
-
-# firma uniforme: (params_del_bloque, component_values_del_bloque) -> netlist
 NETLIST_BUILDERS = {
-    "voltage_divider": lambda params, values: build_voltage_divider_netlist(
-        v_in=params["v_in"], r1=values["r1"], r2=values["r2"]
+    "catalog": build_catalog_netlist,
+    "generic": lambda params, values: _ensure_title_line(
+        values.get("netlist", ""), params.get("description", "Generic Circuit")
     ),
-    "rc_lowpass": lambda params, values: build_rc_lowpass_netlist(
-        r=values["r"], c=values["c"]
-    ),
-    "led_resistor": lambda params, values: build_led_resistor_netlist(
-        v_in=params["v_in"], r=values["r"]
-    ),
-    "noninverting_amp": lambda params, values: build_noninverting_amp_netlist(
-        v_in=params["v_in"], rf=values["rf"], rg=values["rg"]
-    ),
-    # El netlist genérico ya está escrito; escritura solo lo deja pasar.
-    "generic": lambda params, values: values["netlist"],
 }

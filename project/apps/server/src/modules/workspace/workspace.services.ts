@@ -15,6 +15,7 @@ import { composeRequestText } from "./workspace.context";
 import {
   resolveRunOutcome,
   type AgentsRunResult,
+  type ExecutionStage,
   type RunSink,
 } from "./workspace.runner";
 
@@ -161,6 +162,106 @@ export async function listConversationSummaries(
   });
 }
 
+export type ActiveExecutionInfo = {
+  conversationId: string;
+  stages: ExecutionStage[];
+};
+
+export const activeExecutions = new Map<string, ActiveExecutionInfo>();
+
+type ConversationEventListener = (event: { type: "stage" | "done" | "error"; data: unknown }) => void;
+const conversationListeners = new Map<string, Set<ConversationEventListener>>();
+
+export function subscribeConversationEvents(
+  conversationId: string,
+  listener: ConversationEventListener,
+): () => void {
+  let listeners = conversationListeners.get(conversationId);
+  if (!listeners) {
+    listeners = new Set();
+    conversationListeners.set(conversationId, listeners);
+  }
+  listeners.add(listener);
+
+  return () => {
+    listeners?.delete(listener);
+    if (listeners?.size === 0) {
+      conversationListeners.delete(conversationId);
+    }
+  };
+}
+
+export function broadcastConversationEvent(
+  conversationId: string,
+  event: { type: "stage" | "done" | "error"; data: unknown },
+) {
+  const listeners = conversationListeners.get(conversationId);
+  if (!listeners) return;
+  for (const listener of listeners) {
+    try {
+      listener(event);
+    } catch {
+      // ignore
+    }
+  }
+}
+
+export function createDefaultStages(executionId?: string): ExecutionStage[] {
+  const prefix = executionId ? `${executionId}-` : "stage-";
+  return [
+    {
+      id: `${prefix}interpretation`,
+      kind: "interpretation",
+      label: "Interpretación",
+      actor: "Orquestador",
+      status: "active",
+      durationMs: null,
+      summary: "Interpretando solicitud y requerimientos...",
+      metrics: [],
+    },
+    {
+      id: `${prefix}calculation`,
+      kind: "calculation",
+      label: "Cálculo",
+      actor: "Cálculo",
+      status: "pending",
+      durationMs: null,
+      summary: "Pendiente de interpretar restricciones.",
+      metrics: [],
+    },
+    {
+      id: `${prefix}simulation`,
+      kind: "simulation",
+      label: "Simulación",
+      actor: "Simulación",
+      status: "pending",
+      durationMs: null,
+      summary: "Pendiente de calcular componentes.",
+      metrics: [],
+    },
+    {
+      id: `${prefix}curation`,
+      kind: "curation",
+      label: "Curación",
+      actor: "Curador",
+      status: "pending",
+      durationMs: null,
+      summary: "Pendiente de simular circuito.",
+      metrics: [],
+    },
+    {
+      id: `${prefix}result`,
+      kind: "result",
+      label: "Documentación",
+      actor: "Documentador",
+      status: "pending",
+      durationMs: null,
+      summary: "Pendiente de validación.",
+      metrics: [],
+    },
+  ];
+}
+
 const ACTIVE_SUMMARY = "Pensando...";
 
 // El driver neon-http no soporta transacciones interactivas: hacen falta los
@@ -186,6 +287,11 @@ export async function createConversationWithRequest(userId: string, text: string
       requestText: text,
     })
     .returning();
+
+  activeExecutions.set(executionRow!.id, {
+    conversationId: conversationRow!.id,
+    stages: createDefaultStages(executionRow!.id),
+  });
 
   return {
     conversation: conversationRow!,
@@ -280,7 +386,10 @@ export async function getConversationDetail(userId: string, id: string) {
   await sweepStaleExecutions();
   const parts = await loadConversationParts(userId, id);
   if (!parts) return null;
-  return toConversationDetail(parts.row, parts.messages, parts.artifacts, parts.latestExecution);
+  const activeStages = parts.latestExecution
+    ? activeExecutions.get(parts.latestExecution.id)?.stages
+    : undefined;
+  return toConversationDetail(parts.row, parts.messages, parts.artifacts, parts.latestExecution, activeStages);
 }
 
 // Un seguimiento: mensaje del usuario, ejecución nueva, y el request_text
@@ -309,6 +418,11 @@ export async function appendUserMessage(userId: string, id: string, text: string
       requestText,
     })
     .returning();
+
+  activeExecutions.set(executionRow!.id, {
+    conversationId: id,
+    stages: createDefaultStages(executionRow!.id),
+  });
 
   await db.update(conversation).set({ updatedAt: new Date() }).where(eq(conversation.id, id));
 
@@ -387,7 +501,33 @@ export async function sweepStaleExecutions(): Promise<void> {
 // de startRun para que el camino de red se pruebe sin base de datos.
 export function makeDbSink(conversationId: string, executionId: string, previousNormalizedSpec: unknown | null = null): RunSink {
   return {
+    async onStageUpdate(updatedStage: ExecutionStage) {
+      const active = activeExecutions.get(executionId);
+      if (active) {
+        const index = active.stages.findIndex((s) => s.kind === updatedStage.kind);
+        if (index >= 0) {
+          active.stages[index] = { ...active.stages[index], ...updatedStage };
+        } else {
+          active.stages.push(updatedStage);
+        }
+      }
+
+      await db
+        .update(execution)
+        .set({ summary: updatedStage.summary })
+        .where(eq(execution.id, executionId));
+
+      broadcastConversationEvent(conversationId, {
+        type: "stage",
+        data: updatedStage,
+      });
+    },
+
     async onResult(result: AgentsRunResult) {
+      const active = activeExecutions.get(executionId);
+      const finalStages = active ? [...active.stages] : undefined;
+      activeExecutions.delete(executionId);
+
       const outcome = resolveRunOutcome(result, previousNormalizedSpec);
 
       await db.insert(message).values({
@@ -406,12 +546,20 @@ export function makeDbSink(conversationId: string, executionId: string, previous
         }
       }
 
+      const verdictToStore = result.verdict
+        ? { ...result.verdict, stages: finalStages }
+        : result.outcome
+          ? { mode: result.outcome.mode, stages: finalStages }
+          : finalStages
+            ? { stages: finalStages }
+            : null;
+
       await db
         .update(execution)
         .set({
           status: outcome.status,
           summary: outcome.summary,
-          verdict: result.verdict ?? (result.outcome ? { mode: result.outcome.mode } : null),
+          verdict: verdictToStore,
           normalizedSpec: outcome.normalizedSpec,
           history: result.history,
           finishedAt: new Date(),
@@ -422,9 +570,16 @@ export function makeDbSink(conversationId: string, executionId: string, previous
         .update(conversation)
         .set({ updatedAt: new Date() })
         .where(eq(conversation.id, conversationId));
+
+      broadcastConversationEvent(conversationId, {
+        type: "done",
+        data: { outcome, stages: finalStages },
+      });
     },
 
     async onFailure(summary: string) {
+      activeExecutions.delete(executionId);
+
       await db
         .update(execution)
         .set({ status: "failed", summary, finishedAt: new Date() })
@@ -434,6 +589,11 @@ export function makeDbSink(conversationId: string, executionId: string, previous
         .update(conversation)
         .set({ updatedAt: new Date() })
         .where(eq(conversation.id, conversationId));
+
+      broadcastConversationEvent(conversationId, {
+        type: "error",
+        data: { summary },
+      });
     },
   };
 }

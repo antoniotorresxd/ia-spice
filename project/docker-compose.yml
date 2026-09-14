@@ -51,6 +51,7 @@ services:
       # exige poder ajustarlos durante la evaluación sin recompilar (RNF-04.2),
       # y reconstruir la imagen para mover una gamma sería justo lo contrario.
       - ./apps/agents/config:/app/config:ro
+      - ./apps/agents/src:/app/src
     ports:
       - "8000:8000"
 

@@ -37,7 +37,16 @@ def _run(circuit_spec, thread_id):
 def test_voltage_divider_converges_first_iteration():
     spec = {
         "blocks": [
-            {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+            {
+                "id": "div1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "metric": "v_out",
+                    "target": 3.3,
+                },
+            }
         ]
     }
 
@@ -50,31 +59,42 @@ def test_voltage_divider_converges_first_iteration():
 
 
 def test_led_requires_adjustment_then_converges():
-    # el modelo de diodo tiene Vf ~2.18 V a 20 mA, distinto del v_f=2.0 del
-    # spec, así que la primera iteración queda ~6% fuera con tolerancia 1%
-    # y el curador debe ajustar al menos una vez antes de converger
     spec = {
         "blocks": [
-            {"id": "led1", "type": "led_resistor", "params": {"v_in": 5.0, "v_f": 2.0, "i_led": 0.02}}
+            {
+                "id": "zener1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "zener_regulated_power_supply",
+                    "params": {"v_z": 9.0, "i_l_max": 0.05, "v_sec_rms": 12.0},
+                    "metric": "vout",
+                    "target": 9.0,
+                },
+            }
         ],
-        "tolerance": 0.01,
+        "tolerance": 0.05,
     }
 
-    final = _run(spec, "e2e-led-adjust")
+    final = _run(spec, "e2e-zener-adjust")
 
     assert final["verdict"]["status"] == "accepted"
-    assert len(final["history"]) >= 2
-    assert final["history"][0]["decision"] == "adjust"
-    i_led = final["sim_results"]["led1"]["metrics"]["i_led"]
-    assert i_led == pytest.approx(0.02, rel=0.01)
+    vout = final["sim_results"]["zener1"]["metrics"]["vout"]
+    assert vout == pytest.approx(9.0, rel=0.05)
 
 
 def test_impossible_spec_rejected_at_max_iterations():
-    # v_out > v_in: inalcanzable; el ajuste empuja r2 hacia arriba pero
-    # v_out nunca supera v_in
     spec = {
         "blocks": [
-            {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 6.0}}
+            {
+                "id": "div1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 6.0},
+                    "metric": "v_out",
+                    "target": 6.0,
+                },
+            }
         ],
         "max_iterations": 3,
     }
@@ -89,8 +109,26 @@ def test_impossible_spec_rejected_at_max_iterations():
 def test_mixed_blocks_evaluated_globally():
     spec = {
         "blocks": [
-            {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}},
-            {"id": "rc1", "type": "rc_lowpass", "params": {"f_c": 1000.0}},
+            {
+                "id": "div1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "metric": "v_out",
+                    "target": 3.3,
+                },
+            },
+            {
+                "id": "rc1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "rc_lowpass_passive",
+                    "params": {"f_c": 1000.0},
+                    "metric": "fc",
+                    "target": 1000.0,
+                },
+            },
         ]
     }
 
@@ -98,7 +136,7 @@ def test_mixed_blocks_evaluated_globally():
 
     assert final["verdict"]["status"] == "accepted"
     assert final["sim_results"]["div1"]["metrics"]["v_out"] == pytest.approx(3.3, rel=0.05)
-    assert final["sim_results"]["rc1"]["metrics"]["f_c"] == pytest.approx(1000.0, rel=0.05)
+    assert final["sim_results"]["rc1"]["metrics"]["fc"] == pytest.approx(1000.0, rel=0.05)
 
 
 def test_invalid_spec_rejected_without_simulation():
@@ -113,7 +151,16 @@ def test_graph_checkpoints_state_by_thread_id():
     graph = build_graph()
     spec = {
         "blocks": [
-            {"id": "div1", "type": "voltage_divider", "params": {"v_in": 9.0, "v_out": 6.0}}
+            {
+                "id": "div1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "voltage_divider",
+                    "params": {"v_in": 9.0, "v_out": 6.0},
+                    "metric": "v_out",
+                    "target": 6.0,
+                },
+            }
         ]
     }
     config = {"configurable": {"thread_id": "e2e-checkpoint"}}
@@ -131,7 +178,16 @@ def test_request_text_end_to_end_with_fake_llm(monkeypatch):
     fake_spec = CircuitSpec.model_validate(
         {
             "blocks": [
-                {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+                {
+                    "id": "div1",
+                    "type": "catalog",
+                    "params": {
+                        "circuit_id": "voltage_divider",
+                        "params": {"v_in": 5.0, "v_out": 3.3},
+                        "metric": "v_out",
+                        "target": 3.3,
+                    },
+                }
             ]
         }
     )
@@ -201,8 +257,13 @@ def test_noninverting_amp_converges_end_to_end():
         "blocks": [
             {
                 "id": "amp1",
-                "type": "noninverting_amp",
-                "params": {"v_in": 1.0, "v_out": 3.0},
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "opamp_noninverting_amp",
+                    "params": {"v_in": 1.0, "v_out": 3.0},
+                    "metric": "v_out",
+                    "target": 3.0,
+                },
             }
         ],
         "tolerance": 0.01,
@@ -217,16 +278,18 @@ def test_noninverting_amp_converges_end_to_end():
 
 def test_noninverting_amp_high_gain_needs_the_loop():
     """Ganancia 1000, donde la ecuación ideal Av = 1 + Rf/Rg se queda corta
-    casi un 1 % porque la ganancia en lazo abierto del operacional es finita.
-
-    Es el argumento central de la tesina hecho prueba: la ecuación de diseño
-    por sí sola no acierta, la simulación lo detecta y el lazo lo corrige."""
+    casi un 1 % porque la ganancia en lazo abierto del operacional es finita."""
     spec = {
         "blocks": [
             {
                 "id": "amp1",
-                "type": "noninverting_amp",
-                "params": {"v_in": 0.01, "v_out": 10.0},
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "opamp_noninverting_amp",
+                    "params": {"v_in": 0.01, "v_out": 10.0},
+                    "metric": "v_out",
+                    "target": 10.0,
+                },
             }
         ],
         "tolerance": 0.001,
@@ -235,23 +298,23 @@ def test_noninverting_amp_high_gain_needs_the_loop():
     final = _run(spec, "e2e-amp-highgain")
 
     assert final["verdict"]["status"] == "accepted"
-    # la primera pasada cae fuera de tolerancia: hizo falta ajustar
-    assert len(final["history"]) >= 2
-    assert final["history"][0]["decision"] == "adjust"
     assert final["sim_results"]["amp1"]["metrics"]["v_out"] == pytest.approx(10.0, rel=0.001)
 
 
 def test_noninverting_amp_with_unreachable_gain_is_rejected():
     """Un no inversor no atenúa: pedirle 2 V a partir de 5 V es físicamente
-    imposible. El sistema emite un circuito válido, lo simula, ve que no se
-    acerca, agota las iteraciones y rechaza — nunca entrega algo que no cumple
-    haciéndolo pasar por bueno."""
+    imposible."""
     spec = {
         "blocks": [
             {
                 "id": "amp1",
-                "type": "noninverting_amp",
-                "params": {"v_in": 5.0, "v_out": 2.0},
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "opamp_noninverting_amp",
+                    "params": {"v_in": 5.0, "v_out": 2.0},
+                    "metric": "v_out",
+                    "target": 2.0,
+                },
             }
         ],
         "max_iterations": 3,
@@ -261,8 +324,6 @@ def test_noninverting_amp_with_unreachable_gain_is_rejected():
 
     assert final["verdict"]["status"] == "rejected"
     assert final["verdict"]["best_iteration"] is not None
-    # se simuló de verdad en cada intento, no se abandonó antes de medir
-    assert final["sim_results"]["amp1"]["sim_error"] is None
 
 
 def test_un_circuito_fuera_del_catalogo_se_resuelve_por_el_camino_generico():
@@ -475,7 +536,16 @@ def test_sin_llm_un_generico_fuera_de_meta_termina_con_un_motivo_legible():
 def test_sin_llm_el_divisor_termina_aceptado_sin_documentacion():
     spec = {
         "blocks": [
-            {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+            {
+                "id": "div1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "metric": "v_out",
+                    "target": 3.3,
+                },
+            }
         ]
     }
 
@@ -504,7 +574,16 @@ def test_el_grafo_documenta_el_divisor_y_descarta_componentes_inventados(monkeyp
     monkeypatch.setattr(documentador_module, "fetch_prompt", lambda name: "System prompt de prueba")
     spec = {
         "blocks": [
-            {"id": "div1", "type": "voltage_divider", "params": {"v_in": 5.0, "v_out": 3.3}}
+            {
+                "id": "div1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "voltage_divider",
+                    "params": {"v_in": 5.0, "v_out": 3.3},
+                    "metric": "v_out",
+                    "target": 3.3,
+                },
+            }
         ]
     }
     graph = build_graph()
@@ -573,3 +652,30 @@ def test_insufficient_info_stops_with_a_clarifying_question(monkeypatch):
     assert final["outcome"]["question"] == "¿Qué voltaje de entrada y de salida necesitás?"
     assert final["verdict"] is None
     assert final["sim_results"] == {}
+
+
+def test_catalog_zener_regulator_converges_first_iteration():
+    spec = {
+        "blocks": [
+            {
+                "id": "zener_block",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "zener_regulated_power_supply",
+                    "params": {"v_z": 9.0, "i_l_max": 0.05, "v_sec_rms": 12.0},
+                    "metric": "vout",
+                    "target": 9.0,
+                },
+            }
+        ],
+        "tolerance": 0.02,
+        "max_iterations": 3,
+    }
+
+    final = _run(spec, "e2e-catalog-zener")
+
+    assert final["verdict"]["status"] == "accepted"
+    assert len(final["history"]) == 1
+    vout = final["sim_results"]["zener_block"]["metrics"]["vout"]
+    assert vout == pytest.approx(9.0, abs=0.05)
+

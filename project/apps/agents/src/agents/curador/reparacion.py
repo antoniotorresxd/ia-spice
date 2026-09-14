@@ -13,6 +13,7 @@ from pydantic import BaseModel, model_validator
 from agents.llm.factory import build_chat_model
 from agents.llm.prompts import fetch_prompt
 from agents.llm.settings_client import fetch_agent_llm
+from agents.orquestador.schema import find_unresolved_placeholders
 
 # El agente al que corresponde este nodo, para pedir su configuración de LLM.
 AGENT_ID = "curator"
@@ -49,6 +50,14 @@ class NetlistReparado(BaseModel):
             )
         if ".control" not in self.netlist:
             raise ValueError("el netlist debe traer un bloque .control que ejecute el análisis")
+        unresolved = find_unresolved_placeholders(self.netlist)
+        if unresolved:
+            raise ValueError(
+                f"placeholders sin resolver: {', '.join(unresolved)}; deben sustituirse "
+                "por el valor numérico calculado o definirse mediante .param antes de "
+                "usarse en el netlist final, no dejarse literales como en el "
+                "spiceTemplate de referencia del catálogo de circuitos"
+            )
         return self
 
 

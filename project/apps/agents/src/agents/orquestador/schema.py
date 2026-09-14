@@ -1,52 +1,23 @@
+import re
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from agents.config import get_config
 
 
-class VoltageDividerParams(BaseModel):
-    v_in: float = Field(gt=0)
-    v_out: float = Field(gt=0)
-
-
-class RcLowpassParams(BaseModel):
-    f_c: float = Field(gt=0)
-
-
-class LedResistorParams(BaseModel):
-    v_in: float = Field(gt=0)
-    v_f: float = Field(gt=0)
-    i_led: float = Field(gt=0)
-
-
-class NonInvertingAmpParams(BaseModel):
-    v_in: float = Field(gt=0)
-    v_out: float = Field(gt=0)
-
-
-class VoltageDividerBlock(BaseModel):
-    id: str
-    type: Literal["voltage_divider"]
-    params: VoltageDividerParams
-
-
-class RcLowpassBlock(BaseModel):
-    id: str
-    type: Literal["rc_lowpass"]
-    params: RcLowpassParams
-
-
-class LedResistorBlock(BaseModel):
-    id: str
-    type: Literal["led_resistor"]
-    params: LedResistorParams
-
-
-class NonInvertingAmpBlock(BaseModel):
-    id: str
-    type: Literal["noninverting_amp"]
-    params: NonInvertingAmpParams
+def find_unresolved_placeholders(netlist: str) -> list[str]:
+    """Identificadores de plantilla sin una definición .param en el netlist."""
+    names = re.findall(r"\{([A-Za-z_][A-Za-z0-9_]*)\}", netlist)
+    defined = {
+        name.lower()
+        for name in re.findall(
+            r"^[ \t]*\.param[ \t]+([A-Za-z_][A-Za-z0-9_]*)\b",
+            netlist,
+            flags=re.IGNORECASE | re.MULTILINE,
+        )
+    }
+    return list(dict.fromkeys(name for name in names if name.lower() not in defined))
 
 
 class GenericParams(BaseModel):
@@ -74,7 +45,35 @@ class GenericParams(BaseModel):
             )
         if ".control" not in self.netlist:
             raise ValueError("el netlist debe traer un bloque .control que ejecute el análisis")
+        unresolved = find_unresolved_placeholders(self.netlist)
+        if unresolved:
+            raise ValueError(
+                f"placeholders sin resolver: {', '.join(unresolved)}; deben sustituirse "
+                "por el valor numérico calculado o definirse mediante .param antes de "
+                "usarse en el netlist final, no dejarse literales como en el "
+                "spiceTemplate de referencia del catálogo de circuitos"
+            )
         return self
+
+
+class CatalogParams(BaseModel):
+    """Un circuito derivado del catálogo de topologías disponibles.
+
+    El LLM del orquestador identifica la topología (`circuit_id`) y extrae los
+    parámetros técnicos según su parametersSchema, además de la meta.
+    """
+
+    circuit_id: str = Field(min_length=1)
+    params: dict[str, float] = Field(default_factory=dict)
+    metric: str = Field(min_length=1)
+    target: float
+    description: str = Field(default="")
+
+
+class CatalogBlock(BaseModel):
+    id: str
+    type: Literal["catalog"] = "catalog"
+    params: CatalogParams
 
 
 class GenericBlock(BaseModel):
@@ -84,10 +83,7 @@ class GenericBlock(BaseModel):
 
 
 Block = Annotated[
-    VoltageDividerBlock
-    | RcLowpassBlock
-    | LedResistorBlock
-    | NonInvertingAmpBlock
+    CatalogBlock
     | GenericBlock,
     Field(discriminator="type"),
 ]
@@ -104,15 +100,22 @@ class CircuitSpec(BaseModel):
     # default_factory (por instancia, no al importar) para que un experimento
     # que apunte CURADOR_CONFIG_PATH a otro archivo surta efecto.
     max_iterations: int = Field(
-        default_factory=lambda: get_config()["curador"]["max_iterations"], ge=1
+        default_factory=lambda: get_config()["curador"]["max_iterations"],
+        ge=1,
+        le=10,
+        description="Número máximo de iteraciones para el curador (entre 1 y 10). Omitir si no se especificó.",
     )
     tolerance: float = Field(
-        default_factory=lambda: get_config()["curador"]["tolerance"], gt=0
+        default_factory=lambda: get_config()["curador"]["tolerance"],
+        gt=0,
+        description="Tolerancia del diseño (ej. 0.05 para 5%). Omitir si no se especificó.",
     )
 
     @field_validator("max_iterations")
     @classmethod
-    def _max_iterations_dentro_del_limite(cls, v: int) -> int:
+    def _max_iterations_dentro_del_limite(cls, v: int, info: ValidationInfo) -> int:
+        if v < 3 and any(getattr(b, "type", None) == "generic" for b in info.data.get("blocks", [])):
+            v = 3
         # ge=1 en el Field de arriba no pone techo. Sin este límite, una
         # extracción del LLM (o un circuit_spec estructurado) que pida un
         # número grande deja correr el lazo del curador sin freno real: con

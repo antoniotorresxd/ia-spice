@@ -1,4 +1,5 @@
 # project/apps/agents/src/agents/graph.py
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 
@@ -28,8 +29,8 @@ def build_graph(checkpointer=None):
         result = calculo_graph.invoke(state)
         return {"component_values": result["component_values"]}
 
-    def _sintesis_node(state: CircuitState) -> dict:
-        result = sintesis_graph.invoke(state)
+    def _sintesis_node(state: CircuitState, config: RunnableConfig | None = None) -> dict:
+        result = sintesis_graph.invoke(state, config)
         return {"netlists": result["netlists"], "sim_results": result["sim_results"]}
 
     builder = StateGraph(CircuitState)

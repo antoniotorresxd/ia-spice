@@ -5,7 +5,7 @@ import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom
 import { ConfirmDeleteModal } from '@/components/ui/ConfirmDeleteModal'
 import { ConversationDetailSkeleton } from '@/components/ui/Skeleton'
 import { ActivityTimeline } from '../../home/components/ActivityTimeline'
-import type { ConversationExecution } from '../../home/model/home-types'
+import type { ConversationExecution, ExecutionStage } from '../../home/model/home-types'
 import { useConversationPolling } from '../model/use-conversation-polling'
 import type { WorkspaceConversationDetail, WorkspaceSnapshot } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
@@ -28,8 +28,8 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const [previewFileId, setPreviewFileId] = useState<string | null>(null)
   const [isRenaming, setIsRenaming] = useState(false)
 
-  const messagesRef = useRef<HTMLDivElement>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
+  const messagesRef = useRef<HTMLDivElement | null>(null)
+  const contentRef = useRef<HTMLDivElement | null>(null)
   const followLatest = useRef(true)
   const [scrolledDown, setScrolledDown] = useState(false)
   const [awayFromLatest, setAwayFromLatest] = useState(false)
@@ -37,18 +37,21 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const updateScroll = useCallback(() => {
     const region = messagesRef.current
     if (!region) return
-    const away = region.scrollHeight - region.clientHeight - region.scrollTop > 64
+    const distanceToBottom = region.scrollHeight - region.scrollTop - region.clientHeight
+    const away = distanceToBottom >= 32
     followLatest.current = !away
     setScrolledDown(region.scrollTop > 8)
     setAwayFromLatest(away)
   }, [])
 
-  function scrollToLatest() {
+  function scrollToBottom() {
     const region = messagesRef.current
     if (!region) return
     region.scrollTop = region.scrollHeight
+    followLatest.current = true
     updateScroll()
   }
+  const scrollToLatest = scrollToBottom
 
   useEffect(() => {
     const region = messagesRef.current
@@ -78,7 +81,7 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   // reinicia el intervalo en cada render y el sondeo nunca dispara.
   const refresh = useCallback(async () => {
     try {
-      setConversation(await service.getConversation(conversationId))
+      setConversation(await service.getConversation(conversationId, { bypassCache: true }))
     } catch {
       // Un fallo puntual de red no debe tumbar la pantalla ya cargada: el
       // siguiente ciclo del sondeo lo reintenta.
@@ -87,14 +90,81 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
 
   useConversationPolling(conversation?.executionStatus ?? null, refresh)
 
-  const timeline = useMemo<ConversationExecution | null>(() => conversation ? ({
-    id: conversation.execution.id,
-    projectId: conversation.projectId,
-    conversation: { id: conversation.id, title: conversation.title, projectId: conversation.projectId, isTemporary: conversation.projectId === null, updatedAt: conversation.updatedAt },
-    status: conversation.execution.status,
-    stages: [{ id: `${conversation.execution.id}-interpretation`, kind: 'interpretation', label: 'Interpretación', actor: 'Agente', status: conversation.execution.status, durationMs: null, summary: conversation.execution.summary, metrics: [{ label: 'Mensajes', value: String(conversation.messages.length) }, { label: 'Archivos', value: String(conversation.files.length) }] }],
-    files: conversation.files.map((file) => ({ id: file.id, name: file.name, kind: file.language === 'pdf' ? 'report' : file.language === 'spice' ? 'netlist' : 'data', partial: file.status === 'partial' })),
-  }) : null, [conversation])
+  useEffect(() => {
+    if (!service.subscribeConversationEvents || conversation?.executionStatus !== 'active') {
+      return
+    }
+
+    const unsubscribe = service.subscribeConversationEvents(conversationId, (event) => {
+      if (event.type === 'stage') {
+        const stage = event.data as ExecutionStage
+        setConversation((prev) => {
+          if (!prev || prev.id !== conversationId) return prev
+          const existingStages = prev.execution.stages ? [...prev.execution.stages] : []
+          const index = existingStages.findIndex((s) => s.kind === stage.kind)
+          if (index >= 0) {
+            existingStages[index] = { ...existingStages[index], ...stage }
+          } else {
+            existingStages.push(stage)
+          }
+          return {
+            ...prev,
+            execution: {
+              ...prev.execution,
+              summary: stage.summary,
+              stages: existingStages,
+            },
+          }
+        })
+      } else if (event.type === 'done' || event.type === 'error') {
+        void refresh()
+      }
+    })
+
+    return unsubscribe
+  }, [conversation?.executionStatus, conversationId, refresh, service])
+
+  const timeline = useMemo<ConversationExecution | null>(() => {
+    if (!conversation) return null
+    const stages =
+      conversation.execution.stages && conversation.execution.stages.length > 0
+        ? conversation.execution.stages
+        : [
+            {
+              id: `${conversation.execution.id}-interpretation`,
+              kind: 'interpretation' as const,
+              label: 'Interpretación',
+              actor: 'Orquestador',
+              status: conversation.execution.status,
+              durationMs: null,
+              summary: conversation.execution.summary,
+              metrics: [
+                { label: 'Mensajes', value: String(conversation.messages.length) },
+                { label: 'Archivos', value: String(conversation.files.length) },
+              ],
+            },
+          ]
+
+    return {
+      id: conversation.execution.id,
+      projectId: conversation.projectId,
+      conversation: {
+        id: conversation.id,
+        title: conversation.title,
+        projectId: conversation.projectId,
+        isTemporary: conversation.projectId === null,
+        updatedAt: conversation.updatedAt,
+      },
+      status: conversation.execution.status,
+      stages,
+      files: conversation.files.map((file) => ({
+        id: file.id,
+        name: file.name,
+        kind: file.language === 'pdf' ? 'report' : file.language === 'spice' ? 'netlist' : 'data',
+        partial: file.status === 'partial',
+      })),
+    }
+  }, [conversation])
 
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -140,6 +210,9 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const netlistFiles = conversation.files.filter((file) => file.language === 'spice' && file.content.trim())
   const isDesignExecution =
     conversation.execution.mode === 'design' ||
+    (conversation.execution.status === 'active' &&
+      conversation.execution.mode !== 'chat' &&
+      conversation.execution.mode !== 'clarify') ||
     (conversation.execution.mode !== 'chat' &&
       conversation.execution.mode !== 'clarify' &&
       conversation.files.length > 0)
@@ -207,7 +280,7 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
               {(pending || conversation.executionStatus === 'active') && (
                 <article className={styles.message} data-role="assistant" aria-live="polite">
                   <p className={styles.role}>Asistente</p>
-                  <p>Pensando…</p>
+                  <p>{conversation.execution.summary || 'Pensando…'}</p>
                 </article>
               )}
             </section>
