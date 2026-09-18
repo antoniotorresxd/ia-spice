@@ -42,7 +42,11 @@ USER agentes
 
 EXPOSE 8000
 
+# Railway inyecta su propio $PORT en runtime y healthchequea ese puerto, no el
+# 8000 fijo de EXPOSE. Con el CMD anterior el proceso solo escuchaba en 8000
+# mientras Railway sondeaba otro puerto: el healthcheck fallaba con "service
+# unavailable" indefinidamente porque nada respondía del lado correcto.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"
+    CMD python -c "import os, urllib.request; urllib.request.urlopen('http://localhost:' + os.environ.get('PORT', '8000') + '/health').read()"
 
-CMD ["uvicorn", "agents.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn agents.api:app --host 0.0.0.0 --port ${PORT:-8000}"]
