@@ -36,8 +36,8 @@ type HomeSidebarProps = {
 
 const workspaceConversationMime = 'application/x-workspace-conversation'
 const DEFAULT_SIDEBAR_WIDTH = 240
-const MIN_SIDEBAR_WIDTH = 200
-const MAX_SIDEBAR_WIDTH = 440
+const MIN_SIDEBAR_WIDTH = 180
+const MAX_SIDEBAR_WIDTH = 540
 
 const navigation = [
   ['Inicio', '⌂', '/'],
@@ -76,13 +76,24 @@ export function HomeSidebar({
   const [sidebarWidth, setSidebarWidth] = useStoredNumber('spice_sidebar_width', DEFAULT_SIDEBAR_WIDTH)
   const [isResizing, setIsResizing] = useState(false)
 
+  const latestWidthRef = useRef(sidebarWidth)
+
   useEffect(() => {
+    latestWidthRef.current = sidebarWidth
     const clamped = Math.min(Math.max(sidebarWidth, MIN_SIDEBAR_WIDTH), MAX_SIDEBAR_WIDTH)
     document.documentElement.style.setProperty('--sidebar-width', `${clamped}px`)
   }, [sidebarWidth])
 
   const startResizing = (mouseDownEvent: React.PointerEvent) => {
     mouseDownEvent.preventDefault()
+    mouseDownEvent.stopPropagation()
+    const target = mouseDownEvent.currentTarget
+    try {
+      target.setPointerCapture(mouseDownEvent.pointerId)
+    } catch {
+      // ignore
+    }
+
     setIsResizing(true)
     document.documentElement.setAttribute('data-sidebar-resizing', 'true')
     document.body.style.cursor = 'col-resize'
@@ -90,24 +101,33 @@ export function HomeSidebar({
 
     const handlePointerMove = (e: PointerEvent) => {
       const newWidth = Math.min(Math.max(e.clientX, MIN_SIDEBAR_WIDTH), MAX_SIDEBAR_WIDTH)
-      setSidebarWidth(newWidth)
+      latestWidthRef.current = newWidth
       document.documentElement.style.setProperty('--sidebar-width', `${newWidth}px`)
     }
 
-    const handlePointerUp = () => {
+    const handlePointerUp = (e: PointerEvent) => {
+      try {
+        target.releasePointerCapture(e.pointerId)
+      } catch {
+        // ignore
+      }
       setIsResizing(false)
       document.documentElement.removeAttribute('data-sidebar-resizing')
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
+      setSidebarWidth(latestWidthRef.current)
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', handlePointerUp)
     }
 
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', handlePointerUp)
   }
 
   const handleDoubleClickResizer = () => {
+    latestWidthRef.current = DEFAULT_SIDEBAR_WIDTH
     setSidebarWidth(DEFAULT_SIDEBAR_WIDTH)
     document.documentElement.style.setProperty('--sidebar-width', `${DEFAULT_SIDEBAR_WIDTH}px`)
   }
@@ -456,13 +476,35 @@ export function HomeSidebar({
 
       {!isCollapsed && (
         <div
-          aria-hidden="true"
+          role="separator"
+          aria-orientation="vertical"
+          aria-valuenow={sidebarWidth}
+          aria-valuemin={MIN_SIDEBAR_WIDTH}
+          aria-valuemax={MAX_SIDEBAR_WIDTH}
+          aria-label="Redimensionar barra lateral"
+          tabIndex={0}
           className={styles.resizer}
           data-resizing={isResizing}
           onDoubleClick={handleDoubleClickResizer}
           onPointerDown={startResizing}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft') {
+              e.preventDefault()
+              const next = Math.max(sidebarWidth - 16, MIN_SIDEBAR_WIDTH)
+              setSidebarWidth(next)
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault()
+              const next = Math.min(sidebarWidth + 16, MAX_SIDEBAR_WIDTH)
+              setSidebarWidth(next)
+            } else if (e.key === 'Home') {
+              e.preventDefault()
+              setSidebarWidth(DEFAULT_SIDEBAR_WIDTH)
+            }
+          }}
           title="Arrastra para redimensionar (doble clic para restablecer)"
-        />
+        >
+          <div aria-hidden="true" className={styles.resizerGrip} />
+        </div>
       )}
     </aside>
 

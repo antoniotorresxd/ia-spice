@@ -164,4 +164,22 @@ describe('ConversationScreen', () => {
     expect(screen.queryByText('Interpretación')).not.toBeInTheDocument()
     expect(screen.getByText('Conversación', { selector: 'span' })).toBeVisible()
   })
+
+  it('permite colapsar y abrir el panel lateral de circuito e inspección', async () => {
+    const user = userEvent.setup()
+    renderScreen(createMockWorkspaceService())
+
+    expect(await screen.findByRole('complementary', { name: 'Panel de inspección y circuitos' })).toBeVisible()
+
+    const toggleBtn = screen.getByRole('button', { name: 'Ocultar panel lateral' })
+    await user.click(toggleBtn)
+
+    expect(screen.queryByRole('complementary', { name: 'Panel de inspección y circuitos' })).not.toBeInTheDocument()
+
+    const openBtn = screen.getByRole('button', { name: 'Mostrar panel lateral' })
+    expect(openBtn).toBeVisible()
+
+    await user.click(openBtn)
+    expect(await screen.findByRole('complementary', { name: 'Panel de inspección y circuitos' })).toBeVisible()
+  })
 })

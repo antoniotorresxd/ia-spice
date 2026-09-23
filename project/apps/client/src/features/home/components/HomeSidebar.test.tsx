@@ -225,3 +225,27 @@ it('renders resizer handle when not collapsed and handles double-click to reset 
   expect(document.documentElement.style.getPropertyValue('--sidebar-width')).toBe('240px')
 })
 
+it('allows keyboard resizing with arrow keys', () => {
+  render(
+    <ThemeProvider><MemoryRouter>
+      <HomeSidebar
+        conversations={[]}
+        isOpen
+        onClose={vi.fn()}
+        onSignOut={vi.fn()}
+        userName="Antonio"
+      />
+    </MemoryRouter></ThemeProvider>,
+  )
+
+  const resizer = screen.getByRole('separator', { name: 'Redimensionar barra lateral' })
+  expect(resizer).toBeInTheDocument()
+
+  fireEvent.keyDown(resizer, { key: 'ArrowRight' })
+  expect(Number.parseInt(document.documentElement.style.getPropertyValue('--sidebar-width'), 10)).toBeGreaterThan(240)
+
+  fireEvent.keyDown(resizer, { key: 'ArrowLeft' })
+  expect(document.documentElement.style.getPropertyValue('--sidebar-width')).toBe('240px')
+})
+
+

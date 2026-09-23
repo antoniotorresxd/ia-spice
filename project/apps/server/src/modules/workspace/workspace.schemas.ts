@@ -108,12 +108,12 @@ export function deriveExecutionStages(
     stages?: ExecutionStage[];
   } | null;
 
-  if (Array.isArray(verdict?.stages) && verdict.stages.length > 0) {
-    return verdict.stages;
-  }
-
   if (verdict?.mode === "chat" || verdict?.mode === "clarify") {
     return [];
+  }
+
+  if (Array.isArray(verdict?.stages) && verdict.stages.length > 0) {
+    return verdict.stages;
   }
 
   if (latestExecution.status === "active") {
@@ -262,13 +262,16 @@ export function toConversationDetail(
       components: item.components,
       measurementExplanation: item.measurementExplanation,
     })),
-    execution: {
-      id: latestExecution?.id ?? `${row.id}-execution`,
-      status: latestExecution?.status ?? ("failed" as const),
-      summary: latestExecution?.summary ?? MISSING_EXECUTION_SUMMARY,
-      mode: deriveExecutionMode(latestExecution, artifacts.length),
-      stages: stages ?? deriveExecutionStages(latestExecution, artifacts),
-    },
+    execution: (() => {
+      const mode = deriveExecutionMode(latestExecution, artifacts.length);
+      return {
+        id: latestExecution?.id ?? `${row.id}-execution`,
+        status: latestExecution?.status ?? ("failed" as const),
+        summary: latestExecution?.summary ?? MISSING_EXECUTION_SUMMARY,
+        mode,
+        stages: mode === "chat" || mode === "clarify" ? [] : (stages ?? deriveExecutionStages(latestExecution, artifacts)),
+      };
+    })(),
   };
 }
 
