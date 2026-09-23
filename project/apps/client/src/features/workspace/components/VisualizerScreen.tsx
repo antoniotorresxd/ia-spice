@@ -1,4 +1,5 @@
 import {
+  Activity,
   ArrowUpRight,
   Check,
   ChevronDown,
@@ -12,12 +13,14 @@ import { Link, useSearchParams } from 'react-router-dom'
 
 import { parseNetlist } from '../model/netlist-diagram'
 import type {
+  BlockSimResult,
   WorkspaceConversationDetail,
   WorkspaceFileItem,
   WorkspaceSnapshot,
 } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
 import { CircuitExplanation, NetlistDiagram } from './NetlistDiagram'
+import { SimulationChart } from './SimulationChart'
 import styles from './VisualizerScreen.module.css'
 
 const DEFAULT_CIRCUIT = `.title Divisor de voltaje
@@ -178,6 +181,8 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
   const [selectedWorkspaceFileId, setSelectedWorkspaceFileId] = useState<string>('')
   const [activeFileSummary, setActiveFileSummary] = useState<string | null>(null)
+  const [activeFileSimResult, setActiveFileSimResult] = useState<BlockSimResult | null>(null)
+  const [viewMode, setViewMode] = useState<'schematic' | 'simulation'>('schematic')
   const [cache, setCache] = useState<Record<string, WorkspaceConversationDetail>>({})
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false)
 
@@ -237,6 +242,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
         setCode(fileObj.content)
         setDrawnNetlist(fileObj.content)
         setActiveFileSummary(fileObj.summary ?? null)
+        setActiveFileSimResult(fileObj.simResult ?? null)
       }
     }
 
@@ -253,6 +259,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
     setSelectedWorkspaceFileId(fileId)
     if (!fileId) {
       setActiveFileSummary(null)
+      setActiveFileSimResult(null)
       setSearchParams({}, { replace: true })
       return
     }
@@ -269,6 +276,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
         setCode(fileObj.content)
         setDrawnNetlist(fileObj.content)
         setActiveFileSummary(fileObj.summary ?? null)
+        setActiveFileSimResult(fileObj.simResult ?? null)
       }
     } else {
       service
@@ -280,6 +288,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
             setCode(fileObj.content)
             setDrawnNetlist(fileObj.content)
             setActiveFileSummary(fileObj.summary ?? null)
+            setActiveFileSimResult(fileObj.simResult ?? null)
           }
         })
         .catch(() => {
@@ -294,6 +303,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
     if (selectedWorkspaceFileId || queryFileId || queryConversationId) {
       setSelectedWorkspaceFileId('')
       setActiveFileSummary(null)
+      setActiveFileSimResult(null)
       setSearchParams({}, { replace: true })
     }
   }
@@ -420,11 +430,44 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
 
         {/* Right Column: Full-Height Canvas Viewport */}
         <section className={styles.displayColumn} aria-label="Visualización y análisis del circuito">
-          <NetlistDiagram
-            netlistText={drawnNetlist}
-            workspaceSummary={activeFileSummary}
-            showExplanation={false}
-          />
+          {activeFileSimResult?.curve && activeFileSimResult.curve.length > 0 && (
+            <div className={styles.viewToggleWrap}>
+              <button
+                type="button"
+                className={`${styles.viewToggleBtn} ${viewMode === 'schematic' ? styles.viewToggleBtnActive : ''}`}
+                onClick={() => setViewMode('schematic')}
+              >
+                <span>Diagrama Esquemático</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.viewToggleBtn} ${viewMode === 'simulation' ? styles.viewToggleBtnActive : ''}`}
+                onClick={() => setViewMode('simulation')}
+              >
+                <Activity size={13} />
+                <span>Curva de Simulación SPICE</span>
+              </button>
+            </div>
+          )}
+
+          {viewMode === 'simulation' && activeFileSimResult?.curve && activeFileSimResult.curve.length > 0 ? (
+            <SimulationChart
+              curve={activeFileSimResult.curve}
+              analysisType={activeFileSimResult.analysis_type}
+              xUnit={activeFileSimResult.x_unit}
+              yUnit={activeFileSimResult.y_unit}
+              metricName={activeFileSimResult.metric_name}
+              measuredValue={activeFileSimResult.measured_value}
+              targetValue={activeFileSimResult.target_value}
+              title={`Simulación SPICE: ${currentWorkspaceFile?.name ?? 'Circuito'}`}
+            />
+          ) : (
+            <NetlistDiagram
+              netlistText={drawnNetlist}
+              workspaceSummary={activeFileSummary}
+              showExplanation={false}
+            />
+          )}
         </section>
       </div>
     </article>

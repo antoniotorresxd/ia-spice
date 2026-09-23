@@ -121,9 +121,16 @@ def solve_opamp_highpass_active(params: dict[str, Any]) -> dict[str, float]:
     gain = _param(params, "gain", default=2.0)
     c = _param(params, "c", default=1e-8)
     rg = _param(params, "rg", default=10000.0)
-    r1 = 1.0 / (2 * math.pi * fc * c)
+    r = 1.0 / (2 * math.pi * fc * c)
     rf = (gain - 1.0) * rg if gain > 1.0 else rg
-    return {"C": c, "R1": round(r1, 2), "Rf": round(rf, 2), "Rg": rg}
+    return {
+        "C": c,
+        "R": round(r, 2),
+        "R1": rg,
+        "Rg": rg,
+        "Rf": round(rf, 2),
+        "f_c": fc,
+    }
 
 
 def solve_opamp_noninverting_amp(params: dict[str, Any]) -> dict[str, float]:

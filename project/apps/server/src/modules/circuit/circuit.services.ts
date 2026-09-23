@@ -267,8 +267,8 @@ Eout out 0 n2 0 1
 
 .control
 ac dec 100 1 1e9
-let g_db = vdb(vout)[100]
-let g_3db = g_db - 3.0103
+meas ac gpass FIND vdb(vout) AT=1e6
+let g_3db = gpass - 3.0103
 meas ac fc WHEN vdb(vout)=g_3db
 echo $&fc > output.txt
 .endc

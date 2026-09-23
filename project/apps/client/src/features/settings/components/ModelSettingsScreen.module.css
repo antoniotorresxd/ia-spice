@@ -1450,4 +1450,89 @@
   border-color: rgba(234, 179, 8, 0.3);
 }
 
+.curatorParamsBody {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.5rem;
+}
+
+.paramCard {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.paramHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.paramHeader strong {
+  display: block;
+  color: #f1f5f9;
+  font-size: 0.92rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.paramHeader p {
+  margin: 0;
+  color: var(--color-text-muted, #94a3b8);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.paramValueBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(200, 121, 61, 0.12);
+  border: 1px solid rgba(200, 121, 61, 0.3);
+  color: var(--color-mint, #c8793d);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sliderRow {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.paramSlider {
+  width: 100%;
+  accent-color: var(--color-mint, #c8793d);
+  cursor: pointer;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sliderMarkers {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.72rem;
+}
+
+:global(.light) .paramCard {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+:global(.light) .paramHeader strong {
+  color: #1e293b;
+}
+
+:global(.light) .paramSlider {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+
 

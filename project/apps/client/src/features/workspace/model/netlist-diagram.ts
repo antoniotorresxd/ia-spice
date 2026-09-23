@@ -399,11 +399,23 @@ export function componentValue(e: NetlistElement): string {
 export const VCC_Y = 60
 export const COL_ROUTE_Y = 120
 export const RAIL_Y = 200
+export const OPAMP_INP_Y = 186
+export const OPAMP_INN_Y = 214
 export const EMI_Y = 275
 export const GROUND_Y = 390
 export const BRANCH_SPACING = 120
 export const SERIES_SPACING = 155
 export const MARGIN_X = 70
+
+export function getOpampPins(nodes: string[]): { inp: string; inn: string; out: string } {
+  if (nodes.length >= 5) {
+    return { inp: nodes[0], inn: nodes[1], out: nodes[nodes.length - 1] }
+  }
+  if (nodes.length === 4) {
+    return { inp: nodes[0], inn: nodes[1], out: nodes[3] }
+  }
+  return { inp: nodes[0] ?? 'in', inn: nodes[1] ?? 'fb', out: nodes[2] ?? 'out' }
+}
 
 export type LayoutSymbol =
   | { type: 'resistorH'; x1: number; x2: number; y: number; name: string; value: string }
@@ -426,11 +438,25 @@ export type LayoutSymbol =
     }
   | { type: 'sourceV'; x: number; y1: number; y2: number; name: string; value: string; isAc: boolean }
   | { type: 'sourceH'; x1: number; x2: number; y: number; name: string; value: string; isAc: boolean }
-  | { type: 'opamp'; cx: number; inTopX: number; inBotX: number; outX: number }
+  | {
+      type: 'opamp'
+      cx: number
+      inTopX: number
+      inBotX: number
+      outX: number
+      left?: number
+      right?: number
+      name?: string
+      value?: string
+      inpIsGround?: boolean
+      innIsGround?: boolean
+      isBuffer?: boolean
+    }
   | { type: 'bjt'; cx: number; collectorX: number; baseX: number; emitterX: number; name: string; value: string }
   | { type: 'wireH'; x1: number; x2: number; y: number; name: string; value: string }
   | { type: 'wireV'; x: number; y1: number; y2: number }
   | { type: 'wireHopH'; x1: number; x2: number; y: number; hopX: number }
+  | { type: 'nodeDot'; x: number; y: number }
 
 export type NodeBus = {
   node: string
@@ -826,16 +852,56 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
   const seriesElements: NetlistElement[] = []
   const opampElements: NetlistElement[] = []
   const bjtElements: NetlistElement[] = []
+  const opampPinMap = new Map<NetlistElement, { inp: string; inn: string; out: string }>()
+  const opampInnNodes = new Set<string>()
 
   for (const e of parsed.elements) {
     if (e.kind === 'X') {
       opampElements.push(e)
-      continue
-    }
-    if (e.kind === 'Q') {
+      const pins = getOpampPins(e.nodes)
+      opampPinMap.set(e, pins)
+      if (pins.inn !== GROUND && pins.inn !== pins.out) {
+        opampInnNodes.add(pins.inn)
+      }
+    } else if (e.kind === 'Q') {
       bjtElements.push(e)
-      continue
     }
+  }
+
+  // Detectar elementos de retroalimentación de amplificadores operacionales (ej. Rf, Cf entre out e inn/inp)
+  const feedbackElementMap = new Map<
+    NetlistElement,
+    { opamp: NetlistElement; isTop: boolean; targetNode: string }
+  >()
+  const feedbackElements = new Set<NetlistElement>()
+
+  for (const op of opampElements) {
+    const pins = opampPinMap.get(op)!
+    for (const elem of parsed.elements) {
+      if (elem.kind === 'X' || elem.kind === 'Q') continue
+      const [a, b] = elem.nodes
+      if (
+        pins.inn !== GROUND &&
+        pins.inn !== pins.out &&
+        ((a === pins.out && b === pins.inn) || (b === pins.out && a === pins.inn))
+      ) {
+        feedbackElements.add(elem)
+        feedbackElementMap.set(elem, { opamp: op, isTop: false, targetNode: pins.inn })
+      } else if (
+        pins.inp !== GROUND &&
+        pins.inp !== pins.out &&
+        ((a === pins.out && b === pins.inp) || (b === pins.out && a === pins.inp))
+      ) {
+        feedbackElements.add(elem)
+        feedbackElementMap.set(elem, { opamp: op, isTop: true, targetNode: pins.inp })
+      }
+    }
+  }
+
+  for (const e of parsed.elements) {
+    if (e.kind === 'X' || e.kind === 'Q') continue
+    if (feedbackElements.has(e)) continue // Se manejará como bucle de retroalimentación dedicado
+
     const [a, b] = e.nodes
 
     // La propia fuente Vcc a tierra define el raíl
@@ -884,13 +950,28 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
 
   for (const n of sortedNodes) {
     const d = depth[n]
-    // Dos nodos DISTINTOS nunca deben compartir coordenada X, aunque caigan
-    // a la misma profundidad topológica (ramas en paralelo, o subgrafos
-    // desconectados que el fallback de computeDepths ancla todos en 0): sin
-    // este avance, el segundo nodo hereda el curX del primero y sus símbolos
-    // quedan dibujados exactamente encima uno del otro.
     if (lastDepth !== -1) {
       curX += d !== lastDepth ? SERIES_SPACING : BRANCH_SPACING
+    }
+
+    // Si n es la salida de un opamp, asegurar que haya espacio suficiente para el cuerpo del opamp
+    // entre las entradas (inp, inn) y la salida (out).
+    const opWhereOut = opampElements.find((op) => opampPinMap.get(op)?.out === n)
+    if (opWhereOut) {
+      const pins = opampPinMap.get(opWhereOut)!
+      const inX1 = pins.inp !== GROUND ? (nodeEndX[pins.inp] ?? nodeStartX[pins.inp] ?? 0) : 0
+      const inX2 =
+        pins.inn !== GROUND && pins.inn !== pins.out
+          ? (nodeEndX[pins.inn] ?? nodeStartX[pins.inn] ?? 0)
+          : 0
+      const maxInX = Math.max(inX1, inX2)
+      if (maxInX > 0) {
+        // Espacio: maxInX -> holgura 45px -> opamp (64px) -> holgura 60px -> out
+        const requiredX = maxInX + 45 + 64 + 60
+        if (curX < requiredX) {
+          curX = requiredX
+        }
+      }
     }
 
     const shunts = nodeShunts[n] ?? []
@@ -927,7 +1008,16 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     const shunts = nodeShunts[n] ?? []
     const branches = nodeBranches[n] ?? []
     const isEmi = emitterNodes.has(n)
-    const shuntY1 = isEmi ? EMI_Y : RAIL_Y
+    const isOpampInn = opampInnNodes.has(n)
+    const shuntY1 = isEmi ? EMI_Y : isOpampInn ? OPAMP_INN_Y : RAIL_Y
+
+    if (isOpampInn) {
+      // Si hay elementos serie en el raíl superior que llegan a este nodo, unir con vertical
+      const hasSeriesArriving = seriesElements.some((se) => se.nodes.includes(n))
+      if (hasSeriesArriving) {
+        symbols.push({ type: 'wireV', x: nodeStartX[n], y1: RAIL_Y, y2: OPAMP_INN_Y })
+      }
+    }
 
     shunts.forEach((e, idx) => {
       const x = branches[idx] ?? nodeStartX[n]
@@ -955,7 +1045,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
         symbols.push({
           type: 'diodeV',
           x,
-          y1: RAIL_Y,
+          y1: shuntY1,
           y2: GROUND_Y,
           name: e.name,
           value: valStr,
@@ -975,7 +1065,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
         symbols.push({
           type: 'sourceV',
           x,
-          y1: RAIL_Y,
+          y1: shuntY1,
           y2: GROUND_Y,
           name: e.name,
           value: fmtSource(e.extra),
@@ -1071,16 +1161,92 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
 
   // 3. Ubicar operacionales (X)
   for (const e of opampElements) {
-    const [inp, inn, out] = e.nodes
-    const inTop = nodeStartX[inp] ?? MARGIN_X
-    const inBot = nodeStartX[inn] ?? MARGIN_X
-    const outNode = nodeStartX[out] ?? curX + SERIES_SPACING
-    const cx = (inTop + outNode) / 2
-    symbols.push({ type: 'opamp', cx, inTopX: inTop, inBotX: inBot, outX: outNode })
+    const pins = opampPinMap.get(e)!
+    const inTop = pins.inp !== GROUND ? (nodeStartX[pins.inp] ?? MARGIN_X) : MARGIN_X
+    const inBot = pins.inn !== GROUND && pins.inn !== pins.out ? (nodeStartX[pins.inn] ?? MARGIN_X) : MARGIN_X
+    const maxInX = Math.max(
+      pins.inp !== GROUND && nodeEndX[pins.inp] !== undefined ? nodeEndX[pins.inp] : inTop,
+      pins.inn !== GROUND && pins.inn !== pins.out && nodeEndX[pins.inn] !== undefined ? nodeEndX[pins.inn] : inBot,
+    )
+    const outNode = nodeStartX[pins.out] ?? curX + SERIES_SPACING
+    const left = Math.max(maxInX + 45, MARGIN_X + 40)
+    const cx = left + 32
+    const right = left + 64
+    const isBuffer = pins.inn === pins.out
+
+    symbols.push({
+      type: 'opamp',
+      cx,
+      left,
+      right,
+      inTopX: inTop,
+      inBotX: inBot,
+      outX: outNode,
+      name: e.name,
+      value: e.extra || 'opamp',
+      inpIsGround: pins.inp === GROUND,
+      innIsGround: pins.inn === GROUND,
+      isBuffer,
+    })
     usedSymbols.add('opamp')
   }
 
-  // 4. Ubicar transistores BJT (Q)
+  // 4. Ubicar bucles de retroalimentación de amplificadores operacionales
+  const opampFeedbackList = Array.from(feedbackElements)
+  for (let idx = 0; idx < opampFeedbackList.length; idx++) {
+    const elem = opampFeedbackList[idx]
+    const info = feedbackElementMap.get(elem)!
+    const op = info.opamp
+    const pins = opampPinMap.get(op)!
+
+    const inTop = pins.inp !== GROUND ? (nodeStartX[pins.inp] ?? MARGIN_X) : MARGIN_X
+    const inBot = pins.inn !== GROUND && pins.inn !== pins.out ? (nodeStartX[pins.inn] ?? MARGIN_X) : MARGIN_X
+    const maxInX = Math.max(
+      pins.inp !== GROUND && nodeEndX[pins.inp] !== undefined ? nodeEndX[pins.inp] : inTop,
+      pins.inn !== GROUND && pins.inn !== pins.out && nodeEndX[pins.inn] !== undefined ? nodeEndX[pins.inn] : inBot,
+    )
+    const left = Math.max(maxInX + 45, MARGIN_X + 40)
+    const right = left + 64
+    const outX = nodeStartX[pins.out] ?? right + 70
+
+    // Punto de toma en la salida
+    const tapX = Math.round((right + outX) / 2)
+
+    // Punto de llegada al pin/nodo de entrada: entre inNodeX y left
+    const inNodeX = nodeStartX[info.targetNode] ?? maxInX
+    const fbLeftX = Math.round((inNodeX + left) / 2)
+
+    const fbY = info.isTop
+      ? RAIL_Y - 70 - idx * 45
+      : RAIL_Y + 75 + idx * 45
+    const targetY = info.isTop ? OPAMP_INP_Y : OPAMP_INN_Y
+
+    // 1. Tramo vertical desde la salida hasta la pista de retroalimentación
+    symbols.push({ type: 'wireV', x: tapX, y1: Math.min(RAIL_Y, fbY), y2: Math.max(RAIL_Y, fbY) })
+    symbols.push({ type: 'nodeDot', x: tapX, y: RAIL_Y })
+
+    // 2. Componente de retroalimentación en la pista fbY
+    const x1 = Math.min(fbLeftX, tapX)
+    const x2 = Math.max(fbLeftX, tapX)
+    if (elem.kind === 'R') {
+      symbols.push({ type: 'resistorH', x1, x2, y: fbY, name: elem.name, value: fmtOhms(elem.extra) })
+      usedSymbols.add('resistor')
+    } else if (elem.kind === 'C') {
+      symbols.push({ type: 'capacitorH', x1, x2, y: fbY, name: elem.name, value: fmtFarads(elem.extra) })
+      usedSymbols.add('capacitor')
+    } else if (elem.kind === 'L') {
+      symbols.push({ type: 'inductorH', x1, x2, y: fbY, name: elem.name, value: fmtHenries(elem.extra) })
+      usedSymbols.add('inductor')
+    } else {
+      symbols.push({ type: 'wireH', x1, x2, y: fbY, name: elem.name, value: elem.extra })
+    }
+
+    // 3. Tramo vertical desde fbY hasta targetY
+    symbols.push({ type: 'wireV', x: fbLeftX, y1: Math.min(targetY, fbY), y2: Math.max(targetY, fbY) })
+    symbols.push({ type: 'nodeDot', x: fbLeftX, y: targetY })
+  }
+
+  // 5. Ubicar transistores BJT (Q)
   for (const e of bjtElements) {
     const [col, base, emi] = e.nodes
     const bx = nodeStartX[base] ?? MARGIN_X
@@ -1166,7 +1332,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     xStart: nodeStartX[n] ?? MARGIN_X,
     xEnd: nodeEndX[n] ?? MARGIN_X,
     branches: nodeBranches[n] ?? [],
-    y: emitterNodes.has(n) ? EMI_Y : RAIL_Y,
+    y: emitterNodes.has(n) ? EMI_Y : opampInnNodes.has(n) ? OPAMP_INN_Y : RAIL_Y,
   }))
 
   const allXs = [

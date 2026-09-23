@@ -1304,3 +1304,568 @@
   color: #0f172a;
 }
 
+/* Teams-style Rich Composer & Mode Toggle */
+.screen .composerExpanded {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  border-radius: 16px !important;
+  padding: 0.65rem 0.85rem 0.65rem 1rem !important;
+  gap: 0.45rem !important;
+}
+
+.composerFormatBar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:global(.light) .composerFormatBar {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+.formatBarBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.formatBarBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+}
+
+:global(.light) .formatBarBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+.composerFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:global(.light) .composerFooter {
+  border-top-color: rgba(0, 0, 0, 0.05);
+}
+
+.composerHint {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  opacity: 0.75;
+  user-select: none;
+}
+
+.formatToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.formatToggleBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+}
+
+:global(.light) .formatToggleBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+.formatToggleBtnActive {
+  background: rgba(200, 121, 61, 0.15) !important;
+  color: var(--color-mint) !important;
+  border-color: rgba(200, 121, 61, 0.35) !important;
+}
+
+/* Lateral Diagnostics & Langfuse Trace Cards */
+.lateralDiagnosticCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  border: 1px solid var(--color-border);
+}
+
+.lateralDiagnosticFailed {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.28);
+}
+
+.lateralDiagnosticSuccess {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+.lateralDiagnosticTitle {
+  font-weight: 700;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.lateralDiagnosticFailed .lateralDiagnosticTitle {
+  color: #ef4444;
+}
+
+.lateralDiagnosticSuccess .lateralDiagnosticTitle {
+  color: #22c55e;
+}
+
+.lateralTraceCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+}
+
+:global(.light) .lateralTraceCard {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.lateralTraceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+}
+
+.lateralTraceIdRow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.lateralTraceId {
+  font-family: monospace;
+  font-size: 0.74rem;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+:global(.light) .lateralTraceId {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.traceActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.74rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.traceActionBtn:hover {
+  color: var(--color-mint);
+  border-color: var(--color-mint);
+}
+
+/* Subpestañas del Inspector Lateral */
+.inspectorTabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.85rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+:global(.light) .inspectorTabs {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.inspectorTabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inspectorTabBtn:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global(.light) .inspectorTabBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.inspectorTabActive {
+  color: var(--color-mint) !important;
+  background: rgba(200, 121, 61, 0.12) !important;
+  border-color: rgba(200, 121, 61, 0.3) !important;
+}
+
+/* Acciones de descarga de circuito */
+.circuitDownloadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.circuitDownloadBtn:hover {
+  border-color: var(--color-mint);
+  color: var(--color-mint);
+  background: rgba(200, 121, 61, 0.1);
+}
+
+:global(.light) .circuitDownloadBtn {
+  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/* Pestaña de Traza y Diagnóstico */
+.traceSection {
+  display: grid;
+  gap: 1rem;
+}
+
+.traceStagesList {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.traceStageCard {
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.02);
+  display: grid;
+  gap: 0.4rem;
+}
+
+:global(.light) .traceStageCard {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.traceStageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.traceStageName {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.traceStageActor {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.traceStageDuration {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-family: monospace;
+}
+
+.traceStageStatus {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.traceStatusCompleted {
+  background: rgba(69, 214, 196, 0.15);
+  color: var(--color-mint);
+  border: 1px solid rgba(69, 214, 196, 0.3);
+}
+
+.traceStatusFailed {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.traceStatusActive {
+  background: rgba(255, 218, 121, 0.15);
+  color: #ffda79;
+  border: 1px solid rgba(255, 218, 121, 0.3);
+}
+
+.traceStatusPending {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.traceStageSummary {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.traceAdviceCard {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 180, 0, 0.08);
+  border: 1px solid rgba(255, 180, 0, 0.25);
+  color: #ffd166;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.emptyTabState {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+/* Langfuse In-App Trace Tree */
+.langfuseTraceWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.langfuseHeaderCard {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.langfuseMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.langfuseTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-emphasis);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.langfuseStats {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.langfuseStatVal {
+  color: #38bdf8;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+}
+
+.generationList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.generationCard {
+  background: var(--color-surface, #12151c);
+  border: 1px solid var(--color-border, #1e2430);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.generationCard:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.generationCardHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.8rem;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  gap: 0.5rem;
+}
+
+.generationTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.generationName {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-emphasis);
+}
+
+.generationModelBadge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  font-family: var(--font-mono, monospace);
+}
+
+.generationMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.generationContent {
+  padding: 0.75rem 0.85rem;
+  border-top: 1px solid var(--color-border, #1e2430);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.traceBlockLabel {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+}
+
+.traceCodeBox {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+  max-height: 220px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.circuitSimBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.08);
+  color: #38bdf8;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.circuitSimBtn:hover {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: #38bdf8;
+}
+
+.circuitSimBtnActive {
+  background: #38bdf8;
+  color: #0f172a;
+  border-color: #38bdf8;
+  font-weight: 600;
+}
+
+

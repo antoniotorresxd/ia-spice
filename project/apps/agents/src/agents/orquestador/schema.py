@@ -164,6 +164,14 @@ class OrchestratorResult(BaseModel):
     para tool calling, pero sí un objeto con un campo discriminado adentro.
     """
 
+    pensamiento_ingenieril: str = Field(
+        default="",
+        description=(
+            "Analiza el problema con conceptos de ingeniería electrónica (Sedra/Boylestad): "
+            "identifica si se resuelve con una topología del catálogo, si se compone en cascada "
+            "por etapas (ej. pasa-banda = pasa-altos + pasa-bajos), o si requiere clarificación."
+        ),
+    )
     outcome: Annotated[
         ChatOutcome | ClarifyOutcome | DesignOutcome,
         Field(discriminator="mode"),

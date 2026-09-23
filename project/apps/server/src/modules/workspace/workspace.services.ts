@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, inArray, lt, sql } from "drizzle-orm";
 
 import { db } from "@/db";
+import env from "@/lib/env";
 
 import { artifact, conversation, execution, message, project } from "./workspace.model";
 import {
@@ -547,12 +548,14 @@ export function makeDbSink(conversationId: string, executionId: string, previous
       }
 
       const verdictToStore = result.verdict
-        ? { ...result.verdict, stages: finalStages }
+        ? { ...result.verdict, stages: finalStages, sim_results: result.sim_results }
         : result.outcome
-          ? { mode: result.outcome.mode, stages: finalStages }
+          ? { mode: result.outcome.mode, stages: finalStages, sim_results: result.sim_results }
           : finalStages
-            ? { stages: finalStages }
-            : null;
+            ? { stages: finalStages, sim_results: result.sim_results }
+            : result.sim_results
+              ? { sim_results: result.sim_results }
+              : null;
 
       await db
         .update(execution)
@@ -585,6 +588,12 @@ export function makeDbSink(conversationId: string, executionId: string, previous
         .set({ status: "failed", summary, finishedAt: new Date() })
         .where(eq(execution.id, executionId));
 
+      await db.insert(message).values({
+        conversationId,
+        role: "assistant",
+        content: `Error al procesar el circuito: ${summary}`,
+      });
+
       await db
         .update(conversation)
         .set({ updatedAt: new Date() })
@@ -596,4 +605,44 @@ export function makeDbSink(conversationId: string, executionId: string, previous
       });
     },
   };
+}
+
+export async function getConversationTrace(userId: string, id: string) {
+  const parts = await loadConversationParts(userId, id);
+  if (!parts) return null;
+  if (!parts.latestExecution) {
+    return {
+      status: "not_found",
+      executionId: null,
+      message: "No execution found for conversation",
+    };
+  }
+
+  const executionId = parts.latestExecution.id;
+  try {
+    const res = await fetch(`${env.AGENTS_BASE_URL}/runs/${executionId}/trace`, {
+      headers: {
+        authorization: `Bearer ${env.AGENTS_API_TOKEN}`,
+      },
+    });
+    if (!res.ok) {
+      return {
+        status: "unavailable",
+        executionId,
+        message: `Agents service responded with status ${res.status}`,
+      };
+    }
+    const trace = await res.json();
+    return {
+      status: "ok",
+      executionId,
+      trace,
+    };
+  } catch (err) {
+    return {
+      status: "unavailable",
+      executionId,
+      message: (err as Error).message,
+    };
+  }
 }

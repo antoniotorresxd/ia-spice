@@ -166,6 +166,7 @@ describe("toConversationDetail", () => {
         tags: ["divisor", "resistivo"],
         components: { R1: "Resistencia de entrada." },
         measurementExplanation: "Mide el voltaje de salida.",
+        simResult: null,
       },
     ]);
     expect(detail.execution.id).toBe("exec-1");
@@ -198,6 +199,7 @@ describe("toConversationDetail", () => {
       tags: null,
       components: null,
       measurementExplanation: null,
+      simResult: null,
     }]);
   });
 

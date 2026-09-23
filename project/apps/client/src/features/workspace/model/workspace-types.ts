@@ -9,12 +9,27 @@ export type WorkspaceMessage = {
   createdAt: string
 }
 
+export type SimCurvePoint = { x: number; y: number }
+
+export type BlockSimResult = {
+  metrics: Record<string, number> | null
+  sim_error: string | null
+  curve?: SimCurvePoint[] | null
+  analysis_type?: string | null
+  x_unit?: string | null
+  y_unit?: string | null
+  metric_name?: string | null
+  measured_value?: number | null
+  target_value?: number | null
+}
+
 export type WorkspaceExecution = {
   id: string
   status: WorkspaceExecutionStatus
   summary: string
   mode?: 'chat' | 'clarify' | 'design'
   stages?: ExecutionStage[]
+  simResults?: Record<string, BlockSimResult> | null
 }
 
 export type WorkspaceFile = {
@@ -27,6 +42,39 @@ export type WorkspaceFile = {
   tags: string[] | null
   components: Record<string, string> | null
   measurementExplanation: string | null
+  simResult?: BlockSimResult | null
+}
+
+export type TraceGeneration = {
+  name: string
+  model: string
+  input: unknown
+  output: unknown
+  usage?: {
+    prompt_tokens?: number
+    completion_tokens?: number
+    total_tokens?: number
+  } | null
+  latency_s?: number | null
+  status_message?: string | null
+  level?: string | null
+}
+
+export type ExecutionTraceData = {
+  id?: string
+  name?: string
+  timestamp?: string
+  latency_s?: number | null
+  status?: string
+  total_tokens?: number
+  generations?: TraceGeneration[]
+}
+
+export type TraceResponse = {
+  status: 'ok' | 'unavailable' | 'not_found'
+  executionId?: string | null
+  message?: string
+  trace?: ExecutionTraceData
 }
 
 export type WorkspaceFileItem = {

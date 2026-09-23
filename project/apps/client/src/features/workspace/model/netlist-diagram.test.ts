@@ -276,3 +276,87 @@ it('reconoce y genera el esquema limpio de puente rectificador de onda completa'
   }
 })
 
+it('ubica el amplificador operacional y su bucle de retroalimentación de forma limpia sin colisiones', () => {
+  const parsed = parseNetlist(AMP)
+  const diagram = buildDiagram(parsed)
+
+  expect(diagram.usedSymbols.has('opamp')).toBe(true)
+  expect(diagram.usedSymbols.has('resistor')).toBe(true)
+
+  // Nodos vin, vfb y vout tienen coordenadas X estrictamente crecientes
+  expect(diagram.nodeXs.vin).toBeLessThan(diagram.nodeXs.vfb)
+  expect(diagram.nodeXs.vfb).toBeLessThan(diagram.nodeXs.vout)
+
+  const opamp = diagram.symbols.find((s) => s.type === 'opamp')
+  expect(opamp).toBeDefined()
+  if (opamp && opamp.type === 'opamp') {
+    // El cuerpo del opamp (left) se posiciona a la derecha de vfb (entrada inversora)
+    const opLeft = opamp.left ?? opamp.cx - 32
+    expect(opLeft).toBeGreaterThan(diagram.nodeXs.vfb)
+    // La salida (vout) se posiciona a la derecha del extremo de salida del opamp
+    const opRight = opamp.right ?? opamp.cx + 32
+    expect(diagram.nodeXs.vout).toBeGreaterThan(opRight)
+  }
+
+  // La resistencia de realimentación Rf se enruta por una pista inferior dedicada (fbY > RAIL_Y)
+  const rf = diagram.symbols.find((s) => 'name' in s && s.name === 'Rf')
+  expect(rf).toBeDefined()
+  if (rf && 'y' in rf) {
+    expect(rf.y).toBeGreaterThan(200) // Mayor que RAIL_Y (200)
+  }
+
+  // La resistencia a tierra Rg se ubica en el nodo vfb y cae a tierra
+  const rg = diagram.symbols.find((s) => 'name' in s && s.name === 'Rg')
+  expect(rg?.type).toBe('resistorV')
+  if (rg && rg.type === 'resistorV') {
+    expect(rg.x).toBe(diagram.nodeXs.vfb)
+  }
+})
+
+it('resuelve correctamente el filtro activo pasaaltas (Active HP) con capacitor en serie y opamp', () => {
+  const activeHp = [
+    '* Active HP',
+    'Vin vin 0 DC 0 AC 1',
+    'C1 vin vplus 10n',
+    'R1 vplus 0 79.58k',
+    'X1 vplus vfb vout opamp',
+    'Rg vfb 0 10k',
+    'Rf vout vfb 10k',
+  ].join('\n')
+
+  const parsed = parseNetlist(activeHp)
+  const diagram = buildDiagram(parsed)
+
+  expect(diagram.usedSymbols.has('opamp')).toBe(true)
+  expect(diagram.usedSymbols.has('capacitor')).toBe(true)
+  expect(diagram.usedSymbols.has('resistor')).toBe(true)
+
+  // Separación clara y no colisionante de todos los nodos
+  const xs = Object.values(diagram.nodeXs)
+  expect(new Set(xs).size).toBe(xs.length)
+  expect(diagram.nodeXs.vin).toBeLessThan(diagram.nodeXs.vplus)
+  expect(diagram.nodeXs.vplus).toBeLessThan(diagram.nodeXs.vfb)
+  expect(diagram.nodeXs.vfb).toBeLessThan(diagram.nodeXs.vout)
+
+  const opamp = diagram.symbols.find((s) => s.type === 'opamp')
+  expect(opamp).toBeDefined()
+  if (opamp && opamp.type === 'opamp') {
+    const opLeft = opamp.left ?? opamp.cx - 32
+    // El opamp se ubica después de vfb, sin colisionar con vfb ni con Rg
+    expect(opLeft).toBeGreaterThan(diagram.nodeXs.vfb)
+    const opRight = opamp.right ?? opamp.cx + 32
+    expect(diagram.nodeXs.vout).toBeGreaterThan(opRight)
+  }
+
+  // C1 está en serie entre vin y vplus
+  const c1 = diagram.symbols.find((s) => 'name' in s && s.name === 'C1')
+  expect(c1?.type).toBe('capacitorH')
+
+  // Rf está en el bucle de realimentación por debajo del opamp
+  const rf = diagram.symbols.find((s) => 'name' in s && s.name === 'Rf')
+  expect(rf?.type).toBe('resistorH')
+  if (rf && 'y' in rf) {
+    expect(rf.y).toBeGreaterThan(200)
+  }
+})
+

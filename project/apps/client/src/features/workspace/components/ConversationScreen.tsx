@@ -1,12 +1,25 @@
 import {
+  Activity,
   ArrowDown,
   ArrowUpRight,
+  Bold,
+  Check,
   ChevronDown,
   ChevronUp,
+  Code,
+  Copy,
   Cpu,
+  Download,
+  FileSearch,
+  FolderGit2,
+  Italic,
+  Lightbulb,
+  List,
+  ListOrdered,
   PanelRightClose,
   PanelRightOpen,
   Pencil,
+  RefreshCw,
   Send,
   Trash2,
   X,
@@ -19,11 +32,12 @@ import { ConversationDetailSkeleton } from '@/components/ui/Skeleton'
 import { ActivityTimeline } from '../../home/components/ActivityTimeline'
 import type { ConversationExecution, ExecutionStage } from '../../home/model/home-types'
 import { useConversationPolling } from '../model/use-conversation-polling'
-import type { WorkspaceConversationDetail, WorkspaceSnapshot } from '../model/workspace-types'
+import type { TraceResponse, WorkspaceConversationDetail, WorkspaceSnapshot } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
 import { RenameConversationDialog } from './RenameConversationDialog'
 import styles from './ConversationScreen.module.css'
 import { NetlistDiagram } from './NetlistDiagram'
+import { SimulationChart } from './SimulationChart'
 
 const statusLabels = { active: 'En curso', completed: 'Completada', failed: 'Fallida' } as const
 
@@ -38,13 +52,71 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const [submitError, setSubmitError] = useState('')
   const [pending, setPending] = useState(false)
   const [previewFileId, setPreviewFileId] = useState<string | null>(null)
+  const [simCurveFileId, setSimCurveFileId] = useState<string | null>(null)
   const [isRenaming, setIsRenaming] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [copiedTraceId, setCopiedTraceId] = useState(false)
+  const [inspectorTab, setInspectorTab] = useState<'flow' | 'trace' | 'files'>('flow')
+  const [traceData, setTraceData] = useState<TraceResponse | null>(null)
+  const [isLoadingTrace, setIsLoadingTrace] = useState(false)
+  const [expandedGenerations, setExpandedGenerations] = useState<Record<number, boolean>>({})
 
+  function downloadNetlistFile(fileName: string, content: string) {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName.endsWith('.cir') ? fileName : `${fileName}.cir`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const messagesRef = useRef<HTMLDivElement | null>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const followLatest = useRef(true)
   const [scrolledDown, setScrolledDown] = useState(false)
   const [awayFromLatest, setAwayFromLatest] = useState(false)
+
+  const handleCopyTraceId = (id: string) => {
+    navigator.clipboard.writeText(id)
+    setCopiedTraceId(true)
+    setTimeout(() => setCopiedTraceId(false), 2000)
+  }
+
+  const insertFormat = (prefix: string, suffix: string = '') => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selected = text.slice(start, end)
+    const replacement = `${prefix}${selected || 'texto'}${suffix}`
+    const newText = text.slice(0, start) + replacement + text.slice(end)
+    setText(newText)
+    setTimeout(() => {
+      textarea.focus()
+      const cursorPos = start + prefix.length + (selected ? selected.length : 5)
+      textarea.setSelectionRange(cursorPos, cursorPos)
+    }, 0)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      if (isEditMode) {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault()
+          void submit()
+        }
+      } else {
+        if (!e.shiftKey) {
+          e.preventDefault()
+          void submit()
+        }
+      }
+    }
+  }
 
   const updateScroll = useCallback(() => {
     const region = messagesRef.current
@@ -133,6 +205,28 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
     return unsubscribe
   }, [conversation?.executionStatus, conversationId, refresh, service])
 
+  const loadTrace = useCallback(async () => {
+    if (!service.getTrace) return
+    setIsLoadingTrace(true)
+    try {
+      const res = await service.getTrace(conversationId)
+      setTraceData(res)
+    } catch {
+      setTraceData({ status: 'unavailable', message: 'No se pudo contactar el servicio de trazas' })
+    } finally {
+      setIsLoadingTrace(false)
+    }
+  }, [conversationId, service])
+
+  useEffect(() => {
+    if (inspectorTab === 'trace') {
+      const timer = setTimeout(() => {
+        void loadTrace()
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+  }, [inspectorTab, loadTrace, conversation?.executionStatus])
+
   const netlistFiles = useMemo(
     () => conversation?.files.filter((file) => file.language === 'spice' && file.content.trim()) ?? [],
     [conversation?.files],
@@ -220,8 +314,8 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
     }
   }
 
-  async function submit(event: FormEvent) {
-    event.preventDefault()
+  async function submit(event?: FormEvent) {
+    event?.preventDefault()
     const nextText = text.trim()
     if (!nextText) { setSubmitError('Escribe una indicación antes de continuar.'); return }
     setPending(true)
@@ -329,6 +423,15 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                       )}
                     </article>
                   )}
+                  {conversation.executionStatus === 'failed' &&
+                    conversation.messages[conversation.messages.length - 1]?.role === 'user' && (
+                      <article className={styles.message} data-role="assistant">
+                        <p className={styles.role}>Asistente</p>
+                        <p>
+                          ⚠️ {conversation.execution.summary || 'No pudimos ejecutar el diseño. Inténtalo de nuevo.'}
+                        </p>
+                      </article>
+                    )}
                 </section>
 
                 {netlistFiles.length > 0 && !isSidePanelOpen && (
@@ -365,13 +468,100 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
 
           <form className={styles.composerDock} onSubmit={(event) => void submit(event)}>
             {submitError ? <p id="continuation-error" role="alert">{submitError}</p> : null}
-            <div className={styles.composer}>
+            <div className={`${styles.composer} ${isEditMode ? styles.composerExpanded : ''}`}>
+              {isEditMode && (
+                <div className={styles.composerFormatBar} role="toolbar" aria-label="Herramientas de formato">
+                  <button
+                    type="button"
+                    className={styles.formatBarBtn}
+                    onClick={() => insertFormat('**', '**')}
+                    title="Negrita (**texto**)"
+                    aria-label="Negrita"
+                  >
+                    <Bold size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.formatBarBtn}
+                    onClick={() => insertFormat('*', '*')}
+                    title="Cursiva (*texto*)"
+                    aria-label="Cursiva"
+                  >
+                    <Italic size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.formatBarBtn}
+                    onClick={() => insertFormat('```spice\n', '\n```')}
+                    title="Bloque de código SPICE"
+                    aria-label="Código SPICE"
+                  >
+                    <Code size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.formatBarBtn}
+                    onClick={() => insertFormat('- ')}
+                    title="Lista con viñetas"
+                    aria-label="Viñetas"
+                  >
+                    <List size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.formatBarBtn}
+                    onClick={() => insertFormat('1. ')}
+                    title="Lista numerada"
+                    aria-label="Numeración"
+                  >
+                    <ListOrdered size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.formatBarBtn}
+                    onClick={() => setText('')}
+                    title="Limpiar texto"
+                    aria-label="Limpiar texto"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              )}
+
               <label className={styles.visuallyHidden} htmlFor="continuation">Nueva indicación</label>
-              <textarea disabled={pending} id="continuation" rows={1} aria-describedby={submitError ? 'continuation-error' : undefined} onChange={(event) => setText(event.target.value)} placeholder="Describe el siguiente ajuste…" value={text} />
-              <button disabled={pending} type="submit" aria-label={pending ? 'Continuando…' : 'Continuar conversación'}>
-                <span className={styles.sendLabel}>{pending ? 'Continuando…' : 'Continuar conversación'}</span>
-                <Send aria-hidden="true" size={18} />
-              </button>
+              <textarea
+                ref={textareaRef}
+                disabled={pending}
+                id="continuation"
+                rows={isEditMode ? 3 : 1}
+                aria-describedby={submitError ? 'continuation-error' : undefined}
+                onChange={(event) => setText(event.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={isEditMode ? "Escribe o edita el mensaje (Ctrl+Enter para enviar)…" : "Describe el siguiente ajuste (Enter para enviar)…"}
+                value={text}
+              />
+
+              <div className={styles.composerFooter}>
+                <span className={styles.composerHint}>
+                  {isEditMode ? 'Enter = salto de línea · Ctrl+Enter = enviar' : 'Enter = enviar · Shift+Enter = salto de línea'}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                  <button
+                    type="button"
+                    className={`${styles.formatToggleBtn} ${isEditMode ? styles.formatToggleBtnActive : ''}`}
+                    onClick={() => setIsEditMode((prev) => !prev)}
+                    title={isEditMode ? "Modo compacto (Enter para enviar)" : "Modo edición enriquecida (tipo Teams)"}
+                    aria-label="Alternar modo edición"
+                    aria-pressed={isEditMode}
+                  >
+                    <Pencil size={15} />
+                  </button>
+                  <button disabled={pending} type="submit" aria-label={pending ? 'Continuando…' : 'Continuar conversación'}>
+                    <span className={styles.sendLabel}>{pending ? 'Continuando…' : 'Continuar conversación'}</span>
+                    <Send aria-hidden="true" size={18} />
+                  </button>
+                </div>
+              </div>
             </div>
           </form>
         </div>
@@ -394,79 +584,365 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
               </button>
             </div>
 
+            {/* Subpestañas del Inspector */}
+            <div className={styles.inspectorTabs} role="tablist" aria-label="Secciones del inspector">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={inspectorTab === 'flow'}
+                className={`${styles.inspectorTabBtn} ${inspectorTab === 'flow' ? styles.inspectorTabActive : ''}`}
+                onClick={() => setInspectorTab('flow')}
+              >
+                <Activity size={14} />
+                <span>Flujo</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={inspectorTab === 'trace'}
+                className={`${styles.inspectorTabBtn} ${inspectorTab === 'trace' ? styles.inspectorTabActive : ''}`}
+                onClick={() => setInspectorTab('trace')}
+              >
+                <FileSearch size={14} />
+                <span>Traza</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={inspectorTab === 'files'}
+                className={`${styles.inspectorTabBtn} ${inspectorTab === 'files' ? styles.inspectorTabActive : ''}`}
+                onClick={() => setInspectorTab('files')}
+              >
+                <FolderGit2 size={14} />
+                <span>Archivos {netlistFiles.length > 0 ? `(${netlistFiles.length})` : ''}</span>
+              </button>
+            </div>
+
             <div className={styles.lateralContent}>
-              <dl aria-label="Métricas de la conversación" className={styles.metrics}>
-                <div>
-                  <dt>Estado</dt>
-                  <dd>{statusLabels[conversation.executionStatus]}</dd>
-                </div>
-                <div>
-                  <dt>Mensajes</dt>
-                  <dd>{conversation.messages.length}</dd>
-                </div>
-                <div>
-                  <dt>Archivos</dt>
-                  <dd>{conversation.files.length}</dd>
-                </div>
-              </dl>
+              {inspectorTab === 'flow' && (
+                <>
+                  <dl aria-label="Métricas de la conversación" className={styles.metrics}>
+                    <div>
+                      <dt>Estado</dt>
+                      <dd>{statusLabels[conversation.executionStatus]}</dd>
+                    </div>
+                    <div>
+                      <dt>Mensajes</dt>
+                      <dd>{conversation.messages.length}</dd>
+                    </div>
+                    <div>
+                      <dt>Archivos</dt>
+                      <dd>{conversation.files.length}</dd>
+                    </div>
+                  </dl>
 
-              {conversation.preview && (
-                <div className={styles.lateralPreviewCard}>
-                  <span className={styles.lateralPreviewKicker}>Resumen de ejecución</span>
-                  <p>{conversation.preview}</p>
-                </div>
+                  {isDesignExecution && timeline && timeline.stages.length > 0 ? (
+                    <div className={styles.lateralTimelineSection}>
+                      <ActivityTimeline execution={timeline} heading="Progreso de la ejecución" />
+                    </div>
+                  ) : (
+                    <div className={styles.emptyTabState}>
+                      <Activity size={24} style={{ opacity: 0.4 }} />
+                      <p>No hay ejecución de diseño en curso para este diálogo.</p>
+                    </div>
+                  )}
+                </>
               )}
 
-              {netlistFiles.length > 0 && (
-                <section aria-labelledby="circuits-title" className={styles.circuits}>
-                  <h2 id="circuits-title">Circuitos generados</h2>
-                  {netlistFiles.map((file) => {
-                    const isExpanded = previewFileId === file.id
-                    return (
-                      <div key={file.id} className={styles.circuitCard}>
-                        <div className={styles.circuitCardHeader}>
-                          <div className={styles.circuitCardMeta}>
-                            <div className={styles.circuitCardIcon}>
-                              <Cpu size={18} />
-                            </div>
-                            <div className={styles.circuitCardDetails}>
-                              <span className={styles.circuitCardName}>{file.name}</span>
-                              <span className={styles.circuitCardBadge}>Netlist SPICE</span>
-                            </div>
-                          </div>
-                          <div className={styles.circuitCardActions}>
-                            <button
-                              type="button"
-                              className={styles.circuitPreviewBtn}
-                              onClick={() => setPreviewFileId(isExpanded ? null : file.id)}
-                              aria-expanded={isExpanded}
-                            >
-                              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                              <span>{isExpanded ? 'Ocultar esquema' : 'Vista previa'}</span>
-                            </button>
-                            <Link
-                              to={`/visualizer?conversationId=${conversation.id}&fileId=${file.id}`}
-                              className={styles.circuitOpenBtn}
-                              title="Abrir en pantalla completa en el visualizador"
-                            >
-                              <span>Abrir en Visualizador</span>
-                              <ArrowUpRight size={13} />
-                            </Link>
-                          </div>
-                        </div>
-                        {isExpanded ? (
-                          <NetlistDiagram netlistText={file.content} title={file.name} />
-                        ) : null}
+              {inspectorTab === 'trace' && (
+                <div className={styles.traceSection}>
+                  {/* Diagnóstico técnico */}
+                  {conversation.execution && (
+                    <div
+                      className={`${styles.lateralDiagnosticCard} ${
+                        conversation.executionStatus === 'failed'
+                          ? styles.lateralDiagnosticFailed
+                          : conversation.executionStatus === 'completed'
+                          ? styles.lateralDiagnosticSuccess
+                          : ''
+                      }`}
+                    >
+                      <span className={styles.lateralDiagnosticTitle}>
+                        {conversation.executionStatus === 'failed'
+                          ? '⚠️ Diagnóstico de Fallo'
+                          : conversation.executionStatus === 'completed'
+                          ? '✓ Resultado de Ejecución'
+                          : '⏳ Estado de Ejecución'}
+                      </span>
+                      <p>{conversation.execution.summary || conversation.preview || 'Sin observaciones registradas.'}</p>
+                    </div>
+                  )}
+
+                  {/* Sugerencia contextual de iteraciones */}
+                  {conversation.executionStatus === 'failed' && (
+                    <div className={styles.traceAdviceCard}>
+                      <Lightbulb size={18} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
+                      <div>
+                        <strong>Sugerencia de convergencia:</strong>
+                        <p style={{ margin: '0.2rem 0 0', fontSize: '0.74rem' }}>
+                          Si la simulación requiere más ciclos de ajuste en ngspice, puedes aumentar las iteraciones
+                          máximas (hasta 10) o modificar la tolerancia en{' '}
+                          <Link to="/settings" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                            Configuración → Parámetros del Curador
+                          </Link>.
+                        </p>
                       </div>
-                    )
-                  })}
-                </section>
+                    </div>
+                  )}
+
+                  {/* ID de ejecución para trazabilidad */}
+                  {conversation.execution?.id && (
+                    <div className={styles.lateralTraceCard}>
+                      <div className={styles.lateralTraceHeader}>
+                        <span>Identificador de Ejecución</span>
+                      </div>
+                      <div className={styles.lateralTraceIdRow}>
+                        <span className={styles.lateralTraceId} title={conversation.execution.id}>
+                          {conversation.execution.id}
+                        </span>
+                        <button
+                          type="button"
+                          className={styles.traceActionBtn}
+                          onClick={() => handleCopyTraceId(conversation.execution.id)}
+                          title="Copiar ID de corrida"
+                        >
+                          {copiedTraceId ? <Check size={13} /> : <Copy size={13} />}
+                          <span>{copiedTraceId ? 'Copiado' : 'Copiar'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Langfuse In-App Trace Tree */}
+                  <div className={styles.langfuseTraceWrap}>
+                    <div className={styles.langfuseHeaderCard}>
+                      <div className={styles.langfuseMetaRow}>
+                        <div className={styles.langfuseTitle}>
+                          <Activity size={14} style={{ color: '#38bdf8' }} />
+                          <span>Traza de Langfuse (In-App)</span>
+                        </div>
+                        <button
+                          type="button"
+                          className={styles.traceActionBtn}
+                          onClick={() => void loadTrace()}
+                          disabled={isLoadingTrace}
+                          title="Actualizar traza de Langfuse"
+                        >
+                          <RefreshCw size={12} className={isLoadingTrace ? 'spin' : ''} />
+                          <span>{isLoadingTrace ? 'Cargando...' : 'Actualizar'}</span>
+                        </button>
+                      </div>
+
+                      {traceData?.status === 'ok' && traceData.trace ? (
+                        <div className={styles.langfuseStats}>
+                          {traceData.trace.total_tokens !== undefined && (
+                            <span>Tokens: <strong className={styles.langfuseStatVal}>{traceData.trace.total_tokens.toLocaleString()}</strong></span>
+                          )}
+                          {traceData.trace.latency_s !== undefined && traceData.trace.latency_s !== null && (
+                            <span>Latencia: <strong className={styles.langfuseStatVal}>{traceData.trace.latency_s.toFixed(2)}s</strong></span>
+                          )}
+                          <span>Generaciones: <strong className={styles.langfuseStatVal}>{traceData.trace.generations?.length ?? 0}</strong></span>
+                        </div>
+                      ) : traceData?.status === 'unavailable' ? (
+                        <p style={{ margin: 0, fontSize: '0.72rem', color: '#94a3b8' }}>
+                          {traceData.message || 'La traza aún se está indexando en Langfuse Cloud. Presiona Actualizar en unos segundos.'}
+                        </p>
+                      ) : isLoadingTrace ? (
+                        <p style={{ margin: 0, fontSize: '0.72rem', color: '#94a3b8' }}>Consultando traza en Langfuse...</p>
+                      ) : null}
+                    </div>
+
+                    {/* List of Generations */}
+                    {traceData?.status === 'ok' && traceData.trace?.generations && traceData.trace.generations.length > 0 && (
+                      <div className={styles.generationList}>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                          Llamadas a Modelos LLM ({traceData.trace.generations.length})
+                        </span>
+                        {traceData.trace.generations.map((gen, idx) => {
+                          const isExpanded = Boolean(expandedGenerations[idx])
+                          return (
+                            <div key={`gen-${idx}`} className={styles.generationCard}>
+                              <button
+                                type="button"
+                                className={styles.generationCardHeader}
+                                onClick={() => setExpandedGenerations((prev) => ({ ...prev, [idx]: !prev[idx] }))}
+                              >
+                                <div className={styles.generationTitleWrap}>
+                                  <span className={styles.generationName}>{gen.name}</span>
+                                  {gen.model && <span className={styles.generationModelBadge}>{gen.model}</span>}
+                                </div>
+                                <div className={styles.generationMeta}>
+                                  {gen.latency_s !== null && gen.latency_s !== undefined && (
+                                    <span>{gen.latency_s.toFixed(2)}s</span>
+                                  )}
+                                  {gen.usage?.total_tokens && (
+                                    <span>{gen.usage.total_tokens} toks</span>
+                                  )}
+                                  {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                </div>
+                              </button>
+
+                              {isExpanded && (
+                                <div className={styles.generationContent}>
+                                  <div>
+                                    <span className={styles.traceBlockLabel}>Prompt / Input:</span>
+                                    <pre className={styles.traceCodeBox}>
+                                      {typeof gen.input === 'string' ? gen.input : JSON.stringify(gen.input, null, 2)}
+                                    </pre>
+                                  </div>
+                                  <div>
+                                    <span className={styles.traceBlockLabel}>Salida del Modelo:</span>
+                                    <pre className={styles.traceCodeBox}>
+                                      {typeof gen.output === 'string' ? gen.output : JSON.stringify(gen.output, null, 2)}
+                                    </pre>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Desglose de etapas */}
+                  {timeline && timeline.stages.length > 0 && (
+                    <div>
+                      <span style={{ fontSize: '0.74rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.5rem' }}>
+                        Desglose de Etapas
+                      </span>
+                      <div className={styles.traceStagesList}>
+                        {timeline.stages.map((stage) => {
+                          const statusClass =
+                            stage.status === 'completed'
+                              ? styles.traceStatusCompleted
+                              : stage.status === 'failed'
+                              ? styles.traceStatusFailed
+                              : stage.status === 'active'
+                              ? styles.traceStatusActive
+                              : styles.traceStatusPending
+                          return (
+                            <div key={stage.id} className={styles.traceStageCard}>
+                              <div className={styles.traceStageHeader}>
+                                <div className={styles.traceStageName}>
+                                  <span>{stage.label}</span>
+                                  <span className={styles.traceStageActor}>({stage.actor})</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                  {stage.durationMs !== null && (
+                                    <span className={styles.traceStageDuration}>{stage.durationMs} ms</span>
+                                  )}
+                                  <span className={`${styles.traceStageStatus} ${statusClass}`}>
+                                    {stage.status === 'completed'
+                                      ? 'Completado'
+                                      : stage.status === 'failed'
+                                      ? 'Fallo'
+                                      : stage.status === 'active'
+                                      ? 'Activo'
+                                      : 'Pendiente'}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className={styles.traceStageSummary}>{stage.summary}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
 
-              {isDesignExecution && timeline && timeline.stages.length > 0 && (
-                <div className={styles.lateralTimelineSection}>
-                  <ActivityTimeline execution={timeline} heading="Progreso de la ejecución" />
-                </div>
+              {inspectorTab === 'files' && (
+                <>
+                  {netlistFiles.length === 0 ? (
+                    <div className={styles.emptyTabState}>
+                      <FolderGit2 size={24} style={{ opacity: 0.4 }} />
+                      <p>Aún no se han generado archivos de circuito en esta conversación.</p>
+                    </div>
+                  ) : (
+                    <section aria-labelledby="circuits-title" className={styles.circuits}>
+                      <h2 id="circuits-title">Circuitos generados ({netlistFiles.length})</h2>
+                      {netlistFiles.map((file) => {
+                        const isExpanded = previewFileId === file.id
+                        const isSimCurveVisible = simCurveFileId === file.id
+                        return (
+                          <div key={file.id} className={styles.circuitCard}>
+                            <div className={styles.circuitCardHeader}>
+                              <div className={styles.circuitCardMeta}>
+                                <div className={styles.circuitCardIcon}>
+                                  <Cpu size={18} />
+                                </div>
+                                <div className={styles.circuitCardDetails}>
+                                  <span className={styles.circuitCardName}>{file.name}</span>
+                                  <span className={styles.circuitCardBadge}>Netlist SPICE</span>
+                                </div>
+                              </div>
+                              <div className={styles.circuitCardActions}>
+                                {file.simResult?.curve && file.simResult.curve.length > 0 && (
+                                  <button
+                                    type="button"
+                                    className={`${styles.circuitSimBtn} ${isSimCurveVisible ? styles.circuitSimBtnActive : ''}`}
+                                    onClick={() => setSimCurveFileId(isSimCurveVisible ? null : file.id)}
+                                    title="Ver curva de simulación SPICE real"
+                                  >
+                                    <Activity size={13} />
+                                    <span>{isSimCurveVisible ? 'Ocultar Curva' : 'Curva SPICE'}</span>
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  className={styles.circuitPreviewBtn}
+                                  onClick={() => setPreviewFileId(isExpanded ? null : file.id)}
+                                  aria-expanded={isExpanded}
+                                  title={isExpanded ? 'Ocultar esquema' : 'Ver esquema gráfico'}
+                                >
+                                  {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                  <span>{isExpanded ? 'Ocultar' : 'Esquema'}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className={styles.circuitDownloadBtn}
+                                  onClick={() => downloadNetlistFile(file.name, file.content)}
+                                  title="Descargar archivo netlist .cir"
+                                >
+                                  <Download size={13} />
+                                  <span>Descargar</span>
+                                </button>
+                                <Link
+                                  to={`/visualizer?conversationId=${conversation.id}&fileId=${file.id}`}
+                                  className={styles.circuitOpenBtn}
+                                  title="Abrir en pantalla completa en el visualizador"
+                                >
+                                  <span>Visualizador</span>
+                                  <ArrowUpRight size={13} />
+                                </Link>
+                              </div>
+                            </div>
+                            {isSimCurveVisible && file.simResult?.curve && (
+                              <div style={{ marginTop: '0.75rem', marginBottom: '0.5rem' }}>
+                                <SimulationChart
+                                  curve={file.simResult.curve}
+                                  analysisType={file.simResult.analysis_type}
+                                  xUnit={file.simResult.x_unit}
+                                  yUnit={file.simResult.y_unit}
+                                  metricName={file.simResult.metric_name}
+                                  measuredValue={file.simResult.measured_value}
+                                  targetValue={file.simResult.target_value}
+                                  title={`Simulación SPICE: ${file.name}`}
+                                  compact
+                                />
+                              </div>
+                            )}
+                            {isExpanded ? (
+                              <NetlistDiagram netlistText={file.content} title={file.name} />
+                            ) : null}
+                          </div>
+                        )
+                      })}
+                    </section>
+                  )}
+                </>
               )}
             </div>
           </aside>
