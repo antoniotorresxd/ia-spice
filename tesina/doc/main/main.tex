@@ -107,8 +107,9 @@
   linkcolor=black,
   citecolor=black,
   urlcolor=blue,
-  pdftitle={Tesina},
-  pdfauthor={Antonio Torres}
+  pdftitle={Reporte de Proyecto},
+  pdfauthor={Diego Jesús Gutierrez},
+  pdfauthor={Antonio Torres},
 }
 
 % -----------------------------------------------------------------------
@@ -138,7 +139,7 @@
 % -----------------------------------------------------------------------
 % DATOS DEL DOCUMENTO
 % -----------------------------------------------------------------------
-\title{Ecosistema multiagente basado en LLM y aprendizaje por refuerzo para la generación y validación de circuitos analógicos CA/CD a partir de lenguaje natural}
+\title{Desarrollo de unEcosistema multiagente para la generación y validación de circuitos analógicos CA/CD a partir de lenguaje natural}
 \author{Antonio Torres}
 \date{\today}
 
@@ -169,19 +170,18 @@
   \pagenumbering{arabic}
 
   % CAPÍTULO 1: INTRODUCCIÓN
-  \chapter{Introducción}
+  \chapter*{Introducción}
+  \addcontentsline{toc}{chapter}{Introducción}
   \input{sections/problema}
   \input{sections/objetivos}
   \input{sections/justificacion}
   \input{sections/limites_alcances}
+  \input{sections/estado_arte}
 
   % CAPÍTULO 2: MARCO TEÓRICO
   \chapter{Marco Teórico}
   \input{sections/marco_teorico}
 
-  % CAPÍTULO 3: ESTADO DEL ARTE
-  \chapter{Estado del Arte}
-  \input{sections/estado_arte}
 
   % CAPÍTULO 4: DISEÑO E IMPLEMENTACIÓN DE LA SOLUCIÓN
   \chapter{Diseño e Implementación de la Solución}

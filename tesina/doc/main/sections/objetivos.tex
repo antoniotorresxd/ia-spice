@@ -6,10 +6,20 @@ Desarrollar un ecosistema multiagente basado en LLM y aprendizaje por refuerzo p
 
 \subsection*{Objetivos Específicos}
 \begin{enumerate}
-    \item \textbf{Diseñar} la arquitectura del sistema en dos subsistemas independientes: un cliente que gestiona el acceso de los usuarios y un servidor sin estado que aloja a los agentes, condición que habilita su escalado horizontal.
-    \item \textbf{Desarrollar} el agente orquestador y el patrón Master-Worker que descompone un circuito de varias etapas en sub-bloques y reparte su cálculo entre varios trabajadores.
-    \item \textbf{Implementar} el agente de cálculo, que obtiene los valores de los componentes de cada sub-bloque a partir de las ecuaciones de diseño correspondientes.
-    \item \textbf{Desarrollar} el agente curador, basado en aprendizaje por refuerzo, que decide si una propuesta de circuito se acepta, se ajusta o se rechaza con base en las métricas devueltas por la simulación.
-    \item \textbf{Implementar} la integración con ngspice mediante PySpice, cerrando el lazo de realimentación que permite ajustar los valores de los componentes de forma iterativa.
-    \item \textbf{Evaluar} el desempeño del sistema sobre un conjunto de circuitos de prueba con solución de referencia, mediante el error porcentual absoluto medio (MAPE) y la tasa de circuitos que cumplen las metas, y contrastarlo con el de un enfoque de un solo modelo que repite el intento varias veces (\textit{best-of-N}).
+    
+    \item \textbf{Desarrollar} el ecosistema multiagente (orquestador,master-workers, curador, escritura y shell) para la correcta comunicación de los módulos de cada agente mediante LangGraph y conexiones mediante API’s y sistemas externos.
+    
+    \item \textbf{Entrenar e implementar} el agente curador para: indexar, recuperar topologías y reglas de diseño validadas y evitar que los demás agentes alucinen, esto mediante un aprendizaje RAG.
+
+    \item \textbf{Integrar} ngspice mediante PySpice, para cerrar el lazo de realimentación que permite ajustar los valores de los componentes de forma iterativa.
+    \item \textbf{Diseñar} la arquitectura para la gestión y alojamiento de los módulos(cliente web, ecosistema multiagente, conexión a LLM’s), utilizando React, typeScript y Docker.
+    
+    
+
+
+
+
+
+
+
 \end{enumerate}
