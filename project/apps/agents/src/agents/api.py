@@ -75,6 +75,8 @@ class RunRequest(BaseModel):
     # último checkpoint en lugar de empezar de cero. Sin él se genera uno
     # nuevo, y esa corrida no será retomable.
     execution_id: str | None = None
+    max_iterations: int | None = None
+    tolerance: float | None = None
 
 
 def _require_token(authorization: str | None) -> None:
@@ -110,8 +112,14 @@ def create_run(
     if body.request_text is None and body.circuit_spec is None:
         raise HTTPException(status_code=400, detail="request_text or circuit_spec is required")
 
+    spec_dict = dict(body.circuit_spec) if body.circuit_spec else {}
+    if body.max_iterations is not None:
+        spec_dict["max_iterations"] = body.max_iterations
+    if body.tolerance is not None:
+        spec_dict["tolerance"] = body.tolerance
+
     initial_state = {
-        "circuit_spec": body.circuit_spec or {},
+        "circuit_spec": spec_dict,
         "request_text": body.request_text,
         "normalized_spec": None,
         "pending_blocks": None,
@@ -129,7 +137,15 @@ def create_run(
     # no un dato del circuito. El thread_id es la ejecución que abrió el
     # servidor, de modo que reenviarla retoma su checkpoint.
     thread_id = body.execution_id or str(uuid.uuid4())
-    config = {"configurable": {"user_id": body.user_id, "thread_id": thread_id}}
+    configurable = {
+        "user_id": body.user_id,
+        "thread_id": thread_id,
+    }
+    if body.max_iterations is not None:
+        configurable["max_iterations"] = body.max_iterations
+    if body.tolerance is not None:
+        configurable["tolerance"] = body.tolerance
+    config = {"configurable": configurable}
     handler = _langfuse_handler()
     if handler is not None:
         config["callbacks"] = [handler]
@@ -361,8 +377,14 @@ def create_run_stream(body: RunRequest, authorization: str | None = Header(defau
     if body.request_text is None and body.circuit_spec is None:
         raise HTTPException(status_code=400, detail="request_text or circuit_spec is required")
 
+    spec_dict = body.circuit_spec or {}
+    if body.max_iterations is not None:
+        spec_dict["max_iterations"] = body.max_iterations
+    if body.tolerance is not None:
+        spec_dict["tolerance"] = body.tolerance
+
     initial_state = {
-        "circuit_spec": body.circuit_spec or {},
+        "circuit_spec": spec_dict,
         "request_text": body.request_text,
         "normalized_spec": None,
         "pending_blocks": None,
@@ -377,7 +399,15 @@ def create_run_stream(body: RunRequest, authorization: str | None = Header(defau
     }
 
     thread_id = body.execution_id or str(uuid.uuid4())
-    config = {"configurable": {"user_id": body.user_id, "thread_id": thread_id}}
+    configurable = {
+        "user_id": body.user_id,
+        "thread_id": thread_id,
+    }
+    if body.max_iterations is not None:
+        configurable["max_iterations"] = body.max_iterations
+    if body.tolerance is not None:
+        configurable["tolerance"] = body.tolerance
+    config = {"configurable": configurable}
     handler = _langfuse_handler()
     if handler is not None:
         config["callbacks"] = [handler]
@@ -390,4 +420,89 @@ def create_run_stream(body: RunRequest, authorization: str | None = Header(defau
         _stream_run(initial_state, config),
         media_type="text/event-stream",
     )
+
+
+def _langfuse_client():
+    if os.environ.get("LANGFUSE_PUBLIC_KEY") and os.environ.get("LANGFUSE_SECRET_KEY"):
+        try:
+            from langfuse import Langfuse
+            return Langfuse()
+        except Exception:
+            return None
+    return None
+
+
+@app.get("/runs/{execution_id}/trace")
+def get_run_trace(execution_id: str, authorization: str | None = Header(default=None)):
+    _require_token(authorization)
+    client = _langfuse_client()
+    if client is None:
+        return {
+            "traceId": execution_id,
+            "sessionId": execution_id,
+            "status": "unavailable",
+            "message": "Observabilidad de Langfuse no configurada en el servidor.",
+            "steps": [],
+        }
+
+    try:
+        traces_res = client.api.trace.list(session_id=execution_id, limit=5)
+        trace_summary = traces_res.data[0] if traces_res.data else None
+
+        if trace_summary is None:
+            try:
+                trace_detail = client.api.trace.get(trace_id=execution_id)
+            except Exception:
+                return {
+                    "traceId": execution_id,
+                    "sessionId": execution_id,
+                    "status": "pending",
+                    "message": "Traza aún en proceso de indexación en Langfuse.",
+                    "steps": [],
+                }
+        else:
+            trace_detail = client.api.trace.get(trace_id=trace_summary.id)
+
+        steps = []
+        for obs in (trace_detail.observations or []):
+            dur = None
+            if obs.end_time and obs.start_time:
+                dur = round((obs.end_time - obs.start_time).total_seconds(), 3)
+            steps.append({
+                "id": obs.id,
+                "name": obs.name or obs.type,
+                "type": obs.type,
+                "model": obs.model,
+                "startTime": obs.start_time.isoformat() if obs.start_time else None,
+                "endTime": obs.end_time.isoformat() if obs.end_time else None,
+                "durationSec": dur,
+                "input": obs.input,
+                "output": obs.output,
+                "usage": {
+                    "promptTokens": obs.usage.prompt_tokens if obs.usage else None,
+                    "completionTokens": obs.usage.completion_tokens if obs.usage else None,
+                    "totalTokens": obs.usage.total_tokens if obs.usage else None,
+                } if obs.usage else None,
+                "level": str(obs.level) if obs.level else "DEFAULT",
+                "statusMessage": obs.status_message,
+            })
+
+        return {
+            "traceId": trace_detail.id,
+            "sessionId": trace_detail.session_id or execution_id,
+            "timestamp": trace_detail.timestamp.isoformat() if trace_detail.timestamp else None,
+            "latency": trace_detail.latency,
+            "totalCost": trace_detail.total_cost,
+            "status": "ready",
+            "steps": steps,
+        }
+    except Exception as exc:
+        return {
+            "traceId": execution_id,
+            "sessionId": execution_id,
+            "status": "error",
+            "message": f"No se pudo consultar la traza en Langfuse: {exc}",
+            "steps": [],
+        }
+
 

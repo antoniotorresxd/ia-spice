@@ -20,6 +20,7 @@ import {
   deleteConversation,
   deleteProject,
   getConversationDetail,
+  getConversationTrace,
   getProjectDetail,
   getSnapshot,
   listUserFiles,
@@ -76,6 +77,12 @@ export const workspaceRouter = createRouter()
     // 404 y no 403 para una conversación ajena: no se confirma que exista.
     if (!detail) return c.json({ error: "Not Found" }, 404);
     return c.json(detail);
+  })
+  .get("/api/workspace/conversations/:id/trace", requireAuth, async (c) => {
+    const { id: userId } = c.get("user")!;
+    const result = await getConversationTrace(userId, c.req.param("id"));
+    if (!result) return c.json({ error: "Not Found" }, 404);
+    return c.json(result);
   })
   .get("/api/workspace/conversations/:id/events", requireAuth, async (c) => {
     const { id: userId } = c.get("user")!;
@@ -144,7 +151,13 @@ export const workspaceRouter = createRouter()
     // Sin await: la corrida puede tardar decenas de segundos y la respuesta
     // sale ya. El client sondea hasta ver la ejecución cerrada.
     void startRun(
-      { userId, requestText: created.requestText, executionId: created.execution.id },
+      {
+        userId,
+        requestText: created.requestText,
+        executionId: created.execution.id,
+        maxIterations: parsed.data.maxIterations,
+        tolerance: parsed.data.tolerance,
+      },
       makeDbSink(created.conversation.id, created.execution.id),
     );
 
@@ -163,7 +176,13 @@ export const workspaceRouter = createRouter()
     if (!appended) return c.json({ error: "Not Found" }, 404);
 
     void startRun(
-      { userId, requestText: appended.requestText, executionId: appended.execution.id },
+      {
+        userId,
+        requestText: appended.requestText,
+        executionId: appended.execution.id,
+        maxIterations: parsed.data.maxIterations,
+        tolerance: parsed.data.tolerance,
+      },
       makeDbSink(conversationId, appended.execution.id, appended.previousNormalizedSpec),
     );
 

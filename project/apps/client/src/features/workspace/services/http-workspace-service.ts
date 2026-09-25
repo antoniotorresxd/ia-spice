@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../../../lib/api-base'
 import type {
   ProjectInput,
+  TraceResponse,
   WorkspaceConversation,
   WorkspaceConversationDetail,
   WorkspaceProject,
@@ -11,6 +12,29 @@ import type { WorkspaceService } from './workspace-service'
 import { QueryCache, globalQueryCache } from '@/lib/query-cache'
 
 type Options = { fetchImpl?: typeof fetch; cache?: QueryCache }
+
+function getCuratorParamsPayload(): { maxIterations?: number; tolerance?: number } {
+  const payload: { maxIterations?: number; tolerance?: number } = {}
+  try {
+    const iterStr = localStorage.getItem('spice_curador_max_iterations')
+    if (iterStr) {
+      const iter = parseInt(iterStr, 10)
+      if (!isNaN(iter) && iter >= 1 && iter <= 10) {
+        payload.maxIterations = iter
+      }
+    }
+    const tolStr = localStorage.getItem('spice_curador_tolerance')
+    if (tolStr) {
+      const tol = parseFloat(tolStr)
+      if (!isNaN(tol) && tol > 0) {
+        payload.tolerance = tol
+      }
+    }
+  } catch {
+    // localStorage might not be available or accessible
+  }
+  return payload
+}
 
 export function createHttpWorkspaceService(options: Options = {}): WorkspaceService {
   const cache = options.cache ?? new QueryCache()
@@ -71,21 +95,27 @@ export function createHttpWorkspaceService(options: Options = {}): WorkspaceServ
         try {
           const data = JSON.parse(e.data)
           listener({ type: 'stage', data })
-        } catch {}
+        } catch {
+          // ignore malformed sse chunk
+        }
       }
 
       const handleDone = (e: MessageEvent) => {
         try {
           const data = JSON.parse(e.data)
           listener({ type: 'done', data })
-        } catch {}
+        } catch {
+          // ignore malformed sse chunk
+        }
       }
 
       const handleError = (e: MessageEvent) => {
         try {
           const data = JSON.parse(e.data)
           listener({ type: 'error', data })
-        } catch {}
+        } catch {
+          // ignore malformed sse chunk
+        }
       }
 
       source.addEventListener('stage', handleStage)
@@ -120,18 +150,20 @@ export function createHttpWorkspaceService(options: Options = {}): WorkspaceServ
     async submitRequest(text): Promise<WorkspaceConversationDetail> {
       cache.invalidate('workspace:snapshot')
       cache.invalidate('workspace:files')
+      const curatorParams = getCuratorParamsPayload()
       return request<WorkspaceConversationDetail>('/api/workspace/conversations', {
         method: 'POST',
-        body: JSON.stringify({ text: text.trim() }),
+        body: JSON.stringify({ text: text.trim(), ...curatorParams }),
       })
     },
 
     async continueConversation(conversationId, text): Promise<WorkspaceConversationDetail> {
       cache.invalidate(`workspace:conversation:${conversationId}`)
       cache.invalidate('workspace:files')
+      const curatorParams = getCuratorParamsPayload()
       return request<WorkspaceConversationDetail>(
         `/api/workspace/conversations/${conversationId}/messages`,
-        { method: 'POST', body: JSON.stringify({ text: text.trim() }) },
+        { method: 'POST', body: JSON.stringify({ text: text.trim(), ...curatorParams }) },
       )
     },
 
@@ -169,6 +201,10 @@ export function createHttpWorkspaceService(options: Options = {}): WorkspaceServ
       return cache.fetch('workspace:files', () => request('/api/workspace/files'), {
         ttlMs: 30_000,
       })
+    },
+
+    async getTrace(conversationId): Promise<TraceResponse> {
+      return request<TraceResponse>(`/api/workspace/conversations/${conversationId}/trace`)
     },
   }
 }

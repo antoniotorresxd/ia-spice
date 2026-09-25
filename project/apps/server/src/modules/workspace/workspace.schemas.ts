@@ -43,6 +43,8 @@ export type RenameConversationInput = z.infer<typeof renameConversationSchema>;
 
 export const submitTextSchema = z.object({
   text: z.string().trim().min(1),
+  maxIterations: z.coerce.number().int().min(1).max(10).optional(),
+  tolerance: z.coerce.number().positive().optional(),
 });
 
 export type SubmitTextInput = z.infer<typeof submitTextSchema>;
@@ -108,12 +110,12 @@ export function deriveExecutionStages(
     stages?: ExecutionStage[];
   } | null;
 
-  if (Array.isArray(verdict?.stages) && verdict.stages.length > 0) {
-    return verdict.stages;
-  }
-
   if (verdict?.mode === "chat" || verdict?.mode === "clarify") {
     return [];
+  }
+
+  if (Array.isArray(verdict?.stages) && verdict.stages.length > 0) {
+    return verdict.stages;
   }
 
   if (latestExecution.status === "active") {
@@ -251,24 +253,35 @@ export function toConversationDetail(
       content: item.content,
       createdAt: item.createdAt.toISOString(),
     })),
-    files: artifacts.map((item) => ({
-      id: item.id,
-      name: item.name,
-      language: item.language,
-      content: item.content,
-      status: item.status,
-      summary: item.summary,
-      tags: item.tags,
-      components: item.components,
-      measurementExplanation: item.measurementExplanation,
-    })),
-    execution: {
-      id: latestExecution?.id ?? `${row.id}-execution`,
-      status: latestExecution?.status ?? ("failed" as const),
-      summary: latestExecution?.summary ?? MISSING_EXECUTION_SUMMARY,
-      mode: deriveExecutionMode(latestExecution, artifacts.length),
-      stages: stages ?? deriveExecutionStages(latestExecution, artifacts),
-    },
+    files: artifacts.map((item) => {
+      const verdict = latestExecution?.verdict as Record<string, any> | null;
+      const simResults = verdict?.sim_results as Record<string, any> | undefined;
+      const simResult = simResults ? (simResults[item.blockId] ?? null) : null;
+      return {
+        id: item.id,
+        name: item.name,
+        language: item.language,
+        content: item.content,
+        status: item.status,
+        summary: item.summary,
+        tags: item.tags,
+        components: item.components,
+        measurementExplanation: item.measurementExplanation,
+        simResult,
+      };
+    }),
+    execution: (() => {
+      const mode = deriveExecutionMode(latestExecution, artifacts.length);
+      const verdict = latestExecution?.verdict as Record<string, any> | null;
+      return {
+        id: latestExecution?.id ?? `${row.id}-execution`,
+        status: latestExecution?.status ?? ("failed" as const),
+        summary: latestExecution?.summary ?? MISSING_EXECUTION_SUMMARY,
+        mode,
+        stages: mode === "chat" || mode === "clarify" ? [] : (stages ?? deriveExecutionStages(latestExecution, artifacts)),
+        simResults: (verdict?.sim_results as Record<string, any> | undefined) ?? null,
+      };
+    })(),
   };
 }
 

@@ -110,6 +110,17 @@ def orquestador_node(state: CircuitState, config: RunnableConfig | None = None) 
             }
 
         spec = outcome.spec
+        configurable = (config or {}).get("configurable", {})
+        custom_max_iter = configurable.get("max_iterations")
+        custom_tol = configurable.get("tolerance")
+        updates = {}
+        if custom_max_iter is not None:
+            updates["max_iterations"] = custom_max_iter
+        if custom_tol is not None:
+            updates["tolerance"] = custom_tol
+        if updates:
+            spec = spec.model_copy(update=updates)
+
         result = _normalize(spec)
         # se sobreescribe circuit_spec con lo que el LLM entendió, para que
         # history/depuración muestren la especificación resuelta
@@ -121,6 +132,16 @@ def orquestador_node(state: CircuitState, config: RunnableConfig | None = None) 
             spec = CircuitSpec.model_validate(circuit_spec)
         except ValidationError as exc:
             return _rejected(f"invalid circuit_spec: {exc}")
+        configurable = (config or {}).get("configurable", {})
+        custom_max_iter = configurable.get("max_iterations")
+        custom_tol = configurable.get("tolerance")
+        updates = {}
+        if custom_max_iter is not None:
+            updates["max_iterations"] = custom_max_iter
+        if custom_tol is not None:
+            updates["tolerance"] = custom_tol
+        if updates:
+            spec = spec.model_copy(update=updates)
         return _normalize(spec)
 
     return _rejected("no input provided: neither request_text nor circuit_spec")

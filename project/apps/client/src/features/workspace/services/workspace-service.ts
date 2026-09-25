@@ -1,5 +1,6 @@
 import type {
   ProjectInput,
+  TraceResponse,
   WorkspaceConversation,
   WorkspaceConversationDetail,
   WorkspaceFileItem,
@@ -30,6 +31,7 @@ export type WorkspaceService = {
   deleteProject(projectId: string): Promise<void>
   deleteConversation(conversationId: string): Promise<void>
   getFiles(): Promise<WorkspaceFileItem[]>
+  getTrace?(conversationId: string): Promise<TraceResponse>
   subscribeConversationEvents?(
     conversationId: string,
     listener: (event: ConversationEvent) => void,

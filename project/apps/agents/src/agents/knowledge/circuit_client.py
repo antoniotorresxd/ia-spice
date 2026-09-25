@@ -91,7 +91,7 @@ FALLBACK_CIRCUITS: list[CircuitKnowledgeItem] = [
         },
         operatingConstraints="A = 1 + Rf / Rg >= 1.",
         designEquations="R = 1 / (2 * pi * f_c * C). Rf = (gain - 1) * Rg.",
-        spiceTemplate="* Active HP\nVin vin 0 DC 0 AC 1\nC1 vin vplus {C}\nR1 vplus 0 {R}\nX1 vplus vfb vout opamp\nRg vfb 0 {Rg}\nRf vout vfb {Rf}\n.subckt opamp inp inn out\nRin inp inn 1e6\nEgain n1 0 inp inn 1e5\nRp n1 n2 1k\nCp n2 0 159n\nEout out 0 n2 0 1\n.ends\n.control\nac dec 100 1 1e9\nlet g_db = vdb(vout)[100]\nlet g_3db = g_db - 3.0103\nmeas ac fc WHEN vdb(vout)=g_3db\necho $&fc > output.txt\n.endc\n.end",
+        spiceTemplate="* Active HP\nVin vin 0 DC 0 AC 1\nC1 vin vplus {C}\nR1 vplus 0 {R}\nX1 vplus vfb vout opamp\nRg vfb 0 {Rg}\nRf vout vfb {Rf}\n.subckt opamp inp inn out\nRin inp inn 1e6\nEgain n1 0 inp inn 1e5\nRp n1 n2 1k\nCp n2 0 159n\nEout out 0 n2 0 1\n.ends\n.control\nac dec 100 1 1e9\nmeas ac gpass FIND vdb(vout) AT=1e6\nlet g_3db = gpass - 3.0103\nmeas ac fc WHEN vdb(vout)=g_3db\necho $&fc > output.txt\n.endc\n.end",
     ),
     CircuitKnowledgeItem(
         id="opamp_noninverting_amp",

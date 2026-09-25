@@ -13,12 +13,26 @@ export type AgentsOutcome =
   | { mode: "clarify"; question: string; partial_spec: unknown }
   | { mode: "design" };
 
+export type SimCurvePoint = { x: number; y: number };
+
+export type BlockSimResult = {
+  metrics: Record<string, number> | null;
+  sim_error: string | null;
+  curve?: SimCurvePoint[] | null;
+  analysis_type?: string | null;
+  x_unit?: string | null;
+  y_unit?: string | null;
+  metric_name?: string | null;
+  measured_value?: number | null;
+  target_value?: number | null;
+};
+
 export type AgentsRunResult = {
   outcome: AgentsOutcome | null;
   verdict: AgentsVerdict | null;
   normalized_spec: unknown | null;
   netlists: Record<string, { path: string; text: string }>;
-  sim_results: Record<string, { metrics: Record<string, number> | null; sim_error: string | null }>;
+  sim_results: Record<string, BlockSimResult>;
   component_values: Record<string, Record<string, number>>;
   documentation: Record<string, {
     summary: string;
@@ -180,7 +194,13 @@ export type RunSink = {
 const RUN_FAILURE_SUMMARY = "No pudimos ejecutar el diseño. Inténtalo de nuevo.";
 
 export async function startRun(
-  input: { userId: string; requestText: string; executionId: string },
+  input: {
+    userId: string;
+    requestText: string;
+    executionId: string;
+    maxIterations?: number;
+    tolerance?: number;
+  },
   sink: RunSink,
   fetchImpl: typeof fetch = fetch,
 ): Promise<void> {
@@ -200,6 +220,8 @@ export async function startRun(
         user_id: input.userId,
         request_text: input.requestText,
         execution_id: input.executionId,
+        max_iterations: input.maxIterations,
+        tolerance: input.tolerance,
       }),
     });
 
@@ -236,6 +258,10 @@ export async function startRun(
                 await sink.onStageUpdate?.(data as ExecutionStage);
               } else if (currentEvent === "done") {
                 finalResult = data as AgentsRunResult;
+              } else if (currentEvent === "error") {
+                const errorSummary = data.error ? `Error al simular: ${data.error}` : RUN_FAILURE_SUMMARY;
+                await sink.onFailure(errorSummary);
+                return;
               }
             } catch {
               // ignora fragmentos de JSON inválidos en el buffer

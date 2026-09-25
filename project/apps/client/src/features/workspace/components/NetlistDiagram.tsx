@@ -7,6 +7,8 @@ import {
   GROUND_Y,
   type LayoutSymbol,
   NetlistParseError,
+  OPAMP_INP_Y,
+  OPAMP_INN_Y,
   type ParsedNetlist,
   RAIL_Y,
   VCC_Y,
@@ -436,31 +438,101 @@ function WireHopH({ x1, x2, y, hopX }: { x1: number; x2: number; y: number; hopX
   )
 }
 
-function Opamp({ cx, inTopX, inBotX, outX }: { cx: number; inTopX: number; inBotX: number; outX: number }) {
+function Opamp({
+  cx,
+  left: propLeft,
+  right: propRight,
+  inTopX,
+  inBotX,
+  outX,
+  name = 'U1',
+  value = 'opamp',
+  inpIsGround = false,
+  innIsGround = false,
+  isBuffer = false,
+}: {
+  cx: number
+  left?: number
+  right?: number
+  inTopX: number
+  inBotX: number
+  outX: number
+  name?: string
+  value?: string
+  inpIsGround?: boolean
+  innIsGround?: boolean
+  isBuffer?: boolean
+}) {
   const w = 64
   const h = 56
-  const left = cx - w / 2
-  const right = cx + w / 2
+  const left = propLeft ?? cx - w / 2
+  const right = propRight ?? cx + w / 2
   const top = RAIL_Y - h / 2
   const bot = RAIL_Y + h / 2
+  const topPinY = OPAMP_INP_Y
+  const botPinY = OPAMP_INN_Y
+  const stepX = Math.min(inTopX + 20, left - 14)
+
   return (
     <g>
+      {/* Cuerpo triangular del amplificador operacional */}
       <polygon
         points={`${left},${top} ${left},${bot} ${right},${RAIL_Y}`}
         className={styles.symbolStroke}
         fill="none"
       />
-      <text x={left + 10} y={top + 16} textAnchor="start" className={styles.lblSign}>
+      {/* Signos + (no inversor) y - (inversor) */}
+      <text x={left + 9} y={topPinY + 5} textAnchor="start" className={styles.lblSign}>
         +
       </text>
-      <text x={left + 10} y={bot - 8} textAnchor="start" className={styles.lblSign}>
+      <text x={left + 9} y={botPinY + 5} textAnchor="start" className={styles.lblSign}>
         −
       </text>
-      <line x1={inTopX} y1={RAIL_Y} x2={left} y2={top + 14} className={styles.wire} />
-      <line x1={inBotX} y1={RAIL_Y} x2={left} y2={bot - 14} className={styles.wire} />
+
+      {/* Entrada superior (+): enrutamiento ortogonal Manhattan sin diagonales */}
+      {inpIsGround ? (
+        <g>
+          <line x1={left - 16} y1={topPinY} x2={left} y2={topPinY} className={styles.wire} />
+          <line x1={left - 16} y1={topPinY} x2={left - 16} y2={topPinY + 14} className={styles.wire} />
+          <line x1={left - 22} y1={topPinY + 14} x2={left - 10} y2={topPinY + 14} className={styles.symbolStroke} />
+          <line x1={left - 19} y1={topPinY + 18} x2={left - 13} y2={topPinY + 18} className={styles.symbolStroke} />
+          <line x1={left - 17} y1={topPinY + 22} x2={left - 15} y2={topPinY + 22} className={styles.symbolStroke} />
+        </g>
+      ) : (
+        <polyline
+          points={`${inTopX},${RAIL_Y} ${stepX},${RAIL_Y} ${stepX},${topPinY} ${left},${topPinY}`}
+          className={styles.wire}
+          fill="none"
+        />
+      )}
+
+      {/* Entrada inferior (-): enrutamiento horizontal limpio al pin inversor */}
+      {isBuffer ? (
+        <polyline
+          points={`${right},${RAIL_Y} ${right + 16},${RAIL_Y} ${right + 16},${botPinY + 16} ${left - 12},${botPinY + 16} ${left - 12},${botPinY} ${left},${botPinY}`}
+          className={styles.wire}
+          fill="none"
+        />
+      ) : innIsGround ? (
+        <g>
+          <line x1={left - 16} y1={botPinY} x2={left} y2={botPinY} className={styles.wire} />
+          <line x1={left - 16} y1={botPinY} x2={left - 16} y2={botPinY + 14} className={styles.wire} />
+          <line x1={left - 22} y1={botPinY + 14} x2={left - 10} y2={botPinY + 14} className={styles.symbolStroke} />
+          <line x1={left - 19} y1={botPinY + 18} x2={left - 13} y2={botPinY + 18} className={styles.symbolStroke} />
+          <line x1={left - 17} y1={botPinY + 22} x2={left - 15} y2={botPinY + 22} className={styles.symbolStroke} />
+        </g>
+      ) : inBotX < left ? (
+        <line x1={inBotX} y1={botPinY} x2={left} y2={botPinY} className={styles.wire} />
+      ) : (
+        <line x1={left - 16} y1={botPinY} x2={left} y2={botPinY} className={styles.wire} />
+      )}
+
+      {/* Salida: tramo horizontal desde la punta del triángulo hacia outX */}
       <line x1={right} y1={RAIL_Y} x2={outX} y2={RAIL_Y} className={styles.wire} />
-      <text x={cx - 2} y={top - 26} textAnchor="middle" className={styles.lblSub}>
-        U1 · opamp
+
+      {/* Etiqueta identificadora del componente */}
+      <text x={cx} y={top - 20} textAnchor="middle" className={styles.lblSub}>
+        {name} · {value}
       </text>
     </g>
   )
@@ -604,7 +676,21 @@ function Symbol({ symbol }: { symbol: LayoutSymbol }) {
         />
       )
     case 'opamp':
-      return <Opamp cx={symbol.cx} inTopX={symbol.inTopX} inBotX={symbol.inBotX} outX={symbol.outX} />
+      return (
+        <Opamp
+          cx={symbol.cx}
+          left={symbol.left}
+          right={symbol.right}
+          inTopX={symbol.inTopX}
+          inBotX={symbol.inBotX}
+          outX={symbol.outX}
+          name={symbol.name}
+          value={symbol.value}
+          inpIsGround={symbol.inpIsGround}
+          innIsGround={symbol.innIsGround}
+          isBuffer={symbol.isBuffer}
+        />
+      )
     case 'bjt':
       return (
         <Bjt
@@ -631,6 +717,8 @@ function Symbol({ symbol }: { symbol: LayoutSymbol }) {
       return <line x1={symbol.x} y1={symbol.y1} x2={symbol.x} y2={symbol.y2} className={styles.wire} />
     case 'wireHopH':
       return <WireHopH x1={symbol.x1} x2={symbol.x2} y={symbol.y} hopX={symbol.hopX} />
+    case 'nodeDot':
+      return <circle cx={symbol.x} cy={symbol.y} r={3.2} className={styles.nodeDot} />
   }
 }
 

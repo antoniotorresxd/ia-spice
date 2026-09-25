@@ -831,30 +831,62 @@
 .resizer {
   position: absolute;
   top: 0;
-  right: -3px;
-  width: 7px;
+  right: -7px;
+  width: 14px;
   height: 100%;
   cursor: col-resize;
   user-select: none;
   touch-action: none;
   z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
 }
 
-.resizer::after {
+.resizer::before {
   content: '';
   position: absolute;
   top: 0;
-  right: 3px;
+  bottom: 0;
+  left: 6px;
   width: 2px;
-  height: 100%;
   background: transparent;
   transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
-.resizer:hover::after,
-.resizer[data-resizing='true']::after {
+.resizer:hover::before,
+.resizer[data-resizing='true']::before,
+.resizer:focus-visible::before {
   background: var(--color-mint, #45d6c4);
-  box-shadow: 0 0 8px rgba(69, 214, 196, 0.6);
+  box-shadow: 0 0 8px rgba(69, 214, 196, 0.7);
+}
+
+.resizerGrip {
+  width: 4px;
+  height: 28px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.resizer:hover .resizerGrip,
+.resizer[data-resizing='true'] .resizerGrip,
+.resizer:focus-visible .resizerGrip {
+  background: var(--color-mint, #45d6c4);
+  transform: scaleY(1.2);
+  box-shadow: 0 0 10px rgba(69, 214, 196, 0.8);
+}
+
+:global(.light) .resizerGrip {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+:global(.light) .resizer:hover .resizerGrip,
+:global(.light) .resizer[data-resizing='true'] .resizerGrip {
+  background: var(--color-mint, #45d6c4);
 }
 
 .sidebar[data-collapsed='true'] .resizer {

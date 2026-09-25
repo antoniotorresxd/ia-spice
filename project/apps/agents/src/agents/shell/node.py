@@ -1,4 +1,11 @@
-from agents.shell.ngspice_runner import parse_wrdata_scalar, run_ngspice
+import os
+
+from agents.shell.ngspice_runner import (
+    inject_curve_export,
+    parse_wrdata_curve,
+    parse_wrdata_scalar,
+    run_ngspice,
+)
 from agents.state import CircuitState
 
 
@@ -36,10 +43,26 @@ def shell_node(state: CircuitState) -> dict:
             continue
 
         metric = goals[block_id]["metric"]
+        target = goals[block_id].get("target")
+
+        # Parsear curva de simulación si fue generada
+        curve_path = os.path.join(os.path.dirname(netlist_path), "curve.txt")
+        curve_points = parse_wrdata_curve(curve_path)
+
+        netlist_text = state["netlists"][block_id].get("text", "")
+        _, analysis_type, x_unit, y_unit = inject_curve_export(netlist_text)
+
         sim_results[block_id] = {
             "metrics": {metric: value},
             "converged": True,
             "sim_error": None,
+            "curve": curve_points,
+            "analysis_type": analysis_type,
+            "x_unit": x_unit,
+            "y_unit": y_unit,
+            "metric_name": metric,
+            "measured_value": value,
+            "target_value": target,
         }
 
     return {"sim_results": sim_results}

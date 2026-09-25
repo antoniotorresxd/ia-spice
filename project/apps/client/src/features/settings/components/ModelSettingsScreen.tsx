@@ -67,6 +67,46 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
   const [connectionFormDirty, setConnectionFormDirty] = useState(false)
   const connectionNameRef = useRef<HTMLInputElement>(null)
 
+  // Parámetros de iteración y tolerancia del curador SPICE
+  const [curatorParams, setCuratorParams] = useState(() => {
+    try {
+      const iterStr = localStorage.getItem('spice_curador_max_iterations')
+      const tolStr = localStorage.getItem('spice_curador_tolerance')
+      const iter = iterStr ? parseInt(iterStr, 10) : 10
+      const tol = tolStr ? parseFloat(tolStr) * 100 : 5
+      return {
+        maxIterations: isNaN(iter) ? 10 : Math.min(10, Math.max(1, iter)),
+        tolerancePercent: isNaN(tol) ? 5 : Math.min(20, Math.max(0.5, tol)),
+      }
+    } catch {
+      return { maxIterations: 10, tolerancePercent: 5 }
+    }
+  })
+
+  function updateMaxIterations(val: number) {
+    setCuratorParams((prev) => {
+      const next = { ...prev, maxIterations: val }
+      try {
+        localStorage.setItem('spice_curador_max_iterations', String(val))
+      } catch {
+        // ignore storage errors
+      }
+      return next
+    })
+  }
+
+  function updateTolerance(percent: number) {
+    setCuratorParams((prev) => {
+      const next = { ...prev, tolerancePercent: percent }
+      try {
+        localStorage.setItem('spice_curador_tolerance', String(percent / 100))
+      } catch {
+        // ignore storage errors
+      }
+      return next
+    })
+  }
+
   async function fetchCollections() {
     return Promise.all([service.listConnections(), service.listAgentAssignments()])
   }
@@ -328,6 +368,70 @@ export function ModelSettingsScreen({ service, onSignOut = async () => {} }: Pro
             onFetchModels={(id) => (service.listConnectionModels ? service.listConnectionModels(id) : Promise.resolve([]))}
             onSave={saveAssignment}
           />
+        </section>
+
+        <section aria-labelledby="curator-simulation-title" className={styles.section}>
+          <div className={styles.sectionHeading}>
+            <div>
+              <h2 id="curator-simulation-title">Parámetros del Curador y Simulación</h2>
+              <p>Controla las iteraciones de ajuste y la tolerancia de convergencia para el lazo de corrección SPICE.</p>
+            </div>
+          </div>
+          <div className={styles.curatorParamsBody}>
+            <div className={styles.paramCard}>
+              <div className={styles.paramHeader}>
+                <div>
+                  <strong>Iteraciones máximas del Curador</strong>
+                  <p>Número de ciclos de ajuste en ngspice antes de declarar fallo de convergencia (1 - 10).</p>
+                </div>
+                <span className={styles.paramValueBadge}>{curatorParams.maxIterations} iteraciones</span>
+              </div>
+              <div className={styles.sliderRow}>
+                <input
+                  type="range"
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={curatorParams.maxIterations}
+                  onChange={(e) => updateMaxIterations(Number(e.target.value))}
+                  className={styles.paramSlider}
+                  aria-label="Iteraciones máximas del Curador"
+                />
+                <div className={styles.sliderMarkers}>
+                  <span>1 (Rápido)</span>
+                  <span>5 (Por defecto)</span>
+                  <span>10 (Máxima convergencia)</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.paramCard}>
+              <div className={styles.paramHeader}>
+                <div>
+                  <strong>Tolerancia de diseño</strong>
+                  <p>Porcentaje de desviación admitido respecto a las especificaciones deseadas.</p>
+                </div>
+                <span className={styles.paramValueBadge}>{curatorParams.tolerancePercent}%</span>
+              </div>
+              <div className={styles.sliderRow}>
+                <input
+                  type="range"
+                  min={1}
+                  max={20}
+                  step={0.5}
+                  value={curatorParams.tolerancePercent}
+                  onChange={(e) => updateTolerance(Number(e.target.value))}
+                  className={styles.paramSlider}
+                  aria-label="Tolerancia de diseño"
+                />
+                <div className={styles.sliderMarkers}>
+                  <span>1% (Estricto)</span>
+                  <span>5% (Típico electrónica)</span>
+                  <span>20% (Holgado)</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
         </div>
       ) : !loadError ? (
