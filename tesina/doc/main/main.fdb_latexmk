@@ -1,12 +1,12 @@
 # Fdb version 4
-["biber main"] 1790525402.27316 "main.bcf" "main.bbl" "main" 1790525415.61254 0
+["biber main"] 1790525402.27316 "main.bcf" "main.bbl" "main" 1790526300.70626 0
   "./lib/referencias.bib" 1783994054.84653 9937 010c9094c106581356266a6ab1716f52 ""
-  "main.bcf" 1790525415.50601 110263 dc70baf15b9639183160c5cb190385c0 "pdflatex"
+  "main.bcf" 1790526300.59403 110263 dc70baf15b9639183160c5cb190385c0 "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1790525409.80845 "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" "main.pdf" "main" 1790525415.61278 0
+["pdflatex"] 1790526294.91047 "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" "main.pdf" "main" 1790526300.70676 0
   "../src/diagrams/c4_l1_v4.png" 1781587247.73669 416435 fed0c5cdd43cbc1ca807bf020b7a258c ""
   "../src/diagrams/c4_l2_v4.png" 1781587247.82469 716545 52398934ce80488959d5a5868e83b76d ""
   "../src/diagrams/c4_l3_v4.png" 1781587248.00869 749967 ad76a54919aa71e8d58fb10e411dd9bf ""
@@ -22,7 +22,7 @@
   "../src/pantallas/Picture1.png" 1784243698.76469 189098 e62a80dc7dedad24d21186541c45f9b8 ""
   "../src/pantallas/Picture2.png" 1784243698.84869 81843 6d8d0bca80719c62bd5d9de7453785e2 ""
   "/etc/texmf/web2c/texmf.cnf" 1769274164.80754 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" 1790525395.28052 7348 fcc1f815f9d848d51932d4fcd9dbe344 ""
+  "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" 1790526294.7003 7388 d89960b45a608efac0d44fe3f896130b ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/times/psyro.tfm" 1136768653 1544 23a042a74981a3e4b6ce2e350e390409 ""
@@ -332,13 +332,13 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1741904018 41538 c016915c1d51223b6dbbfe27341748a8 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1769274180 5467255 9a64d1b40e0b893fc5588ecce9d8accf ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1769274199 3349532 fbed41e341f01964829f3646eccd5e10 ""
-  "main.aux" 1790525415.49483 18676 db5ae38d9c515c47d87493b7a4f98568 "pdflatex"
+  "main.aux" 1790526300.59003 18676 db5ae38d9c515c47d87493b7a4f98568 "pdflatex"
   "main.bbl" 1790525403.28804 38329 85f852b6af8bef2a320373b4bd7899d5 "biber main"
-  "main.lof" 1790525415.50932 1810 1d660e5e1afff205fef18bd7ed02677c "pdflatex"
-  "main.out" 1790525415.50201 10083 c31cf63db29b9f5b419b04e53ae938ce "pdflatex"
-  "main.run.xml" 1790525415.50932 2409 046fe2279f185af2dca0cfbed2298fd7 "pdflatex"
-  "main.tex" 1790525395.28052 7348 fcc1f815f9d848d51932d4fcd9dbe344 ""
-  "main.toc" 1790525415.50932 4458 d3f1afbe487552dd8a6b4bc96ad174f0 "pdflatex"
+  "main.lof" 1790526300.59998 1810 1d660e5e1afff205fef18bd7ed02677c "pdflatex"
+  "main.out" 1790526300.59403 10083 c31cf63db29b9f5b419b04e53ae938ce "pdflatex"
+  "main.run.xml" 1790526300.59998 2409 046fe2279f185af2dca0cfbed2298fd7 "pdflatex"
+  "main.tex" 1790526294.7003 7388 d89960b45a608efac0d44fe3f896130b ""
+  "main.toc" 1790526300.59998 4458 d3f1afbe487552dd8a6b4bc96ad174f0 "pdflatex"
   "sections/apendices.tex" 1782095897.79589 1165 266dd00467fd99bbf6d009bd102968a6 ""
   "sections/conclusiones.tex" 1780981187.05291 0 d41d8cd98f00b204e9800998ecf8427e ""
   "sections/desarrollo.tex" 1784243992.38332 12555 3e980cfe2617c629308559edb41ac0a9 ""
@@ -347,7 +347,7 @@
   "sections/limites_alcances.tex" 1780983935.46858 1533 1aeb5a5948941f29dc6c6d39ba12ad2d ""
   "sections/marco_teorico.tex" 1790525375.92055 10357 4ea7228e2e30b843660e2c8d1805674b ""
   "sections/objetivos.tex" 1790525375.9207 1282 7ee49e76a0302ff7efaa76c5eae9a951 ""
-  "sections/portada.tex" 1790525375.92084 2290 204f8762263502a86e648008d42e2c13 ""
+  "sections/portada.tex" 1790526014.26226 2291 f4322262efea1b8741755a5ae87f6a17 ""
   "sections/problema.tex" 1790525375.92099 2661 8e7def760aa51f1afb4f42a73ec0d79e ""
   "sections/propuesta_solucion.tex" 1783994054.87002 31249 be833ebb115e4e243c59c2cd445ec5b5 ""
   "sections/pruebas.tex" 1780981138.44091 0 d41d8cd98f00b204e9800998ecf8427e ""
