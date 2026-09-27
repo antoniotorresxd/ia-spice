@@ -4,8 +4,15 @@ El sistema propuesto se sitúa en el cruce de cuatro dominios técnicos: el dise
 
 \section{Qué es un agente}
 
+En ciencias de la computación, un agente es una entidad computacional autónoma provista de mecanismos de percepción sobre un entorno, capacidad de razonamiento/decisión para alcanzar objetivos y una interfaz de acción (ejecución de herramientas o código). Un sistema multiagente (MAS) distribuye una meta compleja en agentes especializados que colaboran e intercambian mensajes estructurados.
+
+El ecosistema implementa agentes de rol acotado (tales como el Agente Orquestador, Agente de Cálculo/Workers, Agente Curador, Agente de Escritura y Agente Shell). Esto permite aplicar el principio de descomposición ("divide y vencerás"), delimitando la carga de razonamiento para cada etapa física del circuito.
+
 \subsection{Que es un prompt}
 
+Un prompt es la secuencia inicial de texto, directivas, restricciones y ejemplos (in-context learning) que se inyecta como entrada en la ventana de contexto de un LLM para condicionar probabilísticamente su respuesta.   
+
+Representa el mecanismo formal mediante el cual se parametrizan las intenciones del usuario (por ejemplo: requerimientos de voltaje, ganancia o ancho de banda). Asimismo, el aislamiento estricto de prompts entre sub-módulos es fundamental para mitigar la atrición o saturación de la ventana de contexto al abordar circuitos multietapa complejos.
 
 \section{Modelos de lenguaje grande}
 
@@ -19,11 +26,27 @@ La generación del modelo no es determinista. En cada paso, el siguiente element
 
 \section{LangGraph}
 
+Es un marco de trabajo (framework) de ingeniería de software orientado al desarrollo de aplicaciones agenticas y flujos multiagente cíclicos, modelándolos formalmente como Grafos Dirigidos o Máquinas de Estados Finitas (FSM). En su arquitectura, los nodos representan agentes o funciones computacionales, los bordes definen las transiciones lógicas (incluyendo bifurcaciones condicionales), y el estado (State) constituye un bus de memoria estructurado e inmutable.
+
+LangGraph coordina de manera declarativa la interacción entre los diferentes agentes del subsistema servidor. Permite ejecutar el patrón Map-Reduce en paralelo para sub-bloques funcionales y gestionar bordes condicionales que reinyectan diagnósticos y habilitan lazos de optimización iterativos en caso de fallo.   
+
 \section{LangFuse}
 
-\section{pyspice}
+Es una plataforma de ingeniería y observabilidad de código abierto (LLM Observability and Tracing Platform) diseñada para rastrear, auditar y monitorizar el ciclo de vida de aplicaciones basadas en modelos de lenguaje. Facilita la telemetría detallada de trazas de ejecución (traces y spans), registro de latencias, consumo de tokens/costes asociados y evaluación cualitativa/cuantitativa de salidas y llamadas a herramientas (tool calling).
 
+Proporciona la infraestructura de auditoría y trazabilidad en tiempo de ejecución. Permite inspeccionar qué instrucciones exactas recibió cada agente, monitorear el costo computacional de las llamadas concurrentes en la fase Map-Reduce y correlacionar los errores o reintentos de diseño con las métricas de respuesta de cada modelo.
 
+\section{Spice (Simulation Program with Integrated Circuit Emphasis)}
+
+Desarrollado originalmente en la Universidad de California en Berkeley, SPICE es el software estándar industrial y académico para la simulación numérica y análisis del comportamiento dinámico de circuitos electrónicos analógicos. Modela circuitos a partir de un listado de interconexiones (netlist) y resuelve numéricamente sistemas de ecuaciones algebraico-diferenciales no lineales empleando técnicas como el análisis nodal modificado y métodos iterativos de Newton-Raphson.
+
+Constituye el entorno cuantitativo de validación física real (a través de motores como ngspice). Actúa como el criterio de verdad técnica indispensable para verificar parámetros como ganancia, margen de fase o rizo, y confirmar la ausencia de anomalías topológicas (nodos flotantes, cortocircuitos o fallos de convergencia).   
+
+\section{PySpice}
+
+Es una biblioteca de abstracción e interfaz para Python que encapsula la sintaxis de simulación de circuitos electrónicos y establece un puente programático con motores de simulación SPICE (particularmente ngspice). Provee una interfaz orientada a objetos para declarar componentes, topologías y directivas de simulación (.AC, .DC, .TRAN, .OP) sin requerir el ensamblado manual de texto plano.
+
+Es la herramienta empleada por el Agente de Escritura para traducir las estructuras de datos abstractas generadas por los agentes de cálculo a código de simulación estructurado y ejecutable. Asimismo, captura vectorialmente los resultados numéricos emitidos por el simulador para que el sistema evalúe el desempeño del circuito en bucle cerrado.   
 
 \section{Sistemas multiagente y orquestación}
 
