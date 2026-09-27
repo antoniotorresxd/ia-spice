@@ -1,8 +1,8 @@
-El sistema propuesto se sitúa en el cruce de cuatro dominios técnicos: el diseño de circuitos analógicos, los modelos de lenguaje, el aprendizaje por refuerzo y la simulación física de circuitos, articulados sobre una arquitectura de software distribuida. Este capítulo expone los conceptos que sostienen cada uno de esos dominios y, sobre todo, las relaciones entre ellos, porque la aportación del proyecto no reside en ninguno por separado, sino en su integración dentro de un lazo de generación y validación. La exposición sigue el recorrido de los datos en el sistema: desde la descripción en lenguaje natural hasta el netlist validado.
+El sistema propuesto se sitúa en el cruce de cuatro dominios técnicos: el diseño de circuitos analógicos, los modelos de lenguaje, la Generacion Aumentada por Recuperación y la simulación física de circuitos, articulados sobre una arquitectura de software distribuida. Este capítulo expone los conceptos que sostienen cada uno de esos dominios y, sobre todo, las relaciones entre ellos, porque la aportación del proyecto no reside en ninguno por separado, sino en su integración dentro de un lazo de generación y validación. La exposición sigue el recorrido de los datos en el sistema: desde la descripción en lenguaje natural hasta el netlist validado.
 
 
 
-\section{Qué es un agente}
+\subsection{Qué es un agente}
 
 En ciencias de la computación, un agente es una entidad computacional autónoma provista de mecanismos de percepción sobre un entorno, capacidad de razonamiento/decisión para alcanzar objetivos y una interfaz de acción (ejecución de herramientas o código). Un sistema multiagente (MAS) distribuye una meta compleja en agentes especializados que colaboran e intercambian mensajes estructurados.
 
@@ -14,7 +14,7 @@ Un prompt es la secuencia inicial de texto, directivas, restricciones y ejemplos
 
 Representa el mecanismo formal mediante el cual se parametrizan las intenciones del usuario (por ejemplo: requerimientos de voltaje, ganancia o ancho de banda). Asimismo, el aislamiento estricto de prompts entre sub-módulos es fundamental para mitigar la atrición o saturación de la ventana de contexto al abordar circuitos multietapa complejos.
 
-\section{Modelos de lenguaje grande}
+\subsection{Modelos de lenguaje grande}
 
 Un modelo de lenguaje grande es un modelo estadístico, entrenado sobre grandes volúmenes de texto, que estima la probabilidad del siguiente elemento de una secuencia a partir de los anteriores. La generación procede de forma autorregresiva: el modelo produce un elemento, lo incorpora al contexto y repite el proceso, de modo que la salida se construye paso a paso \cite{vaswani2017attention}. Esta capacidad de generación permite que el modelo transforme una descripción en lenguaje natural en una estructura de datos o en código, que es precisamente lo que el sistema necesita en dos puntos: la extracción de los parámetros eléctricos a partir de la descripción del circuito y el cálculo de los valores de los componentes de cada sub-bloque. Internamente, el modelo procesa el texto como una secuencia de unidades llamadas tokens y opera sobre una ventana de contexto de tamaño acotado, que fija cuánta información puede considerar en una sola consulta; esta limitación reaparece más adelante como una de las razones para descomponer el circuito en sub-bloques.
 
@@ -24,36 +24,68 @@ La limitación que motiva el problema de investigación es complementaria a esta
 
 La generación del modelo no es determinista. En cada paso, el siguiente elemento se elige de una distribución de probabilidad, y un parámetro de temperatura regula cuánta variación se admite en esa elección. Una temperatura baja produce salidas más estables y, al fijarla, hace repetible la generación, condición necesaria para comparar ejecuciones durante la evaluación. Esta misma variabilidad sustenta la estrategia de referencia frente a la que se contrasta el sistema. El enfoque \textit{best-of-N} consiste en pedir al modelo $N$ propuestas independientes para la misma descripción, evaluarlas y conservar la mejor \cite{chen2021evaluating}. Es una forma directa de aprovechar el muestreo, pero no incorpora realimentación: cada propuesta se genera sin información sobre los fallos de las anteriores. El sistema propuesto se mide contra esta línea base a igual número de llamadas al modelo, lo que permite distinguir la mejora atribuible al lazo de ajuste de la que se obtendría por el solo hecho de muestrear más.
 
-\section{LangGraph}
+\subsection{LangGraph}
 
 Es un marco de trabajo (framework) de ingeniería de software orientado al desarrollo de aplicaciones agenticas y flujos multiagente cíclicos, modelándolos formalmente como Grafos Dirigidos o Máquinas de Estados Finitas (FSM). En su arquitectura, los nodos representan agentes o funciones computacionales, los bordes definen las transiciones lógicas (incluyendo bifurcaciones condicionales), y el estado (State) constituye un bus de memoria estructurado e inmutable.
 
 LangGraph coordina de manera declarativa la interacción entre los diferentes agentes del subsistema servidor. Permite ejecutar el patrón Map-Reduce en paralelo para sub-bloques funcionales y gestionar bordes condicionales que reinyectan diagnósticos y habilitan lazos de optimización iterativos en caso de fallo.   
 
-\section{LangFuse}
+\subsection{LangFuse}
 
 Es una plataforma de ingeniería y observabilidad de código abierto (LLM Observability and Tracing Platform) diseñada para rastrear, auditar y monitorizar el ciclo de vida de aplicaciones basadas en modelos de lenguaje. Facilita la telemetría detallada de trazas de ejecución (traces y spans), registro de latencias, consumo de tokens/costes asociados y evaluación cualitativa/cuantitativa de salidas y llamadas a herramientas (tool calling).
 
 Proporciona la infraestructura de auditoría y trazabilidad en tiempo de ejecución. Permite inspeccionar qué instrucciones exactas recibió cada agente, monitorear el costo computacional de las llamadas concurrentes en la fase Map-Reduce y correlacionar los errores o reintentos de diseño con las métricas de respuesta de cada modelo.
 
-\section{Spice (Simulation Program with Integrated Circuit Emphasis)}
+\subsection{Spice (Simulation Program with Integrated Circuit Emphasis)}
 
 Desarrollado originalmente en la Universidad de California en Berkeley, SPICE es el software estándar industrial y académico para la simulación numérica y análisis del comportamiento dinámico de circuitos electrónicos analógicos. Modela circuitos a partir de un listado de interconexiones (netlist) y resuelve numéricamente sistemas de ecuaciones algebraico-diferenciales no lineales empleando técnicas como el análisis nodal modificado y métodos iterativos de Newton-Raphson.
 
 Constituye el entorno cuantitativo de validación física real (a través de motores como ngspice). Actúa como el criterio de verdad técnica indispensable para verificar parámetros como ganancia, margen de fase o rizo, y confirmar la ausencia de anomalías topológicas (nodos flotantes, cortocircuitos o fallos de convergencia).   
 
-\section{PySpice}
+\subsection{PySpice}
 
 Es una biblioteca de abstracción e interfaz para Python que encapsula la sintaxis de simulación de circuitos electrónicos y establece un puente programático con motores de simulación SPICE (particularmente ngspice). Provee una interfaz orientada a objetos para declarar componentes, topologías y directivas de simulación (.AC, .DC, .TRAN, .OP) sin requerir el ensamblado manual de texto plano.
 
 Es la herramienta empleada por el Agente de Escritura para traducir las estructuras de datos abstractas generadas por los agentes de cálculo a código de simulación estructurado y ejecutable. Asimismo, captura vectorialmente los resultados numéricos emitidos por el simulador para que el sistema evalúe el desempeño del circuito en bucle cerrado.   
 
-\section{Sistemas multiagente y orquestación}
+\subsection{Generacion Aumentada por Recuperación (RAG)}
 
-Hay que modificar el Map reduce con el Master-Workers.
-primero hablarlo 
+En esta arquitectura, la Generación Aumentada por Recuperación (RAG) sustituye los esquemas basados en ensayo y error o aprendizaje por refuerzo puro, transformando el subsistema en un entorno guiado por conocimiento empírico y documental indexado.
 
-\section{Arquitectura de software: principios y patrones de coordinación}
+El RAG se estructura a través del Módulo Curador de Conocimiento y opera en tres dimensiones fundamentales:
+
+Recuperación Previa y Anclaje Técnico (Pre-Generation Retrieval)Cuando el usuario describe un circuito en lenguaje natural, el sistema no permite que los LLMs asuman parámetros arbitrarios. El mecanismo de RAG realiza una búsqueda vectorial y semántica sobre bases de datos técnicas locales:   Catálogos de Componentes COTS (Commercial Off-The-Shelf): Hojas de datos (datasheets) y tablas paramétricas de componentes reales del mercado (diodos rectificadores, capacitores de filtrado, transistores BJT/MOSFET y reguladores integrados).   Plantillas de Topologías Analógicas Validadas: Estructuras de referencia netlist probadas para el tipo de circuito solicitado (filtros pasivos, fuentes lineales, configuraciones de amplificadores).Directivas de Simulación para SPICE: Parámetros de convergencia y tolerancias (.OPTIONS, condiciones iniciales .IC).El Curador extrae estos fragmentos pertinentes y los inyecta en el prompt inicial del Master y de los Workers, restringiendo el espacio de diseño a parámetros realizables en hardware físico real.   
+
+B. Mitigación de Alucinaciones Topológicas y de SizingLos modelos de propósito general tienden a inventar valores ideales (p. ej., resistores de valores no normalizados) o directivas incompatibles con los motores SPICE. La inyección dinámica de contexto mediante RAG actúa como un filtro (grounding): obliga al agente de cálculo a elegir exclusivamente modelos que cuenten con archivos de biblioteca (.lib / .model) reconocidos por el simulador ngspice.
+
+Lazo Cerrado de Curación y Memoria de Diseño (Knowledge Curation Loop)La aportación diferencial del RAG en este sistema radica en su funcionamiento en lazo cerrado tras la ejecución física en ngspice:
+
+Captura del Diagnóstico: Si ngspice reporta una divergencia numérica (fallo de Newton-Raphson, timestep too small) o una discrepancia severa respecto a la especificación esperada, el Agente Shell captura el log crudo.
+Destilación Curada: En lugar de reinyectar el mensaje de error textual íntegro al modelo generador, el Curador procesa el fallo, identifica la causa física subyacente y genera una directiva de ajuste o regla de diseño aprendida.
+Consolidación en la Base Vectorial: Esta heurística verificada se almacena en el almacén de conocimiento persistente (Self-Evolving Memory / Base Vectorial). En el reintento actual (o en futuros diseños de la misma familia de circuitos), el sistema recupera dicha directiva, impidiendo que el ecosistema caiga en ciclos repetitivos de error y acelerando la convergencia a una solución funcional. 
+
+
+\subsection{Sistemas multiagente y orquestación}
+
+En tareas complejas de ingeniería analógica —como la síntesis, dimensionamiento y verificación de circuitos electrónicos—, el uso de un único Modelo de Lenguaje Grande (Single LLM Agent) genera un cuello de botella crítico: la atrición o saturación de la ventana de contexto (context attrition). A medida que se incrementa el número de directivas, restricciones topológicas y mensajes de depuración, el modelo tiende a alucinar nodos flotantes, interconexiones erráticas o componentes comerciales inexistentes.   Un Sistema Multiagente (Multi-Agent System - MAS) resuelve esta limitación mediante el principio de descomposición funcional (divide y vencerás), desacoplando las responsabilidades en agentes autónomos con prompts pequeños, especializados y estrictamente aislados.
+
+La orquestación centralizada no se implementa como un script secuencial rígido, sino como una Máquina de Estados Finita (FSM) estructurada como un grafo cíclico dirigido mediante LangGraph:   Estado Compartido (State): Constituye el bus de datos inmutable y central donde se registran la especificación formal del circuito, las variables intermedias, las listas de componentes calculadas y el historial de iteraciones.   Nodos y Bordes Condicionales: Los nodos encapsulan a los agentes especializados, mientras que los bordes condicionales evalúan en tiempo de ejecución las transiciones del flujo, gestionando lazos cerrados de optimización (feedback loops) y detenciones de seguridad ante fallas críticas.
+
+%METER IMAGEN DE MODELO DE EJECUCION MASTER WORKERS
+
+Para resolver circuitos analógicos multietapa (como fuentes reguladas CA/CD compuestas por etapas de transformación, rectificación, filtrado y regulación lineal), el sistema implementa el patrón concurrente Master-Worker estructurado en dos fases
+
+Nodo Maestro (Master):
+
+Recibe la descripción desglosada y el plan del circuito desde el Orquestador. Su rol consiste en particionar el problema global en especificaciones locales independientes para cada sub-bloque funcional y asegurar que ningún sub-bloque exceda los límites de tokens de la ventana de contexto permitida.
+
+Sub-agentes Trabajadores (Workers):
+
+Se instancian de manera concurrente. Cada Worker resuelve de forma exclusiva el dimensionamiento y el planteamiento analítico de su etapa asignada (cálculo de impedancias, selección de valores comerciales COTS, corrientes de polarización). Al no recibir el código ni los errores de las demás etapas, se elimina el consumo excesivo de memoria operativa del modelo.
+
+
+
+\subsection{Arquitectura de software: principios y patrones de coordinación}
 
 La forma del sistema se apoya en principios reconocidos de la ingeniería de software.
 
@@ -61,6 +93,7 @@ La forma del sistema se apoya en principios reconocidos de la ingeniería de sof
 cada parte del sistema atiende una preocupación distinta, de modo que las responsabilidades no se mezclan y cada una puede evolucionar por separado \cite{pressman2010software}. El proyecto aplica este principio al dividir el sistema en un subsistema cliente, que gestiona el acceso de los usuarios, y un subsistema servidor, que aloja la lógica de diseño de circuitos. La gestión de usuarios y la generación de circuitos son preocupaciones independientes y se despliegan por separado.
 
 \subsection{Ausencia de estado en el componente a escalar} Una instancia sin estado no guarda información entre solicitudes, de modo que cualquier instancia puede atender cualquier solicitud y el sistema admite replicar el servidor detrás de un balanceador de cargas para repartir la demanda \cite{fielding2000architectural}. Este escalado horizontal es la razón por la que el subsistema servidor se diseña sin estado.
+
 \subsection{La ausencia de estado entre solicitudes convive con una exigencia opuesta dentro de cada solicitud}
 El lazo de ajuste necesita conservar el estado entre iteraciones, porque cada ciclo parte del resultado del anterior. El sistema resuelve esta tensión mediante un mecanismo de \textit{checkpointer} que persiste el estado de la generación en una base de datos tras cada paso, de modo que el estado de una solicitud en proceso queda disponible para todos los agentes a lo largo de las iteraciones sin residir en la memoria de una instancia concreta. La coordinación entre agentes se modela como un grafo de estado, en el que los nodos son los agentes y las aristas el flujo de control, y sobre el que se apoya la persistencia por \textit{checkpointer} \cite{langgraph}. Estos conceptos ---separación de intereses, ausencia de estado, persistencia explícita y grafo de estado--- son los que el capítulo de diseño aplica para justificar la estructura concreta del sistema.
 

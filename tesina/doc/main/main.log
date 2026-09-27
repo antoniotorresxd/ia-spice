@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.9.27)  27 SEP 2026 13:49
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.9.27)  27 SEP 2026 14:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1703,12 +1703,12 @@ Package biblatex Info: Reference section=0 on input line 146.
 Package biblatex Info: Reference segment=0 on input line 146.
 Package babel Info: Main language set to 'spanish'.
  (sections/portada.tex
-<../src/logos/ipn_logo.png, id=231, 268.00125pt x 189.70876pt>
+<../src/logos/ipn_logo.png, id=242, 268.00125pt x 189.70876pt>
 File: ../src/logos/ipn_logo.png Graphic file (type png)
 <use ../src/logos/ipn_logo.png>
 Package pdftex.def Info: ../src/logos/ipn_logo.png  used on input line 10.
 (pdftex.def)             Requested size: 113.81102pt x 80.56291pt.
-<../src/logos/esime_logo.jpg, id=232, 585.8688pt x 524.1984pt>
+<../src/logos/esime_logo.jpg, id=243, 585.8688pt x 524.1984pt>
 File: ../src/logos/esime_logo.jpg Graphic file (type jpg)
 <use ../src/logos/esime_logo.jpg>
 Package pdftex.def Info: ../src/logos/esime_logo.jpg  used on input line 15.
@@ -1772,7 +1772,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.I}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.32 ... del sistema (modelo C4)}{18}{section.2.4}
+l.32 ...funcional y casos de uso}{15}{section.2.3}
                                                   % [1
 
 
@@ -1801,82 +1801,54 @@ Package hyperref Warning: The anchor of a bookmark and its parent's must not
 
 
 ])
-(sections/estado_arte.tex [2] [3]
-(C:\Users\cucho\AppData\Local\Programs\MiKTeX\tex/latex/worldflags\worldflag_US
-.tex)
-(C:\Users\cucho\AppData\Local\Programs\MiKTeX\tex/latex/worldflags\worldflag_SG
-.tex)
-(C:\Users\cucho\AppData\Local\Programs\MiKTeX\tex/latex/worldflags\worldflag_BD
-.tex)
-(C:\Users\cucho\AppData\Local\Programs\MiKTeX\tex/latex/worldflags\worldflag_US
-.tex)
-(C:\Users\cucho\AppData\Local\Programs\MiKTeX\tex/latex/worldflags\worldflag_SG
-.tex)
-(C:\Users\cucho\AppData\Local\Programs\MiKTeX\tex/latex/worldflags\worldflag_BD
-.tex)
-\flagwidth=\dimen373
-\flaglength=\dimen374
-\flagframe=\dimen375
-\flagwidth=\dimen376
-\flaglength=\dimen377
-\flagframe=\dimen378
-
-(C:\Users\cucho\AppData\Local\Programs\MiKTeX\tex/latex/worldflags\worldflag_US
-.tex)
-\flagwidth=\dimen379
-\flaglength=\dimen380
-\flagframe=\dimen381
-
-(C:\Users\cucho\AppData\Local\Programs\MiKTeX\tex/latex/worldflags\worldflag_SG
-.tex)
-\flagwidth=\dimen382
-\flaglength=\dimen383
-\flagframe=\dimen384
-
-(C:\Users\cucho\AppData\Local\Programs\MiKTeX\tex/latex/worldflags\worldflag_BD
-.tex)) (sections/justificacion.tex [4]) (sections/limites_alcances.tex [5])
-[6]
+(sections/estado_arte.tex [2] [3]) (sections/justificacion.tex [4])
+(sections/limites_alcances.tex) [5]
 Cap\'{\i }tulo 1.
-(sections/marco_teorico.tex [7
+(sections/marco_teorico.tex
 
-] [8] [9] [10]) [11]
+Package hyperref Warning: Difference (2) between bookmark levels is greater 
+(hyperref)                than one, level fixed on input line 5.
+
+[6
+
+] [7] [8] [9] [10]) [11]
 Cap\'{\i }tulo 2.
 (sections/propuesta_solucion.tex [12
 
 ] [13] [14]
-<../src/diagrams/diagrama_funcional.png, id=468, 4456.65pt x 2890.8pt>
+<../src/diagrams/diagrama_funcional.png, id=467, 4456.65pt x 2890.8pt>
 File: ../src/diagrams/diagrama_funcional.png Graphic file (type png)
 <use ../src/diagrams/diagrama_funcional.png>
 Package pdftex.def Info: ../src/diagrams/diagrama_funcional.png  used on input 
 line 55.
 (pdftex.def)             Requested size: 576.65337pt x 374.00868pt.
  [15]
-<../src/diagrams/casos_uso_simulacion.png, id=477, 3854.4pt x 2168.1pt>
+<../src/diagrams/casos_uso_simulacion.png, id=476, 3854.4pt x 2168.1pt>
 File: ../src/diagrams/casos_uso_simulacion.png Graphic file (type png)
 <use ../src/diagrams/casos_uso_simulacion.png>
 Package pdftex.def Info: ../src/diagrams/casos_uso_simulacion.png  used on inpu
 t line 71.
 (pdftex.def)             Requested size: 576.65337pt x 324.34082pt.
  [16 <../src/diagrams/diagrama_funcional.png>]
-<../src/diagrams/c4_l1_v4.png, id=484, 3312.375pt x 1565.85pt>
+<../src/diagrams/c4_l1_v4.png, id=482, 3312.375pt x 1565.85pt>
 File: ../src/diagrams/c4_l1_v4.png Graphic file (type png)
 <use ../src/diagrams/c4_l1_v4.png>
 Package pdftex.def Info: ../src/diagrams/c4_l1_v4.png  used on input line 88.
 (pdftex.def)             Requested size: 576.65337pt x 272.59428pt.
  [17 <../src/diagrams/casos_uso_simulacion.png>]
-<../src/diagrams/c4_l2_v4.png, id=491, 3312.375pt x 2499.3375pt>
+<../src/diagrams/c4_l2_v4.png, id=489, 3312.375pt x 2499.3375pt>
 File: ../src/diagrams/c4_l2_v4.png Graphic file (type png)
 <use ../src/diagrams/c4_l2_v4.png>
 Package pdftex.def Info: ../src/diagrams/c4_l2_v4.png  used on input line 102.
 (pdftex.def)             Requested size: 576.65337pt x 435.10242pt.
  [18 <../src/diagrams/c4_l1_v4.png>]
-<../src/diagrams/c4_l3_v4.png, id=498, 3312.375pt x 2649.9pt>
+<../src/diagrams/c4_l3_v4.png, id=496, 3312.375pt x 2649.9pt>
 File: ../src/diagrams/c4_l3_v4.png Graphic file (type png)
 <use ../src/diagrams/c4_l3_v4.png>
 Package pdftex.def Info: ../src/diagrams/c4_l3_v4.png  used on input line 116.
 (pdftex.def)             Requested size: 576.65337pt x 461.3134pt.
  [19 <../src/diagrams/c4_l2_v4.png>] [20 <../src/diagrams/c4_l3_v4.png>]
-<../src/diagrams/secuencia_flujo_principal.png, id=509, 3794.175pt x 3914.625pt
+<../src/diagrams/secuencia_flujo_principal.png, id=507, 3794.175pt x 3914.625pt
 >
 File: ../src/diagrams/secuencia_flujo_principal.png Graphic file (type png)
 <use ../src/diagrams/secuencia_flujo_principal.png>
@@ -1894,13 +1866,13 @@ Package microtype Info: Loading generic protrusion settings for font family
  [29
 
 ]
-<../src/pantallas/Picture1.png, id=574, 608.2725pt x 435.12563pt>
+<../src/pantallas/Picture1.png, id=572, 608.2725pt x 435.12563pt>
 File: ../src/pantallas/Picture1.png Graphic file (type png)
 <use ../src/pantallas/Picture1.png>
 Package pdftex.def Info: ../src/pantallas/Picture1.png  used on input line 37.
 (pdftex.def)             Requested size: 443.57848pt x 317.32036pt.
  [30]
-<../src/pantallas/Picture2.png, id=580, 600.74437pt x 438.8897pt>
+<../src/pantallas/Picture2.png, id=578, 600.74437pt x 438.8897pt>
 File: ../src/pantallas/Picture2.png Graphic file (type png)
 <use ../src/pantallas/Picture2.png>
 Package pdftex.def Info: ../src/pantallas/Picture2.png  used on input line 48.
@@ -1955,13 +1927,13 @@ actor ap-pli-ca-tions with LLMs. ^^Tdirección:
 
 ] (sections/apendices.tex [39]
 Ap\'{e}ndice A.
-<../src/diagrams/casos_uso_acceso.png, id=660, 3252.15pt x 1686.3pt>
+<../src/diagrams/casos_uso_acceso.png, id=655, 3252.15pt x 1686.3pt>
 File: ../src/diagrams/casos_uso_acceso.png Graphic file (type png)
 <use ../src/diagrams/casos_uso_acceso.png>
 Package pdftex.def Info: ../src/diagrams/casos_uso_acceso.png  used on input li
 ne 11.
 (pdftex.def)             Requested size: 443.57848pt x 229.98218pt.
-<../src/diagrams/casos_uso_generacion.png, id=661, 3794.175pt x 1746.525pt>
+<../src/diagrams/casos_uso_generacion.png, id=656, 3794.175pt x 1746.525pt>
 File: ../src/diagrams/casos_uso_generacion.png Graphic file (type png)
 <use ../src/diagrams/casos_uso_generacion.png>
 Package pdftex.def Info: ../src/diagrams/casos_uso_generacion.png  used on inpu
@@ -1970,7 +1942,7 @@ t line 20.
 [40
 
  <../src/diagrams/casos_uso_acceso.png>]
-<../src/diagrams/casos_uso_decision.png, id=668, 3553.275pt x 1716.4125pt>
+<../src/diagrams/casos_uso_decision.png, id=662, 3553.275pt x 1716.4125pt>
 File: ../src/diagrams/casos_uso_decision.png Graphic file (type png)
 <use ../src/diagrams/casos_uso_decision.png>
 Package pdftex.def Info: ../src/diagrams/casos_uso_decision.png  used on input 
@@ -1989,17 +1961,8 @@ L3 programming layer <2026-08-10>
 
 LaTeX Warning: There were undefined references.
 
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
-
-Package rerunfilecheck Warning: File `main.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `main.out':
-(rerunfilecheck)             Before: 54030D219A6BE415C574153D1E02D1E6;10301
-(rerunfilecheck)             After:  1D52F02CCA39CAC5D6DE8B26D912B825;10498.
+Package rerunfilecheck Info: File `main.out' has not changed.
+(rerunfilecheck)             Checksum: 96B757265B80786D5CB1D32513F9D25E;10895.
 
 Package biblatex Warning: Please (re)run Biber on the file:
 (biblatex)                main
@@ -2010,50 +1973,22 @@ Package logreq Info: Writing requests to 'main.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 52507 strings out of 467441
- 1192223 string characters out of 5407591
- 2172010 words of memory out of 5000000
- 80390 multiletter control sequences out of 15000+600000
- 714783 words of font info for 358 fonts, out of 8000000 for 9000
+ 52202 strings out of 467441
+ 1185282 string characters out of 5407591
+ 2155827 words of memory out of 5000000
+ 80132 multiletter control sequences out of 15000+600000
+ 711413 words of font info for 346 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 94i,14n,94p,1475b,2366s stack positions out of 10000i,1000n,20000p,200000b,200000s
-
-pdfTeX warning (dest): name{table.caption.16} has been referenced but does not 
-exist, replaced by a fixed one
-
-
-pdfTeX warning (dest): name{figure.caption.20} has been referenced but does not
- exist, replaced by a fixed one
-
-
-pdfTeX warning (dest): name{figure.caption.15} has been referenced but does not
- exist, replaced by a fixed one
-
-
-pdfTeX warning (dest): name{figure.caption.12} has been referenced but does not
- exist, replaced by a fixed one
-
-
-pdfTeX warning (dest): name{figure.caption.5} has been referenced but does not 
-exist, replaced by a fixed one
-
-
-pdfTeX warning (dest): name{chapter*.17} has been referenced but does not exist
-, replaced by a fixed one
-
-
-pdfTeX warning (dest): name{table.caption.6} has been referenced but does not e
-xist, replaced by a fixed one
-
- <C:\Users\cucho\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt10
-95.pk> <C:\Users\cucho\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\
-ectt1200.pk><C:/Users/cucho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times
-/utmb8a.pfb><C:/Users/cucho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times
-/utmr8a.pfb><C:/Users/cucho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times
-/utmri8a.pfb>
-Output written on main.pdf (45 pages, 3362745 bytes).
+ 94i,11n,94p,1475b,2366s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ <C:\Users\cucho\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt
+1095.pk> <C:\Users\cucho\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi60
+0\ectt1200.pk><C:/Users/cucho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/tim
+es/utmb8a.pfb><C:/Users/cucho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/tim
+es/utmr8a.pfb><C:/Users/cucho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/tim
+es/utmri8a.pfb>
+Output written on main.pdf (45 pages, 3361203 bytes).
 PDF statistics:
- 815 PDF objects out of 1000 (max. 8388607)
- 144 named destinations out of 1000 (max. 500000)
- 96838 words of extra memory for PDF output out of 106986 (max. 10000000)
+ 808 PDF objects out of 1000 (max. 8388607)
+ 137 named destinations out of 1000 (max. 500000)
+ 92766 words of extra memory for PDF output out of 106986 (max. 10000000)
 
