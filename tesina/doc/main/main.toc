@@ -3,12 +3,11 @@
 \contentsline {section}{Planteamiento del Problema}{1}{section*.4}%
 \contentsline {section}{Objetivo General}{2}{section*.4}%
 \contentsline {section}{Objetivos Específicos}{2}{section*.4}%
-\contentsline {section}{\numberline {0.1}Estado del Arte}{2}{section.0.1}%
-\contentsline {subsection}{\numberline {0.1.1}AnalogCoder}{2}{subsection.0.1.1}%
-\contentsline {subsection}{\numberline {0.1.2}AnalogAgent}{3}{subsection.0.1.2}%
-\contentsline {subsection}{\numberline {0.1.3}CircuitLM}{3}{subsection.0.1.3}%
-\contentsline {section}{Justificación}{4}{subsection.0.1.3}%
-\contentsline {section}{Límites y Alcances}{5}{subsection.0.1.3}%
+\contentsline {subsection}{\numberline {0.0.1}AnalogCoder}{2}{subsection.0.0.1}%
+\contentsline {subsection}{\numberline {0.0.2}AnalogAgent}{3}{subsection.0.0.2}%
+\contentsline {subsection}{\numberline {0.0.3}CircuitLM}{3}{subsection.0.0.3}%
+\contentsline {section}{Justificación}{4}{subsection.0.0.3}%
+\contentsline {section}{Límites y Alcances}{5}{subsection.0.0.3}%
 \contentsline {chapter}{\numberline {1}Marco Teórico}{6}{chapter.1}%
 \contentsline {subsection}{\numberline {1.0.1}Qué es un agente}{6}{subsection.1.0.1}%
 \contentsline {subsection}{\numberline {1.0.2}Que es un prompt}{6}{subsection.1.0.2}%
@@ -17,39 +16,39 @@
 \contentsline {subsection}{\numberline {1.0.5}LangFuse}{8}{subsection.1.0.5}%
 \contentsline {subsection}{\numberline {1.0.6}Spice (Simulation Program with Integrated Circuit Emphasis)}{8}{subsection.1.0.6}%
 \contentsline {subsection}{\numberline {1.0.7}PySpice}{9}{subsection.1.0.7}%
-\contentsline {subsection}{\numberline {1.0.8}Sistemas multiagente y orquestación}{9}{subsection.1.0.8}%
-\contentsline {subsection}{\numberline {1.0.9}Arquitectura de software: principios y patrones de coordinación}{9}{subsection.1.0.9}%
-\contentsline {subsection}{\numberline {1.0.10}Separacion de intereses}{9}{subsection.1.0.10}%
-\contentsline {subsection}{\numberline {1.0.11}Ausencia de estado en el componente a escalar}{10}{subsection.1.0.11}%
-\contentsline {subsection}{\numberline {1.0.12}La ausencia de estado entre solicitudes convive con una exigencia opuesta dentro de cada solicitud}{10}{subsection.1.0.12}%
-\contentsline {section}{\numberline {1.1}El diseño de circuitos analógicos como proceso iterativo}{10}{section.1.1}%
-\contentsline {section}{\numberline {1.2}Síntesis del marco teórico}{11}{section.1.2}%
-\contentsline {chapter}{\numberline {2}Diseño e Implementación de la Solución}{12}{chapter.2}%
-\contentsline {section}{\numberline {2.1}Introducción}{12}{section.2.1}%
-\contentsline {section}{\numberline {2.2}Premisas y fundamento de diseño}{13}{section.2.2}%
-\contentsline {subsection}{\numberline {2.2.1}El problema de diseño y el papel del SRS}{13}{subsection.2.2.1}%
-\contentsline {subsection}{\numberline {2.2.2}Premisas de diseño}{13}{subsection.2.2.2}%
-\contentsline {section}{\numberline {2.3}Descomposición funcional y casos de uso}{15}{section.2.3}%
-\contentsline {subsection}{\numberline {2.3.1}Vista funcional}{15}{subsection.2.3.1}%
-\contentsline {subsection}{\numberline {2.3.2}Modelo de casos de uso}{16}{subsection.2.3.2}%
-\contentsline {section}{\numberline {2.4}Arquitectura del sistema (modelo C4)}{17}{section.2.4}%
-\contentsline {subsection}{\numberline {2.4.1}Nivel 1 — Contexto}{17}{subsection.2.4.1}%
-\contentsline {subsection}{\numberline {2.4.2}Nivel 2 — Contenedores}{18}{subsection.2.4.2}%
-\contentsline {subsection}{\numberline {2.4.3}Nivel 3 — Componentes}{19}{subsection.2.4.3}%
-\contentsline {section}{\numberline {2.5}Comportamiento dinámico: flujo de generación}{20}{section.2.5}%
-\contentsline {section}{\numberline {2.6}Calidad de la solución}{23}{section.2.6}%
-\contentsline {section}{\numberline {2.7}Seguridad de la solución}{25}{section.2.7}%
-\contentsline {section}{\numberline {2.8}Criterios de aceptación de la propuesta}{27}{section.2.8}%
-\contentsline {section}{\numberline {2.9}Síntesis del diseño}{28}{section.2.9}%
-\contentsline {chapter}{\numberline {3}Desarrollo del Proyecto}{29}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Introducción}{29}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Código fuente del proyecto}{29}{section.3.2}%
-\contentsline {section}{\numberline {3.3}Pantallas del prototipo funcional}{30}{section.3.3}%
-\contentsline {section}{\numberline {3.4}Análisis de seguridad de la implementación}{32}{section.3.4}%
-\contentsline {subsection}{\numberline {3.4.1}Controles implementados}{32}{subsection.3.4.1}%
-\contentsline {subsection}{\numberline {3.4.2}Correspondencia con las categorías de riesgo OWASP}{34}{subsection.3.4.2}%
-\contentsline {subsection}{\numberline {3.4.3}Riesgos residuales}{34}{subsection.3.4.3}%
-\contentsline {chapter}{\numberline {4}Pruebas y Análisis de Resultados}{36}{chapter.4}%
-\contentsline {chapter}{\numberline {5}Conclusiones y Trabajo Futuro}{37}{chapter.5}%
-\contentsline {chapter}{Referencias}{38}{chapter*.15}%
-\contentsline {chapter}{\numberline {A}Diagramas de casos de uso}{40}{appendix.A}%
+\contentsline {subsection}{\numberline {1.0.8}Generacion Aumentada por Recuperación (RAG)}{9}{subsection.1.0.8}%
+\contentsline {subsection}{\numberline {1.0.9}Sistemas multiagente y orquestación}{10}{subsection.1.0.9}%
+\contentsline {subsection}{\numberline {1.0.10}Arquitectura de software: principios y patrones de coordinación}{11}{subsection.1.0.10}%
+\contentsline {subsection}{\numberline {1.0.11}Separacion de intereses}{11}{subsection.1.0.11}%
+\contentsline {subsection}{\numberline {1.0.12}Ausencia de estado en el componente a escalar}{11}{subsection.1.0.12}%
+\contentsline {subsection}{\numberline {1.0.13}La ausencia de estado entre solicitudes convive con una exigencia opuesta dentro de cada solicitud}{12}{subsection.1.0.13}%
+\contentsline {section}{\numberline {1.1}El diseño de circuitos analógicos como proceso iterativo}{12}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Síntesis del marco teórico}{13}{section.1.2}%
+\contentsline {chapter}{\numberline {2}Diseño y desarrollo del proyecto}{14}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Propuesta de Diseño}{14}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Premisas y fundamento de diseño}{15}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}El problema de diseño y el papel del SRS}{15}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Premisas de diseño}{15}{subsection.2.2.2}%
+\contentsline {section}{\numberline {2.3}Descomposición funcional y casos de uso}{17}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}Vista funcional}{17}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}Modelo de casos de uso}{18}{subsection.2.3.2}%
+\contentsline {section}{\numberline {2.4}Arquitectura del sistema (modelo C4)}{19}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}Nivel 1 — Contexto}{19}{subsection.2.4.1}%
+\contentsline {subsection}{\numberline {2.4.2}Nivel 2 — Contenedores}{20}{subsection.2.4.2}%
+\contentsline {subsection}{\numberline {2.4.3}Nivel 3 — Componentes}{21}{subsection.2.4.3}%
+\contentsline {section}{\numberline {2.5}Comportamiento dinámico: flujo de generación}{22}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Calidad de la solución}{25}{section.2.6}%
+\contentsline {section}{\numberline {2.7}Seguridad de la solución}{27}{section.2.7}%
+\contentsline {section}{\numberline {2.8}Criterios de aceptación de la propuesta}{29}{section.2.8}%
+\contentsline {section}{\numberline {2.9}Síntesis del diseño}{30}{section.2.9}%
+\contentsline {section}{\numberline {2.10}Introducción}{30}{section.2.10}%
+\contentsline {section}{\numberline {2.11}Código fuente del proyecto}{30}{section.2.11}%
+\contentsline {section}{\numberline {2.12}Pantallas del prototipo funcional}{31}{section.2.12}%
+\contentsline {section}{\numberline {2.13}Análisis de seguridad de la implementación}{33}{section.2.13}%
+\contentsline {subsection}{\numberline {2.13.1}Controles implementados}{33}{subsection.2.13.1}%
+\contentsline {subsection}{\numberline {2.13.2}Correspondencia con las categorías de riesgo OWASP}{35}{subsection.2.13.2}%
+\contentsline {subsection}{\numberline {2.13.3}Riesgos residuales}{35}{subsection.2.13.3}%
+\contentsline {chapter}{\numberline {3}Pruebas y Análisis de Resultados}{37}{chapter.3}%
+\contentsline {chapter}{\numberline {4}Conclusiones y Trabajo Futuro}{38}{chapter.4}%
+\contentsline {chapter}{Referencias}{39}{chapter*.15}%
+\contentsline {chapter}{\numberline {A}Diagramas de casos de uso}{41}{appendix.A}%
