@@ -130,8 +130,10 @@ it('buildDiagram coloca los drops a tierra y detecta los símbolos usados', () =
   const diagram = buildDiagram(parseNetlist(RC_LOWPASS))
 
   expect(diagram.usedSymbols).toEqual(new Set(['source', 'resistor', 'capacitor', 'ground']))
-  expect(diagram.nodeXs).toEqual({ vin: 70, vout: 225 })
-  expect(diagram.groundDrops.sort((a, b) => a - b)).toEqual([70, 225])
+  // vout = MARGIN_X + SERIES_SPACING + SOURCE_LABEL_ROOM: vin lleva la fuente,
+  // cuya etiqueta necesita la holgura extra para no montarse sobre C1.
+  expect(diagram.nodeXs).toEqual({ vin: 70, vout: 285 })
+  expect(diagram.groundDrops.sort((a, b) => a - b)).toEqual([70, 285])
 })
 
 it('buildDiagram del divisor usa dos resistencias, ningún capacitor', () => {
@@ -360,3 +362,78 @@ it('resuelve correctamente el filtro activo pasaaltas (Active HP) con capacitor 
   }
 })
 
+
+// Netlist real del ensamblador de composición (agents escritura/composition.py):
+// cada etapa es un `.subckt <id> vin vout 0` con su opamp macromodelo anidado.
+const COMPOSED = [
+  '* Composed design',
+  '.subckt hp1 vin vout 0',
+  'Chp1_1 vin hp1_vplus 1.0000e-08',
+  'Rhp1_1 hp1_vplus 0 15915.49',
+  'Xhp1_1 hp1_vplus hp1_vfb vout hp1_opamp',
+  'Rhp1_g hp1_vfb 0 10000',
+  'Rhp1_f vout hp1_vfb 0',
+  '.subckt hp1_opamp hp1_inp hp1_inn hp1_out',
+  'Rhp1_in hp1_inp hp1_inn 1e6',
+  'Ehp1_gain hp1_n1 0 hp1_inp hp1_inn 1e5',
+  'Ehp1_out hp1_out 0 hp1_n1 0 1',
+  '.ends',
+  '.ends',
+  '.subckt amp1 vin vout 0',
+  'Ramp1_1 vout amp1_vfb 9000',
+  'Ramp1_2 amp1_vfb 0 1000',
+  'Xamp1_1 vin amp1_vfb vout amp1_opamp',
+  '.subckt amp1_opamp amp1_inp amp1_inn amp1_out',
+  'Ramp1_in amp1_inp amp1_inn 1e6',
+  'Eamp1_gain amp1_out 0 amp1_inp amp1_inn 1e5',
+  '.ends',
+  '.ends',
+  'V__measure __measure 0 0',
+  'Xhp1 hp1_vin hp1_vout 0 hp1',
+  'Vhp1_in hp1_vin 0 DC 0 AC 1',
+  'Xamp1 hp1_vout amp1_vout 0 amp1',
+  '.control',
+  'ac lin 5 4500 5500',
+  'meas ac gain_at_freq FIND __gain AT=5000',
+  '.endc',
+  '.end',
+].join('\n')
+
+it('expande las etapas de un diseño compuesto en sus componentes reales', () => {
+  const { elements } = parseNetlist(COMPOSED)
+  const byName = Object.fromEntries(elements.map((e) => [e.name, e]))
+
+  // Las etapas Xhp1/Xamp1 (puertos vin vout 0) no son opamps: se expanden.
+  expect(byName.Xhp1).toBeUndefined()
+  expect(byName.Xamp1).toBeUndefined()
+  // La fuente muda del ensamblador no es parte del circuito.
+  expect(byName.V__measure).toBeUndefined()
+  // Los macromodelos (con fuentes E) sí quedan como un solo opamp, con los
+  // puertos de la etapa mapeados a los nodos reales de la cascada.
+  expect(byName.Xhp1_1.nodes).toEqual(['hp1_vplus', 'hp1_vfb', 'hp1_vout'])
+  expect(byName.Xamp1_1.nodes).toEqual(['hp1_vout', 'amp1_vfb', 'amp1_vout'])
+  expect(byName.Chp1_1.nodes).toEqual(['hp1_vin', 'hp1_vplus'])
+  expect(elements.some((e) => e.name.startsWith('E'))).toBe(false)
+  expect(elements).toHaveLength(9)
+})
+
+it('dibuja la cascada compuesta con los nodos separados y en orden', () => {
+  const diagram = buildDiagram(parseNetlist(COMPOSED))
+  const xs = Object.values(diagram.nodeXs)
+  expect(new Set(xs).size).toBe(xs.length)
+  const order = ['hp1_vin', 'hp1_vplus', 'hp1_vfb', 'hp1_vout', 'amp1_vfb', 'amp1_vout']
+  for (let i = 1; i < order.length; i++) {
+    expect(diagram.nodeXs[order[i - 1]]).toBeLessThan(diagram.nodeXs[order[i]])
+  }
+  expect(diagram.symbols.filter((s) => s.type === 'opamp')).toHaveLength(2)
+
+  // Cada opamp usa su propia primera pista de realimentación (no se apilan
+  // globalmente sobre la resistencia a tierra de la etapa siguiente).
+  const rfHp = diagram.symbols.find((s) => 'name' in s && s.name === 'Rhp1_f')
+  const rfAmp = diagram.symbols.find((s) => 'name' in s && s.name === 'Ramp1_1')
+  expect(rfHp && 'y' in rfHp && rfHp.y).toBe(rfAmp && 'y' in rfAmp && rfAmp.y)
+})
+
+it('fmtOhms muestra 0 Ω, no 0 µΩ', () => {
+  expect(fmtOhms('0')).toBe('0 Ω')
+})

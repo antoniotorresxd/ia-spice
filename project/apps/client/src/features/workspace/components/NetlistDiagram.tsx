@@ -1029,6 +1029,10 @@ export function NetlistDiagram({
                 const busY = bus.y ?? RAIL_Y
                 const hasMultiple = bus.branches.length > 1
                 const midX = (bus.xStart + bus.xEnd) / 2
+                // A la izquierda de la salida de un opamp baja su pista de realimentación:
+                // ahí la etiqueta va a la derecha del nodo.
+                const isOpampOut = diagram.symbols.some((s) => s.type === 'opamp' && s.outX === bus.xStart)
+                const labelRight = !hasMultiple && isOpampOut
                 return (
                   <g key={bus.node}>
                     {hasMultiple ? (
@@ -1049,11 +1053,13 @@ export function NetlistDiagram({
                       <circle cx={bus.xStart} cy={busY} r={3.2} className={styles.nodeDot} />
                     ) : null}
 
-                    {/* Etiqueta de nodo posicionada limpia a la izquierda del nodo para no tapar pistas verticales */}
+                    {/* Etiqueta de nodo a la izquierda del nodo para no tapar pistas verticales, y
+                        por debajo del cable: arriba choca con la etiqueta del componente serie que
+                        llega al nodo (nombres largos de diseños compuestos, p. ej. hp1_vplus). */}
                     <text
-                      x={hasMultiple ? midX : bus.xStart - 10}
-                      y={hasMultiple ? busY - 14 : busY - 10}
-                      textAnchor={hasMultiple ? 'middle' : 'end'}
+                      x={hasMultiple ? midX : labelRight ? bus.xStart + 8 : bus.xStart - 10}
+                      y={hasMultiple ? busY - 14 : busY + 16}
+                      textAnchor={hasMultiple ? 'middle' : labelRight ? 'start' : 'end'}
                       className={styles.lblNode}
                     >
                       {bus.node}

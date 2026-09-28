@@ -49,12 +49,99 @@ export function parseSpiceValue(raw: string): number {
   return val
 }
 
+type SubcktDef = { ports: string[]; body: string[] }
+
+/** Tipos de dispositivo que delatan un macromodelo de opamp (fuentes controladas). */
+const BEHAVIORAL_KINDS = 'EGFHB'
+const MAX_EXPANSION_DEPTH = 8
+
+/**
+ * Recolecta las definiciones `.subckt` (anidadas incluidas) por nombre, con
+ * sus puertos y solo sus líneas de dispositivo directas.
+ */
+function collectSubckts(lines: string[]): Record<string, SubcktDef> {
+  const defs: Record<string, SubcktDef> = {}
+  const stack: SubcktDef[] = []
+  for (const line of lines) {
+    if (!line || line.startsWith('*') || line.startsWith(';')) continue
+    const lower = line.toLowerCase()
+    if (lower.startsWith('.subckt')) {
+      const [, name, ...ports] = line.split(/\s+/)
+      const def: SubcktDef = { ports: ports.map(normalizeNode), body: [] }
+      if (name) defs[name.toLowerCase()] = def
+      stack.push(def)
+    } else if (lower.startsWith('.ends')) {
+      stack.pop()
+    } else if (stack.length && !line.startsWith('.')) {
+      stack[stack.length - 1].body.push(line)
+    }
+  }
+  return defs
+}
+
+/**
+ * Un subcircuito "compuesto" (p. ej. cada etapa `hp1`/`amp1` de un diseño
+ * compuesto, con puertos `vin vout 0` y su opamp anidado) se expande en sus
+ * componentes reales para dibujarlo. Uno con fuentes controladas (E/G/...) es
+ * el macromodelo de un opamp, y uno sin tierra como puerto ni instancias X
+ * adentro (p. ej. `.subckt opamp inp inn out` con solo una Rin) también: esos
+ * se siguen dibujando como un solo símbolo.
+ */
+function isComposite(def: SubcktDef): boolean {
+  const kinds = def.body.map((l) => l[0]?.toUpperCase() ?? '')
+  if (kinds.some((k) => BEHAVIORAL_KINDS.includes(k))) return false
+  return def.ports.includes(GROUND) || kinds.includes('X')
+}
+
+/** Fuente muda del ensamblador compuesto (`V__measure __measure 0 0`): no es parte del circuito. */
+function isInternalDummy(e: NetlistElement): boolean {
+  return e.nodes.every((n) => n === GROUND || n.startsWith('__'))
+}
+
 export function parseNetlist(text: string): ParsedNetlist {
   const rawLines = text.split('\n').map((l) => l.trim())
   let title = 'Circuito'
   const elements: NetlistElement[] = []
   const measurements: Measurement[] = []
-  let inBlock = false
+  const subckts = collectSubckts(rawLines)
+  let inControl = false
+  let subcktDepth = 0
+
+  const addElement = (line: string, rename: (node: string) => string, depth: number) => {
+    const tokens = line.split(/\s+/)
+    const name = tokens[0]
+    const kind = name[0]?.toUpperCase() ?? ''
+    if (!'RCVDXLIQ'.includes(kind)) return
+
+    if (kind === 'X') {
+      const subckt = tokens[tokens.length - 1]
+      const nodes = tokens.slice(1, tokens.length - 1).map((n) => rename(normalizeNode(n)))
+      if (nodes.length < 2) return
+      const def = subckts[subckt.toLowerCase()]
+      if (def && isComposite(def) && def.ports.length === nodes.length && depth < MAX_EXPANSION_DEPTH) {
+        const portMap = new Map(def.ports.map((p, i) => [p, nodes[i]]))
+        const prefix = subckt.toLowerCase()
+        const inner = (n: string) =>
+          n === GROUND ? GROUND : (portMap.get(n) ?? (n.startsWith(`${prefix}_`) ? n : `${prefix}_${n}`))
+        for (const bodyLine of def.body) addElement(bodyLine, inner, depth + 1)
+        return
+      }
+      elements.push({ kind, name, nodes, extra: subckt })
+    } else if (kind === 'Q') {
+      // Q<nombre> <colector> <base> <emisor> [<substrato>] <modelo>
+      if (tokens.length < 5) return
+      const nodes = [tokens[1], tokens[2], tokens[3]].map((n) => rename(normalizeNode(n)))
+      const extra = tokens.slice(4).join(' ')
+      elements.push({ kind, name, nodes, extra })
+    } else {
+      if (tokens.length < 3) return
+      const nodes = [tokens[1], tokens[2]].map((n) => rename(normalizeNode(n)))
+      const extra = tokens.slice(3).join(' ')
+      const element: NetlistElement = { kind: kind as ElementKind, name, nodes, extra }
+      if ((kind === 'V' || kind === 'I') && isInternalDummy(element)) return
+      elements.push(element)
+    }
+  }
 
   for (const line of rawLines) {
     if (!line || line.startsWith('*') || line.startsWith(';')) continue
@@ -75,38 +162,25 @@ export function parseNetlist(text: string): ParsedNetlist {
       title = line.slice(6).trim() || title
       continue
     }
-    if (lower.startsWith('.control') || lower.startsWith('.subckt')) {
-      inBlock = true
+    if (lower.startsWith('.control')) {
+      inControl = true
       continue
     }
-    if (lower.startsWith('.endc') || lower.startsWith('.ends')) {
-      inBlock = false
+    if (lower.startsWith('.endc')) {
+      inControl = false
       continue
     }
-    if (inBlock || line.startsWith('.')) continue
-
-    const tokens = line.split(/\s+/)
-    const name = tokens[0]
-    const kind = name[0]?.toUpperCase() ?? ''
-    if (!'RCVDXLIQ'.includes(kind)) continue
-
-    if (kind === 'X') {
-      const subckt = tokens[tokens.length - 1]
-      const nodes = tokens.slice(1, tokens.length - 1).map(normalizeNode)
-      if (nodes.length < 2) continue
-      elements.push({ kind: kind as ElementKind, name, nodes, extra: subckt })
-    } else if (kind === 'Q') {
-      // Q<nombre> <colector> <base> <emisor> [<substrato>] <modelo>
-      if (tokens.length < 5) continue
-      const nodes = [normalizeNode(tokens[1]), normalizeNode(tokens[2]), normalizeNode(tokens[3])]
-      const extra = tokens.slice(4).join(' ')
-      elements.push({ kind: kind as ElementKind, name, nodes, extra })
-    } else {
-      if (tokens.length < 3) continue
-      const nodes = [normalizeNode(tokens[1]), normalizeNode(tokens[2])]
-      const extra = tokens.slice(3).join(' ')
-      elements.push({ kind: kind as ElementKind, name, nodes, extra })
+    if (lower.startsWith('.subckt')) {
+      subcktDepth++
+      continue
     }
+    if (lower.startsWith('.ends')) {
+      subcktDepth = Math.max(0, subcktDepth - 1)
+      continue
+    }
+    if (inControl || subcktDepth > 0 || line.startsWith('.')) continue
+
+    addElement(line, (n) => n, 0)
   }
 
   if (elements.length === 0) {
@@ -213,6 +287,9 @@ function trimNum(n: number): string {
 export function fmtOhms(raw: string): string {
   const n = parseSpiceValue(raw)
   if (!isFinite(n)) return raw
+  // 0 Ω es real (p. ej. Rf=0 de un seguidor de ganancia unitaria): sin esto
+  // caía en la rama de µΩ y se mostraba "0 µΩ".
+  if (n === 0) return '0 Ω'
   if (n >= 1e6) return `${trimNum(n / 1e6)} MΩ`
   if (n >= 1e3) return `${trimNum(n / 1e3)} kΩ`
   if (n < 1e-3) return `${trimNum(n * 1e6)} µΩ`
@@ -406,6 +483,7 @@ export const GROUND_Y = 390
 export const BRANCH_SPACING = 120
 export const SERIES_SPACING = 155
 export const MARGIN_X = 70
+export const SOURCE_LABEL_ROOM = 60
 
 export function getOpampPins(nodes: string[]): { inp: string; inn: string; out: string } {
   if (nodes.length >= 5) {
@@ -990,6 +1068,10 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
 
     nodeBranches[n] = branches
     lastDepth = d
+    // La etiqueta de una fuente vertical ("1 V (AC, señal de prueba)") es más
+    // ancha que la de un R/C: sin holgura extra se monta sobre la rama del
+    // nodo siguiente.
+    if (shunts.some((e) => e.kind === 'V' || e.kind === 'I')) curX += SOURCE_LABEL_ROOM
   }
 
   const symbols: LayoutSymbol[] = []
@@ -1192,11 +1274,16 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
   }
 
   // 4. Ubicar bucles de retroalimentación de amplificadores operacionales
+  // El índice de pista es por opamp, no global: con varios opamps en cascada
+  // (diseños compuestos) un índice global bajaba la realimentación del segundo
+  // una pista de más y la montaba sobre la etiqueta de su resistencia a tierra.
   const opampFeedbackList = Array.from(feedbackElements)
-  for (let idx = 0; idx < opampFeedbackList.length; idx++) {
-    const elem = opampFeedbackList[idx]
+  const feedbackTrackCount = new Map<NetlistElement, number>()
+  for (const elem of opampFeedbackList) {
     const info = feedbackElementMap.get(elem)!
     const op = info.opamp
+    const idx = feedbackTrackCount.get(op) ?? 0
+    feedbackTrackCount.set(op, idx + 1)
     const pins = opampPinMap.get(op)!
 
     const inTop = pins.inp !== GROUND ? (nodeStartX[pins.inp] ?? MARGIN_X) : MARGIN_X
