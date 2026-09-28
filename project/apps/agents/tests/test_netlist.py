@@ -185,3 +185,21 @@ def test_generic_netlist_starting_with_component_keeps_it():
     llm_netlist = "Vin in 0 DC 1\nR1 in out 1k\nR2 out 0 1k\n.control\nop\n.endc\n.end\n"
     netlist = NETLIST_BUILDERS["generic"]({"description": "Divisor"}, {"netlist": llm_netlist})
     assert netlist.splitlines()[:2] == ["* Divisor", "Vin in 0 DC 1"]
+
+
+def test_generic_prose_title_after_leading_comment_is_commented():
+    """Caso real: comentario en la línea 1 y título en prosa en la 2."""
+    from agents.escritura.netlist import NETLIST_BUILDERS
+
+    llm_netlist = (
+        "* Amplificador no inversor, ganancia 8, bias 2.5V\n"
+        "Amplificador No Inversor con Bias DC\n"
+        "VCC vcc 0 DC 5\nR1 vcc vref 10k\nR2 vref 0 10k\n"
+        ".control\nop\n.endc\n.end\n"
+    )
+    netlist = NETLIST_BUILDERS["generic"]({"description": "x"}, {"netlist": llm_netlist})
+    assert netlist.splitlines()[:3] == [
+        "* Amplificador no inversor, ganancia 8, bias 2.5V",
+        "* Amplificador No Inversor con Bias DC",
+        "VCC vcc 0 DC 5",
+    ]

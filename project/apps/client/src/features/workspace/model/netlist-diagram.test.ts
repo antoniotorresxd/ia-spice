@@ -437,3 +437,61 @@ it('dibuja la cascada compuesta con los nodos separados y en orden', () => {
 it('fmtOhms muestra 0 Ω, no 0 µΩ', () => {
   expect(fmtOhms('0')).toBe('0 Ω')
 })
+
+// Casos reales del viewer (2026-09-28).
+const OPAMP_BIAS = [
+  '* Amplificador operacional no inversor con ganancia de 8, polarizado a 2.5V.',
+  'Amplificador No Inversor con Bias DC',
+  'VCC vcc 0 DC 5',
+  'VEE vee 0 DC 0',
+  'R1 vcc vref 10k',
+  'R2 vref 0 10k',
+  'Vin vin vref DC -0.0125',
+  'Rin vref vminus 1000',
+  'Rf vout vminus 7000',
+  'X1 vin vminus vout vcc vee opamp',
+  '.subckt opamp inp inn out vcc vee',
+  'Rin inp inn 1e6',
+  'Egain n1 0 inp inn 1e5',
+  'Eout out 0 n1 0 1',
+  '.ends',
+].join('\n')
+
+it('mapea los pines del opamp por nombre de puerto, sin tomar la alimentación como salida', () => {
+  const { elements } = parseNetlist(OPAMP_BIAS)
+  expect(elements.find((e) => e.name === 'X1')?.nodes).toEqual(['vin', 'vminus', 'vout'])
+})
+
+it('ubica el opamp a la derecha del divisor que polariza su entrada', () => {
+  const diagram = buildDiagram(parseNetlist(OPAMP_BIAS))
+  const opamp = diagram.symbols.find((s) => s.type === 'opamp')
+  expect(opamp?.type).toBe('opamp')
+  if (opamp?.type !== 'opamp') return
+  // Entradas justo antes del opamp: vref (divisor) -> vin (+) -> vminus (−) -> opamp -> vout
+  expect(diagram.nodeXs.vref).toBeLessThan(diagram.nodeXs.vin)
+  expect(diagram.nodeXs.vin).toBeLessThan(diagram.nodeXs.vminus)
+  expect(opamp.left).toBeGreaterThan(diagram.nodeXs.vminus)
+  expect(diagram.nodeXs.vout).toBeGreaterThan(opamp.right!)
+  // Rin (vref -> vminus) no puede ir por encima del raíl: cruzaría la pista de la entrada +.
+  const rin = diagram.symbols.find((s) => 'name' in s && s.name === 'Rin')
+  expect(rin && 'y' in rin && rin.y).toBeGreaterThan(200)
+})
+
+it('coloca colector y emisor del BJT a la derecha del transistor', () => {
+  const bjt = [
+    '* BJT Common Emitter Voltage Divider Bias',
+    'VCC vcc 0 DC 15',
+    'RB1 vcc vb 43662.83',
+    'RB2 vb 0 9055.46',
+    'RC vcc vc 2142.4925',
+    'RE ve 0 625',
+    'Q1 vc vb ve NPN_MODEL',
+  ].join('\n')
+  const diagram = buildDiagram(parseNetlist(bjt))
+  const q = diagram.symbols.find((s) => s.type === 'bjt')
+  expect(q?.type).toBe('bjt')
+  if (q?.type !== 'bjt') return
+  expect(q.cx).toBeGreaterThan(diagram.nodeXs.vb)
+  expect(diagram.nodeXs.vc).toBeGreaterThan(q.cx + 26)
+  expect(diagram.nodeXs.ve).toBeGreaterThan(q.cx + 26)
+})

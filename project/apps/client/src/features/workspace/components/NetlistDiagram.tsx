@@ -2,7 +2,6 @@ import { Maximize2, Move, ZoomIn, ZoomOut } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
-  COL_ROUTE_Y,
   EMI_Y,
   GROUND_Y,
   type LayoutSymbol,
@@ -64,13 +63,27 @@ function DropLegs({ x1, x2, y }: { x1: number; x2: number; y: number }) {
   )
 }
 
-function ResistorH({ x1, x2, y, name, value }: { x1: number; x2: number; y: number; name: string; value: string }) {
+function ResistorH({
+  x1,
+  x2,
+  y,
+  name,
+  value,
+  labelBelow = false,
+}: {
+  x1: number
+  x2: number
+  y: number
+  name: string
+  value: string
+  labelBelow?: boolean
+}) {
   const mx = (x1 + x2) / 2
   return (
     <g>
       <DropLegs x1={x1} x2={x2} y={y} />
       <ResistorZigzag x1={x1} x2={x2} y={y} />
-      <text x={mx} y={y - 18} textAnchor="middle" className={styles.lbl}>
+      <text x={mx} y={labelBelow ? y + 26 : y - 18} textAnchor="middle" className={styles.lbl}>
         {name} · {value}
       </text>
     </g>
@@ -105,7 +118,21 @@ function ResistorV({ x, y1, y2, name, value }: { x: number; y1: number; y2: numb
   )
 }
 
-function CapacitorH({ x1, x2, y, name, value }: { x1: number; x2: number; y: number; name: string; value: string }) {
+function CapacitorH({
+  x1,
+  x2,
+  y,
+  name,
+  value,
+  labelBelow = false,
+}: {
+  x1: number
+  x2: number
+  y: number
+  name: string
+  value: string
+  labelBelow?: boolean
+}) {
   const mx = (x1 + x2) / 2
   const plateH = 14
   const gap = 4
@@ -116,7 +143,7 @@ function CapacitorH({ x1, x2, y, name, value }: { x1: number; x2: number; y: num
       <line x1={mx + gap} y1={y} x2={x2} y2={y} className={styles.wire} />
       <line x1={mx - gap} y1={y - plateH} x2={mx - gap} y2={y + plateH} className={styles.symbolStroke} />
       <line x1={mx + gap} y1={y - plateH} x2={mx + gap} y2={y + plateH} className={styles.symbolStroke} />
-      <text x={mx} y={y - 18} textAnchor="middle" className={styles.lbl}>
+      <text x={mx} y={labelBelow ? y + 26 : y - 18} textAnchor="middle" className={styles.lbl}>
         {name} · {value}
       </text>
     </g>
@@ -142,7 +169,21 @@ function CapacitorV({ x, y1, y2, name, value }: { x: number; y1: number; y2: num
   )
 }
 
-function InductorH({ x1, x2, y, name, value }: { x1: number; x2: number; y: number; name: string; value: string }) {
+function InductorH({
+  x1,
+  x2,
+  y,
+  name,
+  value,
+  labelBelow = false,
+}: {
+  x1: number
+  x2: number
+  y: number
+  name: string
+  value: string
+  labelBelow?: boolean
+}) {
   const lead = 20
   const loops = 4
   const lx1 = x1 + lead
@@ -163,7 +204,7 @@ function InductorH({ x1, x2, y, name, value }: { x1: number; x2: number; y: numb
       {paths.map((p, idx) => (
         <path key={idx} d={p} className={styles.symbolStroke} fill="none" />
       ))}
-      <text x={(x1 + x2) / 2} y={y - 18} textAnchor="middle" className={styles.lbl}>
+      <text x={(x1 + x2) / 2} y={labelBelow ? y + 26 : y - 18} textAnchor="middle" className={styles.lbl}>
         {name} · {value}
       </text>
     </g>
@@ -571,9 +612,10 @@ function Bjt({
       <line x1={bodyX} y1={spineTop} x2={bodyX} y2={spineBot} className={styles.symbolStroke} />
       <line x1={bodyX} y1={spineTop + 6} x2={colTermX} y2={colTermY} className={styles.symbolStroke} />
 
-      {/* Enrutamiento colector hacia collectorX por la pista aérea COL_ROUTE_Y (sin tocar el texto del transistor) */}
+      {/* Colector: sale a la derecha justo encima del transistor y baja al nodo. Por la
+          pista aérea COL_ROUTE_Y cruzaba el zigzag de la resistencia de colector. */}
       <polyline
-        points={`${colTermX},${colTermY} ${colTermX},${COL_ROUTE_Y} ${collectorX},${COL_ROUTE_Y} ${collectorX},${RAIL_Y}`}
+        points={`${colTermX},${colTermY} ${collectorX},${colTermY} ${collectorX},${RAIL_Y}`}
         className={styles.wire}
         fill="none"
       />
@@ -596,7 +638,8 @@ function Bjt({
 
       {/* Cuerpo circular del BJT */}
       <circle cx={cx} cy={RAIL_Y} r={26} className={styles.symbolStroke} fill="none" />
-      <text x={cx} y={RAIL_Y - 34} textAnchor="middle" className={styles.lblSub}>
+      {/* Etiqueta abajo a la derecha del cuerpo: arriba la cruza la salida del colector. */}
+      <text x={cx + 30} y={RAIL_Y + 42} textAnchor="start" className={styles.lblSub}>
         {name} · {value}
       </text>
     </g>
@@ -617,15 +660,42 @@ function Ground({ x, y }: { x: number; y: number }) {
 function Symbol({ symbol }: { symbol: LayoutSymbol }) {
   switch (symbol.type) {
     case 'resistorH':
-      return <ResistorH x1={symbol.x1} x2={symbol.x2} y={symbol.y} name={symbol.name} value={symbol.value} />
+      return (
+        <ResistorH
+          x1={symbol.x1}
+          x2={symbol.x2}
+          y={symbol.y}
+          name={symbol.name}
+          value={symbol.value}
+          labelBelow={symbol.labelBelow}
+        />
+      )
     case 'resistorV':
       return <ResistorV x={symbol.x} y1={symbol.y1} y2={symbol.y2} name={symbol.name} value={symbol.value} />
     case 'capacitorH':
-      return <CapacitorH x1={symbol.x1} x2={symbol.x2} y={symbol.y} name={symbol.name} value={symbol.value} />
+      return (
+        <CapacitorH
+          x1={symbol.x1}
+          x2={symbol.x2}
+          y={symbol.y}
+          name={symbol.name}
+          value={symbol.value}
+          labelBelow={symbol.labelBelow}
+        />
+      )
     case 'capacitorV':
       return <CapacitorV x={symbol.x} y1={symbol.y1} y2={symbol.y2} name={symbol.name} value={symbol.value} />
     case 'inductorH':
-      return <InductorH x1={symbol.x1} x2={symbol.x2} y={symbol.y} name={symbol.name} value={symbol.value} />
+      return (
+        <InductorH
+          x1={symbol.x1}
+          x2={symbol.x2}
+          y={symbol.y}
+          name={symbol.name}
+          value={symbol.value}
+          labelBelow={symbol.labelBelow}
+        />
+      )
     case 'inductorV':
       return <InductorV x={symbol.x} y1={symbol.y1} y2={symbol.y2} name={symbol.name} value={symbol.value} />
     case 'diodeH':

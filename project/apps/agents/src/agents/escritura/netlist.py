@@ -65,11 +65,20 @@ def _ensure_title_line(netlist: str, title: str = "Circuit") -> str:
     comenta, porque anteponer otro la empujaba a la línea 2 y ngspice la
     parseaba como componente."""
     stripped = netlist.lstrip()
+    lines = stripped.splitlines()
+    # El LLM a veces pone el título en prosa DESPUÉS de un comentario
+    # ("* descripción\nAmplificador No Inversor con Bias DC\n..."): ngspice toma
+    # el comentario como título y parsea la prosa como elemento. Se comenta la
+    # primera línea no-comentario si no está conectada al resto.
+    lead = 0
+    while lead < len(lines) and (not lines[lead].strip() or lines[lead].lstrip().startswith("*")):
+        lead += 1
+    if lead < len(lines) and _first_line_is_title(lines[lead:]):
+        lines[lead] = f"* {lines[lead]}"
+        stripped = "\n".join(lines) + ("\n" if stripped.endswith("\n") else "")
+        return stripped
     if stripped.startswith("*"):
         return netlist
-    lines = stripped.splitlines()
-    if lines and _first_line_is_title(lines):
-        return "\n".join([f"* {lines[0]}", *lines[1:]]) + ("\n" if stripped.endswith("\n") else "")
     return f"* {title}\n" + netlist
 
 

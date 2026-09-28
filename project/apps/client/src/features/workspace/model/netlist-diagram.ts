@@ -93,6 +93,32 @@ function isComposite(def: SubcktDef): boolean {
   return def.ports.includes(GROUND) || kinds.includes('X')
 }
 
+const PORT_PATTERNS = {
+  inp: /^(inp|in_?p|in\+|vinp|vp|plus|pos|p|non_?inv\w*|noninv\w*)$/i,
+  inn: /^(inn|in_?n|in-|vinn|vn|minus|neg|n|inv\w*)$/i,
+  out: /^(out|vout|vo|o|output)$/i,
+}
+
+function matchesPort(port: string, pattern: RegExp): boolean {
+  // Los puertos de un diseño compuesto llegan prefijados (`hp1_inp`).
+  return pattern.test(port) || pattern.test(port.slice(port.lastIndexOf('_') + 1))
+}
+
+/**
+ * Reordena los nodos de un opamp a `[inp, inn, out]` según los nombres de los
+ * puertos de su `.subckt`, descartando los de alimentación. Sin esto, un
+ * `X1 vin vminus vout vcc vee opamp` tomaba `vee` (el último) como salida.
+ * Si los nombres no son reconocibles se deja el orden original.
+ */
+function orderOpampNodes(def: SubcktDef, nodes: string[]): string[] {
+  const idx = (pattern: RegExp) => def.ports.findIndex((p) => matchesPort(p, pattern))
+  const inp = idx(PORT_PATTERNS.inp)
+  const inn = idx(PORT_PATTERNS.inn)
+  const out = idx(PORT_PATTERNS.out)
+  if ([inp, inn, out].some((i) => i < 0) || new Set([inp, inn, out]).size < 3) return nodes
+  return [nodes[inp], nodes[inn], nodes[out]]
+}
+
 /** Fuente muda del ensamblador compuesto (`V__measure __measure 0 0`): no es parte del circuito. */
 function isInternalDummy(e: NetlistElement): boolean {
   return e.nodes.every((n) => n === GROUND || n.startsWith('__'))
@@ -126,7 +152,8 @@ export function parseNetlist(text: string): ParsedNetlist {
         for (const bodyLine of def.body) addElement(bodyLine, inner, depth + 1)
         return
       }
-      elements.push({ kind, name, nodes, extra: subckt })
+      const pins = def && def.ports.length === nodes.length ? orderOpampNodes(def, nodes) : nodes
+      elements.push({ kind, name, nodes: pins, extra: subckt })
     } else if (kind === 'Q') {
       // Q<nombre> <colector> <base> <emisor> [<substrato>] <modelo>
       if (tokens.length < 5) return
@@ -484,6 +511,7 @@ export const BRANCH_SPACING = 120
 export const SERIES_SPACING = 155
 export const MARGIN_X = 70
 export const SOURCE_LABEL_ROOM = 60
+export const BJT_BODY_OFFSET = 120
 
 export function getOpampPins(nodes: string[]): { inp: string; inn: string; out: string } {
   if (nodes.length >= 5) {
@@ -496,11 +524,11 @@ export function getOpampPins(nodes: string[]): { inp: string; inn: string; out: 
 }
 
 export type LayoutSymbol =
-  | { type: 'resistorH'; x1: number; x2: number; y: number; name: string; value: string }
+  | { type: 'resistorH'; x1: number; x2: number; y: number; name: string; value: string; labelBelow?: boolean }
   | { type: 'resistorV'; x: number; y1: number; y2: number; name: string; value: string }
-  | { type: 'capacitorH'; x1: number; x2: number; y: number; name: string; value: string }
+  | { type: 'capacitorH'; x1: number; x2: number; y: number; name: string; value: string; labelBelow?: boolean }
   | { type: 'capacitorV'; x: number; y1: number; y2: number; name: string; value: string }
-  | { type: 'inductorH'; x1: number; x2: number; y: number; name: string; value: string }
+  | { type: 'inductorH'; x1: number; x2: number; y: number; name: string; value: string; labelBelow?: boolean }
   | { type: 'inductorV'; x: number; y1: number; y2: number; name: string; value: string }
   | { type: 'diodeH'; x1: number; x2: number; y: number; name: string; value: string; isLed: boolean; pointingRight: boolean }
   | {
@@ -1018,6 +1046,42 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
       return a.localeCompare(b)
     })
 
+  // Las entradas de un opamp van justo antes de él (+ y después −): así la
+  // pista de la entrada + no cruza nodos intermedios (p. ej. el divisor que
+  // polariza la entrada) y el opamp queda a la derecha de todo lo que lo
+  // alimenta. No se mueven salidas de otros opamps (cascadas).
+  const opampOuts = new Set(opampElements.map((op) => opampPinMap.get(op)!.out))
+  for (const op of opampElements) {
+    const pins = opampPinMap.get(op)!
+    const inputs = [pins.inp, pins.inn].filter(
+      (n, i, arr) => n !== GROUND && n !== pins.out && !opampOuts.has(n) && arr.indexOf(n) === i,
+    )
+    const outIdx = sortedNodes.indexOf(pins.out)
+    if (outIdx < 0 || inputs.some((n) => sortedNodes.indexOf(n) < 0 || sortedNodes.indexOf(n) > outIdx)) continue
+    const rest = sortedNodes.filter((n) => !inputs.includes(n))
+    rest.splice(rest.indexOf(pins.out), 0, ...inputs)
+    sortedNodes.splice(0, sortedNodes.length, ...rest)
+  }
+
+  // La base de un BJT va antes que su colector y su emisor: el transistor se
+  // dibuja a la derecha de la base, y colector/emisor a la derecha de él.
+  for (const q of bjtElements) {
+    const [col, base, emi] = q.nodes
+    const baseIdx = sortedNodes.indexOf(base)
+    if (baseIdx < 0) continue
+    for (const n of [emi, col]) {
+      const i = sortedNodes.indexOf(n)
+      if (n === GROUND || i < 0 || i > baseIdx) continue
+      sortedNodes.splice(i, 1)
+      sortedNodes.splice(sortedNodes.indexOf(base) + 1, 0, n)
+    }
+  }
+  const bjtBaseOf = new Map<string, string>()
+  for (const q of bjtElements) {
+    const [col, base, emi] = q.nodes
+    for (const n of [col, emi]) if (n !== GROUND && !bjtBaseOf.has(n)) bjtBaseOf.set(n, base)
+  }
+
   // Asignar coordenadas X a cada nodo garantizando espacio para todas sus ramas en paralelo
   const nodeStartX: Record<string, number> = {}
   const nodeEndX: Record<string, number> = {}
@@ -1025,6 +1089,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
 
   let curX = MARGIN_X
   let lastDepth = -1
+  const opampLeftX = new Map<NetlistElement, number>()
 
   for (const n of sortedNodes) {
     const d = depth[n]
@@ -1032,24 +1097,22 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
       curX += d !== lastDepth ? SERIES_SPACING : BRANCH_SPACING
     }
 
-    // Si n es la salida de un opamp, asegurar que haya espacio suficiente para el cuerpo del opamp
-    // entre las entradas (inp, inn) y la salida (out).
+    // Si n es la salida de un opamp, el cuerpo del opamp va a la derecha de
+    // todo lo ya ubicado (no solo de sus entradas: un nodo intermedio, como el
+    // de un divisor de polarización, quedaba debajo del triángulo).
     const opWhereOut = opampElements.find((op) => opampPinMap.get(op)?.out === n)
-    if (opWhereOut) {
-      const pins = opampPinMap.get(opWhereOut)!
-      const inX1 = pins.inp !== GROUND ? (nodeEndX[pins.inp] ?? nodeStartX[pins.inp] ?? 0) : 0
-      const inX2 =
-        pins.inn !== GROUND && pins.inn !== pins.out
-          ? (nodeEndX[pins.inn] ?? nodeStartX[pins.inn] ?? 0)
-          : 0
-      const maxInX = Math.max(inX1, inX2)
-      if (maxInX > 0) {
-        // Espacio: maxInX -> holgura 45px -> opamp (64px) -> holgura 60px -> out
-        const requiredX = maxInX + 45 + 64 + 60
-        if (curX < requiredX) {
-          curX = requiredX
-        }
-      }
+    if (opWhereOut && lastDepth !== -1) {
+      const prevEnd = Math.max(...Object.values(nodeEndX))
+      opampLeftX.set(opWhereOut, prevEnd + 45)
+      // Espacio: prevEnd -> holgura 45px -> opamp (64px) -> holgura 60px -> out
+      curX = Math.max(curX, prevEnd + 45 + 64 + 60)
+    }
+
+    // Colector/emisor de un BJT: a la derecha del transistor, que se dibuja a
+    // BJT_BODY_OFFSET de su base (si no, el nodo caía encima del símbolo).
+    const baseOfN = bjtBaseOf.get(n)
+    if (baseOfN && nodeEndX[baseOfN] !== undefined) {
+      curX = Math.max(curX, nodeEndX[baseOfN] + BJT_BODY_OFFSET + 80)
     }
 
     const shunts = nodeShunts[n] ?? []
@@ -1160,6 +1223,17 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
 
   // 2. Ubicar componentes serie horizontales con prevención de colisiones en pistas Y
   const placedHorizontal: { x1: number; x2: number; y: number }[] = []
+  // Tramo que recorre la entrada + de cada opamp a la altura OPAMP_INP_Y (ver
+  // el símbolo Opamp): una pista por encima del raíl cuya pata vertical caiga
+  // dentro de ese tramo lo cruzaría.
+  const inpRouteSpans = opampElements.flatMap((op) => {
+    const pins = opampPinMap.get(op)!
+    const left = opampLeftX.get(op)
+    if (pins.inp === GROUND || left === undefined || nodeStartX[pins.inp] === undefined) return []
+    return [{ from: Math.min(nodeStartX[pins.inp] + 20, left - 14), to: left }]
+  })
+  const crossesInpRoute = (x1: number, x2: number, y: number) =>
+    y < OPAMP_INP_Y && inpRouteSpans.some((r) => [x1, x2].some((x) => x > r.from && x < r.to))
 
   for (const e of seriesElements) {
     const [a, b] = e.nodes
@@ -1182,9 +1256,9 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     ]
     let foundTrack = false
     for (const track of yTracks) {
-      const collides = placedHorizontal.some(
-        (p) => p.y === track && !(x2 <= p.x1 + 10 || x1 >= p.x2 - 10),
-      )
+      const collides =
+        crossesInpRoute(x1, x2, track) ||
+        placedHorizontal.some((p) => p.y === track && !(x2 <= p.x1 + 10 || x1 >= p.x2 - 10))
       if (!collides) {
         targetY = track
         foundTrack = true
@@ -1195,15 +1269,18 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
       targetY = RAIL_Y - (placedHorizontal.length + 1) * 35
     }
     placedHorizontal.push({ x1, x2, y: targetY })
+    // En pistas bajo el raíl la etiqueta va abajo: arriba choca con las
+    // etiquetas de nodo, que van bajo el cable.
+    const labelBelow = targetY > RAIL_Y
 
     if (e.kind === 'R') {
-      symbols.push({ type: 'resistorH', x1, x2, y: targetY, name: e.name, value: fmtOhms(e.extra) })
+      symbols.push({ type: 'resistorH', x1, x2, y: targetY, name: e.name, value: fmtOhms(e.extra), labelBelow })
       usedSymbols.add('resistor')
     } else if (e.kind === 'C') {
-      symbols.push({ type: 'capacitorH', x1, x2, y: targetY, name: e.name, value: fmtFarads(e.extra) })
+      symbols.push({ type: 'capacitorH', x1, x2, y: targetY, name: e.name, value: fmtFarads(e.extra), labelBelow })
       usedSymbols.add('capacitor')
     } else if (e.kind === 'L') {
-      symbols.push({ type: 'inductorH', x1, x2, y: targetY, name: e.name, value: fmtHenries(e.extra) })
+      symbols.push({ type: 'inductorH', x1, x2, y: targetY, name: e.name, value: fmtHenries(e.extra), labelBelow })
       usedSymbols.add('inductor')
     } else if (e.kind === 'D') {
       const isLed = e.extra.toUpperCase().includes('LED') || e.name.toUpperCase().startsWith('DLED')
@@ -1251,7 +1328,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
       pins.inn !== GROUND && pins.inn !== pins.out && nodeEndX[pins.inn] !== undefined ? nodeEndX[pins.inn] : inBot,
     )
     const outNode = nodeStartX[pins.out] ?? curX + SERIES_SPACING
-    const left = Math.max(maxInX + 45, MARGIN_X + 40)
+    const left = opampLeftX.get(e) ?? Math.max(maxInX + 45, MARGIN_X + 40)
     const cx = left + 32
     const right = left + 64
     const isBuffer = pins.inn === pins.out
@@ -1292,7 +1369,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
       pins.inp !== GROUND && nodeEndX[pins.inp] !== undefined ? nodeEndX[pins.inp] : inTop,
       pins.inn !== GROUND && pins.inn !== pins.out && nodeEndX[pins.inn] !== undefined ? nodeEndX[pins.inn] : inBot,
     )
-    const left = Math.max(maxInX + 45, MARGIN_X + 40)
+    const left = opampLeftX.get(op) ?? Math.max(maxInX + 45, MARGIN_X + 40)
     const right = left + 64
     const outX = nodeStartX[pins.out] ?? right + 70
 
@@ -1339,7 +1416,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     const bx = nodeStartX[base] ?? MARGIN_X
     const ex = nodeStartX[emi] ?? MARGIN_X
     const bEnd = nodeEndX[base] ?? bx
-    const cx = Math.max(bEnd + 120, (bx + ex) / 2)
+    const cx = bEnd + BJT_BODY_OFFSET
     symbols.push({
       type: 'bjt',
       cx,
