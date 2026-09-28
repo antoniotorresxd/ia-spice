@@ -306,6 +306,35 @@ exigiría que la fuente de cabeza cargue la forma de onda/sesgo que el
 diseño realmente pide, no un `DC 0 AC 1` fijo — trabajo futuro, no de esta
 sesión.
 
+**3. Bug preexistente encontrado y arreglado — polarización BJT nunca
+convergía.** "Diseña un circuito de polarización para un transistor BJT NPN
+con VCC=12V, IC≈2mA, VCE≈6V" (`bjt_voltage_divider`, un solo bloque, sin
+composición — nada que ver con Slice A/B/C) rechazaba siempre tras 5
+iteraciones, con la recompensa empeorando en cada una. Dos bugs distintos,
+ninguno introducido por esta sesión, ambos confirmados simulando a mano en
+ngspice antes de tocar código:
+
+- `calculo/catalog_solver.py::solve_bjt_voltage_divider` tenía `RB1`/`RB2`
+  **invertidas** (`rb1 = r_th*vcc/(vcc-v_th)`, debía ser
+  `r_th*vcc/v_th`, y viceversa) — sobrepolarizaba la base entregando un
+  Thevenin de ~9.8 V en vez de ~2.2 V, saturando el transistor (VCE≈0.05 V
+  en vez de ~6 V) sin importar qué tan bien resuelto estuviera todo lo
+  demás. La función hermana `solve_bjt_common_emitter_amp`, a dos
+  topologías de distancia en el mismo archivo, ya tenía la fórmula
+  correcta — sirvió de confirmación independiente del bug.
+- Con la fórmula corregida, el punto de partida ya caía cerca del objetivo
+  (9.3 V contra 6 V), pero el curador seguía sin converger: `curador/
+  policy.py::_adjust_catalog`'s rama `"RC" in new_values` escalaba `RC` por
+  `target/actual` (la regla correcta para R2/Rf, donde más resistencia
+  SUBE la salida) — pero en un divisor de polarización BJT, VCEQ **baja**
+  al subir RC (más caída de tensión en el colector), así que esa regla
+  empujaba en la dirección que empeora el error, cada iteración un poco
+  peor. Se cambió esa rama a `RC / ratio` (misma dirección que la rama
+  RZ/R-con-C, que también es inversa).
+
+Con ambos fixes, el mismo pedido converge en 2 iteraciones (VCE medido
+6.32 V contra el objetivo de 6.0 V, aceptado).
+
 ---
 
 ## Notas para quien retome Slice B/C

@@ -61,7 +61,12 @@ def _adjust_catalog(values: dict, target: float, actual: float) -> dict:
     elif "Rf" in new_values:
         new_values["Rf"] = max(new_values["Rf"] * ratio, 1.0)
     elif "RC" in new_values:
-        new_values["RC"] = max(new_values["RC"] * ratio, 1.0)
+        # VCEQ (la métrica de los dos tipos BJT que traen RC) baja al SUBIR
+        # RC —más caída en el colector—, al revés que R2/Rf (donde más
+        # resistencia sube la salida). Multiplicar por `ratio` como esos dos
+        # empuja en la dirección que empeora el error: si actual > target
+        # (VCEQ de más), ratio < 1 encoge RC, lo que sube VCEQ todavía más.
+        new_values["RC"] = max(new_values["RC"] / ratio, 1.0)
     else:
         for k in list(new_values.keys()):
             if k.upper().startswith("R") and isinstance(new_values[k], (int, float)):

@@ -74,8 +74,14 @@ def solve_bjt_voltage_divider(params: dict[str, Any]) -> dict[str, float]:
     v_th = vbe + icq * re * (1 + 0.1 / beta)
     if v_th >= vcc:
         v_th = vcc * 0.5
-    rb1 = r_th * vcc / (vcc - v_th)
-    rb2 = r_th * vcc / v_th
+    # El divisor real es RB1 (vcc->vb) en paralelo con RB2 (vb->0): con
+    # V_th = VCC*RB2/(RB1+RB2) y R_th = RB1||RB2, despejar da
+    # RB1 = R_th*VCC/V_th y RB2 = R_th*VCC/(VCC-V_th) — invertidas (como
+    # estaban antes) sobrepolarizan la base y saturan el transistor (VCE
+    # cae a ~0 V en vez de acercarse a VCEQ), sin importar cuánto ajuste el
+    # curador después: el punto de partida ya está mal.
+    rb1 = r_th * vcc / v_th
+    rb2 = r_th * vcc / (vcc - v_th)
 
     return {
         "VCC": vcc,
