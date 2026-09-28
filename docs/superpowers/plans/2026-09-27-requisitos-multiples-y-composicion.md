@@ -438,6 +438,7 @@ no bugs puntuales:**
   la entrada del bloque CABEZA de la cadena (no la propia) al medir
   `gain_at_freq` de una etapa downstream — no hay ningún campo para eso
   todavía en `Requirement`.
+  **→ Resuelto en el hallazgo #7.**
 - La fuente de cabeza del ensamblador compuesto sigue siendo fija
   (`DC 0 AC 1`, ver hallazgo #2 más arriba): no lleva la amplitud/frecuencia
   reales del pedido (ej. "100 mV pico a 5 kHz") como una fuente `SIN(...)`,
@@ -446,6 +447,43 @@ no bugs puntuales:**
 - (Fuera de esta sesión, fase 3 del diseño original) los valores de R no se
   ajustan a series comerciales E12/E24 — el usuario señaló que 15915.49 Ω no
   es un valor real, correcto pero ya documentado como fuera de alcance.
+
+**7. Ganancia total end-to-end en composición (2026-09-28) — resuelve el
+primer gap del hallazgo #6.** Sin campo nuevo en `Requirement`: se cambió el
+*default* de `input_node` en `escritura/composition.py::assemble_composed_netlist`
+**solo para `gain_at_freq`** (después de normalizar `MEASURE_ALIASES`, así
+que `"gain"`/`"ganancia"`/`"av"` también cuentan). Ahora se compara contra el
+`in_node` del bloque CABEZA de la cadena de ese bloque — se sube por
+`connections` (`upstream[dst] = src`) hasta el bloque que nada alimenta, el
+mismo criterio "no está en `fed_blocks`" que decide quién lleva la fuente
+`V{id}_in ... AC 1`. O sea, `gain_at_freq` de una etapa downstream es la
+ganancia total desde la entrada real del circuito hasta la salida de esa
+etapa. Para el bloque cabeza no cambia nada (su `in_node` ya es la entrada
+de la cadena). `fc_-3db`, `max`, `min`, `peak_to_peak`, `ripple`, `dc` y
+`current` siguen usando el `in_node` propio del bloque **a propósito**: la fc
+de un filtro downstream tiene que ser la de esa etapa, no la respuesta
+combinada.
+
+- Test nuevo `test_cascade_gain_at_freq_measures_total_gain_from_chain_input`
+  (ngspice real, pedido como alias `"gain"` a 5 kHz): verifica
+  `v(amp_vout)/v(hp_vin)` en el netlist y que la métrica valga
+  `2 × |H_hp(5 kHz)| × 4 ≈ 7.84` (con `|H| = (f/fc)/√(1+(f/fc)²) ≈ 0.9806`),
+  `rel=0.05`; la fc del `hp` sigue en 1000 Hz.
+- **Efecto colateral necesario:** la aserción de ganancia de
+  `test_cascade_is_one_design_and_measures_each_stage` esperaba 4 (solo el
+  amp), pero el `hp` de ese fixture tiene `gain: 2`, así que con el nuevo
+  default mide `2 × 0.995 × 4 ≈ 7.96`. Sin campo nuevo no queda forma de
+  pedir la ganancia por etapa, así que se actualizó **solo esa aserción** al
+  valor total. El resto del test (un solo netlist, cableado, fc por etapa)
+  no cambió. Si algún día hace falta pedir la ganancia de una sola etapa,
+  eso sí requiere un campo explícito.
+- Suite completa: 316 passed, 6 skipped. El único rojo es el preexistente
+  `test_prompts.py::test_api_attaches_handler_and_run_metadata_only_when_configured[True]`.
+- **No verificado contra la app real** (sin docker en el entorno donde se
+  hizo el cambio). Para el pedido del hallazgo #6 (fc=1 kHz, ganancia 10,
+  medido a 5 kHz) lo esperado es ≈ 0.9806 × 10 ≈ 9.8, siempre que el
+  orquestador ponga el requisito de ganancia en el bloque amplificador con
+  `frequency_hz` = 5000.
 
 ---
 

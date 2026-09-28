@@ -132,13 +132,16 @@ def assemble_composed_netlist(blocks: list[dict], connections: list, component_v
     upstream block's output.
 
     A `Requirement` with no `node` is measured at its own block's output
-    (the natural per-stage default); `input_node` for ratio-based measures
-    (gain, cutoff) is always the block's own resolved input node, so a
-    downstream stage's gain is measured relative to what actually drives it,
-    not the original chain input.
+    (the natural per-stage default). `input_node` depends on the measure:
+    `gain_at_freq` is measured against the input of the HEAD of the block's
+    chain, i.e. the total end-to-end gain up to that stage's output (for the
+    head block itself that is its own input, so nothing changes there). Every
+    other ratio-based measure (`fc_-3db`, ...) keeps the block's own resolved
+    input node on purpose: a downstream filter's cutoff must stay relative to
+    what drives *it*, not the combined response of every stage before it.
     """
     from agents.curador.policy import metric_key
-    from agents.escritura.measurements import measurement_commands
+    from agents.escritura.measurements import MEASURE_ALIASES, measurement_commands
 
     in_node = {b["id"]: f'{b["id"]}_vin' for b in blocks}
     out_node = {b["id"]: f'{b["id"]}_vout' for b in blocks}
@@ -153,6 +156,7 @@ def assemble_composed_netlist(blocks: list[dict], connections: list, component_v
         return block_id, port if sep else default_port
 
     fed_blocks = set()
+    upstream: dict[str, str] = {}
     for src, dst in connections:
         src_block, src_port = _split_port(src, "vout")
         dst_block, dst_port = _split_port(dst, "vin")
@@ -160,6 +164,17 @@ def assemble_composed_netlist(blocks: list[dict], connections: list, component_v
             raise ValueError(f"unsupported connection ports: {src} -> {dst} (only vout -> vin)")
         in_node[dst_block] = out_node[src_block]
         fed_blocks.add(dst_block)
+        upstream[dst_block] = src_block
+
+    def _chain_head(block_id: str) -> str:
+        # Sube por `connections` hasta el bloque que nada alimenta (el mismo
+        # criterio "no está en fed_blocks" que decide quién lleva la fuente
+        # independiente). `seen` corta un ciclo mal formado en vez de colgarse.
+        seen = {block_id}
+        while block_id in upstream and upstream[block_id] not in seen:
+            block_id = upstream[block_id]
+            seen.add(block_id)
+        return block_id
 
     definitions: list[str] = []
     # Fuente muda que measure_dc/measure_current (Slice B) necesitan para su
@@ -178,8 +193,10 @@ def assemble_composed_netlist(blocks: list[dict], connections: list, component_v
 
         for requirement in block["requirements"]:
             node = requirement.get("node") or out_node[bid]
+            measure = MEASURE_ALIASES.get(requirement["measure"], requirement["measure"])
+            input_node = in_node[_chain_head(bid)] if measure == "gain_at_freq" else in_node[bid]
             commands = measurement_commands(
-                requirement, node=node, input_node=in_node[bid], values=values
+                requirement, node=node, input_node=input_node, values=values
             )
             control.extend(commands)
             key = metric_key(requirement)

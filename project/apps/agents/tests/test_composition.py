@@ -92,7 +92,9 @@ def test_cascade_is_one_design_and_measures_each_stage():
     assert results["hp"]["sim_error"] is None, results
     assert results["amp"]["sim_error"] is None, results
     assert results["hp"]["metrics"]["fc_-3db"] == pytest.approx(1000, rel=0.04)
-    assert results["amp"]["metrics"]["gain_at_freq"] == pytest.approx(4, rel=0.01)
+    # gain_at_freq se mide desde la entrada de la cadena (hp_vin), no desde
+    # hp_vout: ganancia_hp (2) × |H_hp(10 kHz)| (≈0.995) × ganancia_amp (4).
+    assert results["amp"]["metrics"]["gain_at_freq"] == pytest.approx(2 * (10 / (1 + 10 ** 2) ** 0.5) * 4, rel=0.01)
 
 
 def test_catalog_never_resolves_writer_llm(monkeypatch):
@@ -102,3 +104,36 @@ def test_catalog_never_resolves_writer_llm(monkeypatch):
         pytest.fail("catalog synthesis must not resolve the writer LLM")
     monkeypatch.setattr(node, "get_chat_model", forbidden)
     node.escritura_node(cascade(), {"configurable": {"user_id": "u"}})
+
+
+def test_cascade_gain_at_freq_measures_total_gain_from_chain_input():
+    """`gain_at_freq` de una etapa downstream se mide contra la entrada del
+    bloque CABEZA de la cadena, no contra lo que alimenta a esa etapa: es la
+    ganancia total end-to-end (hallazgo #6 del post-mortem). `fc_-3db` y el
+    resto de las medidas siguen siendo relativas a la entrada propia.
+
+    A 5 kHz (5x la fc de 1 kHz) el pasa-altas ya está en banda pasante pero
+    no perfectamente plano: |H| = (f/fc) / sqrt(1 + (f/fc)^2) ≈ 0.9806.
+    Total = ganancia_hp (2) × |H| × ganancia_amp (4) ≈ 7.84, no 4.
+    """
+    import math
+
+    from agents.escritura.node import escritura_node
+    from agents.shell.node import shell_node
+
+    state = cascade()
+    amp = state["normalized_spec"]["blocks"][1]
+    # "gain" (alias) en vez de "gain_at_freq": ejercita que el default de
+    # entrada de cadena también aplica después de normalizar el alias.
+    amp["requirements"] = [req("gain", 4, frequency_hz=5000)]
+    key = metric_key(amp["requirements"][0])
+    state.update(escritura_node(state))
+    text = next(iter(state["netlists"].values()))["text"].lower()
+    assert "v(amp_vout)/v(hp_vin)" in text
+    results = shell_node(state)["sim_results"]
+    assert results["amp"]["sim_error"] is None, results
+    ratio = 5000 / 1000
+    h_highpass = ratio / math.sqrt(1 + ratio ** 2)
+    expected_total = 2 * h_highpass * 4
+    assert results["amp"]["metrics"][key] == pytest.approx(expected_total, rel=0.05)
+    assert results["hp"]["metrics"]["fc_-3db"] == pytest.approx(1000, rel=0.04)
