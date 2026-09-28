@@ -154,3 +154,34 @@ def test_generate_writer_netlist_calls_chat_model():
     assert "* " in netlist
     assert ".control" in netlist
     assert "wrdata output.txt" in netlist
+
+
+def test_generic_prose_title_line_is_commented_not_parsed_as_element(tmp_path):
+    """Caso real: el LLM empezó el netlist con un título en prosa sin '*'.
+    Anteponer otro título lo empujaba a la línea 2 y ngspice lo leía como
+    elemento XSPICE `a...` ("unable to find definition of model dc")."""
+    from agents.escritura.netlist import NETLIST_BUILDERS
+    from agents.shell.ngspice_runner import parse_measurements, run_ngspice
+
+    llm_netlist = (
+        "amplificador no inversor con bias dc\n"
+        "Vcc vcc 0 DC 5\n"
+        "R1 vcc vbias 10k\n"
+        "R2 vbias 0 10k\n"
+        ".control\nop\necho b1 vbias $&v(vbias) > output.txt\nquit\n.endc\n.end\n"
+    )
+    netlist = NETLIST_BUILDERS["generic"]({"description": "x"}, {"netlist": llm_netlist})
+    assert netlist.splitlines()[0] == "* amplificador no inversor con bias dc"
+    path = tmp_path / "circuit.cir"
+    path.write_text(netlist)
+    output, error = run_ngspice(str(path))
+    assert error is None, error
+    assert parse_measurements(output)["b1"]["vbias"] == pytest.approx(2.5, rel=0.001)
+
+
+def test_generic_netlist_starting_with_component_keeps_it():
+    from agents.escritura.netlist import NETLIST_BUILDERS
+
+    llm_netlist = "Vin in 0 DC 1\nR1 in out 1k\nR2 out 0 1k\n.control\nop\n.endc\n.end\n"
+    netlist = NETLIST_BUILDERS["generic"]({"description": "Divisor"}, {"netlist": llm_netlist})
+    assert netlist.splitlines()[:2] == ["* Divisor", "Vin in 0 DC 1"]

@@ -32,14 +32,45 @@ class WriterNetlist(BaseModel):
         return self
 
 
+def _first_line_is_title(lines: list[str]) -> bool:
+    """¿La primera línea es un título en prosa (convención SPICE) y no un componente?
+
+    Se decide por conectividad, no por la letra inicial: un componente real
+    comparte al menos un nodo con el resto del netlist (o va a tierra); un
+    título como "amplificador no inversor con bias dc" no. Mirar solo la
+    letra no sirve: esa línea empieza con `a` (elemento XSPICE) y ngspice
+    la rechazaba con "unable to find definition of model dc".
+    """
+    first, rest = lines[0], lines[1:]
+    tokens = first.split()
+    if first.startswith("."):
+        return False
+    if len(tokens) < 3:
+        return True
+    other_tokens = {
+        tok.lower().strip("()")
+        for line in rest
+        if line.strip() and not line.lstrip().startswith("*")
+        for tok in line.split()[1:]
+    }
+    nodes = [t.lower() for t in tokens[1:3]]
+    return not any(n in ("0", "gnd") or n in other_tokens for n in nodes)
+
+
 def _ensure_title_line(netlist: str, title: str = "Circuit") -> str:
     """SPICE trata obligatoriamente la primera línea como título.
     Si el netlist no empieza con '*', anteponer una línea de título
-    para evitar que ngspice descarte el primer componente."""
+    para evitar que ngspice descarte el primer componente — salvo que esa
+    primera línea ya sea el título en prosa que escribió el LLM: ahí se
+    comenta, porque anteponer otro la empujaba a la línea 2 y ngspice la
+    parseaba como componente."""
     stripped = netlist.lstrip()
-    if not stripped.startswith("*"):
-        return f"* {title}\n" + netlist
-    return netlist
+    if stripped.startswith("*"):
+        return netlist
+    lines = stripped.splitlines()
+    if lines and _first_line_is_title(lines):
+        return "\n".join([f"* {lines[0]}", *lines[1:]]) + ("\n" if stripped.endswith("\n") else "")
+    return f"* {title}\n" + netlist
 
 
 def _format_spice_value(val: Any) -> str:
