@@ -155,7 +155,11 @@ def solve_opamp_highpass_active(params: dict[str, Any]) -> dict[str, float]:
     c = _param(params, "c", default=1e-8)
     rg = _param(params, "rg", default=10000.0)
     r = 1.0 / (2 * math.pi * fc * c)
-    rf = (gain - 1.0) * rg if gain > 1.0 else rg
+    # Av = 1 + Rf/Rg (no inversor): para ganancia unitaria hace falta Rf=0,
+    # no Rf=Rg (eso da Av=2, sea cual sea Rg). `max(gain-1, 0)` cubre ambos
+    # extremos: gain=1 -> Rf=0 (Av=1); gain<1 (pedido imposible en este
+    # amplificador) satura en Rf=0 en vez de invertir la relación.
+    rf = max(gain - 1.0, 0.0) * rg
     return {
         "C": c,
         "R": round(r, 2),
@@ -170,11 +174,14 @@ def solve_opamp_noninverting_amp(params: dict[str, Any]) -> dict[str, float]:
     vin = _param(params, "v_in", "vin", default=1.0)
     vout = _param(params, "v_out", "vout", "target", default=2.0)
     rg = _param(params, "rg", default=1000.0)
-    if vin <= 0 or vout <= vin:
+    # Mismo bug que opamp_highpass_active: Av=1+Rf/Rg no inversor, así que
+    # ganancia unitaria (vout==vin) necesita Rf=0, no Rf=Rg (Av=2, no 1).
+    # Guarda vin<=0 aparte solo para evitar la división por cero.
+    if vin <= 0:
         rf = rg
     else:
         gain = vout / vin
-        rf = (gain - 1.0) * rg
+        rf = max(gain - 1.0, 0.0) * rg
     return {"v_in": vin, "v_out": vout, "Rg": rg, "Rf": round(rf, 2)}
 
 
