@@ -49,9 +49,9 @@ def test_valid_spec_produces_normalized_spec_with_defaults():
     assert spec["max_iterations"] == 5
     assert [b["id"] for b in spec["blocks"]] == ["div1", "led1"]
     div = spec["blocks"][0]
-    assert div["requirements"] == [{"measure": "v_out", "value": 3.3, "tolerance": 0.05, "node": "", "comparator": "approx"}]
+    assert div["requirements"] == [{"measure": "v_out", "value": 3.3, "tolerance": 0.05, "node": "", "comparator": "approx", "frequency_hz": None}]
     led = spec["blocks"][1]
-    assert led["requirements"] == [{"measure": "i_led", "value": 0.02, "tolerance": 0.05, "node": "", "comparator": "approx"}]
+    assert led["requirements"] == [{"measure": "i_led", "value": 0.02, "tolerance": 0.05, "node": "", "comparator": "approx", "frequency_hz": None}]
     assert result["pending_blocks"] == ["div1", "led1"]
     assert result["iteration"] == 0
 
@@ -671,7 +671,7 @@ def test_orquestador_normalizes_catalog_block():
     assert result["pending_blocks"] == ["zener1"]
     block = result["normalized_spec"]["blocks"][0]
     assert block["type"] == "catalog"
-    assert block["requirements"] == [{"measure": "vout", "value": 9.0, "tolerance": 0.01, "node": "", "comparator": "approx"}]
+    assert block["requirements"] == [{"measure": "vout", "value": 9.0, "tolerance": 0.01, "node": "", "comparator": "approx", "frequency_hz": None}]
     assert block["params"]["circuit_id"] == "zener_regulated_power_supply"
 
 
@@ -715,9 +715,9 @@ def test_normalization_resolves_each_requirement_and_propagates_connections():
     normalized = _normalize(spec)["normalized_spec"]
     assert normalized["connections"] == [("a.out", "b.in")]
     assert normalized["blocks"][0]["requirements"] == [
-        {"measure": "v_out", "value": 3.3, "tolerance": 0.05, "comparator": "approx", "node": ""},
-        {"measure": "fc", "value": 1000.0, "tolerance": 0.01, "comparator": "ge", "node": ""},
-        {"measure": "current", "value": 0.02, "tolerance": 0.0, "comparator": "approx", "node": ""},
+        {"measure": "v_out", "value": 3.3, "tolerance": 0.05, "comparator": "approx", "node": "", "frequency_hz": None},
+        {"measure": "fc", "value": 1000.0, "tolerance": 0.01, "comparator": "ge", "node": "", "frequency_hz": None},
+        {"measure": "current", "value": 0.02, "tolerance": 0.0, "comparator": "approx", "node": "", "frequency_hz": None},
     ]
 
 def test_normalization_keeps_first_requirement_projection_for_slice_b_c_consumers():

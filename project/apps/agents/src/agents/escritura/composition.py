@@ -142,17 +142,30 @@ def assemble_composed_netlist(blocks: list[dict], connections: list, component_v
 
     in_node = {b["id"]: f'{b["id"]}_vin' for b in blocks}
     out_node = {b["id"]: f'{b["id"]}_vout' for b in blocks}
+
+    def _split_port(endpoint: str, default_port: str) -> tuple[str, str]:
+        # El orquestador (LLM) no siempre incluye el puerto — a veces manda
+        # solo el id del bloque ("hp" en vez de "hp.vout"), porque para una
+        # cadena simple vout->vin el puerto es inferible. Como hoy solo se
+        # soporta esa forma de cadena de todos modos, faltarlo no es
+        # ambiguo: se completa con el default en vez de fallar.
+        block_id, sep, port = endpoint.partition(".")
+        return block_id, port if sep else default_port
+
+    fed_blocks = set()
     for src, dst in connections:
-        src_block, src_port = src.split(".")
-        dst_block, dst_port = dst.split(".")
+        src_block, src_port = _split_port(src, "vout")
+        dst_block, dst_port = _split_port(dst, "vin")
         if src_port != "vout" or dst_port != "vin":
             raise ValueError(f"unsupported connection ports: {src} -> {dst} (only vout -> vin)")
         in_node[dst_block] = out_node[src_block]
-
-    fed_blocks = {dst.split(".")[0] for _, dst in connections}
+        fed_blocks.add(dst_block)
 
     definitions: list[str] = []
-    instances: list[str] = []
+    # Fuente muda que measure_dc/measure_current (Slice B) necesitan para su
+    # barrido de un solo punto — ver measurements.py. Inerte cuando ningún
+    # requisito del diseño la usa; más simple que emitirla condicionalmente.
+    instances: list[str] = ["V__measure __measure 0 0"]
     control: list[str] = []
     for block in blocks:
         bid = block["id"]

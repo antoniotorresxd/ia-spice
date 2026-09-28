@@ -238,6 +238,74 @@ B1, o forzar cualquier bloque con 2+ requisitos por el ensamblador aunque no
 tenga conexiones. Ninguna de las dos está hecha; es la limitación más
 concreta que queda para retomar Slice C.
 
+## Post-mortem: bugs reales encontrados probando la app en vivo (2026-09-28)
+
+Tras cerrar A/B/C, se probó la app real (`docker` local: `spice-agents-1`,
+`spice-server-1`, `spice-client-1`) con pedidos en lenguaje natural, no solo
+con el banco estructurado. Dos hallazgos distintos:
+
+**1. No es un bug de esta sesión — un `circuit_id` que falta.** "Diseña un
+circuito con un diodo que rectifique... obteniendo únicamente los
+semiciclos positivos" no tiene equivalente en el catálogo: `diode_clipper`
+(recortar) y `diode_clamper` (desplazar nivel DC) no son un rectificador. El
+orquestador fuerza el pedido a `diode_clipper` con `v_recorte: 0`, cuya
+métrica `vclip` nunca puede alcanzar el objetivo de 10 V que el propio LLM
+le puso — rechaza tras 5 iteraciones, siempre. Preexistente, no relacionado
+con Slice A/B/C. Aparte, la UI mostraba el mensaje genérico "No pudimos
+ejecutar el diseño" en vez del motivo real ("goals not met after 5
+iterations") — un llamado directo y sin streaming a `/runs` sí devuelve el
+motivo legible, así que el problema está en cómo el cliente/servidor
+consume el streaming SSE de `/runs`, no en agents. No investigado más:
+ninguno de los dos es de este slice.
+
+**2. Bugs reales de Slice B, encontrados y arreglados:** al pedir en
+lenguaje natural un filtro pasa-altas seguido de un amplificador (el caso
+que Slice B sí sabe resolver), fallaba con
+`unknown measure 'fc'; must be one of [...]`. Tres problemas en cadena,
+los tres en `escritura/composition.py`/`escritura/measurements.py`/
+`orquestador/schema.py`:
+
+- El orquestador (LLM) no tiene ninguna descripción de campo que le diga que
+  `Requirement.measure` debe salir del vocabulario cerrado de B1 cuando el
+  bloque es parte de una composición — sigue usando nombres libres ("fc",
+  "gain") como en el camino sin componer. **Fix:** `MEASURE_ALIASES` en
+  `measurements.py` normaliza los sinónimos obvios (fc→fc_-3db, gain→
+  gain_at_freq, vout→dc, etc.) antes de exigir el vocabulario cerrado, y se
+  agregaron descripciones a `Requirement.measure`/`.node` y a
+  `CircuitSpec.connections` para que el LLM tenga más chance de acertar
+  directamente.
+- `Requirement` no declaraba `frequency_hz` como campo — Pydantic lo
+  descartaba en silencio (extra ignorado por default), así que
+  `gain_at_freq` nunca recibía la frecuencia que el LLM sí intentaba mandar.
+  **Fix:** se agregó `frequency_hz: float | None = None` al modelo.
+- El orquestador manda `connections` como pares de solo id de bloque (`["hp",
+  "amp"]`), no `"hp.vout"`/`"amp.vin"` como asumía
+  `assemble_composed_netlist`, y reventaba con
+  `ValueError: not enough values to unpack`. **Fix:** `_split_port` en
+  `composition.py` acepta ambas formas, completando el puerto por default
+  (`vout`/`vin`) cuando falta — hoy solo se soporta esa forma de cadena de
+  todos modos, así que no es ambiguo.
+- El ensamblador nunca emitía el dispositivo `V__measure` que
+  `measure_dc`/`measure_current` (Slice B) necesitan para su barrido de un
+  solo punto — solo existía en el netlist de prueba escrito a mano del test
+  aislado, nunca en el netlist real que arma `assemble_composed_netlist`.
+  **Fix:** se agrega `V__measure __measure 0 0` como dispositivo fijo del
+  diseño compuesto (inerte si ningún requisito lo usa).
+
+**Limitación real que queda sin resolver, encontrada en el mismo caso:** la
+fuente de cabeza de cadena que arma el ensamblador es
+`V{id}_in {id}_vin 0 DC 0 AC 1` — sirve para medidas en dominio AC
+(`fc_-3db`, `gain_at_freq`), pero no tiene ninguna forma de onda transitoria
+ni sesgo DC real, así que `max`/`min`/`peak_to_peak`/`ripple` (que corren
+`.tran`) y `dc`/`current` miden 0 en cualquier circuito compuesto hoy — no
+hay nada que medir. En el caso probado, el LLM eligió `dc` para "amplificar
+con ganancia 5" (debería haber sido `gain_at_freq`), así que el síntoma
+observado fue ese, pero el problema de fondo es más amplio: el ensamblador
+compuesto solo sostiene mediciones en dominio AC por ahora. Extenderlo
+exigiría que la fuente de cabeza cargue la forma de onda/sesgo que el
+diseño realmente pide, no un `DC 0 AC 1` fijo — trabajo futuro, no de esta
+sesión.
+
 ---
 
 ## Notas para quien retome Slice B/C

@@ -21,11 +21,34 @@ def find_unresolved_placeholders(netlist: str) -> list[str]:
 
 
 class Requirement(BaseModel):
-    measure: str = Field(min_length=1)
-    node: str = ""  # Reservado para la composición en Slice B.
+    measure: str = Field(
+        min_length=1,
+        description=(
+            "Qué se mide. Para un bloque suelto (sin `connections`), cualquier "
+            "nombre libre sirve (ej. 'v_out', 'fc', 'gain'): es el mismo nombre "
+            "que la plantilla del catálogo calcula. Para un bloque dentro de una "
+            "composición (cuando `connections` conecta este bloque con otro), "
+            "usa exactamente uno de: max, min, peak_to_peak, dc, current, "
+            "fc_-3db (frecuencia de corte a -3 dB), gain_at_freq (ganancia a una "
+            "frecuencia — agrega `frequency_hz`), ripple."
+        ),
+    )
+    node: str = Field(
+        default="",
+        description=(
+            "Dónde se mide, solo relevante en una composición. Vacío = la "
+            "salida propia de este bloque (el caso normal). Poné algo distinto "
+            "solo si el requisito se mide en un nodo de OTRO bloque del "
+            "circuito compuesto."
+        ),
+    )
     comparator: Literal["approx", "le", "ge"] = "approx"
     value: float
     tolerance: float | None = None
+    frequency_hz: float | None = Field(
+        default=None,
+        description="Solo para measure='gain_at_freq': a qué frecuencia medir la ganancia.",
+    )
 
 
 class GenericParams(BaseModel):
@@ -100,7 +123,18 @@ class CircuitSpec(BaseModel):
     deberá producir exactamente este schema."""
 
     blocks: list[Block] = Field(min_length=1)
-    connections: list[tuple[str, str]] = Field(default_factory=list)
+    connections: list[tuple[str, str]] = Field(
+        default_factory=list,
+        description=(
+            "Cómo se cablean los bloques cuando el circuito son varias etapas "
+            "en cascada (ej. un filtro seguido de un amplificador). Vacío si "
+            "hay un solo bloque, o si los bloques son independientes entre sí. "
+            "Cada par es (origen, destino), en el sentido de la señal: la "
+            "salida del primer bloque alimenta la entrada del segundo. Basta "
+            "con el id del bloque en cada lado (ej. ['hp', 'amp']); hoy solo "
+            "se soporta esa forma de cadena (salida -> entrada)."
+        ),
+    )
     # Los valores por omisión salen de config/curador.yaml, no del código: el
     # RNF-04.2 de la tesina exige poder ajustar el máximo de iteraciones y la
     # tolerancia durante la evaluación experimental sin recompilar. Se leen con

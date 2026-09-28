@@ -77,6 +77,36 @@ MEASURE_BUILDERS = {
     "gain_at_freq": measure_gain_at_freq, "ripple": measure_ripple,
 }
 
+# El orquestador (LLM) no conoce este vocabulario cerrado — sigue usando los
+# nombres libres de siempre ("fc", "gain", "vout", ...) también cuando arma
+# una composición, porque nada en su prompt le enseña la diferencia. En vez
+# de depender de que el prompt cambie el vocabulario del modelo (frágil: un
+# reformulado cualquiera vuelve a fallar), se normalizan aquí los sinónimos
+# obvios antes de exigir el vocabulario cerrado. Ampliar esta tabla es más
+# seguro que ampliar MEASURE_BUILDERS: no inventa un tipo de medida nuevo,
+# solo reconoce cómo la gente (y el LLM) ya nombra los que existen.
+MEASURE_ALIASES = {
+    "fc": "fc_-3db",
+    "f_c": "fc_-3db",
+    "cutoff": "fc_-3db",
+    "corner_frequency": "fc_-3db",
+    "frecuencia_corte": "fc_-3db",
+    "gain": "gain_at_freq",
+    "av": "gain_at_freq",
+    "a_v": "gain_at_freq",
+    "ganancia": "gain_at_freq",
+    "vout": "dc",
+    "v_out": "dc",
+    "voltage": "dc",
+    "vmax": "max",
+    "peak": "max",
+    "vmin": "min",
+    "vpp": "peak_to_peak",
+    "iout": "current",
+    "i_out": "current",
+    "corriente": "current",
+}
+
 
 def measurement_commands(requirement: dict, *, node: str, input_node: str = "vin",
                          values: dict | None = None) -> list[str]:
@@ -88,10 +118,12 @@ def measurement_commands(requirement: dict, *, node: str, input_node: str = "vin
         values.get("tstop", 5 / frequency), values.get("tstart", 3 / frequency),
     )
     measure = requirement["measure"]
-    builder = MEASURE_BUILDERS.get(measure)
+    canonical = MEASURE_ALIASES.get(measure, measure)
+    builder = MEASURE_BUILDERS.get(canonical)
     if builder is None:
         raise ValueError(
             f"unknown measure {measure!r}; must be one of {sorted(MEASURE_BUILDERS)} "
+            f"or a known alias ({sorted(MEASURE_ALIASES)}) "
             "(this closed vocabulary applies only to composed/Slice B requirements — "
             "a single-block Requirement without `node` keeps Slice A's free-form "
             "metric names, since those are legacy names read straight off each "
