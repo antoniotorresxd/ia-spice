@@ -381,10 +381,48 @@ no hay ninguna vía hoy para que el curador lo alcance ajustando parámetros
 — es una pregunta de diseño (¿qué debería ajustar un "clamper" para
 cumplir un objetivo de tensión?), no un bug puntual como los de arriba.
 
+**5. El prompt de `orquestador-system` en Langfuse estaba desactualizado —
+raíz de varios de los bugs de arriba.** A pedido del usuario, se revisaron
+los tres prompts del proyecto. `documentador-system` y
+`curador-reparacion-system` siguen vigentes (son agnósticos al schema o ya
+reciben la lista de requisitos armada en el mensaje de usuario, no en el
+system prompt). `orquestador-system` (v8, del 2026-09-13, antes de Slice
+A/B/C) seguía instruyendo al LLM a producir `metric`/`target` sueltos
+—campos que **ya no existen** en `CatalogParams`/`GenericParams`— sin
+mencionar `requirements`, `connections` ni el vocabulario cerrado de
+`measure` para composición. Es decir: la desalineación de vocabulario que
+motivó `MEASURE_ALIASES` y el bug del formato de `connections` no eran solo
+"el LLM no lo sabía" — el prompt activamente le enseñaba lo viejo.
+
+- **v9** (con aprobación explícita del usuario para promoverla a
+  producción): reescribe las secciones A/B para `requirements`/`connections`,
+  documenta el vocabulario cerrado de `measure` y da un ejemplo concreto de
+  composición. Probada contra la app real: el caso de la cascada pasó de
+  rechazar con `unknown measure` a **aceptar en la primera iteración**
+  (antes necesitaba los alias + 2 reintentos).
+- v9 destapó una regresión al toque: el LLM empezó a pedir DOS requisitos
+  sobre el BJT suelto (`icq` Y `vceq`) — v9 mencionaba multi-requisito sin
+  aclarar que un bloque sin componer solo puede medir uno. **v10** agrega
+  una sección explícita de "LIMITACIÓN IMPORTANTE" diciendo que un bloque
+  suelto es un solo requisito. **No fue suficiente por sí sola** — probado
+  contra la app real, el LLM lo siguió ignorando pese a la instrucción
+  explícita. La solución que sí funcionó fue la de siempre en esta sesión:
+  no confiar en que el prompt baste. `orquestador/node.py::_normalize`
+  ahora recorta de forma determinista los requisitos de cualquier bloque
+  que no participe de `connections` a uno solo, sin importar cuántos
+  extraiga el LLM. Con eso, el caso BJT también converge (2 iteraciones,
+  aceptado).
+
+**Lección para cualquier prompt futuro de este proyecto:** un prompt puede
+señalar la dirección correcta, pero para una regla dura ("nunca más de X",
+"siempre en este formato exacto") la salvaguarda tiene que vivir en código
+determinista — el prompt solo reduce cuánto tiene que corregir esa
+salvaguarda, no la reemplaza.
+
 ---
 
 ## Notas para quien retome Slice B/C
 
-- El shape de `normalized_spec` después de Slice A es `{"blocks": [{"id", "type", "params", "requirements": [...]}, ...], "max_iterations", "connections": []}`. `connections` existe pero está vacía en la práctica: nada la puebla (el orquestador no la extrae todavía) ni la consume (no hay ensamblador todavía).
+- El shape de `normalized_spec` después de Slice A/B es `{"blocks": [{"id", "type", "params", "requirements": [...]}, ...], "max_iterations", "connections": [...]}`. A diferencia de lo que decía esta nota antes: el orquestador **sí** extrae `connections` de lenguaje natural desde que se actualizó el prompt (`orquestador-system` v9/v10) — lo que falta es la extracción de comparadores `le`/`ge` (ver el punto de abajo, sigue sin ejercitarse en producción).
 - `curador/policy.evaluate_requirement` ya soporta `le`/`ge` aunque Slice A solo los ejercita en tests unitarios — ningún camino real produce hoy un requisito que no sea `approx`, porque el orquestador todavía no extrae comparadores de lenguaje natural. Slice B es quien primero los ejercita end-to-end.
 - El ajuste multi-requisito de un bloque `catalog` (Task 4, Step 3 de Slice A) es una limitación conocida: elige el peor requisito, no resuelve el sistema completo. Si el criterio de terminado 4 del diseño ("recalibra solo la consigna del requisito que falló") necesita algo más fino que "el peor gana", es trabajo de Slice B/C, marcado con `TODO(slice-b/c)` en `curador/node.py`.
