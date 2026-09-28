@@ -1,108 +1,162 @@
 # Banco de circuitos de prueba con solución de referencia.
 #
-# `referencia.componentes` está calculado a mano con la ecuación de diseño de
-# cada topología. No se usa para puntuar —eso se hace sobre la métrica que
-# ngspice mide— sino para que el banco sea auditable: cualquiera puede
-# verificar que el caso está bien planteado.
+# `referencia` es una LISTA de requisitos (Slice C): cada entrada trae
+# `requisito` (el bloque/requisito al que corresponde), `metrica`, `objetivo`
+# y `componentes` — la salida real de `calculo.catalog_solver.solve_catalog_circuit`
+# para los mismos parámetros del caso, no una cuenta hecha a mano. No se usa
+# para puntuar —eso se hace sobre la métrica que ngspice mide— sino para que
+# el banco sea auditable: cualquiera puede recalcularla y comparar. Todos los
+# casos de la primera tanda tienen un solo bloque con un solo requisito; el
+# caso de composición al final tiene dos.
 #
 # `descripcion` es la entrada en lenguaje natural que consume la línea base
 # best-of-N, para que compita sobre exactamente el mismo enunciado.
+#
+# NOTA (2026-09-27, Slice C): el banco original tenía 20 casos sobre cuatro
+# `circuit_id` (`voltage_divider`, `rc_lowpass`, `led_resistor`,
+# `noninverting_amp`) que ya no existen tal cual en
+# `knowledge/circuit_client.py`/`calculo/catalog_solver.py` — el catálogo
+# real de hoy usa `rc_lowpass_passive` y `opamp_noninverting_amp`, y
+# `led_resistor` no tiene equivalente (no hay ningún `circuit_id` de
+# LED+resistencia en el catálogo actual). Los cinco casos de LED se
+# eliminaron en vez de forzarlos contra una topología que no es la misma; los
+# de divisor y filtro se migraron al `circuit_id` real, con sus valores de
+# referencia recalculados (el default de R1 del divisor cambió de 1 kΩ a
+# 10 kΩ, y el filtro pasa de fijar R y resolver C a fijar C=10 nF y resolver
+# R, así que los números viejos ya no aplicaban de todas formas).
 
 casos:
-  # --- Divisores de voltaje: R2 = R1·v_out/(v_in − v_out), con R1 = 1 kΩ ---
+  # --- Divisores de voltaje: R1 = 10 kΩ fijo, R2 = R1·v_out/(v_in − v_out) ---
   - id: divisor-12-5
     descripcion: "un divisor de voltaje que baje 12 V a 5 V"
     spec:
-      blocks: [{id: div1, type: voltage_divider, params: {v_in: 12.0, v_out: 5.0}}]
-    referencia: {metrica: v_out, objetivo: 5.0, componentes: {r1: 1000.0, r2: 714.29}}
+      blocks:
+        - id: div1
+          type: catalog
+          params:
+            circuit_id: voltage_divider
+            params: {v_in: 12.0, v_out: 5.0}
+            requirements: [{measure: v_out, value: 5.0}]
+    referencia:
+      - {requisito: div1, metrica: v_out, objetivo: 5.0, componentes: {r1: 10000.0, r2: 7142.86}}
 
   - id: divisor-5-3v3
     descripcion: "un divisor de voltaje de 5 V a 3.3 V"
     spec:
-      blocks: [{id: div1, type: voltage_divider, params: {v_in: 5.0, v_out: 3.3}}]
-    referencia: {metrica: v_out, objetivo: 3.3, componentes: {r1: 1000.0, r2: 1941.18}}
+      blocks:
+        - id: div1
+          type: catalog
+          params:
+            circuit_id: voltage_divider
+            params: {v_in: 5.0, v_out: 3.3}
+            requirements: [{measure: v_out, value: 3.3}]
+    referencia:
+      - {requisito: div1, metrica: v_out, objetivo: 3.3, componentes: {r1: 10000.0, r2: 19411.76}}
 
   - id: divisor-9-5
     descripcion: "un divisor de voltaje de 9 V a 5 V"
     spec:
-      blocks: [{id: div1, type: voltage_divider, params: {v_in: 9.0, v_out: 5.0}}]
-    referencia: {metrica: v_out, objetivo: 5.0, componentes: {r1: 1000.0, r2: 1250.0}}
+      blocks:
+        - id: div1
+          type: catalog
+          params:
+            circuit_id: voltage_divider
+            params: {v_in: 9.0, v_out: 5.0}
+            requirements: [{measure: v_out, value: 5.0}]
+    referencia:
+      - {requisito: div1, metrica: v_out, objetivo: 5.0, componentes: {r1: 10000.0, r2: 12500.0}}
 
   - id: divisor-24-12
     descripcion: "un divisor de voltaje que reduzca 24 V a la mitad"
     spec:
-      blocks: [{id: div1, type: voltage_divider, params: {v_in: 24.0, v_out: 12.0}}]
-    referencia: {metrica: v_out, objetivo: 12.0, componentes: {r1: 1000.0, r2: 1000.0}}
+      blocks:
+        - id: div1
+          type: catalog
+          params:
+            circuit_id: voltage_divider
+            params: {v_in: 24.0, v_out: 12.0}
+            requirements: [{measure: v_out, value: 12.0}]
+    referencia:
+      - {requisito: div1, metrica: v_out, objetivo: 12.0, componentes: {r1: 10000.0, r2: 10000.0}}
 
   - id: divisor-3v3-1v8
     descripcion: "un divisor de voltaje de 3.3 V a 1.8 V"
     spec:
-      blocks: [{id: div1, type: voltage_divider, params: {v_in: 3.3, v_out: 1.8}}]
-    referencia: {metrica: v_out, objetivo: 1.8, componentes: {r1: 1000.0, r2: 1200.0}}
+      blocks:
+        - id: div1
+          type: catalog
+          params:
+            circuit_id: voltage_divider
+            params: {v_in: 3.3, v_out: 1.8}
+            requirements: [{measure: v_out, value: 1.8}]
+    referencia:
+      - {requisito: div1, metrica: v_out, objetivo: 1.8, componentes: {r1: 10000.0, r2: 12000.0}}
 
-  # --- Filtros RC pasa-bajas: C = 1/(2π·R·f_c), con R = 1 kΩ ---
+  # --- Filtros RC pasa-bajas: C = 10 nF fijo, R = 1/(2π·f_c·C) ---
   - id: rc-100hz
     descripcion: "un filtro RC pasa-bajas con frecuencia de corte de 100 Hz"
     spec:
-      blocks: [{id: rc1, type: rc_lowpass, params: {f_c: 100.0}}]
-    referencia: {metrica: f_c, objetivo: 100.0, componentes: {r: 1000.0, c: 1.5915e-06}}
+      blocks:
+        - id: rc1
+          type: catalog
+          params:
+            circuit_id: rc_lowpass_passive
+            params: {f_c: 100.0}
+            requirements: [{measure: f_c, value: 100.0}]
+    referencia:
+      - {requisito: rc1, metrica: f_c, objetivo: 100.0, componentes: {r: 159154.94, c: 1.0e-08}}
 
   - id: rc-1khz
     descripcion: "un filtro RC pasa-bajas de 1 kHz de corte"
     spec:
-      blocks: [{id: rc1, type: rc_lowpass, params: {f_c: 1000.0}}]
-    referencia: {metrica: f_c, objetivo: 1000.0, componentes: {r: 1000.0, c: 1.5915e-07}}
+      blocks:
+        - id: rc1
+          type: catalog
+          params:
+            circuit_id: rc_lowpass_passive
+            params: {f_c: 1000.0}
+            requirements: [{measure: f_c, value: 1000.0}]
+    referencia:
+      - {requisito: rc1, metrica: f_c, objetivo: 1000.0, componentes: {r: 15915.49, c: 1.0e-08}}
 
   - id: rc-10khz
     descripcion: "un filtro RC pasa-bajas de 10 kHz"
     spec:
-      blocks: [{id: rc1, type: rc_lowpass, params: {f_c: 10000.0}}]
-    referencia: {metrica: f_c, objetivo: 10000.0, componentes: {r: 1000.0, c: 1.5915e-08}}
+      blocks:
+        - id: rc1
+          type: catalog
+          params:
+            circuit_id: rc_lowpass_passive
+            params: {f_c: 10000.0}
+            requirements: [{measure: f_c, value: 10000.0}]
+    referencia:
+      - {requisito: rc1, metrica: f_c, objetivo: 10000.0, componentes: {r: 1591.55, c: 1.0e-08}}
 
   - id: rc-50khz
     descripcion: "un filtro RC pasa-bajas con corte en 50 kHz"
     spec:
-      blocks: [{id: rc1, type: rc_lowpass, params: {f_c: 50000.0}}]
-    referencia: {metrica: f_c, objetivo: 50000.0, componentes: {r: 1000.0, c: 3.1831e-09}}
+      blocks:
+        - id: rc1
+          type: catalog
+          params:
+            circuit_id: rc_lowpass_passive
+            params: {f_c: 50000.0}
+            requirements: [{measure: f_c, value: 50000.0}]
+    referencia:
+      - {requisito: rc1, metrica: f_c, objetivo: 50000.0, componentes: {r: 318.31, c: 1.0e-08}}
 
   - id: rc-1mhz
     descripcion: "un filtro RC pasa-bajas de 1 MHz"
     spec:
-      blocks: [{id: rc1, type: rc_lowpass, params: {f_c: 1000000.0}}]
-    referencia: {metrica: f_c, objetivo: 1000000.0, componentes: {r: 1000.0, c: 1.5915e-10}}
-
-  # --- LED con resistencia: R = (v_in − v_f)/i_led ---
-  # El v_f declarado no coincide con el del modelo de diodo (~2.18 V a 20 mA):
-  # la ecuación ideal falla y el lazo tiene que corregir. Es a propósito.
-  - id: led-5v-20ma
-    descripcion: "un LED de 2 V a 20 mA alimentado con 5 V"
-    spec:
-      blocks: [{id: led1, type: led_resistor, params: {v_in: 5.0, v_f: 2.0, i_led: 0.02}}]
-    referencia: {metrica: i_led, objetivo: 0.02, componentes: {r: 150.0}}
-
-  - id: led-12v-10ma
-    descripcion: "un LED de 2.1 V a 10 mA con fuente de 12 V"
-    spec:
-      blocks: [{id: led1, type: led_resistor, params: {v_in: 12.0, v_f: 2.1, i_led: 0.01}}]
-    referencia: {metrica: i_led, objetivo: 0.01, componentes: {r: 990.0}}
-
-  - id: led-3v3-5ma
-    descripcion: "un LED de 1.8 V a 5 mA con 3.3 V"
-    spec:
-      blocks: [{id: led1, type: led_resistor, params: {v_in: 3.3, v_f: 1.8, i_led: 0.005}}]
-    referencia: {metrica: i_led, objetivo: 0.005, componentes: {r: 300.0}}
-
-  - id: led-9v-15ma
-    descripcion: "un LED de 2 V a 15 mA alimentado con 9 V"
-    spec:
-      blocks: [{id: led1, type: led_resistor, params: {v_in: 9.0, v_f: 2.0, i_led: 0.015}}]
-    referencia: {metrica: i_led, objetivo: 0.015, componentes: {r: 466.67}}
-
-  - id: led-5v-3v2
-    descripcion: "un LED azul de 3.2 V a 20 mA con fuente de 5 V"
-    spec:
-      blocks: [{id: led1, type: led_resistor, params: {v_in: 5.0, v_f: 3.2, i_led: 0.02}}]
-    referencia: {metrica: i_led, objetivo: 0.02, componentes: {r: 90.0}}
+      blocks:
+        - id: rc1
+          type: catalog
+          params:
+            circuit_id: rc_lowpass_passive
+            params: {f_c: 1000000.0}
+            requirements: [{measure: f_c, value: 1000000.0}]
+    referencia:
+      - {requisito: rc1, metrica: f_c, objetivo: 1000000.0, componentes: {r: 15.92, c: 1.0e-08}}
 
   # --- Amplificadores no inversores: Rf = Rg·(Av − 1), con Rg = 1 kΩ ---
   # Las ganancias altas sufren la ganancia finita en lazo abierto del
@@ -110,29 +164,101 @@ casos:
   - id: amp-ganancia-2
     descripcion: "un amplificador no inversor de ganancia 2 para una señal de 1 V"
     spec:
-      blocks: [{id: amp1, type: noninverting_amp, params: {v_in: 1.0, v_out: 2.0}}]
-    referencia: {metrica: v_out, objetivo: 2.0, componentes: {rg: 1000.0, rf: 1000.0}}
+      blocks:
+        - id: amp1
+          type: catalog
+          params:
+            circuit_id: opamp_noninverting_amp
+            params: {v_in: 1.0, v_out: 2.0}
+            requirements: [{measure: v_out, value: 2.0}]
+    referencia:
+      - {requisito: amp1, metrica: v_out, objetivo: 2.0, componentes: {rg: 1000.0, rf: 1000.0}}
 
   - id: amp-ganancia-3
     descripcion: "un amplificador no inversor que lleve 1 V a 3 V"
     spec:
-      blocks: [{id: amp1, type: noninverting_amp, params: {v_in: 1.0, v_out: 3.0}}]
-    referencia: {metrica: v_out, objetivo: 3.0, componentes: {rg: 1000.0, rf: 2000.0}}
+      blocks:
+        - id: amp1
+          type: catalog
+          params:
+            circuit_id: opamp_noninverting_amp
+            params: {v_in: 1.0, v_out: 3.0}
+            requirements: [{measure: v_out, value: 3.0}]
+    referencia:
+      - {requisito: amp1, metrica: v_out, objetivo: 3.0, componentes: {rg: 1000.0, rf: 2000.0}}
 
   - id: amp-ganancia-10
     descripcion: "un amplificador no inversor de ganancia 10 para 0.5 V de entrada"
     spec:
-      blocks: [{id: amp1, type: noninverting_amp, params: {v_in: 0.5, v_out: 5.0}}]
-    referencia: {metrica: v_out, objetivo: 5.0, componentes: {rg: 1000.0, rf: 9000.0}}
+      blocks:
+        - id: amp1
+          type: catalog
+          params:
+            circuit_id: opamp_noninverting_amp
+            params: {v_in: 0.5, v_out: 5.0}
+            requirements: [{measure: v_out, value: 5.0}]
+    referencia:
+      - {requisito: amp1, metrica: v_out, objetivo: 5.0, componentes: {rg: 1000.0, rf: 9000.0}}
 
   - id: amp-ganancia-100
     descripcion: "un amplificador no inversor de ganancia 100 para 0.1 V"
     spec:
-      blocks: [{id: amp1, type: noninverting_amp, params: {v_in: 0.1, v_out: 10.0}}]
-    referencia: {metrica: v_out, objetivo: 10.0, componentes: {rg: 1000.0, rf: 99000.0}}
+      blocks:
+        - id: amp1
+          type: catalog
+          params:
+            circuit_id: opamp_noninverting_amp
+            params: {v_in: 0.1, v_out: 10.0}
+            requirements: [{measure: v_out, value: 10.0}]
+    referencia:
+      - {requisito: amp1, metrica: v_out, objetivo: 10.0, componentes: {rg: 1000.0, rf: 99000.0}}
 
   - id: amp-ganancia-1000
     descripcion: "un amplificador no inversor de ganancia 1000 para una señal de 10 mV"
     spec:
-      blocks: [{id: amp1, type: noninverting_amp, params: {v_in: 0.01, v_out: 10.0}}]
-    referencia: {metrica: v_out, objetivo: 10.0, componentes: {rg: 1000.0, rf: 999000.0}}
+      blocks:
+        - id: amp1
+          type: catalog
+          params:
+            circuit_id: opamp_noninverting_amp
+            params: {v_in: 0.01, v_out: 10.0}
+            requirements: [{measure: v_out, value: 10.0}]
+    referencia:
+      - {requisito: amp1, metrica: v_out, objetivo: 10.0, componentes: {rg: 1000.0, rf: 999000.0}}
+
+  # --- Composición (Slice C) ---
+  # Primer caso que ejercita lo que Slice B habilitó: un bloque cuya entrada
+  # es la salida de otro, medido como un solo circuito compuesto. Reusa el
+  # par opamp_highpass_active/opamp_noninverting_amp ya probado en
+  # tests/test_composition.py — no es una ecuación de catálogo nueva.
+  #
+  # NOTA: un solo bloque con VARIOS requisitos (sin `connections`) todavía no
+  # es medible — el camino no compuesto sigue produciendo una sola métrica
+  # por plantilla (la que su propio `.control` calcula), y el vocabulario de
+  # medidas de Slice B (`measurement_commands`) solo se invoca desde el
+  # ensamblador de composición. Extenderlo a un bloque suelto es trabajo
+  # futuro, no de este slice — ver la nota en el plan.
+  - id: cascada-pasaaltas-ganancia-4
+    descripcion: >-
+      un circuito que reciba una señal senoidal de 1 V a 100 Hz, elimine
+      componentes inferiores a 500 Hz mediante un filtro pasa-altas de primer
+      orden y amplifique la señal resultante con una ganancia de 4 usando un
+      amplificador no inversor
+    spec:
+      blocks:
+        - id: hp
+          type: catalog
+          params:
+            circuit_id: opamp_highpass_active
+            params: {f_c: 500.0, gain: 1.0}
+            requirements: [{measure: fc_-3db, value: 500.0}]
+        - id: amp
+          type: catalog
+          params:
+            circuit_id: opamp_noninverting_amp
+            params: {v_in: 1.0, v_out: 4.0}
+            requirements: [{measure: gain_at_freq, value: 4.0, frequency_hz: 5000}]
+      connections: [["hp.vout", "amp.vin"]]
+    referencia:
+      - {requisito: hp, metrica: fc_-3db, objetivo: 500.0, componentes: {r: 31830.99, c: 1.0e-08, rg: 10000.0, rf: 10000.0}}
+      - {requisito: amp, metrica: gain_at_freq, objetivo: 4.0, componentes: {rg: 1000.0, rf: 3000.0}}

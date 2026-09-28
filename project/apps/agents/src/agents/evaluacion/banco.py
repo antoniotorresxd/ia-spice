@@ -12,7 +12,9 @@ import yaml
 BANCO_POR_DEFECTO = Path(__file__).resolve().parents[3] / "evaluacion" / "banco.yaml"
 
 _CLAVES = ("id", "descripcion", "spec", "referencia")
-_CLAVES_REFERENCIA = ("metrica", "objetivo", "componentes")
+# Uno por requisito: `referencia` es una lista (Slice C), no un único dict —
+# un caso con varios requisitos o con `connections` trae varias entradas.
+_CLAVES_REQUISITO = ("requisito", "metrica", "objetivo", "componentes")
 
 
 class CasoInvalido(ValueError):
@@ -26,9 +28,12 @@ def validar_caso(caso: dict) -> dict:
             raise CasoInvalido(f"caso sin '{clave}': {caso.get('id', caso)}")
 
     referencia = caso["referencia"]
-    for clave in _CLAVES_REFERENCIA:
-        if clave not in referencia:
-            raise CasoInvalido(f"referencia de '{caso['id']}' sin '{clave}'")
+    if not referencia:
+        raise CasoInvalido(f"caso '{caso['id']}' sin requisitos de referencia")
+    for requisito in referencia:
+        for clave in _CLAVES_REQUISITO:
+            if clave not in requisito:
+                raise CasoInvalido(f"un requisito de '{caso['id']}' sin '{clave}': {requisito}")
 
     if not caso["spec"].get("blocks"):
         raise CasoInvalido(f"caso '{caso['id']}' sin bloques")

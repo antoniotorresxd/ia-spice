@@ -208,14 +208,35 @@ nuevo para esto.
 - El ajuste del curador para un bloque `catalog` compuesto sigue usando "el
   peor requisito" (limitación heredada de Slice A, sin cambios aquí).
 
-## Slice C — Banco de evaluación por requisito (no arrancar todavía)
+## Slice C — Banco de evaluación por requisito
 
-**Alcance:** `evaluacion/banco.yaml`, `evaluacion/corredor.py`, `evaluacion/metricas.py`, `evaluacion/reporte.py`.
+**Estado: implementado y verde (2026-09-27).** `uv run pytest` desde
+`project/apps/agents`: 315 passed, 6 skipped, 1 failed (el mismo fallo
+preexistente de Langfuse, ajeno). `uv run python -m agents.evaluacion`
+corre el banco completo end-to-end contra ngspice real: **17 filas
+(16 casos, la cascada aporta 2), 100 % aceptado, 100 % en tolerancia,
+MAPE 0.07 %**.
 
-- [ ] **Task C1:** `banco.yaml`: cada caso gana `referencia: list[{requisito, metrica, objetivo, componentes}]` en vez de un único `metrica`/`objetivo`/`componentes`.
-- [ ] **Task C2:** `corredor.py`: recorre requisitos, no bloques, para comparar contra la referencia.
-- [ ] **Task C3:** `metricas.py`/`reporte.py`: agregan por requisito; el reporte lista cada requisito con su propio APE, no un promedio por bloque.
-- [ ] **Task C4:** Cargar los ejemplos 1–16 del diseño (más el prompt combinado "filtro pasa-altas + ganancia 4, error < 5 %") como casos nuevos del banco.
+**Alcance:** `evaluacion/banco.yaml`, `evaluacion/banco.py`,
+`evaluacion/corredor.py`. `metricas.py`/`reporte.py` no necesitaron tocarse
+(ver Task C3).
+
+- [x] **Task C1:** `banco.yaml` gana `referencia: list[{requisito, metrica, objetivo, componentes}]`. `banco.py::validar_caso` valida esa forma (antes comprobaba claves de un dict único; ahora itera la lista). **Descubrimiento no anticipado por el diseño:** el banco original (20 casos, `circuit_id` `voltage_divider`/`rc_lowpass`/`led_resistor`/`noninverting_amp`) ya estaba desalineado con el catálogo real *antes* de este slice — `calculo/catalog_solver.py` no reconoce `rc_lowpass` ni `noninverting_amp` (son `rc_lowpass_passive`/`opamp_noninverting_amp`) y no tiene ningún `circuit_id` de LED+resistencia. Los 5 casos de LED se eliminaron (no hay a qué migrarlos); los de divisor/filtro se migraron al `circuit_id` real, con `componentes` recalculado contra el solver de verdad (el default de `R1` del divisor pasó de 1 kΩ a 10 kΩ, y el filtro fija `C` y resuelve `R` en vez de al revés). El banco quedó en 16 casos, no 20.
+- [x] **Task C2:** `corredor.py::resultado_desde_estado`/`correr_caso` devuelven `list[dict]` (una fila por requisito) en vez de un único dict; `correr_banco` aplana. Cierra el `TODO(slice-c)` que tenía `tests/test_evaluacion_corredor.py`: ya no lee la proyección `goal` heredada, resuelve la tolerancia buscando el `Requirement` real por `measure` en `normalized_spec.blocks[i].requirements`.
+- [x] **Task C3:** **No hicieron falta cambios.** `metricas.resumir` y `reporte.tabla_markdown`/`tabla_latex` ya operaban sobre una lista plana de filas sin asumir "una fila = un caso"; darles una lista con más filas que casos (por la cascada) ya agrega por requisito sin tocar su código.
+- [x] **Task C4 (parcial, con nota):** se agregó **un** caso de composición (`cascada-pasaaltas-ganancia-4`, el ejemplo "filtro pasa-altas + ganancia 4" del diseño), que reusa el par `opamp_highpass_active`/`opamp_noninverting_amp` ya validado en `tests/test_composition.py`. **No se cargaron los ejemplos 1–16 completos del diseño** (Zener, BJT, diodos clamper/clipper, etc.): la mayoría necesita ecuaciones de referencia y verificación contra `catalog_solver.py` caso por caso, y varios (recortador con dos límites, Zener en peor caso) necesitan justamente la capacidad de "un bloque con varios requisitos sin `connections`" que este slice descubrió que **todavía no es medible** (ver nota abajo). Autorearlos a ciegas arriesgaba valores de referencia incorrectos; queda como trabajo de seguimiento, no de este slice.
+
+**Descubrimiento que limita la cobertura futura de Slice C:** un bloque
+`catalog` **sin** `connections` sigue produciendo una sola medición por
+plantilla (lo que su propio `.control` calcula, vía `wrdata`/`echo $&var`) —
+el vocabulario de medidas de Slice B (`measurement_commands`,
+`assemble_composed_netlist`) solo se invoca desde el ensamblador de
+composición. Un caso como el Zener del diseño ("9 V con carga ≤ 50 mA", dos
+requisitos sobre el MISMO bloque sin conexiones) no es medible hoy: haría
+falta extender el camino no compuesto para que también use el vocabulario de
+B1, o forzar cualquier bloque con 2+ requisitos por el ensamblador aunque no
+tenga conexiones. Ninguna de las dos está hecha; es la limitación más
+concreta que queda para retomar Slice C.
 
 ---
 

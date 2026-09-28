@@ -3,34 +3,42 @@ import pytest
 from agents.evaluacion.banco import CasoInvalido, cargar_banco, validar_caso
 
 
-def test_el_banco_de_la_tesina_tiene_veinte_casos_bien_formados():
+def test_el_banco_de_la_tesina_tiene_dieciseis_casos_bien_formados():
     casos = cargar_banco()
 
-    assert len(casos) == 20
-    assert len({c["id"] for c in casos}) == 20, "hay ids repetidos"
+    assert len(casos) == 16
+    assert len({c["id"] for c in casos}) == 16, "hay ids repetidos"
 
 
-def test_el_banco_cubre_las_cuatro_topologias():
-    tipos = {c["spec"]["blocks"][0]["type"] for c in cargar_banco()}
+def test_el_banco_cubre_los_tipos_curados_vigentes():
+    circuit_ids = {
+        block["params"]["circuit_id"]
+        for c in cargar_banco()
+        for block in c["spec"]["blocks"]
+    }
 
-    assert tipos == {"voltage_divider", "rc_lowpass", "led_resistor", "noninverting_amp"}
+    assert {"voltage_divider", "rc_lowpass_passive", "opamp_noninverting_amp", "opamp_highpass_active"} <= circuit_ids
 
 
-def test_cada_caso_declara_su_objetivo_y_su_referencia():
+def test_cada_caso_declara_su_descripcion_y_al_menos_un_requisito_de_referencia():
     for caso in cargar_banco():
         assert caso["descripcion"].strip(), f"{caso['id']} sin descripción"
-        assert caso["referencia"]["objetivo"] > 0
-        assert caso["referencia"]["componentes"], f"{caso['id']} sin solución de referencia"
+        assert caso["referencia"], f"{caso['id']} sin requisitos de referencia"
+        for requisito in caso["referencia"]:
+            assert requisito["objetivo"] > 0
+            assert requisito["componentes"], f"{caso['id']}/{requisito['requisito']} sin solución de referencia"
 
 
-def test_el_objetivo_declarado_coincide_con_el_parametro_del_spec():
+def test_el_objetivo_declarado_coincide_con_el_requirement_del_bloque():
     """La referencia y el spec tienen que contar la misma historia; si se
     separan, el banco mide una cosa y el sistema resuelve otra."""
     for caso in cargar_banco():
-        params = caso["spec"]["blocks"][0]["params"]
-        metrica = caso["referencia"]["metrica"]
-
-        assert params[metrica] == pytest.approx(caso["referencia"]["objetivo"]), caso["id"]
+        requisitos_por_metrica = {r["metrica"]: r["objetivo"] for r in caso["referencia"]}
+        for block in caso["spec"]["blocks"]:
+            for requirement in block["params"]["requirements"]:
+                objetivo = requisitos_por_metrica.get(requirement["measure"])
+                if objetivo is not None:
+                    assert requirement["value"] == pytest.approx(objetivo), caso["id"]
 
 
 def test_validar_caso_rechaza_uno_sin_referencia():
@@ -53,16 +61,23 @@ def test_cargar_banco_acepta_una_ruta_propia(tmp_path):
                             "blocks": [
                                 {
                                     "id": "d1",
-                                    "type": "voltage_divider",
-                                    "params": {"v_in": 5.0, "v_out": 3.3},
+                                    "type": "catalog",
+                                    "params": {
+                                        "circuit_id": "voltage_divider",
+                                        "params": {"v_in": 5.0, "v_out": 3.3},
+                                        "requirements": [{"measure": "v_out", "value": 3.3}],
+                                    },
                                 }
                             ]
                         },
-                        "referencia": {
-                            "metrica": "v_out",
-                            "objetivo": 3.3,
-                            "componentes": {"r1": 1000.0, "r2": 1941.18},
-                        },
+                        "referencia": [
+                            {
+                                "requisito": "d1",
+                                "metrica": "v_out",
+                                "objetivo": 3.3,
+                                "componentes": {"r1": 1000.0, "r2": 1941.18},
+                            }
+                        ],
                     }
                 ]
             }
