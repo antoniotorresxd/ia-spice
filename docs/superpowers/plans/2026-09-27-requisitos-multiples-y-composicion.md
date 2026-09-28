@@ -419,6 +419,34 @@ señalar la dirección correcta, pero para una regla dura ("nunca más de X",
 determinista — el prompt solo reduce cuánto tiene que corregir esa
 salvaguarda, no la reemplaza.
 
+**6. Bug real encontrado por el usuario en una revisión manual detallada —
+ganancia unitaria daba Av=2.** Caso: "filtro pasa-altas de 1 kHz (ganancia
+unitaria) + amplificador de ganancia 10" — la ganancia total terminaba en
+≈20, no ≈10. Causa confirmada:
+`solve_opamp_highpass_active`/`solve_opamp_noninverting_amp` (no inversor,
+Av=1+Rf/Rg) ponían `Rf=Rg` como fallback para ganancia≤1, que da Av=2 sea
+cual sea Rg — no Av=1. Arreglado a `Rf = max(gain-1, 0)*Rg` en ambos, así
+ganancia unitaria da Rf=0 de verdad. Verificado que `fc` sigue midiendo
+correcto con la fórmula nueva.
+
+**Del mismo reporte, señalado pero NO arreglado — dos gaps de arquitectura,
+no bugs puntuales:**
+- La composición mide la ganancia de CADA ETAPA por separado (`gain_at_freq`
+  de un bloque = su propia entrada/salida), no hay forma hoy de pedir "la
+  ganancia total end-to-end del circuito compuesto". El pedido del usuario
+  quería explícitamente verificar ambas. Necesitaría una forma de referenciar
+  la entrada del bloque CABEZA de la cadena (no la propia) al medir
+  `gain_at_freq` de una etapa downstream — no hay ningún campo para eso
+  todavía en `Requirement`.
+- La fuente de cabeza del ensamblador compuesto sigue siendo fija
+  (`DC 0 AC 1`, ver hallazgo #2 más arriba): no lleva la amplitud/frecuencia
+  reales del pedido (ej. "100 mV pico a 5 kHz") como una fuente `SIN(...)`,
+  así que un análisis transitorio del circuito compuesto con la señal real
+  no es posible hoy, solo el barrido AC pequeña-señal.
+- (Fuera de esta sesión, fase 3 del diseño original) los valores de R no se
+  ajustan a series comerciales E12/E24 — el usuario señaló que 15915.49 Ω no
+  es un valor real, correcto pero ya documentado como fuera de alcance.
+
 ---
 
 ## Notas para quien retome Slice B/C
