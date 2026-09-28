@@ -18,6 +18,7 @@ export type BlockSimResult = {
   analysis_type?: string | null
   x_unit?: string | null
   y_unit?: string | null
+  x_label?: string | null
   metric_name?: string | null
   measured_value?: number | null
   target_value?: number | null
@@ -45,36 +46,43 @@ export type WorkspaceFile = {
   simResult?: BlockSimResult | null
 }
 
-export type TraceGeneration = {
-  name: string
-  model: string
-  input: unknown
-  output: unknown
-  usage?: {
-    prompt_tokens?: number
-    completion_tokens?: number
-    total_tokens?: number
-  } | null
-  latency_s?: number | null
-  status_message?: string | null
-  level?: string | null
+export type TraceStepUsage = {
+  promptTokens?: number | null
+  completionTokens?: number | null
+  totalTokens?: number | null
 }
 
-export type ExecutionTraceData = {
-  id?: string
-  name?: string
-  timestamp?: string
-  latency_s?: number | null
-  status?: string
-  total_tokens?: number
-  generations?: TraceGeneration[]
+export type TraceStep = {
+  id: string
+  name: string
+  type: string
+  model?: string | null
+  startTime?: string | null
+  endTime?: string | null
+  durationSec?: number | null
+  input?: unknown
+  output?: unknown
+  usage?: TraceStepUsage | null
+  level?: string
+  statusMessage?: string | null
+}
+
+export type LangfuseTraceDetail = {
+  traceId: string
+  sessionId?: string
+  timestamp?: string | null
+  latency?: number | null
+  totalCost?: number | null
+  status: 'ready' | 'pending' | 'unavailable' | 'error'
+  message?: string
+  steps: TraceStep[]
 }
 
 export type TraceResponse = {
   status: 'ok' | 'unavailable' | 'not_found'
   executionId?: string | null
   message?: string
-  trace?: ExecutionTraceData
+  trace?: LangfuseTraceDetail
 }
 
 export type WorkspaceFileItem = {

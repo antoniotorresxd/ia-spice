@@ -2,19 +2,48 @@ from agents.config import get_config
 from agents.curador.reward import Measurement, compute_reward
 
 
-def evaluate_block(goal: dict, sim_result: dict) -> tuple[str, float | None]:
-    """Evalúa un bloque: ('ok' | 'off' | 'error', error_relativo | None)."""
-    if sim_result["sim_error"] is not None:
+def metric_key(requirement: dict) -> str:
+    """La clave con la que este requisito se busca en `sim_result['metrics']`.
+
+    Sin `node` (el caso de Slice A, un bloque = un requisito = una métrica),
+    la clave es el nombre de la medida tal cual, igual que siempre. Con
+    `node` (composición de Slice B), dos requisitos con la misma `measure`
+    en nodos distintos del circuito compuesto colisionarían en una sola
+    clave si no se distinguen — de ahí el sufijo `__at__node`. Esta clave
+    también se usa tal cual como nombre de variable dentro de ngspice
+    (`.meas`/`$&`), que acepta letras, dígitos y `_`, pero no `@`.
+    """
+    node = requirement.get("node")
+    measure = requirement["measure"]
+    return f"{measure}__at__{node}" if node else measure
+
+
+def evaluate_requirement(requirement: dict, sim_result: dict) -> tuple[str, float | None]:
+    """Evalúa un requisito: ('ok' | 'off' | 'error', error_relativo | None)."""
+    metrics = sim_result.get("metrics") or {}
+    measure = requirement["measure"]
+    key = metric_key(requirement)
+    if sim_result["sim_error"] is not None or key not in metrics:
         return "error", None
-    actual = sim_result["metrics"][goal["metric"]]
-    target = goal["target"]
-    denom = abs(target) if abs(target) > 1e-12 else 1.0
-    metric_name = str(goal.get("metric", "")).lower()
-    if "gain" in metric_name or metric_name in ("av", "a_v"):
-        rel_err = abs(abs(actual) - abs(target)) / denom
+    actual = metrics[key]
+    target = requirement["value"]
+    comparator = requirement.get("comparator", "approx")
+    if comparator == "approx":
+        # Compatibilidad no negociable: el código anterior usa 1.0 cerca de
+        # cero, no 1e-12. Cambiarlo alteraría APE, reward y decisiones.
+        denom = abs(target) if abs(target) > 1e-12 else 1.0
+        metric_name = measure.lower()
+        if "gain" in metric_name or metric_name in ("av", "a_v"):
+            rel_err = abs(abs(actual) - abs(target)) / denom
+        else:
+            rel_err = abs(actual - target) / denom
+    elif comparator == "le":
+        rel_err = max(actual - target, 0.0) / max(abs(target), 1e-12)
+    elif comparator == "ge":
+        rel_err = max(target - actual, 0.0) / max(abs(target), 1e-12)
     else:
-        rel_err = abs(actual - target) / denom
-    return ("ok" if rel_err <= goal["tolerance"] else "off"), rel_err
+        raise ValueError(f"unknown comparator: {comparator}")
+    return ("ok" if rel_err <= requirement["tolerance"] else "off"), rel_err
 
 
 def _adjust_catalog(values: dict, target: float, actual: float) -> dict:
@@ -62,7 +91,7 @@ def observed_reduction(history: list) -> float | None:
     sea el error, así que aceptar gana siempre. Es correcto como señal de
     "seguir ajustando ya no paga", pero por sí solo dejaría pasar como aceptado
     un circuito malísimo que se estancó. Quien decide aplica además
-    `accept_is_admissible`, que compara contra la tolerancia de cada bloque.
+    `accept_is_admissible`, que compara contra la tolerancia de cada requisito.
     """
     scored = [r["weighted_ape"] for r in history if r.get("weighted_ape") is not None]
     # weighted_ape suma términos no negativos, así que <= 0 solo ocurre cuando
@@ -104,8 +133,8 @@ def estimate_action_rewards(
 
 
 def accept_is_admissible(
-    blocks: list[dict],
-    evaluations: dict[str, tuple[str, float | None]],
+    requirements: list[tuple[str, int, float]],
+    evaluations: dict[tuple[str, int], tuple[str, float | None]],
     config: dict,
 ) -> bool:
     """Si el circuito que hay ahora se puede entregar.
@@ -121,15 +150,15 @@ def accept_is_admissible(
     bloque con tolerancia del 1 % y a uno del 5 %, y aceptaría el primero
     incumpliendo su meta por seis veces.
 
-    Un bloque que no llegó a medirse nunca es admisible: no hay nada que
+    Un requisito que no llegó a medirse nunca es admisible: no hay nada que
     entregar.
     """
     slack = config["curador"]["accept_tolerance_slack"]
-    for block in blocks:
-        _, rel_err = evaluations[block["id"]]
-        if rel_err is None:
+    for block_id, req_index, tolerance in requirements:
+        status, rel_err = evaluations[(block_id, req_index)]
+        if status == "error" or rel_err is None:
             return False
-        if rel_err > slack * block["goal"]["tolerance"]:
+        if rel_err > slack * tolerance:
             return False
     return True
 

@@ -210,18 +210,18 @@ export function FilesScreen({ service }: { service: WorkspaceService }) {
                           <Link
                             to={`/visualizer?conversationId=${file.conversationId}&fileId=${file.id}`}
                             className={styles.actionBtn}
-                            title="Visualizar circuito esquemático"
+                            title="Abrir en el visualizador de circuitos"
                           >
-                            <span>Visualizar</span>
+                            <span>Visualizador</span>
                             <ArrowUpRight size={13} />
                           </Link>
                         )}
                         <Link
                           to={`/conversations/${file.conversationId}`}
                           className={styles.actionBtn}
-                          title="Ver en conversación"
+                          title="Abrir conversación original"
                         >
-                          <span>Ver</span>
+                          <span>Conversación</span>
                           <ArrowUpRight size={13} />
                         </Link>
                       </div>

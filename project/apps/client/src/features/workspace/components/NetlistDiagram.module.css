@@ -26,8 +26,8 @@
   flex-direction: column;
   gap: 1rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  flex: 1;
-  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .head {
@@ -120,8 +120,8 @@
   border: 1px solid #21262d;
   background: #090d13;
   position: relative;
-  flex: 1;
-  min-height: 480px;
+  height: 380px;
+  min-height: 320px;
   cursor: grab;
   user-select: none;
   touch-action: none;
@@ -261,24 +261,41 @@
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.1rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.explainHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.explainHeaderDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ea8144;
 }
 
 .explainTitle {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #8b949e;
+  color: #c9d1d9;
 }
 
 .explainText {
   margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.6;
-  color: #c9d1d9;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
 }
 
 .explainText strong {
@@ -289,33 +306,82 @@
 .measureCallout {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.35rem 0 0.35rem 0.75rem;
-  border-left: 2.5px solid #ea8144;
-  background: transparent;
-  margin: 0.35rem 0;
+  gap: 0.4rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(234, 129, 68, 0.25);
+  background: rgba(234, 129, 68, 0.05);
+}
+
+.measureHeader {
+  display: flex;
+  align-items: center;
 }
 
 .measurePrefix {
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.75rem;
-  color: #8b949e;
-  white-space: nowrap;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ea8144;
 }
 
 .measureContent {
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   line-height: 1.5;
-  color: #c9d1d9;
+  color: #e2e8f0;
+}
+
+.tableSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.tableHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tableTitle {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+
+.nodePills {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.nodePill {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.72rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: #cbd5e1;
 }
 
 /* Component Table */
 .componentTable {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 0.82rem;
-  margin-top: 0.25rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .componentTable th {
@@ -324,32 +390,32 @@
   font-size: 0.68rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #8b949e;
+  color: #94a3b8;
   font-weight: 600;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #21262d;
+  padding: 0.55rem 0.85rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .componentTable th:first-child {
-  padding-left: 0;
+  padding-left: 0.85rem;
 }
 
 .componentTable td {
-  padding: 0.55rem 0.75rem;
-  border-bottom: 1px solid #1a202c;
-  color: #c9d1d9;
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
 }
 
 .componentTable td:first-child {
-  padding-left: 0;
+  padding-left: 0.85rem;
   color: #f0f6fc;
   font-family: var(--font-mono, ui-monospace, monospace);
   font-weight: 650;
 }
 
 .componentTable td:nth-child(2) {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  color: #8b949e;
+  color: #94a3b8;
 }
 
 .componentTable tr:last-child td {
@@ -484,5 +550,12 @@
 
 :global(.light) .footnote {
   color: #64748b;
+}
+
+@media (max-width: 640px) {
+  .canvasWrap {
+    height: 300px;
+    min-height: 260px;
+  }
 }
 

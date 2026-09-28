@@ -12,7 +12,7 @@ it('presents tokens first and cost as an estimate', () => {
 
   const metrics = screen.getAllByRole('term')
   expect(metrics[0]).toHaveTextContent('Tokens utilizados')
-  expect(screen.getByText('184,200 / 500,000')).toBeVisible()
+  expect(screen.getByText('184,200')).toBeVisible()
   expect(screen.getByText('$3.84 estimados')).toBeVisible()
   expect(screen.getByText('31 · 90% exitosas')).toBeVisible()
   expect(screen.getByText('74 min')).toBeVisible()
@@ -38,4 +38,24 @@ it('reports period changes', async () => {
   await user.selectOptions(screen.getByLabelText('Periodo de consumo'), '90d')
 
   expect(onPeriodChange).toHaveBeenCalledWith('90d')
+})
+
+it('renders telemetry charts and real-time dashboard widgets', () => {
+  render(
+    <UsageSummary
+      usage={usageByPeriod['30d']}
+      onPeriodChange={vi.fn()}
+    />,
+  )
+
+  expect(screen.getByText(/Telemetría & Observabilidad/i)).toBeVisible()
+  expect(screen.getByText('Evolución de Inferencia & Telemetría')).toBeVisible()
+  expect(
+    screen.getByText('Distribución de Carga en el Pipeline de Agentes'),
+  ).toBeVisible()
+  expect(screen.getByText('Orquestador (Intención & NLP)')).toBeVisible()
+  expect(screen.getByText('Distribución de Modelos LLM')).toBeVisible()
+  expect(screen.getByText('Gemini 3.5 Flash Lite')).toBeVisible()
+  expect(screen.getByText('Estado del Sistema & Infraestructura')).toBeVisible()
+  expect(screen.getByText('Eficiencia y Tiempos de Respuesta')).toBeVisible()
 })

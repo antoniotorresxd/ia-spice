@@ -1,7 +1,11 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { SimulationChart } from './SimulationChart'
+
+afterEach(() => {
+  cleanup()
+})
 
 describe('SimulationChart', () => {
   it('renders empty state when no curve points are provided', () => {
@@ -65,5 +69,56 @@ describe('SimulationChart', () => {
     expect(screen.getByText(/Transitorio \(Onda\)/i)).toBeInTheDocument()
     expect(screen.getByText('4 pts ngspice')).toBeInTheDocument()
     expect(screen.getByText('Voltaje Pico:')).toBeInTheDocument()
+  })
+
+  it('renders a DC sweep with volts on the x axis and no cutoff marker', () => {
+    const mockCurve = [
+      { x: 0, y: 0 },
+      { x: 10, y: 8.9 },
+      { x: 21.1, y: 9.1 },
+    ]
+
+    render(
+      <SimulationChart
+        curve={mockCurve}
+        analysisType="dc"
+        xUnit="V"
+        yUnit="V"
+        xLabel="Vdc"
+        metricName="vout"
+        measuredValue={9.0}
+        targetValue={9}
+      />,
+    )
+
+    expect(screen.getByText(/Barrido DC · Vdc/i)).toBeInTheDocument()
+    expect(screen.getByText('3 pts ngspice')).toBeInTheDocument()
+    expect(screen.queryByText(/fc:/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Hz/)).not.toBeInTheDocument()
+  })
+
+  it('renders an operating-point card when there is a single point', () => {
+    render(
+      <SimulationChart
+        curve={[{ x: 0, y: 9.0023 }]}
+        analysisType="op"
+        xUnit="nodo"
+        yUnit="V"
+        metricName="vout"
+        measuredValue={9.0022922}
+        targetValue={9}
+      />,
+    )
+
+    expect(screen.getByText(/Punto de operación/i)).toBeInTheDocument()
+    expect(screen.getByText('9.002 V')).toBeInTheDocument()
+    expect(screen.getByText(/obj: 9.000 V/)).toBeInTheDocument()
+    expect(screen.queryByText(/No hay datos vectoriales/i)).not.toBeInTheDocument()
+  })
+
+  it('shows the ngspice error when the simulation failed', () => {
+    render(<SimulationChart curve={null} simError="ngspice exited with non-zero status" />)
+
+    expect(screen.getByText(/ngspice exited with non-zero status/)).toBeInTheDocument()
   })
 })

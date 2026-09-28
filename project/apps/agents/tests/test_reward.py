@@ -26,15 +26,15 @@ def test_weight_for_falls_back_to_default():
 
 
 def test_build_measurements_converts_relative_error_to_percentage_points():
-    blocks = [{"id": "div1", "goal": {"metric": "v_out"}}]
-    evaluations = {"div1": ("off", 0.25)}
+    blocks = [{"id": "div1", "requirements": [{"measure": "v_out"}]}]
+    evaluations = {("div1", 0): ("off", 0.25)}
 
     assert build_measurements(blocks, evaluations, CFG) == [("v_out", 25.0)]
 
 
 def test_build_measurements_imputes_failed_ape_when_there_is_no_measurement():
-    blocks = [{"id": "div1", "goal": {"metric": "v_out"}}]
-    evaluations = {"div1": ("error", None)}
+    blocks = [{"id": "div1", "requirements": [{"measure": "v_out"}]}]
+    evaluations = {("div1", 0): ("error", None)}
 
     assert build_measurements(blocks, evaluations, CFG) == [("v_out", 100.0)]
 
@@ -45,10 +45,10 @@ def test_build_measurements_handles_a_mix_of_ok_and_failed_blocks():
     dado justo en el blanco— y una corrida con un bloque roto puntuaría mejor
     que una donde todos midieron con error moderado."""
     blocks = [
-        {"id": "div1", "goal": {"metric": "v_out"}},
-        {"id": "rc1", "goal": {"metric": "f_c"}},
+        {"id": "div1", "requirements": [{"measure": "v_out"}]},
+        {"id": "rc1", "requirements": [{"measure": "f_c"}]},
     ]
-    evaluations = {"div1": ("off", 0.10), "rc1": ("error", None)}
+    evaluations = {("div1", 0): ("off", 0.10), ("rc1", 0): ("error", None)}
 
     measurements = build_measurements(blocks, evaluations, CFG)
 
@@ -82,3 +82,11 @@ def test_compute_reward_with_no_measurements_is_just_convergence_and_iteration()
 
 def test_a_perfect_circuit_on_the_first_iteration_scores_beta():
     assert compute_reward([("v_out", 0.0)], converged=True, iteration=0, config=CFG) == pytest.approx(10.0)
+
+
+def test_two_requirements_have_independent_measurements_and_weights():
+    blocks = [{"id": "a", "requirements": [{"measure": "v_out"}, {"measure": "f_c"}]}]
+    evaluations = {("a", 0): ("off", 0.25), ("a", 1): ("ok", 0.01)}
+    measurements = build_measurements(blocks, evaluations, CFG)
+    assert measurements == [("v_out", 25.0), ("f_c", 1.0)]
+    assert weighted_ape(measurements, CFG) == 51.0

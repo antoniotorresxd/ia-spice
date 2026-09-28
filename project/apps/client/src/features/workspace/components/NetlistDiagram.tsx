@@ -731,39 +731,58 @@ export function CircuitExplanation({
   workspaceSummary?: string | null
   compact?: boolean
 }) {
+  const explanation = workspaceSummary || describeCircuit(netlist)
+
   return (
     <section aria-label="Descripción del circuito" className={`${styles.explainCard} ${compact ? styles.compactExplain : ''}`}>
-      <h5 className={styles.explainTitle}>¿QUÉ HACE ESTE CIRCUITO?</h5>
-      <p className={styles.explainText}>{workspaceSummary || describeCircuit(netlist)}</p>
+      <div className={styles.explainHeader}>
+        <div className={styles.explainHeaderDot} />
+        <h5 className={styles.explainTitle}>Funcionamiento del circuito</h5>
+      </div>
+      
+      <p className={styles.explainText}>{explanation}</p>
 
-      {netlist.measurements.length > 0 ? (
+      {netlist.measurements.length > 0 && (
         <div className={styles.measureCallout}>
-          <span className={styles.measurePrefix}>El sistema mide</span>
+          <div className={styles.measureHeader}>
+            <span className={styles.measurePrefix}>Parámetros de medición</span>
+          </div>
           <span className={styles.measureContent}>
             {measurementText(netlist.measurements)}
           </span>
         </div>
-      ) : null}
+      )}
 
-      <div className={styles.tableScrollWrap}>
-        <table className={styles.componentTable}>
-          <thead>
-            <tr>
-              <th>Componente</th>
-              <th>Entre nodos</th>
-              <th>Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            {netlist.elements.map((e) => (
-              <tr key={e.name}>
-                <td>{e.name}</td>
-                <td>{e.nodes.join(' → ')}</td>
-                <td>{componentValue(e)}</td>
+      <div className={styles.tableSection}>
+        <div className={styles.tableHeaderRow}>
+          <span className={styles.tableTitle}>Componentes ({netlist.elements.length})</span>
+        </div>
+        <div className={styles.tableScrollWrap}>
+          <table className={styles.componentTable}>
+            <thead>
+              <tr>
+                <th>Componente</th>
+                <th>Entre nodos</th>
+                <th>Valor</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {netlist.elements.map((e) => (
+                <tr key={e.name}>
+                  <td>{e.name}</td>
+                  <td>
+                    <span className={styles.nodePills}>
+                      {e.nodes.map((n, idx) => (
+                        <span key={idx} className={styles.nodePill}>{n}</span>
+                      ))}
+                    </span>
+                  </td>
+                  <td>{componentValue(e)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   )

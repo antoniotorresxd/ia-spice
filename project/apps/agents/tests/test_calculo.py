@@ -64,7 +64,7 @@ def test_calculo_subgraph_fans_out_one_worker_per_block():
                         "circuit_id": "zener_regulated_power_supply",
                         "params": {"v_z": 9.0, "i_l_max": 0.05, "v_sec_rms": 12.0},
                     },
-                    "goal": {"metric": "vout", "target": 9.0, "tolerance": 0.05},
+                    "requirements": [{"measure": "vout", "value": 9.0, "tolerance": 0.05}],
                 },
                 {
                     "id": "rc1",
@@ -73,7 +73,7 @@ def test_calculo_subgraph_fans_out_one_worker_per_block():
                         "circuit_id": "rc_lowpass_passive",
                         "params": {"f_c": 1000.0, "c": 1e-8},
                     },
-                    "goal": {"metric": "fc", "target": 1000.0, "tolerance": 0.05},
+                    "requirements": [{"measure": "fc", "value": 1000.0, "tolerance": 0.05}],
                 },
             ],
             "max_iterations": 5,
@@ -99,7 +99,7 @@ def test_generic_deja_pasar_el_netlist_sin_calcular_nada():
     netlist = "* x\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
 
     values = FORMULAS["generic"](
-        {"description": "algo", "metric": "v_out", "target": 1.0, "netlist": netlist}
+        {"description": "algo", "requirements": [{"measure": "v_out", "value": 1.0}], "netlist": netlist}
     )
 
     assert values == {"netlist": netlist}

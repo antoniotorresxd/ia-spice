@@ -18,8 +18,7 @@ DIVISOR = {
             "params": {
                 "circuit_id": "voltage_divider",
                 "params": {"v_in": 5.0, "v_out": 3.3},
-                "metric": "v_out",
-                "target": 3.3,
+                "requirements": [{"measure": "v_out", "value": 3.3}],
             },
         }
     ]

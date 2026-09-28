@@ -1,4 +1,4 @@
-import { Activity, Radio } from 'lucide-react'
+import { Activity, AlertTriangle, Radio } from 'lucide-react'
 import { useId, useMemo, useRef, useState } from 'react'
 
 import type { SimCurvePoint } from '../model/workspace-types'
@@ -12,8 +12,46 @@ export type SimulationChartProps = {
   metricName?: string | null
   measuredValue?: number | null
   targetValue?: number | null
+  /** Fuente barrida en un análisis `dc` (p. ej. "Vdc"). */
+  xLabel?: string | null
+  simError?: string | null
   title?: string
   compact?: boolean
+}
+
+type AnalysisKind = 'ac' | 'tran' | 'dc' | 'op'
+
+const ANALYSIS_BADGES: Record<AnalysisKind, string> = {
+  ac: 'Bode (Magnitud AC)',
+  tran: 'Transitorio (Onda)',
+  dc: 'Barrido DC',
+  op: 'Punto de operación (DC)',
+}
+
+function resolveKind(analysisType?: string | null, xUnit?: string | null): AnalysisKind {
+  if (analysisType === 'ac' || analysisType === 'tran' || analysisType === 'dc' || analysisType === 'op') {
+    return analysisType
+  }
+  return xUnit === 'Hz' ? 'ac' : 'tran'
+}
+
+const SI_PREFIXES: Array<[number, string]> = [
+  [1e9, 'G'],
+  [1e6, 'M'],
+  [1e3, 'k'],
+  [1, ''],
+  [1e-3, 'm'],
+  [1e-6, 'µ'],
+  [1e-9, 'n'],
+]
+
+function formatEngineering(val: number, unit?: string | null): string {
+  const u = unit ?? ''
+  if (val === 0) return `0 ${u}`.trim()
+  const abs = Math.abs(val)
+  const [scale, prefix] = SI_PREFIXES.find(([s]) => abs >= s) ?? SI_PREFIXES[SI_PREFIXES.length - 1]
+  const scaled = val / scale
+  return `${Number(scaled.toFixed(2))} ${prefix}${u}`.trim()
 }
 
 function formatFrequency(val: number): string {
@@ -29,8 +67,10 @@ function formatTime(val: number): string {
   return `${val.toFixed(2)} s`
 }
 
-function formatX(val: number, isFreq: boolean): string {
-  return isFreq ? formatFrequency(val) : formatTime(val)
+function formatX(val: number, kind: AnalysisKind, xUnit?: string | null): string {
+  if (kind === 'ac') return formatFrequency(val)
+  if (kind === 'tran') return formatTime(val)
+  return formatEngineering(val, xUnit)
 }
 
 function formatY(val: number, unit?: string | null): string {
@@ -46,6 +86,8 @@ export function SimulationChart({
   metricName,
   measuredValue,
   targetValue,
+  xLabel,
+  simError,
   title = 'Respuesta de Simulación SPICE',
   compact = false,
 }: SimulationChartProps) {
@@ -53,7 +95,9 @@ export function SimulationChart({
   const svgRef = useRef<SVGSVGElement>(null)
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
 
-  const isAc = analysisType === 'ac' || (!analysisType && xUnit === 'Hz')
+  const kind = resolveKind(analysisType, xUnit)
+  const isAc = kind === 'ac'
+  const badge = kind === 'dc' && xLabel ? `${ANALYSIS_BADGES.dc} · ${xLabel}` : ANALYSIS_BADGES[kind]
 
   const validPoints = useMemo(() => {
     if (!curve || curve.length === 0) return []
@@ -133,7 +177,7 @@ export function SimulationChart({
         xTicks.push({
           val,
           xCoord: mapX(val),
-          label: formatX(val, true),
+          label: formatX(val, kind, xUnit),
         })
       }
     } else {
@@ -143,7 +187,7 @@ export function SimulationChart({
         xTicks.push({
           val,
           xCoord: mapX(val),
-          label: formatX(val, false),
+          label: formatX(val, kind, xUnit),
         })
       }
     }
@@ -160,14 +204,15 @@ export function SimulationChart({
       })
     }
 
-    // Cutoff / reference marker
+    // Marcadores de corte: solo en AC, donde la métrica (fc) vive en el eje X.
+    // En DC/transitorio la métrica es un valor de Y y marcarla en X mentiría.
     let refXCoord: number | null = null
-    if (measuredValue && measuredValue >= minX && measuredValue <= maxX) {
+    if (isAc && measuredValue && measuredValue >= minX && measuredValue <= maxX) {
       refXCoord = mapX(measuredValue)
     }
 
     let targetXCoord: number | null = null
-    if (targetValue && targetValue >= minX && targetValue <= maxX) {
+    if (isAc && targetValue && targetValue >= minX && targetValue <= maxX) {
       targetXCoord = mapX(targetValue)
     }
 
@@ -190,7 +235,7 @@ export function SimulationChart({
       targetXCoord,
       isLogX,
     }
-  }, [validPoints, isAc, yUnit, compact, measuredValue, targetValue])
+  }, [validPoints, isAc, kind, xUnit, yUnit, compact, measuredValue, targetValue])
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!chartGeometry || chartGeometry.coords.length === 0 || !svgRef.current) return
@@ -214,9 +259,56 @@ export function SimulationChart({
     setHoverIndex(null)
   }
 
-  if (validPoints.length === 0 || !chartGeometry) {
+  const containerClass = `${styles.chartContainer} ${compact ? styles.chartContainerCompact : ''}`
+
+  if (!chartGeometry) {
+    if (simError) {
+      return (
+        <div className={containerClass}>
+          <div className={styles.emptyState}>
+            <AlertTriangle size={22} className={styles.errorIcon} />
+            <span>La simulación SPICE falló para este bloque:</span>
+            <code className={styles.errorText}>{simError}</code>
+          </div>
+        </div>
+      )
+    }
+
+    // Un solo punto (análisis `op`, o no se pudo obtener la curva): se muestra
+    // la medición como punto de operación en vez de un gráfico vacío.
+    const opValue = measuredValue ?? validPoints[0]?.y ?? null
+    if (opValue !== null) {
+      const deviation =
+        targetValue !== null && targetValue !== undefined && targetValue !== 0
+          ? ((opValue - targetValue) / Math.abs(targetValue)) * 100
+          : null
+      return (
+        <div className={containerClass}>
+          <div className={styles.chartHeader}>
+            <div className={styles.chartTitleWrap}>
+              <span className={styles.chartTitle}>
+                <Activity size={15} style={{ color: '#38bdf8' }} />
+                {title}
+              </span>
+              <span className={styles.chartBadge}>{ANALYSIS_BADGES.op}</span>
+            </div>
+          </div>
+          <div className={styles.opCard}>
+            {metricName && <span className={styles.opMetric}>{metricName}</span>}
+            <span className={styles.opValue}>{`${opValue.toFixed(3)} ${yUnit ?? ''}`.trim()}</span>
+            {targetValue !== null && targetValue !== undefined && (
+              <span className={styles.metricTarget}>
+                obj: {targetValue.toFixed(3)} {yUnit}
+                {deviation !== null && ` · desvío ${deviation >= 0 ? '+' : ''}${deviation.toFixed(2)} %`}
+              </span>
+            )}
+          </div>
+        </div>
+      )
+    }
+
     return (
-      <div className={`${styles.chartContainer} ${compact ? styles.chartContainerCompact : ''}`}>
+      <div className={containerClass}>
         <div className={styles.emptyState}>
           <Radio size={22} style={{ opacity: 0.5 }} />
           <span>No hay datos vectoriales de simulación SPICE disponibles para este bloque.</span>
@@ -235,9 +327,7 @@ export function SimulationChart({
             <Activity size={15} style={{ color: '#38bdf8' }} />
             {title}
           </span>
-          <span className={`${styles.chartBadge} ${isAc ? '' : styles.chartBadgeTran}`}>
-            {isAc ? 'Bode (Magnitud AC)' : 'Transitorio (Onda)'}
-          </span>
+          <span className={`${styles.chartBadge} ${isAc ? '' : styles.chartBadgeTran}`}>{badge}</span>
           <span style={{ fontSize: '0.68rem', color: '#64748b' }}>
             {validPoints.length} pts ngspice
           </span>
@@ -423,8 +513,8 @@ export function SimulationChart({
             }}
           >
             <div className={styles.tooltipRow}>
-              <span>X ({xUnit}):</span>
-              <strong style={{ color: '#38bdf8' }}>{formatX(activeCoord.raw.x, isAc)}</strong>
+              <span>X ({xLabel ?? xUnit}):</span>
+              <strong style={{ color: '#38bdf8' }}>{formatX(activeCoord.raw.x, kind, xUnit)}</strong>
             </div>
             <div className={styles.tooltipRow}>
               <span>Y ({yUnit}):</span>

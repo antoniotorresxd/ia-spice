@@ -175,6 +175,41 @@
   gap: 0.5rem;
 }
 
+.opCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1.75rem 1rem;
+  text-align: center;
+}
+
+.opMetric {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.opValue {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #10b981;
+  font-family: var(--font-mono, monospace);
+}
+
+.errorIcon {
+  color: #f59e0b;
+}
+
+.errorText {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  color: #fca5a5;
+}
+
 .emptyState {
   display: flex;
   flex-direction: column;

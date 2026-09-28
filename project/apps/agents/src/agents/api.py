@@ -53,6 +53,14 @@ def _graph():
     return graph
 
 
+def _langfuse_host() -> str:
+    return (
+        os.environ.get("LANGFUSE_HOST")
+        or os.environ.get("LANGFUSE_BASE_URL")
+        or "https://us.cloud.langfuse.com"
+    )
+
+
 def _langfuse_handler() -> CallbackHandler | None:
     """El handler del proceso, creado al arrancar o al vuelo en tests.
 
@@ -61,7 +69,9 @@ def _langfuse_handler() -> CallbackHandler | None:
     if not hasattr(app.state, "langfuse_handler"):
         handler = None
         if os.environ.get("LANGFUSE_PUBLIC_KEY") and os.environ.get("LANGFUSE_SECRET_KEY"):
-            handler = CallbackHandler()
+            handler = CallbackHandler(
+                public_key=os.environ.get("LANGFUSE_PUBLIC_KEY"),
+            )
         app.state.langfuse_handler = handler
     return app.state.langfuse_handler
 
@@ -426,7 +436,11 @@ def _langfuse_client():
     if os.environ.get("LANGFUSE_PUBLIC_KEY") and os.environ.get("LANGFUSE_SECRET_KEY"):
         try:
             from langfuse import Langfuse
-            return Langfuse()
+            return Langfuse(
+                public_key=os.environ.get("LANGFUSE_PUBLIC_KEY"),
+                secret_key=os.environ.get("LANGFUSE_SECRET_KEY"),
+                host=_langfuse_host(),
+            )
         except Exception:
             return None
     return None
@@ -468,6 +482,14 @@ def get_run_trace(execution_id: str, authorization: str | None = Header(default=
             dur = None
             if obs.end_time and obs.start_time:
                 dur = round((obs.end_time - obs.start_time).total_seconds(), 3)
+            elif getattr(obs, "latency", None) is not None:
+                dur = round(float(obs.latency), 3)
+
+            u = getattr(obs, "usage", None)
+            p_tok = getattr(u, "input", None) or getattr(u, "prompt_tokens", None)
+            c_tok = getattr(u, "output", None) or getattr(u, "completion_tokens", None)
+            t_tok = getattr(u, "total", None) or getattr(u, "total_tokens", None)
+
             steps.append({
                 "id": obs.id,
                 "name": obs.name or obs.type,
@@ -479,10 +501,10 @@ def get_run_trace(execution_id: str, authorization: str | None = Header(default=
                 "input": obs.input,
                 "output": obs.output,
                 "usage": {
-                    "promptTokens": obs.usage.prompt_tokens if obs.usage else None,
-                    "completionTokens": obs.usage.completion_tokens if obs.usage else None,
-                    "totalTokens": obs.usage.total_tokens if obs.usage else None,
-                } if obs.usage else None,
+                    "promptTokens": p_tok,
+                    "completionTokens": c_tok,
+                    "totalTokens": t_tok,
+                } if u else None,
                 "level": str(obs.level) if obs.level else "DEFAULT",
                 "statusMessage": obs.status_message,
             })

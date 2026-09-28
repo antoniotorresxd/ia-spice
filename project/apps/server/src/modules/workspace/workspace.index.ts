@@ -21,6 +21,7 @@ import {
   deleteProject,
   getConversationDetail,
   getConversationTrace,
+  getDashboardMetrics,
   getProjectDetail,
   getSnapshot,
   listUserFiles,
@@ -216,4 +217,9 @@ export const workspaceRouter = createRouter()
   .get("/api/workspace/files", requireAuth, async (c) => {
     const { id: userId } = c.get("user")!;
     return c.json(await listUserFiles(userId));
+  })
+  .get("/api/workspace/dashboard", requireAuth, async (c) => {
+    const { id: userId } = c.get("user")!;
+    const period = (c.req.query("period") ?? "30d") as "7d" | "30d" | "90d";
+    return c.json(await getDashboardMetrics(userId, period));
   });

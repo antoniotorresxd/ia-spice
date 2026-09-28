@@ -1,5 +1,6 @@
 import { PanelLeft, PanelLeftClose, PanelRight, PanelRightClose, Search } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import type {
   ConversationExecution,
@@ -14,7 +15,6 @@ import { ContextPanel } from './ContextPanel'
 import { HomeHero } from './HomeHero'
 import { HomeOverview } from './HomeOverview'
 import { HomeSidebar } from './HomeSidebar'
-import { NaturalLanguageComposer } from './NaturalLanguageComposer'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { GuidedTourSpotlight, TutorialTriggerButton, usePageTutorial } from '../../tutorial'
 import { InteractiveCatFooter } from '@/components/layout/InteractiveCatFooter'
@@ -30,6 +30,7 @@ type HomeScreenProps = {
 }
 
 export function HomeScreen({ service, workspaceService, userName, onSignOut }: HomeScreenProps) {
+  const navigate = useNavigate()
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const searchTriggerRef = useRef<HTMLButtonElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -57,18 +58,16 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
     }
   }, [isSearchOpen])
 
-  const composerRef = useRef<HTMLDivElement>(null)
   const [overview, setOverview] = useState<HomeOverviewData | null>(null)
   const [period, setPeriod] = useState<UsagePeriod>('30d')
-  const [selectedExecution, setSelectedExecution] =
-    useState<ConversationExecution | null>(null)
+  const [selectedExecution] = useState<ConversationExecution | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useStoredBoolean('spice_sidebar_collapsed', false)
   const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useStoredBoolean('spice_right_sidebar_collapsed', false)
   const [contextOpen, setContextOpen] = useState(false)
-  const [announcement, setAnnouncement] = useState('')
+  const [announcement] = useState('')
   const [signOutError, setSignOutError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
@@ -137,12 +136,47 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
     setSnapshot(next)
   }
 
-  async function submitPrompt(text: string) {
-    const execution = await service.submitPrompt({ text })
-    setSelectedExecution(execution)
-    setContextOpen(true)
-    setAnnouncement('Solicitud iniciada. La ejecución está en progreso.')
-  }
+  const effectiveOverview = useMemo(() => {
+    if (!overview) return null
+    if (!snapshot || !workspaceService) return overview
+
+    const realProjects = (snapshot.projects ?? []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      conversationCount: p.conversationIds.length,
+    }))
+    const realConversations = (snapshot.conversations ?? []).map((c) => ({
+      id: c.id,
+      title: c.title,
+      projectId: c.projectId,
+      isTemporary: false,
+      updatedAt: c.updatedAt,
+    }))
+    const realExecutions = (snapshot.conversations ?? []).slice(0, 5).map((c) => ({
+      id: `exec-${c.id}`,
+      projectId: c.projectId,
+      conversation: {
+        id: c.id,
+        title: c.title,
+        projectId: c.projectId,
+        isTemporary: false,
+        updatedAt: c.updatedAt,
+      },
+      status: (c.executionStatus === 'active' || c.executionStatus === 'failed'
+        ? c.executionStatus
+        : 'completed') as 'active' | 'completed' | 'failed',
+      stages: [],
+      files: [],
+    }))
+
+    return {
+      ...overview,
+      recentProjects: realProjects.length > 0 ? realProjects : overview.recentProjects,
+      recentConversations: realConversations.length > 0 ? realConversations : overview.recentConversations,
+      recentExecutions: realExecutions.length > 0 ? realExecutions : overview.recentExecutions,
+      isDemo: realConversations.length === 0 && realProjects.length === 0 ? overview.isDemo : false,
+    }
+  }, [overview, snapshot, workspaceService])
 
   async function signOut() {
     setSignOutError(null)
@@ -261,13 +295,9 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
             <HomeHero
               userName={userName}
               onNewRequest={() => {
-                composerRef.current?.querySelector('textarea')?.focus()
+                navigate('/new')
               }}
             />
-
-            <div data-tour="conversation-area" ref={composerRef}>
-              <NaturalLanguageComposer onSubmit={submitPrompt} />
-            </div>
 
             {signOutError ? <p role="alert">{signOutError}</p> : null}
             {loadError && !overview ? (
@@ -283,9 +313,9 @@ export function HomeScreen({ service, workspaceService, userName, onSignOut }: H
               </p>
             ) : selectedExecution ? (
               <ActivityTimeline execution={selectedExecution} />
-            ) : overview ? (
+            ) : effectiveOverview ? (
               <HomeOverview
-                data={overview}
+                data={effectiveOverview}
                 onPeriodChange={changePeriod}
               />
             ) : null}

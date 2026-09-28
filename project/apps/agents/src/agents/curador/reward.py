@@ -16,12 +16,12 @@ def weight_for(metric: str, config: dict) -> float:
 
 def build_measurements(
     blocks: list[dict],
-    evaluations: dict[str, tuple[str, float | None]],
+    evaluations: dict[tuple[str, int], tuple[str, float | None]],
     config: dict,
 ) -> list[Measurement]:
     """Arma la lista (métrica, APE) que consume la recompensa.
 
-    Un bloque cuya simulación falló no tiene medición; se le imputa
+    Un requisito cuya simulación falló no tiene medición; se le imputa
     `failed_ape` porque dejarlo fuera de la suma haría que fallar saliera
     gratis y la recompensa premiaría no simular.
     """
@@ -29,11 +29,12 @@ def build_measurements(
 
     measurements: list[Measurement] = []
     for block in blocks:
-        metric = block["goal"]["metric"]
-        _, rel_err = evaluations[block["id"]]
-        measurements.append(
-            (metric, failed_ape if rel_err is None else rel_err * 100.0)
-        )
+        for req_index, requirement in enumerate(block["requirements"]):
+            metric = requirement["measure"]
+            _, rel_err = evaluations[(block["id"], req_index)]
+            measurements.append(
+                (metric, failed_ape if rel_err is None else rel_err * 100.0)
+            )
     return measurements
 
 

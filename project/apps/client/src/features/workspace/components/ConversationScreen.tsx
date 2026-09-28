@@ -10,12 +10,12 @@ import {
   Copy,
   Cpu,
   Download,
-  FileSearch,
   FolderGit2,
   Italic,
   Lightbulb,
   List,
   ListOrdered,
+  Loader2,
   PanelRightClose,
   PanelRightOpen,
   Pencil,
@@ -36,30 +36,91 @@ import type { TraceResponse, WorkspaceConversationDetail, WorkspaceSnapshot } fr
 import type { WorkspaceService } from '../services/workspace-service'
 import { RenameConversationDialog } from './RenameConversationDialog'
 import styles from './ConversationScreen.module.css'
-import { NetlistDiagram } from './NetlistDiagram'
-import { SimulationChart } from './SimulationChart'
 
 const statusLabels = { active: 'En curso', completed: 'Completada', failed: 'Fallida' } as const
+
+const DEFAULT_PANEL_WIDTH = 380
+const MIN_PANEL_WIDTH = 280
+const MAX_PANEL_WIDTH = 750
 
 export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const { conversationId = '' } = useParams()
   const navigate = useNavigate()
-  const outlet = useOutletContext<{ refreshSnapshot?: () => Promise<void>; deleteConversation?: (id: string) => Promise<void> } | null>()
+  const outlet = useOutletContext<{ refreshSnapshot?: () => Promise<void>; deleteConversation?: (id: string) => Promise<void>; isTourOpen?: boolean } | null>()
   const [conversation, setConversation] = useState<WorkspaceConversationDetail | null>(null)
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [text, setText] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [pending, setPending] = useState(false)
-  const [previewFileId, setPreviewFileId] = useState<string | null>(null)
-  const [simCurveFileId, setSimCurveFileId] = useState<string | null>(null)
   const [isRenaming, setIsRenaming] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
-  const [copiedTraceId, setCopiedTraceId] = useState(false)
   const [inspectorTab, setInspectorTab] = useState<'flow' | 'trace' | 'files'>('flow')
   const [traceData, setTraceData] = useState<TraceResponse | null>(null)
   const [isLoadingTrace, setIsLoadingTrace] = useState(false)
-  const [expandedGenerations, setExpandedGenerations] = useState<Record<number, boolean>>({})
+  const [traceFilter, setTraceFilter] = useState<'all' | 'generations'>('generations')
+  const [expandedSteps, setExpandedSteps] = useState<Record<string, boolean>>({})
+  const [copiedStepId, setCopiedStepId] = useState<string | null>(null)
+  const [copiedTraceId, setCopiedTraceId] = useState(false)
+
+  const toggleStepExpanded = (id: string) => {
+    setExpandedSteps((prev) => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  const handleCopyTraceId = (id: string) => {
+    void navigator.clipboard.writeText(id)
+    setCopiedTraceId(true)
+    setTimeout(() => setCopiedTraceId(false), 2000)
+  }
+
+  const handleCopySnippet = (key: string, textToCopy: string) => {
+    void navigator.clipboard.writeText(textToCopy)
+    setCopiedStepId(key)
+    setTimeout(() => setCopiedStepId(null), 2000)
+  }
+
+  // Redimensionamiento del banner lateral
+  const [sidePanelWidth, setSidePanelWidth] = useState<number>(() => {
+    const saved = localStorage.getItem('spice_side_panel_width')
+    return saved ? Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, parseInt(saved, 10))) : DEFAULT_PANEL_WIDTH
+  })
+  const [isResizing, setIsResizing] = useState(false)
+
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsResizing(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = window.innerWidth - e.clientX
+      if (newWidth >= MIN_PANEL_WIDTH && newWidth <= MAX_PANEL_WIDTH) {
+        setSidePanelWidth(newWidth)
+      }
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+      setSidePanelWidth((current) => {
+        localStorage.setItem('spice_side_panel_width', String(current))
+        return current
+      })
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [isResizing])
 
   function downloadNetlistFile(fileName: string, content: string) {
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
@@ -80,11 +141,6 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const [scrolledDown, setScrolledDown] = useState(false)
   const [awayFromLatest, setAwayFromLatest] = useState(false)
 
-  const handleCopyTraceId = (id: string) => {
-    navigator.clipboard.writeText(id)
-    setCopiedTraceId(true)
-    setTimeout(() => setCopiedTraceId(false), 2000)
-  }
 
   const insertFormat = (prefix: string, suffix: string = '') => {
     const textarea = textareaRef.current
@@ -220,12 +276,42 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
 
   useEffect(() => {
     if (inspectorTab === 'trace') {
-      const timer = setTimeout(() => {
-        void loadTrace()
-      }, 0)
-      return () => clearTimeout(timer)
+      void loadTrace()
     }
   }, [inspectorTab, loadTrace, conversation?.executionStatus])
+
+  const traceSteps = useMemo(() => traceData?.trace?.steps ?? [], [traceData])
+
+  const filteredTraceSteps = useMemo(() => {
+    if (traceFilter === 'generations') {
+      return traceSteps.filter((s) => s.type === 'GENERATION' || Boolean(s.model))
+    }
+    return traceSteps
+  }, [traceSteps, traceFilter])
+
+  const totalPromptTokens = useMemo(
+    () => traceSteps.reduce((acc, s) => acc + (s.usage?.promptTokens ?? 0), 0),
+    [traceSteps],
+  )
+  const totalCompletionTokens = useMemo(
+    () => traceSteps.reduce((acc, s) => acc + (s.usage?.completionTokens ?? 0), 0),
+    [traceSteps],
+  )
+  const totalTokens = totalPromptTokens + totalCompletionTokens
+  const totalGenerations = useMemo(
+    () => traceSteps.filter((s) => s.type === 'GENERATION' || Boolean(s.model)).length,
+    [traceSteps],
+  )
+
+  const formatTraceContent = (content: unknown): string => {
+    if (typeof content === 'string') return content
+    try {
+      return JSON.stringify(content, null, 2)
+    } catch {
+      return String(content)
+    }
+  }
+
 
   const netlistFiles = useMemo(
     () => conversation?.files.filter((file) => file.language === 'spice' && file.content.trim()) ?? [],
@@ -246,6 +332,12 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const hasCircuitsOrDesign = netlistFiles.length > 0 || isDesignExecution
   const [sidePanelUserToggled, setSidePanelUserToggled] = useState<boolean | null>(null)
   const isSidePanelOpen = sidePanelUserToggled ?? hasCircuitsOrDesign
+
+  useEffect(() => {
+    if (outlet?.isTourOpen) {
+      setSidePanelUserToggled(true)
+    }
+  }, [outlet?.isTourOpen])
 
   const timeline = useMemo<ConversationExecution | null>(() => {
     if (!conversation) return null
@@ -384,6 +476,7 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
             aria-expanded={isSidePanelOpen}
             aria-label={isSidePanelOpen ? 'Ocultar panel lateral' : 'Mostrar panel lateral'}
             title={isSidePanelOpen ? 'Ocultar panel lateral' : 'Mostrar panel lateral'}
+            data-tour="panel-toggle"
           >
             <Cpu size={15} />
             <span>{netlistFiles.length > 0 ? `Circuito (${netlistFiles.length})` : 'Inspección'}</span>
@@ -466,7 +559,7 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
             ) : null}
           </div>
 
-          <form className={styles.composerDock} onSubmit={(event) => void submit(event)}>
+          <form className={styles.composerDock} data-tour="conversation-composer" onSubmit={(event) => void submit(event)}>
             {submitError ? <p id="continuation-error" role="alert">{submitError}</p> : null}
             <div className={`${styles.composer} ${isEditMode ? styles.composerExpanded : ''}`}>
               {isEditMode && (
@@ -567,7 +660,17 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
         </div>
 
         {isSidePanelOpen && (
-          <aside className={styles.lateralPanel} aria-label="Panel de inspección y circuitos">
+          <aside
+            className={styles.lateralPanel}
+            style={{ width: `${sidePanelWidth}px` }}
+            aria-label="Panel de inspección y circuitos"
+          >
+            <div
+              className={`${styles.resizeHandle} ${isResizing ? styles.resizing : ''}`}
+              onMouseDown={startResizing}
+              title="Arrastrar para redimensionar panel"
+              data-tour="inspector-resize"
+            />
             <div className={styles.lateralHeader}>
               <div className={styles.lateralTitle}>
                 <Cpu size={16} />
@@ -585,10 +688,11 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
             </div>
 
             {/* Subpestañas del Inspector */}
-            <div className={styles.inspectorTabs} role="tablist" aria-label="Secciones del inspector">
+            <div className={styles.inspectorTabs} role="tablist" aria-label="Secciones del inspector" data-tour="inspector-tabs">
               <button
                 type="button"
                 role="tab"
+                data-tour="tab-flow"
                 aria-selected={inspectorTab === 'flow'}
                 className={`${styles.inspectorTabBtn} ${inspectorTab === 'flow' ? styles.inspectorTabActive : ''}`}
                 onClick={() => setInspectorTab('flow')}
@@ -599,16 +703,18 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
               <button
                 type="button"
                 role="tab"
+                data-tour="tab-trace"
                 aria-selected={inspectorTab === 'trace'}
                 className={`${styles.inspectorTabBtn} ${inspectorTab === 'trace' ? styles.inspectorTabActive : ''}`}
                 onClick={() => setInspectorTab('trace')}
               >
-                <FileSearch size={14} />
-                <span>Traza</span>
+                <Cpu size={14} />
+                <span>Traza Langfuse {totalGenerations > 0 ? `(${totalGenerations})` : ''}</span>
               </button>
               <button
                 type="button"
                 role="tab"
+                data-tour="tab-files"
                 aria-selected={inspectorTab === 'files'}
                 className={`${styles.inspectorTabBtn} ${inspectorTab === 'files' ? styles.inspectorTabActive : ''}`}
                 onClick={() => setInspectorTab('files')}
@@ -636,44 +742,15 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                     </div>
                   </dl>
 
-                  {isDesignExecution && timeline && timeline.stages.length > 0 ? (
-                    <div className={styles.lateralTimelineSection}>
-                      <ActivityTimeline execution={timeline} heading="Progreso de la ejecución" />
-                    </div>
-                  ) : (
-                    <div className={styles.emptyTabState}>
-                      <Activity size={24} style={{ opacity: 0.4 }} />
-                      <p>No hay ejecución de diseño en curso para este diálogo.</p>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {inspectorTab === 'trace' && (
-                <div className={styles.traceSection}>
-                  {/* Diagnóstico técnico */}
-                  {conversation.execution && (
-                    <div
-                      className={`${styles.lateralDiagnosticCard} ${
-                        conversation.executionStatus === 'failed'
-                          ? styles.lateralDiagnosticFailed
-                          : conversation.executionStatus === 'completed'
-                          ? styles.lateralDiagnosticSuccess
-                          : ''
-                      }`}
-                    >
-                      <span className={styles.lateralDiagnosticTitle}>
-                        {conversation.executionStatus === 'failed'
-                          ? '⚠️ Diagnóstico de Fallo'
-                          : conversation.executionStatus === 'completed'
-                          ? '✓ Resultado de Ejecución'
-                          : '⏳ Estado de Ejecución'}
-                      </span>
-                      <p>{conversation.execution.summary || conversation.preview || 'Sin observaciones registradas.'}</p>
+                  {/* Diagnóstico técnico en caso de fallo */}
+                  {conversation.executionStatus === 'failed' && (
+                    <div className={`${styles.lateralDiagnosticCard} ${styles.lateralDiagnosticFailed}`}>
+                      <span className={styles.lateralDiagnosticTitle}>⚠️ Diagnóstico de Fallo</span>
+                      <p>{conversation.execution.summary || conversation.preview || 'La ejecución de diseño falló durante la simulación.'}</p>
                     </div>
                   )}
 
-                  {/* Sugerencia contextual de iteraciones */}
+                  {/* Sugerencia contextual de iteraciones si falló */}
                   {conversation.executionStatus === 'failed' && (
                     <div className={styles.traceAdviceCard}>
                       <Lightbulb size={18} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
@@ -690,165 +767,224 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                     </div>
                   )}
 
-                  {/* ID de ejecución para trazabilidad */}
-                  {conversation.execution?.id && (
-                    <div className={styles.lateralTraceCard}>
-                      <div className={styles.lateralTraceHeader}>
-                        <span>Identificador de Ejecución</span>
-                      </div>
-                      <div className={styles.lateralTraceIdRow}>
-                        <span className={styles.lateralTraceId} title={conversation.execution.id}>
-                          {conversation.execution.id}
-                        </span>
-                        <button
-                          type="button"
-                          className={styles.traceActionBtn}
-                          onClick={() => handleCopyTraceId(conversation.execution.id)}
-                          title="Copiar ID de corrida"
-                        >
-                          {copiedTraceId ? <Check size={13} /> : <Copy size={13} />}
-                          <span>{copiedTraceId ? 'Copiado' : 'Copiar'}</span>
-                        </button>
-                      </div>
+                  {isDesignExecution && timeline && timeline.stages.length > 0 ? (
+                    <div className={styles.lateralTimelineSection}>
+                      <ActivityTimeline execution={timeline} heading="Progreso de la ejecución" />
+                    </div>
+                  ) : (
+                    <div className={styles.emptyTabState}>
+                      <Activity size={24} style={{ opacity: 0.4 }} />
+                      <p>No hay ejecución de diseño en curso para este diálogo.</p>
                     </div>
                   )}
+                </>
+              )}
 
-                  {/* Langfuse In-App Trace Tree */}
-                  <div className={styles.langfuseTraceWrap}>
-                    <div className={styles.langfuseHeaderCard}>
-                      <div className={styles.langfuseMetaRow}>
-                        <div className={styles.langfuseTitle}>
-                          <Activity size={14} style={{ color: '#38bdf8' }} />
-                          <span>Traza de Langfuse (In-App)</span>
-                        </div>
-                        <button
-                          type="button"
-                          className={styles.traceActionBtn}
-                          onClick={() => void loadTrace()}
-                          disabled={isLoadingTrace}
-                          title="Actualizar traza de Langfuse"
-                        >
-                          <RefreshCw size={12} className={isLoadingTrace ? 'spin' : ''} />
-                          <span>{isLoadingTrace ? 'Cargando...' : 'Actualizar'}</span>
-                        </button>
-                      </div>
-
-                      {traceData?.status === 'ok' && traceData.trace ? (
-                        <div className={styles.langfuseStats}>
-                          {traceData.trace.total_tokens !== undefined && (
-                            <span>Tokens: <strong className={styles.langfuseStatVal}>{traceData.trace.total_tokens.toLocaleString()}</strong></span>
-                          )}
-                          {traceData.trace.latency_s !== undefined && traceData.trace.latency_s !== null && (
-                            <span>Latencia: <strong className={styles.langfuseStatVal}>{traceData.trace.latency_s.toFixed(2)}s</strong></span>
-                          )}
-                          <span>Generaciones: <strong className={styles.langfuseStatVal}>{traceData.trace.generations?.length ?? 0}</strong></span>
-                        </div>
-                      ) : traceData?.status === 'unavailable' ? (
-                        <p style={{ margin: 0, fontSize: '0.72rem', color: '#94a3b8' }}>
-                          {traceData.message || 'La traza aún se está indexando en Langfuse Cloud. Presiona Actualizar en unos segundos.'}
-                        </p>
-                      ) : isLoadingTrace ? (
-                        <p style={{ margin: 0, fontSize: '0.72rem', color: '#94a3b8' }}>Consultando traza en Langfuse...</p>
-                      ) : null}
+              {inspectorTab === 'trace' && (
+                <div className={styles.langfuseTraceWrap}>
+                  {isLoadingTrace ? (
+                    <div className={styles.emptyTabState}>
+                      <Loader2 size={24} className={styles.spin} style={{ opacity: 0.7 }} />
+                      <p>Consultando traza en Langfuse...</p>
                     </div>
-
-                    {/* List of Generations */}
-                    {traceData?.status === 'ok' && traceData.trace?.generations && traceData.trace.generations.length > 0 && (
-                      <div className={styles.generationList}>
-                        <span style={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
-                          Llamadas a Modelos LLM ({traceData.trace.generations.length})
-                        </span>
-                        {traceData.trace.generations.map((gen, idx) => {
-                          const isExpanded = Boolean(expandedGenerations[idx])
-                          return (
-                            <div key={`gen-${idx}`} className={styles.generationCard}>
+                  ) : traceData?.status === 'not_found' ? (
+                    <div className={styles.emptyTabState}>
+                      <Activity size={24} style={{ opacity: 0.4 }} />
+                      <p>No se encontraron ejecuciones para consultar la traza.</p>
+                    </div>
+                  ) : traceData?.status === 'unavailable' ? (
+                    <div className={styles.emptyTabState}>
+                      <Cpu size={24} style={{ opacity: 0.5, color: '#f87171' }} />
+                      <p>{traceData.message || 'Observabilidad de Langfuse no disponible para esta ejecución.'}</p>
+                      <button type="button" className={styles.traceRefreshBtn} onClick={() => void loadTrace()}>
+                        <RefreshCw size={12} />
+                        <span>Reintentar</span>
+                      </button>
+                    </div>
+                  ) : traceData?.trace?.status === 'pending' ? (
+                    <div className={styles.emptyTabState}>
+                      <Activity size={24} style={{ opacity: 0.5, color: '#fbbf24' }} />
+                      <p>{traceData.trace.message || 'La traza aún se está indexando en Langfuse...'}</p>
+                      <button type="button" className={styles.traceRefreshBtn} onClick={() => void loadTrace()}>
+                        <RefreshCw size={12} />
+                        <span>Comprobar estado</span>
+                      </button>
+                    </div>
+                  ) : traceData?.trace?.status === 'error' ? (
+                    <div className={styles.emptyTabState}>
+                      <Cpu size={24} style={{ opacity: 0.5, color: '#f87171' }} />
+                      <p>{traceData.trace.message || 'Error al obtener los detalles de la traza en Langfuse.'}</p>
+                      <button type="button" className={styles.traceRefreshBtn} onClick={() => void loadTrace()}>
+                        <RefreshCw size={12} />
+                        <span>Reintentar</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Resumen Langfuse */}
+                      <div className={styles.langfuseHeaderCard}>
+                        <div className={styles.langfuseMetaRow}>
+                          <div className={styles.langfuseTitle}>
+                            <Cpu size={14} style={{ color: '#38bdf8' }} />
+                            <span>Langfuse Cloud</span>
+                            {traceData?.trace?.traceId && (
                               <button
                                 type="button"
-                                className={styles.generationCardHeader}
-                                onClick={() => setExpandedGenerations((prev) => ({ ...prev, [idx]: !prev[idx] }))}
+                                className={styles.traceCopyBtn}
+                                onClick={() => handleCopyTraceId(traceData.trace!.traceId)}
+                                title="Copiar Trace ID de Langfuse"
                               >
-                                <div className={styles.generationTitleWrap}>
-                                  <span className={styles.generationName}>{gen.name}</span>
-                                  {gen.model && <span className={styles.generationModelBadge}>{gen.model}</span>}
-                                </div>
-                                <div className={styles.generationMeta}>
-                                  {gen.latency_s !== null && gen.latency_s !== undefined && (
-                                    <span>{gen.latency_s.toFixed(2)}s</span>
-                                  )}
-                                  {gen.usage?.total_tokens && (
-                                    <span>{gen.usage.total_tokens} toks</span>
-                                  )}
-                                  {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                                </div>
+                                {copiedTraceId ? <Check size={11} style={{ color: '#4ade80' }} /> : <Copy size={11} />}
+                                <span>{traceData.trace.traceId.slice(0, 8)}...</span>
                               </button>
-
-                              {isExpanded && (
-                                <div className={styles.generationContent}>
-                                  <div>
-                                    <span className={styles.traceBlockLabel}>Prompt / Input:</span>
-                                    <pre className={styles.traceCodeBox}>
-                                      {typeof gen.input === 'string' ? gen.input : JSON.stringify(gen.input, null, 2)}
-                                    </pre>
-                                  </div>
-                                  <div>
-                                    <span className={styles.traceBlockLabel}>Salida del Modelo:</span>
-                                    <pre className={styles.traceCodeBox}>
-                                      {typeof gen.output === 'string' ? gen.output : JSON.stringify(gen.output, null, 2)}
-                                    </pre>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.traceRefreshBtn}
+                            onClick={() => void loadTrace()}
+                            disabled={isLoadingTrace}
+                            title="Actualizar traza desde Langfuse"
+                          >
+                            <RefreshCw size={11} className={isLoadingTrace ? styles.spin : ''} />
+                            <span>Actualizar</span>
+                          </button>
+                        </div>
+                        <div className={styles.langfuseStats}>
+                          <div>
+                            <span>Latencia: </span>
+                            <span className={styles.langfuseStatVal}>
+                              {traceData?.trace?.latency ? `${traceData.trace.latency.toFixed(2)}s` : '-'}
+                            </span>
+                          </div>
+                          <div>
+                            <span>Tokens: </span>
+                            <span className={styles.langfuseStatVal} title={`Prompt: ${totalPromptTokens} | Salida: ${totalCompletionTokens}`}>
+                              {totalTokens > 0 ? totalTokens.toLocaleString() : '-'}
+                            </span>
+                          </div>
+                          <div>
+                            <span>Llamadas LLM: </span>
+                            <span className={styles.langfuseStatVal}>{totalGenerations}</span>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
 
-                  {/* Desglose de etapas */}
-                  {timeline && timeline.stages.length > 0 && (
-                    <div>
-                      <span style={{ fontSize: '0.74rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.5rem' }}>
-                        Desglose de Etapas
-                      </span>
-                      <div className={styles.traceStagesList}>
-                        {timeline.stages.map((stage) => {
-                          const statusClass =
-                            stage.status === 'completed'
-                              ? styles.traceStatusCompleted
-                              : stage.status === 'failed'
-                              ? styles.traceStatusFailed
-                              : stage.status === 'active'
-                              ? styles.traceStatusActive
-                              : styles.traceStatusPending
-                          return (
-                            <div key={stage.id} className={styles.traceStageCard}>
-                              <div className={styles.traceStageHeader}>
-                                <div className={styles.traceStageName}>
-                                  <span>{stage.label}</span>
-                                  <span className={styles.traceStageActor}>({stage.actor})</span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                  {stage.durationMs !== null && (
-                                    <span className={styles.traceStageDuration}>{stage.durationMs} ms</span>
-                                  )}
-                                  <span className={`${styles.traceStageStatus} ${statusClass}`}>
-                                    {stage.status === 'completed'
-                                      ? 'Completado'
-                                      : stage.status === 'failed'
-                                      ? 'Fallo'
-                                      : stage.status === 'active'
-                                      ? 'Activo'
-                                      : 'Pendiente'}
-                                  </span>
-                                </div>
+                      {/* Filtro de llamadas */}
+                      <div className={styles.traceFilterBar}>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                          Llamadas e Inferencia
+                        </span>
+                        <div className={styles.traceFilterPills}>
+                          <button
+                            type="button"
+                            className={`${styles.traceFilterBtn} ${traceFilter === 'generations' ? styles.traceFilterBtnActive : ''}`}
+                            onClick={() => setTraceFilter('generations')}
+                          >
+                            Solo LLM ({totalGenerations})
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.traceFilterBtn} ${traceFilter === 'all' ? styles.traceFilterBtnActive : ''}`}
+                            onClick={() => setTraceFilter('all')}
+                          >
+                            Todas ({traceSteps.length})
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Lista de Observaciones */}
+                      {filteredTraceSteps.length === 0 ? (
+                        <div className={styles.emptyTabState}>
+                          <p>No se encontraron llamadas {traceFilter === 'generations' ? 'LLM' : ''} en esta traza.</p>
+                        </div>
+                      ) : (
+                        <div className={styles.generationList}>
+                          {filteredTraceSteps.map((step) => {
+                            const isExpanded = Boolean(expandedSteps[step.id])
+                            const inputFormatted = formatTraceContent(step.input)
+                            const outputFormatted = formatTraceContent(step.output)
+
+                            return (
+                              <div key={step.id} className={styles.generationCard}>
+                                <button
+                                  type="button"
+                                  className={styles.generationCardHeader}
+                                  onClick={() => toggleStepExpanded(step.id)}
+                                  aria-expanded={isExpanded}
+                                >
+                                  <div className={styles.generationTitleWrap}>
+                                    <span className={styles.generationName}>{step.name}</span>
+                                    {step.model ? (
+                                      <span className={styles.generationModelBadge} title={`Modelo: ${step.model}`}>
+                                        {step.model.replace('models/', '')}
+                                      </span>
+                                    ) : (
+                                      <span className={styles.traceTypeBadgeChain}>{step.type}</span>
+                                    )}
+                                  </div>
+                                  <div className={styles.generationMeta}>
+                                    {step.durationSec !== null && step.durationSec !== undefined && (
+                                      <span style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+                                        {step.durationSec}s
+                                      </span>
+                                    )}
+                                    {step.usage?.totalTokens ? (
+                                      <span style={{ fontFamily: 'var(--font-mono, monospace)', color: '#38bdf8' }}>
+                                        {step.usage.totalTokens} tok
+                                      </span>
+                                    ) : null}
+                                    {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                  </div>
+                                </button>
+
+                                {isExpanded && (
+                                  <div className={styles.generationContent}>
+                                    <div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
+                                        <span className={styles.traceBlockLabel}>Prompt / Input:</span>
+                                        <button
+                                          type="button"
+                                          className={styles.traceCopyBtn}
+                                          onClick={() => handleCopySnippet(`${step.id}-input`, inputFormatted)}
+                                        >
+                                          {copiedStepId === `${step.id}-input` ? (
+                                            <Check size={11} style={{ color: '#4ade80' }} />
+                                          ) : (
+                                            <Copy size={11} />
+                                          )}
+                                          <span>Copiar</span>
+                                        </button>
+                                      </div>
+                                      <pre className={styles.traceCodeBox}>{inputFormatted}</pre>
+                                    </div>
+
+                                    <div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
+                                        <span className={styles.traceBlockLabel}>Salida / Respuesta:</span>
+                                        <button
+                                          type="button"
+                                          className={styles.traceCopyBtn}
+                                          onClick={() => handleCopySnippet(`${step.id}-output`, outputFormatted)}
+                                        >
+                                          {copiedStepId === `${step.id}-output` ? (
+                                            <Check size={11} style={{ color: '#4ade80' }} />
+                                          ) : (
+                                            <Copy size={11} />
+                                          )}
+                                          <span>Copiar</span>
+                                        </button>
+                                      </div>
+                                      <pre className={styles.traceCodeBox}>{outputFormatted}</pre>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                              <p className={styles.traceStageSummary}>{stage.summary}</p>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -864,8 +1000,6 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                     <section aria-labelledby="circuits-title" className={styles.circuits}>
                       <h2 id="circuits-title">Circuitos generados ({netlistFiles.length})</h2>
                       {netlistFiles.map((file) => {
-                        const isExpanded = previewFileId === file.id
-                        const isSimCurveVisible = simCurveFileId === file.id
                         return (
                           <div key={file.id} className={styles.circuitCard}>
                             <div className={styles.circuitCardHeader}>
@@ -879,27 +1013,6 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                                 </div>
                               </div>
                               <div className={styles.circuitCardActions}>
-                                {file.simResult?.curve && file.simResult.curve.length > 0 && (
-                                  <button
-                                    type="button"
-                                    className={`${styles.circuitSimBtn} ${isSimCurveVisible ? styles.circuitSimBtnActive : ''}`}
-                                    onClick={() => setSimCurveFileId(isSimCurveVisible ? null : file.id)}
-                                    title="Ver curva de simulación SPICE real"
-                                  >
-                                    <Activity size={13} />
-                                    <span>{isSimCurveVisible ? 'Ocultar Curva' : 'Curva SPICE'}</span>
-                                  </button>
-                                )}
-                                <button
-                                  type="button"
-                                  className={styles.circuitPreviewBtn}
-                                  onClick={() => setPreviewFileId(isExpanded ? null : file.id)}
-                                  aria-expanded={isExpanded}
-                                  title={isExpanded ? 'Ocultar esquema' : 'Ver esquema gráfico'}
-                                >
-                                  {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                                  <span>{isExpanded ? 'Ocultar' : 'Esquema'}</span>
-                                </button>
                                 <button
                                   type="button"
                                   className={styles.circuitDownloadBtn}
@@ -919,24 +1032,6 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                                 </Link>
                               </div>
                             </div>
-                            {isSimCurveVisible && file.simResult?.curve && (
-                              <div style={{ marginTop: '0.75rem', marginBottom: '0.5rem' }}>
-                                <SimulationChart
-                                  curve={file.simResult.curve}
-                                  analysisType={file.simResult.analysis_type}
-                                  xUnit={file.simResult.x_unit}
-                                  yUnit={file.simResult.y_unit}
-                                  metricName={file.simResult.metric_name}
-                                  measuredValue={file.simResult.measured_value}
-                                  targetValue={file.simResult.target_value}
-                                  title={`Simulación SPICE: ${file.name}`}
-                                  compact
-                                />
-                              </div>
-                            )}
-                            {isExpanded ? (
-                              <NetlistDiagram netlistText={file.content} title={file.name} />
-                            ) : null}
                           </div>
                         )
                       })}

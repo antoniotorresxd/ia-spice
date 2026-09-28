@@ -28,51 +28,69 @@ def _rejected(reason: str) -> dict:
     }
 
 
-def _goal_for(block, params: dict, tolerance: float) -> dict:
-    """La meta de un bloque (métrica y target numérico deseado)."""
-    metric = params.get("metric", "vout")
-    target = float(params.get("target", 0.0))
+def _requirements_for(block, params: dict, tolerance: float) -> list[dict]:
+    """Resuelve tolerancia y valores alucinados por requisito."""
+    requirements = []
+    for req in params["requirements"]:
+        metric = req["measure"]
+        target = float(req["value"])
+        # Si el target es un valor absurdamente grande o infinito (alucinación del LLM >= 1e6),
+        # recuperamos el valor real de forma genérica a partir de los parámetros del bloque.
+        if abs(target) >= 1e6:
+            block_params = params.get("params", {})
+            norm_metric = metric.lower().replace("_", "")
+            # 1. Buscar si algún parámetro coincide con el nombre de la métrica
+            for k, v in block_params.items():
+                if k.lower().replace("_", "") == norm_metric and isinstance(v, (int, float)):
+                    target = float(v)
+                    break
+            else:
+                # 2. Buscar parámetros típicos de salida del catálogo (vout, vceq, fc, etc.)
+                for out_key in ("vout", "vceq", "target", "fc", "vclip", "vz"):
+                    for k, v in block_params.items():
+                        if k.lower().replace("_", "") == out_key and isinstance(v, (int, float)):
+                            target = float(v)
+                            metric = k
+                            break
 
-    # Si el target es un valor absurdamente grande o infinito (alucinación del LLM >= 1e6),
-    # recuperamos el valor real de forma genérica a partir de los parámetros del bloque.
-    if abs(target) >= 1e6:
-        block_params = params.get("params", {})
-        norm_metric = metric.lower().replace("_", "")
-        # 1. Buscar si algún parámetro coincide con el nombre de la métrica
-        for k, v in block_params.items():
-            if k.lower().replace("_", "") == norm_metric and isinstance(v, (int, float)):
-                target = float(v)
-                break
-        else:
-            # 2. Buscar parámetros típicos de salida del catálogo (vout, vceq, fc, etc.)
-            for out_key in ("vout", "vceq", "target", "fc", "vclip", "vz"):
-                for k, v in block_params.items():
-                    if k.lower().replace("_", "") == out_key and isinstance(v, (int, float)):
-                        target = float(v)
-                        metric = k
-                        break
-
-    return {
-        "metric": metric,
-        "target": target,
-        "tolerance": tolerance,
-    }
+        requirements.append(
+            {
+                **req,
+                "measure": metric,
+                "value": target,
+                "tolerance": tolerance if req["tolerance"] is None else req["tolerance"],
+            }
+        )
+    return requirements
 
 
 def _normalize(spec: CircuitSpec) -> dict:
     blocks = []
     for block in spec.blocks:
         params = block.params.model_dump()
+        requirements = _requirements_for(block, params, spec.tolerance)
         blocks.append(
             {
                 "id": block.id,
                 "type": block.type,
                 "params": params,
-                "goal": _goal_for(block, params, spec.tolerance),
+                "requirements": requirements,
+                # TODO(slice-b/c): retirar esta proyección cuando shell,
+                # escritura, documentador y evaluacion consuman requirements.
+                # Mantiene el camino de un requisito sin modificar esos módulos.
+                "goal": {
+                    "metric": requirements[0]["measure"],
+                    "target": requirements[0]["value"],
+                    "tolerance": requirements[0]["tolerance"],
+                },
             }
         )
     return {
-        "normalized_spec": {"blocks": blocks, "max_iterations": spec.max_iterations},
+        "normalized_spec": {
+            "blocks": blocks,
+            "max_iterations": spec.max_iterations,
+            "connections": spec.connections,
+        },
         "pending_blocks": [b["id"] for b in blocks],
         "iteration": 0,
     }

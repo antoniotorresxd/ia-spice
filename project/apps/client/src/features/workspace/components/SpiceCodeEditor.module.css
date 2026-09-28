@@ -1,0 +1,331 @@
+/* Contenedor del Editor / Visor estilo IDE profesional */
+.editorWrapper {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+}
+
+:global(.light) .editorWrapper {
+  background: #ffffff;
+  border-color: #d0d7de;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Barra de Título / Tabs estilo VS Code */
+.editorTitlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #010409;
+  border-bottom: 1px solid #21262d;
+  padding: 0 0.75rem;
+  height: 42px;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+:global(.light) .editorTitlebar {
+  background: #f6f8fa;
+  border-bottom-color: #d0d7de;
+}
+
+.titlebarLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+/* Mac window dots */
+.windowDots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 2px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dotRed {
+  background: #ff5f56;
+}
+
+.dotYellow {
+  background: #ffbd2e;
+}
+
+.dotGreen {
+  background: #27c93f;
+}
+
+/* Tab de archivo activo */
+.fileTab {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #0d1117;
+  border-top: 2px solid #ea8144;
+  border-left: 1px solid #21262d;
+  border-right: 1px solid #21262d;
+  padding: 0.4rem 0.85rem;
+  height: 41px;
+  font-size: 0.82rem;
+  color: #f0f6fc;
+  font-weight: 500;
+}
+
+:global(.light) .fileTab {
+  background: #ffffff;
+  border-left-color: #d0d7de;
+  border-right-color: #d0d7de;
+  color: #1f2328;
+}
+
+.fileIcon {
+  color: #ea8144;
+}
+
+.fileBadge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: rgba(234, 129, 68, 0.15);
+  color: #ea8144;
+  border: 1px solid rgba(234, 129, 68, 0.3);
+  font-weight: 600;
+}
+
+/* Acciones en la barra superior */
+.titlebarRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  font-size: 0.74rem;
+  font-weight: 500;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+:global(.light) .actionBtn {
+  background: #f6f8fa;
+  border-color: #d0d7de;
+  color: #24292f;
+}
+
+.actionBtn:hover {
+  background: #21262d;
+  color: #f0f6fc;
+  border-color: #8b949e;
+}
+
+:global(.light) .actionBtn:hover {
+  background: #eaeef2;
+  color: #1f2328;
+}
+
+/* Área central de Código + Números de Línea */
+.codeArea {
+  display: flex;
+  position: relative;
+  min-height: 380px;
+  max-height: 540px;
+  background: #0d1117;
+  overflow: auto;
+}
+
+:global(.light) .codeArea {
+  background: #ffffff;
+}
+
+/* Columna de números de línea (Gutter) */
+.gutter {
+  background: #090d13;
+  border-right: 1px solid #21262d;
+  padding: 1rem 0.75rem 1rem 0.5rem;
+  text-align: right;
+  user-select: none;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #484f58;
+  display: flex;
+  flex-direction: column;
+  min-width: 44px;
+}
+
+:global(.light) .gutter {
+  background: #f6f8fa;
+  border-right-color: #d0d7de;
+  color: #8c959f;
+}
+
+.lineNumber {
+  height: 1.6em;
+  display: block;
+}
+
+/* Vista de Código Resaltado */
+.highlightedCode {
+  flex: 1;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  white-space: pre;
+  overflow-x: auto;
+  font-family: inherit;
+  color: #e6edf3;
+}
+
+:global(.light) .highlightedCode {
+  color: #1f2328;
+}
+
+.codeLine {
+  height: 1.6em;
+  display: block;
+}
+
+/* Tokens de Sintaxis SPICE */
+.tokenComment {
+  color: #7ee787;
+  font-style: italic;
+}
+
+:global(.light) .tokenComment {
+  color: #22863a;
+}
+
+.tokenDirective {
+  color: #d2a8ff;
+  font-weight: 600;
+}
+
+:global(.light) .tokenDirective {
+  color: #8250df;
+}
+
+.tokenComponent {
+  color: #79c0ff;
+  font-weight: 600;
+}
+
+:global(.light) .tokenComponent {
+  color: #0550ae;
+}
+
+.tokenGround {
+  color: #ffa657;
+  font-weight: 600;
+}
+
+:global(.light) .tokenGround {
+  color: #cf222e;
+}
+
+.tokenNode {
+  color: #e5c07b;
+}
+
+:global(.light) .tokenNode {
+  color: #953800;
+}
+
+.tokenNumber {
+  color: #56d364;
+  font-weight: 500;
+}
+
+:global(.light) .tokenNumber {
+  color: #1a7f37;
+}
+
+.tokenKeyword {
+  color: #ff7b72;
+  font-weight: 600;
+}
+
+:global(.light) .tokenKeyword {
+  color: #cf222e;
+}
+
+.tokenIdentifier {
+  color: #c9d1d9;
+}
+
+:global(.light) .tokenIdentifier {
+  color: #24292f;
+}
+
+/* Barra de Estado inferior (Footer de IDE) */
+.editorStatusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #010409;
+  border-top: 1px solid #21262d;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.7rem;
+  color: #8b949e;
+}
+
+:global(.light) .editorStatusbar {
+  background: #f6f8fa;
+  border-top-color: #d0d7de;
+  color: #656d76;
+}
+
+.statusbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.statusbarItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.statusbarDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #27c93f;
+}
+
+.statusbarRight {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-family: inherit;
+}
+
+.readOnlyBadge {
+  color: #8b949e;
+  font-size: 0.65rem;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

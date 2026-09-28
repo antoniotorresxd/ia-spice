@@ -4,7 +4,7 @@ import { AuthScreen } from './features/auth/components/AuthScreen'
 import { authClient } from './features/auth/services/auth-client'
 import { authService } from './features/auth/services/auth-service'
 import { HomeScreen } from './features/home/components/HomeScreen'
-import { mockHomeService } from './features/home/services/mock-home-service'
+import { httpHomeService } from './features/home/services/http-home-service'
 import { ModelSettingsScreen } from './features/settings/components/ModelSettingsScreen'
 import { ProfileSettingsScreen } from './features/settings/components/ProfileSettingsScreen'
 import { httpSettingsService } from './features/settings/services/http-settings-service'
@@ -64,7 +64,7 @@ function App() {
           element={
             <HomeScreen
               onSignOut={handleSignOut}
-              service={mockHomeService}
+              service={httpHomeService}
               workspaceService={workspaceService}
               userName={session.user.name}
             />

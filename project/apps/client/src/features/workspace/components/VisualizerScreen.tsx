@@ -4,8 +4,6 @@ import {
   Check,
   ChevronDown,
   FileCode2,
-  PanelLeft,
-  PanelLeftClose,
   Play,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -21,6 +19,7 @@ import type {
 import type { WorkspaceService } from '../services/workspace-service'
 import { CircuitExplanation, NetlistDiagram } from './NetlistDiagram'
 import { SimulationChart } from './SimulationChart'
+import { SpiceCodeEditor } from './SpiceCodeEditor'
 import styles from './VisualizerScreen.module.css'
 
 const DEFAULT_CIRCUIT = `.title Divisor de voltaje
@@ -182,9 +181,8 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
   const [selectedWorkspaceFileId, setSelectedWorkspaceFileId] = useState<string>('')
   const [activeFileSummary, setActiveFileSummary] = useState<string | null>(null)
   const [activeFileSimResult, setActiveFileSimResult] = useState<BlockSimResult | null>(null)
-  const [viewMode, setViewMode] = useState<'schematic' | 'simulation'>('schematic')
+  const [viewMode, setViewMode] = useState<'schematic' | 'code' | 'simulation'>('schematic')
   const [cache, setCache] = useState<Record<string, WorkspaceConversationDetail>>({})
-  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false)
 
   // Cargar lista de archivos y snapshot
   useEffect(() => {
@@ -297,17 +295,6 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
     }
   }
 
-  const handleTextareaChange = (newCode: string) => {
-    setCode(newCode)
-    // Si el usuario edita o pega texto manualmente, desvincular del archivo del workspace
-    if (selectedWorkspaceFileId || queryFileId || queryConversationId) {
-      setSelectedWorkspaceFileId('')
-      setActiveFileSummary(null)
-      setActiveFileSimResult(null)
-      setSearchParams({}, { replace: true })
-    }
-  }
-
   const handleDraw = () => {
     setDrawnNetlist(code)
   }
@@ -328,50 +315,23 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
   return (
     <article className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.headerRow}>
-          <div className={styles.headerTop}>
-            <span className={styles.eyebrow}>SPICE → ESQUEMÁTICO</span>
-            <h1 className={styles.title}>De netlist a diagrama que se entiende</h1>
-          </div>
-
-          <button
-            type="button"
-            className={styles.togglePanelBtn}
-            onClick={() => setIsPanelCollapsed((prev) => !prev)}
-            title={isPanelCollapsed ? 'Mostrar panel de control' : 'Ocultar panel (pantalla completa)'}
-            aria-label={isPanelCollapsed ? 'Mostrar panel lateral' : 'Ocultar panel lateral'}
-          >
-            {isPanelCollapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
-            <span>{isPanelCollapsed ? 'Mostrar panel' : 'Ocultar panel'}</span>
-          </button>
+        <div className={styles.headerTop}>
+          <span className={styles.eyebrow}>Visualizador de Circuitos</span>
+          <h1 className={styles.title}>Visualizador y Análisis de Netlist</h1>
         </div>
         <p className={styles.subtitle}>
-          Pegá el .cir que genera el agente de síntesis y mirá qué circuito describe, sin saber leer SPICE.
+          Explora la topología del circuito, inspecciona el código SPICE y analiza las curvas de simulación en tiempo real.
         </p>
       </header>
 
-      <div className={`${styles.workbenchGrid} ${isPanelCollapsed ? styles.workbenchGridCollapsed : ''}`}>
-        {/* Left Column: Unified Studio Inspector Panel */}
-        {!isPanelCollapsed && (
-          <aside className={styles.sidebarPanel} aria-label="Editor y selector de netlist">
-          <div className={styles.sidebarTop}>
-            <div className={styles.editorHead}>
-              <p className={styles.cardEyebrow}>NETLIST</p>
-              {currentWorkspaceFile && (
-                <Link
-                  to={`/conversations/${currentWorkspaceFile.conversationId}`}
-                  className={styles.originLink}
-                >
-                  <span>Ver conversación</span>
-                  <ArrowUpRight size={11} />
-                </Link>
-              )}
-            </div>
-
-            {/* Selector de archivos del workspace */}
+      {/* Barra de Control / Toolbar Unificada */}
+      <div className={styles.toolbar}>
+        {/* Fila 1: Selección del Circuito, Actualizar y Origen */}
+        <div className={styles.toolbarTopRow}>
+          <div className={styles.circuitControlGroup} data-tour="circuit-selector">
             <div className={styles.workspaceImportRow}>
               <label htmlFor="workspace-file-select" className={styles.importLabel}>
-                Importar de conversaciones:
+                Circuito:
               </label>
               <WorkspaceFileSelect
                 files={spiceFiles}
@@ -381,64 +341,51 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
               />
             </div>
 
-            {/* Textarea */}
-            <div className={styles.textareaWrap}>
-              <label htmlFor="spice-code-textarea" className={styles.textareaLabel}>
-                Código netlist SPICE
-              </label>
-              <textarea
-                id="spice-code-textarea"
-                aria-label="Código netlist SPICE"
-                className={styles.textarea}
-                value={code}
-                placeholder="Pegá aquí el código SPICE (.cir)..."
-                onChange={(e) => handleTextareaChange(e.target.value)}
-                spellCheck={false}
-                rows={6}
-              />
-            </div>
-
-            {/* Action Button */}
             <button
               type="button"
               className={styles.drawButton}
               onClick={handleDraw}
+              title="Actualizar diagrama y análisis con el código actual"
             >
-              <Play size={15} fill="currentColor" />
-              <span>Dibujar circuito</span>
+              <Play size={13} fill="currentColor" />
+              <span>Actualizar</span>
             </button>
           </div>
 
-          <div className={styles.sidebarDivider} />
+          {currentWorkspaceFile && (
+            <Link
+              to={`/conversations/${currentWorkspaceFile.conversationId}`}
+              className={styles.originLink}
+              title="Ir a la conversación donde se generó este archivo"
+            >
+              <span>Ver conversación</span>
+              <ArrowUpRight size={13} />
+            </Link>
+          )}
+        </div>
 
-          {/* Bottom Section: Explanation & Components */}
-          <div className={styles.sidebarBottom} aria-label="Análisis del circuito">
-            {parsedNetlist ? (
-              <CircuitExplanation
-                netlist={parsedNetlist}
-                workspaceSummary={activeFileSummary}
-                compact
-              />
-            ) : (
-              <div className={styles.inspectorPlaceholder}>
-                <p>Presioná "Dibujar circuito" para actualizar el análisis esquemático.</p>
-              </div>
-            )}
-          </div>
-        </aside>
-        )}
+        {/* Separador */}
+        <div className={styles.toolbarDivider} />
 
-        {/* Right Column: Full-Height Canvas Viewport */}
-        <section className={styles.displayColumn} aria-label="Visualización y análisis del circuito">
-          {activeFileSimResult?.curve && activeFileSimResult.curve.length > 0 && (
-            <div className={styles.viewToggleWrap}>
-              <button
-                type="button"
-                className={`${styles.viewToggleBtn} ${viewMode === 'schematic' ? styles.viewToggleBtnActive : ''}`}
-                onClick={() => setViewMode('schematic')}
-              >
-                <span>Diagrama Esquemático</span>
-              </button>
+        {/* Fila 2: Selector de Vistas */}
+        <div className={styles.toolbarBottomRow}>
+          <div className={styles.viewToggleWrap} data-tour="view-toggle">
+            <button
+              type="button"
+              className={`${styles.viewToggleBtn} ${viewMode === 'schematic' ? styles.viewToggleBtnActive : ''}`}
+              onClick={() => setViewMode('schematic')}
+            >
+              <span>Diagrama Esquemático</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.viewToggleBtn} ${viewMode === 'code' ? styles.viewToggleBtnActive : ''}`}
+              onClick={() => setViewMode('code')}
+            >
+              <FileCode2 size={13} />
+              <span>Código Netlist SPICE</span>
+            </button>
+            {activeFileSimResult && (
               <button
                 type="button"
                 className={`${styles.viewToggleBtn} ${viewMode === 'simulation' ? styles.viewToggleBtnActive : ''}`}
@@ -447,29 +394,57 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
                 <Activity size={13} />
                 <span>Curva de Simulación SPICE</span>
               </button>
-            </div>
-          )}
-
-          {viewMode === 'simulation' && activeFileSimResult?.curve && activeFileSimResult.curve.length > 0 ? (
-            <SimulationChart
-              curve={activeFileSimResult.curve}
-              analysisType={activeFileSimResult.analysis_type}
-              xUnit={activeFileSimResult.x_unit}
-              yUnit={activeFileSimResult.y_unit}
-              metricName={activeFileSimResult.metric_name}
-              measuredValue={activeFileSimResult.measured_value}
-              targetValue={activeFileSimResult.target_value}
-              title={`Simulación SPICE: ${currentWorkspaceFile?.name ?? 'Circuito'}`}
-            />
-          ) : (
-            <NetlistDiagram
-              netlistText={drawnNetlist}
-              workspaceSummary={activeFileSummary}
-              showExplanation={false}
-            />
-          )}
-        </section>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Visor Central (Diagrama / Editor de Código / Curva) */}
+      <section className={styles.viewerSection} data-tour="circuit-viewer" aria-label="Lienzo y visualización del circuito">
+        {viewMode === 'simulation' && activeFileSimResult ? (
+          <SimulationChart
+            curve={activeFileSimResult.curve}
+            analysisType={activeFileSimResult.analysis_type}
+            xUnit={activeFileSimResult.x_unit}
+            yUnit={activeFileSimResult.y_unit}
+            xLabel={activeFileSimResult.x_label}
+            simError={activeFileSimResult.sim_error}
+            metricName={activeFileSimResult.metric_name}
+            measuredValue={activeFileSimResult.measured_value}
+            targetValue={activeFileSimResult.target_value}
+            title={`Simulación SPICE: ${currentWorkspaceFile?.name ?? 'Circuito'}`}
+          />
+        ) : viewMode === 'code' ? (
+          <SpiceCodeEditor
+            code={code}
+            fileName={currentWorkspaceFile?.name ?? 'Código Netlist SPICE'}
+          />
+        ) : (
+          <NetlistDiagram
+            netlistText={drawnNetlist}
+            workspaceSummary={activeFileSummary}
+            showExplanation={false}
+          />
+        )}
+      </section>
+
+      {/* Sección Inferior: Análisis y Funcionamiento del Circuito */}
+      <section className={styles.explanationSection} data-tour="circuit-explanation" aria-label="Análisis y funcionamiento del circuito">
+        {parsedNetlist ? (
+          <>
+            <CircuitExplanation
+              netlist={parsedNetlist}
+              workspaceSummary={activeFileSummary}
+              compact={false}
+            />
+          </>
+        ) : (
+          <div className={styles.inspectorPlaceholder}>
+            <p>No se pudo interpretar el netlist. Revisa la sintaxis SPICE o presiona "Actualizar" para refrescar el análisis.</p>
+          </div>
+        )}
+      </section>
     </article>
   )
 }
+

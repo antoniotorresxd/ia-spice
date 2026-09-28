@@ -21,16 +21,14 @@ describe('VisualizerScreen', () => {
     )
 
     expect(
-      await screen.findByRole('heading', { name: 'De netlist a diagrama que se entiende', level: 1 }),
+      await screen.findByRole('heading', { name: 'Visualizador y Análisis de Netlist', level: 1 }),
     ).toBeVisible()
 
-    expect(screen.getByLabelText(/importar de conversaciones/i)).toBeVisible()
-    expect(screen.getByLabelText('Código netlist SPICE')).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Dibujar circuito' })).toBeVisible()
+    expect(screen.getByLabelText(/seleccionar netlist/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /actualizar/i })).toBeVisible()
 
     // Default circuit is drawn
     expect(await screen.findByText('Divisor de voltaje')).toBeVisible()
-    expect(screen.getByText('¿QUÉ HACE ESTE CIRCUITO?')).toBeVisible()
     expect(screen.getByText(/dos resistencias en serie reparten el voltaje/i)).toBeVisible()
   })
 
@@ -53,15 +51,18 @@ Cout vout 0 100u
 Rload vout 0 100
 .end`
 
-    const textarea = screen.getByLabelText('Código netlist SPICE')
-    await user.clear(textarea)
-    await user.type(textarea, zenerCircuit)
+    // Cambiar a la pestaña de código SPICE
+    const codeTab = screen.getByRole('button', { name: /código netlist spice/i })
+    await user.click(codeTab)
 
-    const drawBtn = screen.getByRole('button', { name: /dibujar circuito/i })
-    await user.click(drawBtn)
+    expect(screen.getByRole('region', { name: /visor de código netlist spice/i })).toBeVisible()
+    expect(screen.getByRole('button', { name: /copiar/i })).toBeVisible()
 
-    expect(await screen.findByText('Fuente Regulada de 5V (Zener)')).toBeVisible()
-    expect(screen.getByText(/fuente regulada con diodo zener/i)).toBeVisible()
+    // Regresar al esquema gráfico
+    const diagramTab = screen.getByRole('button', { name: /diagrama esquemático/i })
+    await user.click(diagramTab)
+
+    expect(await screen.findByText('Divisor de voltaje')).toBeVisible()
 
     // Verify parser and diagram layout for this circuit
     const parsed = parseNetlist(zenerCircuit)

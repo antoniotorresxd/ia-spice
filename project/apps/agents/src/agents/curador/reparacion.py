@@ -65,10 +65,12 @@ class ReparacionError(Exception):
     """El LLM no produjo un netlist reparado válido."""
 
 
-def _resultado_medicion(metric: str, measured: float | None, sim_error: str | None) -> str:
-    if sim_error is not None:
-        return f"La simulación falló: {sim_error}"
-    return f"Se midió {metric} = {measured}"
+def _resultado_medicion(requirement: dict) -> str:
+    if requirement.get("sim_error") is not None:
+        return f"La simulación falló: {requirement['sim_error']}"
+    if requirement.get("measured") is None:
+        return f"No se obtuvo medición de {requirement['measure']}"
+    return f"Se midió {requirement['measure']} = {requirement['measured']}"
 
 
 # Con temperature=0 (config/curador.yaml) el modelo es determinista: si el
@@ -90,11 +92,8 @@ def repair_netlist(
     chat_model,
     *,
     description: str,
-    metric: str,
-    target: float,
+    requirements_fallidos: list[dict],
     netlist: str,
-    measured: float | None,
-    sim_error: str | None,
 ) -> str:
     """Le pide al modelo un netlist corregido, dado lo que se midió (o el
     error de simulación) contra la meta declarada.
@@ -111,11 +110,16 @@ def repair_netlist(
     except Exception as exc:  # noqa: BLE001 - incluye PromptFetchError
         raise ReparacionError(f"LLM repair failed: {exc}") from exc
 
+    requisitos = "\n".join(
+        f"{i}. Meta: {req['measure']} {req.get('comparator', 'approx')} {req['value']} "
+        f"(tolerancia: {req['tolerance']})\n{_resultado_medicion(req)}"
+        for i, req in enumerate(requirements_fallidos, start=1)
+    )
+
     def _pedir(extra: str) -> str:
         user_content = (
             f"Circuito: {description}\n"
-            f"Meta: {metric} = {target}\n"
-            f"{_resultado_medicion(metric, measured, sim_error)}\n\n"
+            f"Requisitos incumplidos:\n{requisitos}\n\n"
             f"Netlist actual:\n{netlist}"
             f"{extra}"
         )

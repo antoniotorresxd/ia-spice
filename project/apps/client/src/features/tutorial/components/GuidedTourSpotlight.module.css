@@ -42,6 +42,8 @@
 .tourCard {
   width: 380px;
   max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  box-sizing: border-box;
   background: rgba(18, 24, 32, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -79,13 +81,14 @@
 }
 
 .headerGraphic {
-  height: 76px;
+  height: 62px;
+  flex-shrink: 0;
   background: linear-gradient(180deg, rgba(69, 214, 196, 0.12) 0%, rgba(18, 24, 32, 0) 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
+  padding: 0.35rem;
 }
 
 .headerGraphic[data-accent='copper'] {
@@ -95,14 +98,17 @@
 .graphicSvg {
   width: 100%;
   height: 100%;
-  max-height: 64px;
+  max-height: 54px;
 }
 
 .body {
-  padding: 1.1rem 1.25rem 0.8rem;
+  padding: 0.85rem 1.15rem 0.6rem;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.55rem;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .badgeRow {
@@ -200,13 +206,14 @@
 }
 
 .footer {
-  padding: 0.75rem 1.25rem 1rem;
+  padding: 0.65rem 1.15rem 0.75rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   background: rgba(14, 19, 26, 0.6);
+  flex-shrink: 0;
 }
 
 .checkboxLabel {

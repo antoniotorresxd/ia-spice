@@ -87,33 +87,60 @@ def solve_bjt_voltage_divider(params: dict[str, Any]) -> dict[str, float]:
     }
 
 
+def _sine_timing(params: dict[str, Any]) -> dict[str, float]:
+    """Frecuencia de la senoidal de entrada y ventana de `tran` que la acompaña.
+
+    Simula 5 periodos y mide sobre los 2 últimos (ya en régimen), con 1000
+    pasos por periodo. Las plantillas usan {freq}/{tstep}/{tstop}/{tstart}
+    en vez de fijar 1 kHz, que ignoraba la frecuencia pedida.
+    """
+    f = _param(params, "freq", "f", "frequency", default=1000.0)
+    period = 1.0 / f
+    return {"freq": f, "tstep": period / 1000, "tstop": 5 * period, "tstart": 3 * period}
+
+
 def solve_diode_clamper(params: dict[str, Any]) -> dict[str, float]:
     vm = _param(params, "v_m", "vm", default=10.0)
-    f = _param(params, "f", default=1000.0)
+    timing = _sine_timing(params)
     v_bias = _param(params, "v_bias", "vbias", default=0.0)
     rl = _param(params, "r_l", "rl", default=100000.0)
-    c = 10.0 / (2 * math.pi * f * rl)
-    return {"Vm": vm, "f": f, "C": c, "Vbias": v_bias, "RL": rl}
+    # RL·C >= 10·T para que C casi no se descargue entre picos (T = 1/f).
+    c = 10.0 / (timing["freq"] * rl)
+    return {"Vm": vm, "C": c, "Vbias": v_bias, "RL": rl, **timing}
 
 
 def solve_diode_clipper(params: dict[str, Any]) -> dict[str, float]:
     vm = _param(params, "v_m", "vm", default=10.0)
-    v_clip = _param(params, "v_clip", "vclip", "target", default=5.0)
-    f = _param(params, "f", default=1000.0)
+    v_clip = _param(params, "v_recorte", "v_clip", "vclip", "target", default=5.0)
     rl = _param(params, "r_l", "rl", default=100000.0)
-    v1 = v_clip - 0.7
+    v_bias = v_clip - 0.7
     r = 1000.0
-    return {"Vm": vm, "f": f, "R": r, "V1": round(v1, 2), "RL": rl}
+    return {"Vm": vm, "R": r, "Vbias": round(v_bias, 2), "RL": rl, **_sine_timing(params)}
 
 
 def solve_double_ended_clipper(params: dict[str, Any]) -> dict[str, float]:
+    """Recortador a dos niveles: salida acotada en [v_clip_neg, v_clip_pos].
+
+    La plantilla conecta ambas fuentes con el positivo hacia el diodo
+    (`V1 v1node 0`, `V2 v2node 0`), así que V1 y V2 son tensiones con signo:
+    D1 conduce cuando vout > V1 + 0.7 y D2 cuando vout < V2 - 0.7. Para
+    recortar en -3.7 V, V2 = -3.0 V; usar |v_clip_neg| la dejaba en +3.0 V y la
+    rama inferior recortaba en +2.3 V.
+    """
     vm = _param(params, "v_m", "vm", default=10.0)
     v_pos = _param(params, "v_clip_pos", "vclippos", default=5.0)
     v_neg = _param(params, "v_clip_neg", "vclipneg", default=-5.0)
-    rl = _param(params, "r_l", "rl", default=10000.0)
+    rl = _param(params, "r_l", "rl", default=100000.0)
     v1 = v_pos - 0.7
-    v2 = abs(v_neg) - 0.7
-    return {"Vm": vm, "V1": round(v1, 2), "V2": round(v2, 2), "R": 1000.0, "RL": rl}
+    v2 = v_neg + 0.7
+    return {
+        "Vm": vm,
+        "V1": round(v1, 2),
+        "V2": round(v2, 2),
+        "R": 1000.0,
+        "RL": rl,
+        **_sine_timing(params),
+    }
 
 
 def solve_opamp_highpass_active(params: dict[str, Any]) -> dict[str, float]:

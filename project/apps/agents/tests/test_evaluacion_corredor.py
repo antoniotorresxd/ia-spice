@@ -2,6 +2,7 @@ import pytest
 
 from agents.evaluacion.corredor import correr_caso, resultado_desde_estado
 
+# TODO(slice-c): los estados conservan la proyección goal que consume el corredor.
 CASO = {
     "id": "divisor-5-3v3",
     "descripcion": "un divisor de 5 V a 3.3 V",
@@ -13,8 +14,7 @@ CASO = {
                 "params": {
                     "circuit_id": "voltage_divider",
                     "params": {"v_in": 5.0, "v_out": 3.3},
-                    "metric": "v_out",
-                    "target": 3.3,
+                    "requirements": [{"measure": "v_out", "value": 3.3}],
                 },
             }
         ]
@@ -27,7 +27,11 @@ def test_resultado_desde_estado_extrae_medicion_error_e_iteraciones():
     estado = {
         "verdict": {"status": "accepted", "reason": "ok", "best_iteration": 0},
         "sim_results": {"div1": {"metrics": {"v_out": 3.4}, "converged": True, "sim_error": None}},
-        "normalized_spec": {"blocks": [{"id": "div1", "goal": {"tolerance": 0.05}}]},
+        "normalized_spec": {"blocks": [{
+            "id": "div1",
+            "requirements": [{"measure": "v_out", "value": 3.3, "tolerance": 0.05}],
+            "goal": {"tolerance": 0.05},
+        }]},
         "iteration": 0,
         "history": [{"iteration": 0, "reward": 1.0}],
     }
@@ -47,7 +51,11 @@ def test_en_tolerancia_se_juzga_contra_la_tolerancia_del_caso_no_contra_el_vered
         "verdict": {"status": "accepted", "reason": "aceptado por recompensa", "best_iteration": 0},
         # 3.6 contra 3.3 es 9.1 %, fuera de la tolerancia del 5 %
         "sim_results": {"div1": {"metrics": {"v_out": 3.6}, "converged": True, "sim_error": None}},
-        "normalized_spec": {"blocks": [{"id": "div1", "goal": {"tolerance": 0.05}}]},
+        "normalized_spec": {"blocks": [{
+            "id": "div1",
+            "requirements": [{"measure": "v_out", "value": 3.3, "tolerance": 0.05}],
+            "goal": {"tolerance": 0.05},
+        }]},
         "iteration": 0,
         "history": [],
     }
@@ -62,7 +70,11 @@ def test_un_caso_sin_medicion_no_inventa_un_ape():
     estado = {
         "verdict": {"status": "rejected", "reason": "boom", "best_iteration": None},
         "sim_results": {"div1": {"metrics": None, "converged": False, "sim_error": "boom"}},
-        "normalized_spec": {"blocks": [{"id": "div1", "goal": {"tolerance": 0.05}}]},
+        "normalized_spec": {"blocks": [{
+            "id": "div1",
+            "requirements": [{"measure": "v_out", "value": 3.3, "tolerance": 0.05}],
+            "goal": {"tolerance": 0.05},
+        }]},
         "iteration": 4,
         "history": [],
     }

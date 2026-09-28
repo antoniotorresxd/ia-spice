@@ -1,15 +1,63 @@
-import os
-
-from agents.shell.ngspice_runner import (
-    inject_curve_export,
-    parse_wrdata_curve,
-    parse_wrdata_scalar,
-    run_ngspice,
-)
+from agents.shell.curve import extract_curve
+from agents.shell.ngspice_runner import parse_measurements, parse_wrdata_scalar, run_ngspice
 from agents.state import CircuitState
 
 
+def _empty_curve() -> dict:
+    return {"curve": [], "analysis_type": None, "x_unit": None, "y_unit": None, "x_label": None}
+
+
+def _composed_shell(state: CircuitState) -> dict:
+    """Un netlist compartido por todos los bloques pendientes: se corre
+    ngspice una sola vez y sus mediciones (una por requisito, etiquetadas
+    por bloque) se reparten entre los `sim_results` de cada bloque."""
+    pending = state["pending_blocks"]
+    if not pending:
+        return {"sim_results": {}}
+
+    netlist_path = state["netlists"][pending[0]]["path"]
+    raw_output_path, error = run_ngspice(netlist_path)
+    if error is not None:
+        return {
+            "sim_results": {
+                bid: {"metrics": None, "converged": False, "sim_error": error} for bid in pending
+            }
+        }
+
+    try:
+        measurements = parse_measurements(raw_output_path)
+    except ValueError as exc:
+        return {
+            "sim_results": {
+                bid: {"metrics": None, "converged": False, "sim_error": str(exc)} for bid in pending
+            }
+        }
+
+    curve = extract_curve(netlist_path) or _empty_curve()
+
+    sim_results = {}
+    for block_id in pending:
+        block_metrics = measurements.get(block_id)
+        if not block_metrics:
+            sim_results[block_id] = {
+                "metrics": None,
+                "converged": False,
+                "sim_error": f"no measurements found for block {block_id} in output.txt",
+            }
+            continue
+        sim_results[block_id] = {
+            "metrics": block_metrics,
+            "converged": True,
+            "sim_error": None,
+            **curve,
+        }
+    return {"sim_results": sim_results}
+
+
 def shell_node(state: CircuitState) -> dict:
+    if state["normalized_spec"].get("connections"):
+        return _composed_shell(state)
+
     goals = {b["id"]: b["goal"] for b in state["normalized_spec"]["blocks"]}
 
     sim_results = {}
@@ -45,21 +93,21 @@ def shell_node(state: CircuitState) -> dict:
         metric = goals[block_id]["metric"]
         target = goals[block_id].get("target")
 
-        # Parsear curva de simulación si fue generada
-        curve_path = os.path.join(os.path.dirname(netlist_path), "curve.txt")
-        curve_points = parse_wrdata_curve(curve_path)
-
-        netlist_text = state["netlists"][block_id].get("text", "")
-        _, analysis_type, x_unit, y_unit = inject_curve_export(netlist_text)
+        # La curva es solo para visualizar: corre aparte y, si falla, el
+        # bloque queda sin curva pero con su medición intacta.
+        curve = extract_curve(netlist_path) or {
+            "curve": [],
+            "analysis_type": None,
+            "x_unit": None,
+            "y_unit": None,
+            "x_label": None,
+        }
 
         sim_results[block_id] = {
             "metrics": {metric: value},
             "converged": True,
             "sim_error": None,
-            "curve": curve_points,
-            "analysis_type": analysis_type,
-            "x_unit": x_unit,
-            "y_unit": y_unit,
+            **curve,
             "metric_name": metric,
             "measured_value": value,
             "target_value": target,

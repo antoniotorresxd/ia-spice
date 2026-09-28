@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react'
-import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { TutorialConfig, TutorialStep } from '../model/tutorial-content'
 import styles from './GuidedTourSpotlight.module.css'
 
@@ -55,6 +55,84 @@ function StepGraphic({ type, accent }: { type?: TutorialStep['graphicType']; acc
     )
   }
 
+  if (type === 'circuit') {
+    return (
+      <svg className={styles.graphicSvg} fill="none" viewBox="0 0 380 90" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="45" fill={secondaryColor} r="14" stroke={primaryColor} strokeWidth="1.5" />
+        <text fontFamily="monospace" fontSize="9" fill={primaryColor} textAnchor="middle" x="60" y="48">Vin</text>
+        <line stroke={primaryColor} strokeWidth="1.5" x1="74" x2="110" y1="45" y2="45" />
+        <rect fill={secondaryColor} height="16" rx="2" stroke={primaryColor} strokeWidth="1.5" width="40" x="110" y="37" />
+        <text fontFamily="monospace" fontSize="8" fill={primaryColor} textAnchor="middle" x="130" y="48">R1</text>
+        <line stroke={primaryColor} strokeWidth="1.5" x1="150" x2="200" y1="45" y2="45" />
+        <line stroke={primaryColor} strokeWidth="1.5" x1="200" x2="200" y1="45" y2="58" />
+        <line stroke={primaryColor} strokeWidth="2" x1="192" x2="208" y1="58" y2="58" />
+        <line stroke={primaryColor} strokeWidth="2" x1="192" x2="208" y1="62" y2="62" />
+        <line stroke={primaryColor} strokeWidth="1.5" x1="200" x2="200" y1="62" y2="70" />
+        <line stroke={primaryColor} strokeWidth="1.5" x1="195" x2="205" y1="70" y2="70" />
+        <line stroke={primaryColor} strokeWidth="1.5" x1="197" x2="203" y1="73" y2="73" />
+        <line stroke={primaryColor} strokeWidth="1.5" x1="200" x2="260" y1="45" y2="45" />
+        <circle cx="275" cy="45" fill={secondaryColor} r="14" stroke={primaryColor} strokeWidth="1.5" />
+        <text fontFamily="monospace" fontSize="8" fill={primaryColor} textAnchor="middle" x="275" y="48">Vout</text>
+        <line stroke={primaryColor} strokeDasharray="2 2" strokeWidth="1" x1="289" x2="324" y1="45" y2="45" />
+        <text fontFamily="monospace" fontSize="8" fill={primaryColor} textAnchor="start" x="328" y="48">E24</text>
+      </svg>
+    )
+  }
+
+  if (type === 'spice') {
+    return (
+      <svg className={styles.graphicSvg} fill="none" viewBox="0 0 380 90" xmlns="http://www.w3.org/2000/svg">
+        <line stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" x1="50" x2="330" y1="70" y2="70" />
+        <line stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" x1="50" x2="50" y1="20" y2="70" />
+        <line stroke="rgba(255, 255, 255, 0.08)" strokeDasharray="3 3" strokeWidth="1" x1="50" x2="330" y1="45" y2="45" />
+        <path d="M 50 30 Q 180 30 200 48 T 320 68" fill="none" stroke={primaryColor} strokeWidth="2" />
+        <circle cx="200" cy="48" fill={primaryColor} r="3.5" />
+        <text fill={primaryColor} fontFamily="monospace" fontSize="9" fontWeight="bold" x="208" y="43">fc = 1 kHz (-3 dB)</text>
+      </svg>
+    )
+  }
+
+  if (type === 'files') {
+    return (
+      <svg className={styles.graphicSvg} fill="none" viewBox="0 0 380 90" xmlns="http://www.w3.org/2000/svg">
+        <rect fill={secondaryColor} height="50" rx="5" stroke={primaryColor} strokeWidth="1.5" width="40" x="115" y="20" />
+        <text fill={primaryColor} fontFamily="monospace" fontSize="8" fontWeight="bold" textAnchor="middle" x="135" y="49">.CIR</text>
+        <rect fill={secondaryColor} height="50" rx="5" stroke={primaryColor} strokeWidth="1.5" width="40" x="170" y="20" />
+        <text fill={primaryColor} fontFamily="monospace" fontSize="8" fontWeight="bold" textAnchor="middle" x="190" y="49">.SVG</text>
+        <rect fill={secondaryColor} height="50" rx="5" stroke={primaryColor} strokeWidth="1.5" width="40" x="225" y="20" />
+        <text fill={primaryColor} fontFamily="monospace" fontSize="8" fontWeight="bold" textAnchor="middle" x="245" y="49">.CSV</text>
+        <line stroke={primaryColor} strokeDasharray="3 3" strokeWidth="1" x1="155" x2="170" y1="45" y2="45" />
+        <line stroke={primaryColor} strokeDasharray="3 3" strokeWidth="1" x1="210" x2="225" y1="45" y2="45" />
+      </svg>
+    )
+  }
+
+  if (type === 'ai') {
+    return (
+      <svg className={styles.graphicSvg} fill="none" viewBox="0 0 380 90" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="95" cy="45" fill={secondaryColor} r="18" stroke={primaryColor} strokeWidth="1.5" />
+        <text fill={primaryColor} fontFamily="monospace" fontSize="8" fontWeight="bold" textAnchor="middle" x="95" y="48">LLM</text>
+        <line stroke={primaryColor} strokeWidth="1.5" x1="113" x2="150" y1="45" y2="45" />
+        <rect fill={secondaryColor} height="36" rx="6" stroke={primaryColor} strokeWidth="1.5" width="80" x="150" y="27" />
+        <text fill={primaryColor} fontFamily="monospace" fontSize="8" fontWeight="bold" textAnchor="middle" x="190" y="43">Langfuse</text>
+        <text fill="rgba(255,255,255,0.6)" fontFamily="monospace" fontSize="7" textAnchor="middle" x="190" y="55">trace_id</text>
+        <line stroke={primaryColor} strokeWidth="1.5" x1="230" x2="267" y1="45" y2="45" />
+        <circle cx="285" cy="45" fill={secondaryColor} r="18" stroke={primaryColor} strokeWidth="1.5" />
+        <text fill={primaryColor} fontFamily="monospace" fontSize="8" fontWeight="bold" textAnchor="middle" x="285" y="48">Tokens</text>
+      </svg>
+    )
+  }
+
+  if (type === 'folder') {
+    return (
+      <svg className={styles.graphicSvg} fill="none" viewBox="0 0 380 90" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 125 28 L 155 28 L 165 38 L 255 38 A 6 6 0 0 1 261 44 L 261 68 A 6 6 0 0 1 255 74 L 125 74 A 6 6 0 0 1 119 68 L 119 34 A 6 6 0 0 1 125 28 Z" fill={secondaryColor} stroke={primaryColor} strokeWidth="1.5" />
+        <line stroke={primaryColor} strokeLinecap="round" strokeWidth="2" x1="140" x2="185" y1="52" y2="52" />
+        <line stroke="rgba(255, 255, 255, 0.4)" strokeLinecap="round" strokeWidth="1.5" x1="140" x2="235" y1="62" y2="62" />
+      </svg>
+    )
+  }
+
   return (
     <svg className={styles.graphicSvg} fill="none" viewBox="0 0 380 90" xmlns="http://www.w3.org/2000/svg">
       <rect fill={secondaryColor} height="48" rx="8" stroke={primaryColor} strokeWidth="1.5" width="260" x="60" y="21" />
@@ -75,6 +153,17 @@ export const GuidedTourSpotlight: React.FC<GuidedTourSpotlightProps> = ({
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [measuredHeight, setMeasuredHeight] = useState<number>(440)
+
+  useLayoutEffect(() => {
+    if (cardRef.current) {
+      const height = cardRef.current.offsetHeight
+      if (height > 0 && Math.abs(height - measuredHeight) > 4) {
+        setMeasuredHeight(height)
+      }
+    }
+  }, [currentStepIndex, isOpen, measuredHeight])
 
   // Reset al abrir
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
@@ -171,7 +260,7 @@ export const GuidedTourSpotlight: React.FC<GuidedTourSpotlightProps> = ({
 
   // Calcular posición del Tooltip
   const CARD_WIDTH = 380
-  const CARD_HEIGHT = 380
+  const cardHeight = cardRef.current?.offsetHeight || measuredHeight || 440
   const PADDING = 14
 
   let cardStyle: React.CSSProperties = {
@@ -183,7 +272,23 @@ export const GuidedTourSpotlight: React.FC<GuidedTourSpotlightProps> = ({
   }
 
   if (targetRect) {
-    const placement = currentStep.placement ?? 'right'
+    let placement = currentStep.placement ?? 'right'
+
+    // Auto-invertir si no cabe en el viewport
+    if (placement === 'bottom') {
+      const spaceBelow = window.innerHeight - (targetRect.y + targetRect.height + PADDING)
+      const spaceAbove = targetRect.y - PADDING
+      if (spaceBelow < cardHeight && spaceAbove > spaceBelow) {
+        placement = 'top'
+      }
+    } else if (placement === 'top') {
+      const spaceAbove = targetRect.y - PADDING
+      const spaceBelow = window.innerHeight - (targetRect.y + targetRect.height + PADDING)
+      if (spaceAbove < cardHeight && spaceBelow > spaceAbove) {
+        placement = 'bottom'
+      }
+    }
+
     let top = targetRect.y
     let left = targetRect.x
 
@@ -198,12 +303,12 @@ export const GuidedTourSpotlight: React.FC<GuidedTourSpotlightProps> = ({
       top = targetRect.y + targetRect.height + PADDING
     } else if (placement === 'top') {
       left = Math.max(16, targetRect.x)
-      top = targetRect.y - CARD_HEIGHT - PADDING
+      top = targetRect.y - cardHeight - PADDING
     }
 
-    // Asegurar que no se salga de la pantalla
+    // Asegurar que NUNCA se corte ni se salga de la pantalla
     left = Math.max(16, Math.min(left, window.innerWidth - CARD_WIDTH - 20))
-    top = Math.max(16, Math.min(top, window.innerHeight - CARD_HEIGHT - 20))
+    top = Math.max(16, Math.min(top, window.innerHeight - cardHeight - 20))
 
     cardStyle = {
       position: 'fixed',
@@ -263,6 +368,7 @@ export const GuidedTourSpotlight: React.FC<GuidedTourSpotlightProps> = ({
 
       {/* Tarjeta flotante con instrucciones del paso */}
       <motion.div
+        ref={cardRef}
         animate={{ opacity: 1, scale: 1 }}
         aria-describedby="tour-step-desc"
         aria-labelledby="tour-step-title"

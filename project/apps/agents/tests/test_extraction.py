@@ -31,8 +31,7 @@ FIXED_SPEC = CircuitSpec(
             "params": {
                 "circuit_id": "voltage_divider",
                 "params": {"v_in": 5.0, "v_out": 3.3},
-                "metric": "vout",
-                "target": 3.3,
+                "requirements": [{"measure": "vout", "value": 3.3}],
             },
         }
     ]

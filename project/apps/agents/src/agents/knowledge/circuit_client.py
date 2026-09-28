@@ -63,7 +63,7 @@ FALLBACK_CIRCUITS: list[CircuitKnowledgeItem] = [
         },
         operatingConstraints="tau = RL * C >= 10 / freq.",
         designEquations="VC = Vm - 0.7V. RL >= 10 / (freq * C).",
-        spiceTemplate="* Clamper\nVin vin 0 SIN(0 {Vm} {freq})\nC1 vin vout {C}\nD1 0 vout DIODE_1N4148\nRL vout 0 {RL}\n.model DIODE_1N4148 D(IS=2.52n RS=0.568 N=1.752)\n.control\ntran 1u 10m 5m\nmeas tran vomax MAX v(vout) from=5m to=10m\necho $&vomax > output.txt\n.endc\n.end",
+        spiceTemplate="* Clamper\nVin vin 0 SIN(0 {Vm} {freq})\nC1 vin vout {C}\nD1 0 vout DIODE_1N4148\nRL vout 0 {RL}\n.model DIODE_1N4148 D(IS=2.52n RS=0.568 N=1.752)\n.control\ntran {tstep} {tstop} {tstart}\nmeas tran vomax MAX v(vout) from={tstart} to={tstop}\necho $&vomax > output.txt\n.endc\n.end",
     ),
     CircuitKnowledgeItem(
         id="diode_clipper",
@@ -74,10 +74,11 @@ FALLBACK_CIRCUITS: list[CircuitKnowledgeItem] = [
         parametersSchema={
             "v_m": {"type": "number", "unit": "V", "description": "Voltaje pico entrada"},
             "v_recorte": {"type": "number", "unit": "V", "description": "Voltaje de recorte"},
+            "freq": {"type": "number", "unit": "Hz", "description": "Frecuencia de señal", "default": 1000},
         },
         operatingConstraints="100*Rd < R < 0.01*RL.",
         designEquations="Vbias = V_recorte - 0.7V.",
-        spiceTemplate="* Clipper\nVin vin 0 SIN(0 {Vm} 1000)\nR1 vin vout {R}\nD1 vout vbias DIODE_1N4148\nVbias vbias 0 DC {Vbias}\nRL vout 0 {RL}\n.model DIODE_1N4148 D(IS=2.52n RS=0.568 N=1.752)\n.control\ntran 1u 5m 3m\nmeas tran vclip MAX v(vout) from=3m to=5m\necho $&vclip > output.txt\n.endc\n.end",
+        spiceTemplate="* Clipper\nVin vin 0 SIN(0 {Vm} {freq})\nR1 vin vout {R}\nD1 vout vbias DIODE_1N4148\nVbias vbias 0 DC {Vbias}\nRL vout 0 {RL}\n.model DIODE_1N4148 D(IS=2.52n RS=0.568 N=1.752)\n.control\ntran {tstep} {tstop} {tstart}\nmeas tran vclip MAX v(vout) from={tstart} to={tstop}\necho $&vclip > output.txt\n.endc\n.end",
     ),
     CircuitKnowledgeItem(
         id="opamp_highpass_active",
@@ -146,11 +147,12 @@ FALLBACK_CIRCUITS: list[CircuitKnowledgeItem] = [
         parametersSchema={
             "v_m": {"type": "number", "unit": "V", "description": "Amplitud pico entrada"},
             "v_clip_pos": {"type": "number", "unit": "V", "description": "Nivel recorte positivo"},
-            "v_clip_neg": {"type": "number", "unit": "V", "description": "Nivel recorte negativo"},
+            "v_clip_neg": {"type": "number", "unit": "V", "description": "Nivel recorte negativo (con signo)"},
+            "freq": {"type": "number", "unit": "Hz", "description": "Frecuencia de señal", "default": 1000},
         },
         operatingConstraints="100*Rd < R < 0.01*RL.",
-        designEquations="V1 = V_clip_pos - 0.7. V2 = |V_clip_neg| - 0.7. R = sqrt(100*Rd * 0.01*RL).",
-        spiceTemplate="* Slicer\nVin vin 0 SIN(0 {Vm} 1000)\nR1 vin vout {R}\nD1 vout v1node DIODE_1N4148\nV1 v1node 0 DC {V1}\nD2 v2node vout DIODE_1N4148\nV2 v2node 0 DC {V2}\nRL vout 0 {RL}\n.model DIODE_1N4148 D(IS=2.52n RS=0.568 N=1.752)\n.control\ntran 1u 5m 3m\nmeas tran vpos MAX v(vout) from=3m to=5m\necho $&vpos > output.txt\n.endc\n.end",
+        designEquations="V1 = V_clip_pos - 0.7. V2 = V_clip_neg + 0.7 (con signo: -3.7 V -> V2 = -3.0 V). R = sqrt(100*Rd * 0.01*RL).",
+        spiceTemplate="* Slicer\nVin vin 0 SIN(0 {Vm} {freq})\nR1 vin vout {R}\nD1 vout v1node DIODE_1N4148\nV1 v1node 0 DC {V1}\nD2 v2node vout DIODE_1N4148\nV2 v2node 0 DC {V2}\nRL vout 0 {RL}\n.model DIODE_1N4148 D(IS=2.52n RS=0.568 N=1.752)\n.control\ntran {tstep} {tstop} {tstart}\nmeas tran vpos MAX v(vout) from={tstart} to={tstop}\necho $&vpos > output.txt\n.endc\n.end",
     ),
     CircuitKnowledgeItem(
         id="bjt_common_emitter_amp",

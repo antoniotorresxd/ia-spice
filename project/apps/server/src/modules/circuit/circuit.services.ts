@@ -192,21 +192,28 @@ echo $&vomax > output.txt
         description: "Nivel máximo de recorte deseado a la salida",
         required: true,
       },
+      freq: {
+        type: "number",
+        unit: "Hz",
+        description: "Frecuencia de la señal senoidal de entrada",
+        default: 1000,
+        required: false,
+      },
     },
     operatingConstraints:
       "100 * Rd < R < 0.01 * RL para asegurar corte limpio sin atenuar la señal por debajo del umbral.",
     designEquations:
       "1. Vbias = V_recorte - V_gamma (con V_gamma ~= 0.7V).\n2. Seleccionar R tal que Rd << R << RL.\n3. Salida recortada rígidamente a V_recorte.",
     spiceTemplate: `* Diode Clipper Circuit
-Vin vin 0 SIN(0 {Vm} 1000)
+Vin vin 0 SIN(0 {Vm} {freq})
 R1 vin vout {R}
 D1 vout vbias DIODE_1N4148
 Vbias vbias 0 DC {Vbias}
 RL vout 0 {RL}
 .model DIODE_1N4148 D(IS=2.52n RS=0.568 N=1.752)
 .control
-tran 1u 5m 3m
-meas tran vclip MAX v(vout) from=3m to=5m
+tran {tstep} {tstop} {tstart}
+meas tran vclip MAX v(vout) from={tstart} to={tstop}
 echo $&vclip > output.txt
 .endc
 .end`,
@@ -485,13 +492,20 @@ wrdata output.txt v(vout)
         default: 100000,
         required: false,
       },
+      freq: {
+        type: "number",
+        unit: "Hz",
+        description: "Frecuencia de la señal senoidal de entrada",
+        default: 1000,
+        required: false,
+      },
     },
     operatingConstraints:
       "100 * Rd < R < 0.01 * RL para recorte nítido sin atenuar la señal dentro de los límites.",
     designEquations:
-      "1. V1 = V_clip_pos - 0.7\n2. V2 = |V_clip_neg| - 0.7\n3. R = sqrt(100*Rd * 0.01*RL)\n4. Salida acotada en [V_clip_neg, V_clip_pos].",
+      "1. V1 = V_clip_pos - 0.7\n2. V2 = V_clip_neg + 0.7 (con signo: V2 se conecta como `V2 v2node 0`, así que para recortar en -3.7 V hace falta V2 = -3.0 V)\n3. R = sqrt(100*Rd * 0.01*RL)\n4. Salida acotada en [V_clip_neg, V_clip_pos].",
     spiceTemplate: `* Double Ended Clipper (Slicer)
-Vin vin 0 SIN(0 {Vm} 1000)
+Vin vin 0 SIN(0 {Vm} {freq})
 R1 vin vout {R}
 D1 vout v1node DIODE_1N4148
 V1 v1node 0 DC {V1}
@@ -500,14 +514,14 @@ V2 v2node 0 DC {V2}
 RL vout 0 {RL}
 .model DIODE_1N4148 D(IS=2.52n RS=0.568 N=1.752)
 .control
-tran 1u 5m 3m
-meas tran vpos MAX v(vout) from=3m to=5m
+tran {tstep} {tstop} {tstart}
+meas tran vpos MAX v(vout) from={tstart} to={tstop}
 echo $&vpos > output.txt
 .endc
 .end`,
     numericalExample: {
       specs: { v_m: 15, v_clip_pos: 5.7, v_clip_neg: -3.7, r_l: 100000 },
-      computed: { V1: 5.0, V2: 3.0, R: 1000 },
+      computed: { V1: 5.0, V2: -3.0, R: 1000 },
       expected: { vpos: 5.7 },
     },
   },

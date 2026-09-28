@@ -121,6 +121,10 @@ def test_shell_node_simulates_each_pending_block():
     div = result["sim_results"]["div1"]
     assert div["sim_error"] is None
     assert div["metrics"]["v_out"] == pytest.approx(3.3333333, rel=1e-5)
+    # Un `op` da un solo punto; la curva es el barrido DC de la fuente.
+    assert div["analysis_type"] == "dc"
+    assert div["x_label"] == "Vinput"
+    assert len(div["curve"]) >= 50
 
 
 def test_shell_node_isolates_errors_per_block():

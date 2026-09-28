@@ -176,7 +176,7 @@ it.each([
   ['/conversations/conversation-filter', 'Detalle de la conversación'],
   ['/files', /Archivos/],
   ['/executions', 'Ejecuciones'],
-  ['/visualizer', 'De netlist a diagrama que se entiende'],
+  ['/visualizer', 'Visualizador y Análisis de Netlist'],
 ])('renders workspace route %s for authenticated users', async (path, heading) => {
   window.history.pushState({}, '', path)
   setSessionState({ data: session })
@@ -197,7 +197,7 @@ it('redirects unknown authenticated routes home', async () => {
   render(<App />, { wrapper: ThemeProvider })
 
   expect(
-    await screen.findByRole('heading', { name: /buenos días/i }),
+    await screen.findByRole('heading', { name: /buen(os|as) (días|tardes|noches)/i }),
   ).toBeVisible()
 })
 

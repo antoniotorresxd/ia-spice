@@ -72,8 +72,7 @@ VOLTAGE_DIVIDER_SPEC = {
             "params": {
                 "circuit_id": "voltage_divider",
                 "params": {"v_in": 12.0, "v_out": 5.0},
-                "metric": "v_out",
-                "target": 5.0,
+                "requirements": [{"measure": "v_out", "value": 5.0}],
             },
         }
     ],

@@ -24,7 +24,7 @@ it('loads the operational overview through the service', async () => {
   )
 
   expect(
-    await screen.findByRole('heading', { name: /buenos días, ada/i }),
+    await screen.findByRole('heading', { name: /buen(os|as) (días|tardes|noches), ada/i }),
   ).toBeVisible()
   expect(screen.getByText('Datos de demostración')).toBeVisible()
   expect(
@@ -32,8 +32,7 @@ it('loads the operational overview through the service', async () => {
   ).toBeVisible()
 })
 
-it('switches from overview to an active timeline after prompt submission', async () => {
-  const user = userEvent.setup()
+it('renders the telemetry dashboard and links to /new for designing', async () => {
   render(
     <HomeScreen
       service={createMockHomeService()}
@@ -43,16 +42,11 @@ it('switches from overview to an active timeline after prompt submission', async
   )
   await screen.findByText('Datos de demostración')
 
-  await user.type(
-    screen.getByLabelText('Describe qué quieres diseñar'),
-    'Filtro RC',
-  )
-  await user.click(screen.getByRole('button', { name: 'Enviar solicitud' }))
-
-  expect(
-    await screen.findByRole('list', { name: 'Actividad de ejecución' }),
-  ).toBeVisible()
-  expect(screen.getAllByText('Sin proyecto').length).toBeGreaterThan(0)
+  expect(screen.getByText('Resumen operativo')).toBeVisible()
+  expect(screen.getByText('Tokens utilizados')).toBeVisible()
+  const newLinks = screen.getAllByRole('link', { name: /nueva solicitud/i })
+  expect(newLinks.length).toBeGreaterThan(0)
+  expect(newLinks[0]).toHaveAttribute('href', '/new')
 })
 
 it('changes the selected usage period through the service', async () => {
@@ -84,22 +78,14 @@ it('shows a safe load error and retries the current period', async () => {
   expect(await screen.findByText('Datos de demostración')).toBeVisible()
 })
 
-
-it('focuses the existing composer from the welcome CTA without submitting', async () => {
-  const service = createMockHomeService()
-  const submit = vi.spyOn(service, 'submitPrompt')
-  const user = userEvent.setup()
-  render(<HomeScreen service={service} userName="Ada" onSignOut={vi.fn()} />)
+it('links to new design request and projects from the hero actions', async () => {
+  render(<HomeScreen service={createMockHomeService()} userName="Ada" onSignOut={vi.fn()} />)
   await screen.findByText('Datos de demostración')
 
-  const composer = screen.getByLabelText('Describe qué quieres diseñar')
-  await user.type(composer, 'Filtro RC')
-  await user.click(screen.getByRole('button', { name: 'Nueva solicitud' }))
-
-  expect(composer).toHaveFocus()
-  expect(composer).toHaveValue('Filtro RC')
-  expect(submit).not.toHaveBeenCalled()
-  expect(screen.getByRole('link', { name: 'Ver proyectos' })).toHaveAttribute('href', '/projects')
+  const newLinks = screen.getAllByRole('link', { name: /nueva solicitud/i })
+  expect(newLinks.some((l) => l.getAttribute('href') === '/new')).toBe(true)
+  const projectLinks = screen.getAllByRole('link', { name: /proyectos/i })
+  expect(projectLinks.some((l) => l.getAttribute('href') === '/projects')).toBe(true)
 })
 
 it('opens the search stub, contains keyboard focus and closes on Escape or backdrop click', async () => {

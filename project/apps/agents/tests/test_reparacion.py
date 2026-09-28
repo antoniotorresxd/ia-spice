@@ -50,11 +50,9 @@ def test_repair_netlist_devuelve_el_netlist_corregido():
     resultado = repair_netlist(
         modelo,
         description="un divisor",
-        metric="v_out",
-        target=5.0,
+        requirements_fallidos=[{"measure": "v_out", "value": 5.0, "comparator": "approx", "tolerance": 0.05, "measured": 6.67, "sim_error": None}],
         netlist="* viejo\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n",
-        measured=6.67,
-        sim_error=None,
+
     )
 
     assert resultado == NETLIST_OK
@@ -68,11 +66,9 @@ def test_el_prompt_lleva_la_meta_y_lo_que_se_midio():
     repair_netlist(
         modelo,
         description="un divisor resistivo",
-        metric="v_out",
-        target=5.0,
+        requirements_fallidos=[{"measure": "v_out", "value": 5.0, "comparator": "approx", "tolerance": 0.05, "measured": 6.67, "sim_error": None}],
         netlist=NETLIST_OK,
-        measured=6.67,
-        sim_error=None,
+
     )
 
     texto = " ".join(m["content"] for m in modelo.mensajes)
@@ -88,11 +84,9 @@ def test_cuando_la_simulacion_fallo_se_le_dice_al_modelo():
     repair_netlist(
         modelo,
         description="algo",
-        metric="v_out",
-        target=5.0,
+        requirements_fallidos=[{"measure": "v_out", "value": 5.0, "comparator": "approx", "tolerance": 0.05, "measured": None, "sim_error": "ngspice exited with non-zero status"}],
         netlist=NETLIST_OK,
-        measured=None,
-        sim_error="ngspice exited with non-zero status",
+
     )
 
     texto = " ".join(m["content"] for m in modelo.mensajes)
@@ -106,11 +100,9 @@ def test_un_fallo_del_modelo_se_tipa_como_ReparacionError():
         repair_netlist(
             modelo,
             description="algo",
-            metric="v_out",
-            target=5.0,
+            requirements_fallidos=[{"measure": "v_out", "value": 5.0, "comparator": "approx", "tolerance": 0.05, "measured": 1.0, "sim_error": None}],
             netlist=NETLIST_OK,
-            measured=1.0,
-            sim_error=None,
+
         )
 
 
@@ -135,11 +127,9 @@ def test_repair_netlist_reintenta_cuando_el_primer_intento_no_cambia_nada():
     resultado = repair_netlist(
         modelo,
         description="un divisor",
-        metric="v_out",
-        target=5.0,
+        requirements_fallidos=[{"measure": "v_out", "value": 5.0, "comparator": "approx", "tolerance": 0.05, "measured": 6.67, "sim_error": None}],
         netlist=NETLIST_OK,
-        measured=6.67,
-        sim_error=None,
+
     )
 
     assert resultado == NETLIST_OK.replace("2000", "1500")
@@ -154,11 +144,9 @@ def test_repair_netlist_no_reintenta_si_el_primer_intento_ya_cambio_algo():
     repair_netlist(
         modelo,
         description="un divisor",
-        metric="v_out",
-        target=5.0,
+        requirements_fallidos=[{"measure": "v_out", "value": 5.0, "comparator": "approx", "tolerance": 0.05, "measured": 6.67, "sim_error": None}],
         netlist=NETLIST_OK,
-        measured=6.67,
-        sim_error=None,
+
     )
 
     assert len(modelo.mensajes_por_llamada) == 1
@@ -174,11 +162,9 @@ def test_repair_netlist_devuelve_lo_mismo_si_el_reintento_tambien_repite():
     resultado = repair_netlist(
         modelo,
         description="un divisor",
-        metric="v_out",
-        target=5.0,
+        requirements_fallidos=[{"measure": "v_out", "value": 5.0, "comparator": "approx", "tolerance": 0.05, "measured": 6.67, "sim_error": None}],
         netlist=NETLIST_OK,
-        measured=6.67,
-        sim_error=None,
+
     )
 
     assert resultado == NETLIST_OK
@@ -195,3 +181,15 @@ def test_netlist_reparado_rechaza_placeholders_sin_param():
 
     with pytest.raises(ValidationError, match="RZ"):
         NetlistReparado(netlist=NETLIST_OK.replace("1000", "{RZ}"))
+
+
+def test_repair_prompt_enumerates_every_failed_requirement():
+    modelo = _ModeloFalso(NetlistReparado(netlist=NETLIST_OK))
+    repair_netlist(modelo, description="dos metas", netlist="viejo", requirements_fallidos=[
+        {"measure": "v_out", "value": 5.0, "comparator": "le", "tolerance": 0.02, "measured": 6.67, "sim_error": None},
+        {"measure": "gain", "value": 4.0, "comparator": "ge", "tolerance": 0.01, "measured": None, "sim_error": "missing gain"},
+    ])
+    texto = modelo.mensajes[1]["content"]
+    assert "1." in texto and "2." in texto
+    for expected in ["v_out", "5.0", "le", "0.02", "6.67", "gain", "4.0", "ge", "0.01", "missing gain"]:
+        assert expected in texto

@@ -26,8 +26,7 @@ VALID_SPEC = {
             "params": {
                 "circuit_id": "voltage_divider",
                 "params": {"v_in": 5.0, "v_out": 3.3},
-                "metric": "v_out",
-                "target": 3.3,
+                "requirements": [{"measure": "v_out", "value": 3.3}],
             },
         },
         {
@@ -36,8 +35,7 @@ VALID_SPEC = {
             "params": {
                 "circuit_id": "led_resistor",
                 "params": {"v_in": 5.0, "v_f": 2.0, "i_led": 0.02},
-                "metric": "i_led",
-                "target": 0.02,
+                "requirements": [{"measure": "i_led", "value": 0.02}],
             },
         },
     ]
@@ -51,9 +49,9 @@ def test_valid_spec_produces_normalized_spec_with_defaults():
     assert spec["max_iterations"] == 5
     assert [b["id"] for b in spec["blocks"]] == ["div1", "led1"]
     div = spec["blocks"][0]
-    assert div["goal"] == {"metric": "v_out", "target": 3.3, "tolerance": 0.05}
+    assert div["requirements"] == [{"measure": "v_out", "value": 3.3, "tolerance": 0.05, "node": "", "comparator": "approx"}]
     led = spec["blocks"][1]
-    assert led["goal"] == {"metric": "i_led", "target": 0.02, "tolerance": 0.05}
+    assert led["requirements"] == [{"measure": "i_led", "value": 0.02, "tolerance": 0.05, "node": "", "comparator": "approx"}]
     assert result["pending_blocks"] == ["div1", "led1"]
     assert result["iteration"] == 0
 
@@ -63,7 +61,7 @@ def test_spec_overrides_max_iterations_and_tolerance():
     result = orquestador_node(_state(spec_in))
 
     assert result["normalized_spec"]["max_iterations"] == 3
-    assert result["normalized_spec"]["blocks"][0]["goal"]["tolerance"] == 0.01
+    assert result["normalized_spec"]["blocks"][0]["requirements"][0]["tolerance"] == 0.01
 
 
 def test_invalid_spec_sets_rejected_verdict_without_raising():
@@ -87,8 +85,7 @@ def test_duplicate_block_ids_rejected():
                 "params": {
                     "circuit_id": "voltage_divider",
                     "params": {"v_in": 5.0, "v_out": 3.3},
-                    "metric": "v_out",
-                    "target": 3.3,
+                    "requirements": [{"measure": "v_out", "value": 3.3}],
                 },
             },
             {
@@ -97,8 +94,7 @@ def test_duplicate_block_ids_rejected():
                 "params": {
                     "circuit_id": "rc_lowpass_passive",
                     "params": {"f_c": 1000.0},
-                    "metric": "fc",
-                    "target": 1000.0,
+                    "requirements": [{"measure": "fc", "value": 1000.0}],
                 },
             },
         ]
@@ -126,8 +122,7 @@ def test_request_text_uses_llm_to_produce_normalized_spec(monkeypatch):
                 "params": {
                     "circuit_id": "voltage_divider",
                     "params": {"v_in": 5.0, "v_out": 3.3},
-                    "metric": "v_out",
-                    "target": 3.3,
+                    "requirements": [{"measure": "v_out", "value": 3.3}],
                     "description": "",
                 },
             }
@@ -152,7 +147,7 @@ def test_request_text_uses_llm_to_produce_normalized_spec(monkeypatch):
     )
 
     assert result["normalized_spec"]["blocks"][0]["id"] == "div1"
-    assert result["circuit_spec"] == fake_spec
+    assert result["circuit_spec"] == CircuitSpec.model_validate(fake_spec).model_dump(mode="json")
     assert result["pending_blocks"] == ["div1"]
 
 
@@ -252,8 +247,7 @@ def test_orquestador_con_circuit_spec_no_necesita_user_id():
                         "params": {
                             "circuit_id": "voltage_divider",
                             "params": {"v_in": 5.0, "v_out": 2.5},
-                            "metric": "v_out",
-                            "target": 2.5,
+                            "requirements": [{"measure": "v_out", "value": 2.5}],
                         },
                     }
                 ],
@@ -314,8 +308,7 @@ def test_max_iterations_and_tolerance_come_from_the_config(tmp_path, monkeypatch
                         "params": {
                             "circuit_id": "voltage_divider",
                             "params": {"v_in": 5.0, "v_out": 3.3},
-                            "metric": "v_out",
-                            "target": 3.3,
+                            "requirements": [{"measure": "v_out", "value": 3.3}],
                         },
                     }
                 ]
@@ -342,8 +335,7 @@ def test_the_caller_can_still_override_what_the_config_proposes(tmp_path, monkey
                     "params": {
                         "circuit_id": "voltage_divider",
                         "params": {"v_in": 5.0, "v_out": 3.3},
-                        "metric": "v_out",
-                        "target": 3.3,
+                        "requirements": [{"measure": "v_out", "value": 3.3}],
                     },
                 }
             ],
@@ -375,8 +367,7 @@ def test_max_iterations_no_puede_superar_el_limite_configurado():
                         "params": {
                             "circuit_id": "voltage_divider",
                             "params": {"v_in": 5.0, "v_out": 3.3},
-                            "metric": "v_out",
-                            "target": 3.3,
+                            "requirements": [{"measure": "v_out", "value": 3.3}],
                         },
                     }
                 ],
@@ -397,8 +388,7 @@ def test_max_iterations_igual_al_limite_configurado_se_acepta():
                     "params": {
                         "circuit_id": "voltage_divider",
                         "params": {"v_in": 5.0, "v_out": 3.3},
-                        "metric": "v_out",
-                        "target": 3.3,
+                        "requirements": [{"measure": "v_out", "value": 3.3}],
                     },
                 }
             ],
@@ -422,8 +412,7 @@ def test_catalog_amp_block_is_accepted_and_gets_its_goal():
                     "params": {
                         "circuit_id": "opamp_noninverting_amp",
                         "params": {"v_in": 1.0, "v_out": 3.0},
-                        "metric": "v_out",
-                        "target": 3.0,
+                        "requirements": [{"measure": "v_out", "value": 3.0}],
                     },
                 }
             ]
@@ -433,8 +422,8 @@ def test_catalog_amp_block_is_accepted_and_gets_its_goal():
     block = result["normalized_spec"]["blocks"][0]
 
     assert block["type"] == "catalog"
-    assert block["goal"]["metric"] == "v_out"
-    assert block["goal"]["target"] == 3.0
+    assert block["requirements"][0]["measure"] == "v_out"
+    assert block["requirements"][0]["value"] == 3.0
 
 
 def test_noninverting_amp_rejects_nonpositive_params():
@@ -464,8 +453,7 @@ def test_generic_block_trae_su_propia_meta():
                     "type": "generic",
                     "params": {
                         "description": "filtro Sallen-Key pasa-bajas",
-                        "metric": "f_c",
-                        "target": 1000.0,
+                        "requirements": [{"measure": "f_c", "value": 1000.0}],
                         "netlist": "* x\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n",
                     },
                 }
@@ -475,9 +463,9 @@ def test_generic_block_trae_su_propia_meta():
 
     block = _normalize(spec)["normalized_spec"]["blocks"][0]
 
-    assert block["goal"]["metric"] == "f_c"
-    assert block["goal"]["target"] == 1000.0
-    assert block["goal"]["tolerance"] == 0.05
+    assert block["requirements"][0]["measure"] == "f_c"
+    assert block["requirements"][0]["value"] == 1000.0
+    assert block["requirements"][0]["tolerance"] == 0.05
 
 
 def test_generic_rechaza_un_netlist_que_no_mide_nada():
@@ -494,8 +482,7 @@ def test_generic_rechaza_un_netlist_que_no_mide_nada():
                         "type": "generic",
                         "params": {
                             "description": "algo",
-                            "metric": "v_out",
-                            "target": 1.0,
+                            "requirements": [{"measure": "v_out", "value": 1.0}],
                             "netlist": "* sin control\n.end\n",
                         },
                     }
@@ -511,7 +498,7 @@ def test_generic_rechaza_placeholders_sin_param():
 
     with pytest.raises(ValidationError, match="RZ"):
         GenericParams(
-            description="regulador", metric="v_out", target=5.0,
+            description="regulador", requirements=[{"measure": "v_out", "value": 5.0}],
             netlist="* x\nRZ vin vout {RZ}\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n",
         )
 
@@ -525,7 +512,7 @@ def test_generic_acepta_valores_y_parametros_validos(componentes):
     from agents.orquestador.schema import GenericParams
 
     netlist = "* x\n" + componentes + ".control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n"
-    params = GenericParams(description="algo", metric="v_out", target=1.0, netlist=netlist)
+    params = GenericParams(description="algo", requirements=[{"measure": "v_out", "value": 1.0}], netlist=netlist)
     assert params.netlist == netlist
 
 
@@ -536,7 +523,7 @@ def test_generic_max_iterations_minimo_tres():
         "blocks": [{
             "id": "x", "type": "generic",
             "params": {
-                "description": "algo", "metric": "v_out", "target": 1.0,
+                "description": "algo", "requirements": [{"measure": "v_out", "value": 1.0}],
                 "netlist": "* x\n.control\nop\nwrdata output.txt v(vout)\n.endc\n.end\n",
             },
         }],
@@ -587,8 +574,7 @@ def test_orchestrator_result_parses_design_outcome_with_a_full_spec():
                             "params": {
                                 "circuit_id": "voltage_divider",
                                 "params": {"v_in": 5.0, "v_out": 3.3},
-                                "metric": "v_out",
-                                "target": 3.3,
+                                "requirements": [{"measure": "v_out", "value": 3.3}],
                             },
                         }
                     ]
@@ -672,8 +658,7 @@ def test_orquestador_normalizes_catalog_block():
                     "params": {
                         "circuit_id": "zener_regulated_power_supply",
                         "params": {"v_z": 9.0, "i_l_max": 0.05, "v_sec_rms": 12.0},
-                        "metric": "vout",
-                        "target": 9.0,
+                        "requirements": [{"measure": "vout", "value": 9.0}],
                     },
                 }
             ],
@@ -686,6 +671,58 @@ def test_orquestador_normalizes_catalog_block():
     assert result["pending_blocks"] == ["zener1"]
     block = result["normalized_spec"]["blocks"][0]
     assert block["type"] == "catalog"
-    assert block["goal"] == {"metric": "vout", "target": 9.0, "tolerance": 0.01}
+    assert block["requirements"] == [{"measure": "vout", "value": 9.0, "tolerance": 0.01, "node": "", "comparator": "approx"}]
     assert block["params"]["circuit_id"] == "zener_regulated_power_supply"
 
+
+
+def test_schema_accepts_multiple_requirements_and_connections():
+    from agents.orquestador.schema import CircuitSpec
+
+    spec = CircuitSpec.model_validate({"blocks": [{"id": "a", "type": "catalog", "params": {
+        "circuit_id": "voltage_divider", "requirements": [
+            {"measure": "v_out", "value": 3.3},
+            {"measure": "current", "value": 0.02, "comparator": "le", "tolerance": 0.01},
+        ],
+    }}]})
+    assert len(spec.blocks[0].params.requirements) == 2
+    assert spec.blocks[0].params.requirements[0].comparator == "approx"
+    assert spec.blocks[0].params.requirements[0].node == ""
+    assert spec.blocks[0].params.requirements[0].tolerance is None
+    assert spec.connections == []
+
+
+@pytest.mark.parametrize("requirements", [[], [{"measure": "", "value": 1}], [{"measure": "x", "value": 1, "comparator": "eq"}]])
+def test_schema_rejects_invalid_requirements(requirements):
+    from pydantic import ValidationError
+    from agents.orquestador.schema import CatalogParams
+
+    with pytest.raises(ValidationError):
+        CatalogParams(circuit_id="x", requirements=requirements)
+
+
+def test_normalization_resolves_each_requirement_and_propagates_connections():
+    from agents.orquestador.node import _normalize
+    from agents.orquestador.schema import CircuitSpec
+
+    spec = CircuitSpec.model_validate({"blocks": [{"id": "a", "type": "catalog", "params": {
+        "circuit_id": "x", "params": {"v_out": 3.3, "fc": 1000}, "requirements": [
+            {"measure": "v_out", "value": 1e6},
+            {"measure": "fc", "value": -1e6, "tolerance": 0.01, "comparator": "ge"},
+            {"measure": "current", "value": 0.02, "tolerance": 0.0},
+        ],
+    }}], "connections": [["a.out", "b.in"]]})
+    normalized = _normalize(spec)["normalized_spec"]
+    assert normalized["connections"] == [("a.out", "b.in")]
+    assert normalized["blocks"][0]["requirements"] == [
+        {"measure": "v_out", "value": 3.3, "tolerance": 0.05, "comparator": "approx", "node": ""},
+        {"measure": "fc", "value": 1000.0, "tolerance": 0.01, "comparator": "ge", "node": ""},
+        {"measure": "current", "value": 0.02, "tolerance": 0.0, "comparator": "approx", "node": ""},
+    ]
+
+def test_normalization_keeps_first_requirement_projection_for_slice_b_c_consumers():
+    # TODO(slice-b/c): shell/escritura/documentador y evaluacion aún leen goal.
+    # Es una proyección de salida; el schema de entrada solo acepta requirements.
+    spec = orquestador_node(_state(VALID_SPEC))["normalized_spec"]
+    assert spec["connections"] == []
+    assert spec["blocks"][0]["goal"] == {"metric": "v_out", "target": 3.3, "tolerance": 0.05}

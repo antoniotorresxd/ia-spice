@@ -22,6 +22,7 @@ export type BlockSimResult = {
   analysis_type?: string | null;
   x_unit?: string | null;
   y_unit?: string | null;
+  x_label?: string | null;
   metric_name?: string | null;
   measured_value?: number | null;
   target_value?: number | null;

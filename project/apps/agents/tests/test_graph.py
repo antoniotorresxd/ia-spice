@@ -43,8 +43,7 @@ def test_voltage_divider_converges_first_iteration():
                 "params": {
                     "circuit_id": "voltage_divider",
                     "params": {"v_in": 5.0, "v_out": 3.3},
-                    "metric": "v_out",
-                    "target": 3.3,
+                    "requirements": [{"measure": "v_out", "value": 3.3}],
                 },
             }
         ]
@@ -67,8 +66,7 @@ def test_led_requires_adjustment_then_converges():
                 "params": {
                     "circuit_id": "zener_regulated_power_supply",
                     "params": {"v_z": 9.0, "i_l_max": 0.05, "v_sec_rms": 12.0},
-                    "metric": "vout",
-                    "target": 9.0,
+                    "requirements": [{"measure": "vout", "value": 9.0}],
                 },
             }
         ],
@@ -91,8 +89,7 @@ def test_impossible_spec_rejected_at_max_iterations():
                 "params": {
                     "circuit_id": "voltage_divider",
                     "params": {"v_in": 5.0, "v_out": 6.0},
-                    "metric": "v_out",
-                    "target": 6.0,
+                    "requirements": [{"measure": "v_out", "value": 6.0}],
                 },
             }
         ],
@@ -115,8 +112,7 @@ def test_mixed_blocks_evaluated_globally():
                 "params": {
                     "circuit_id": "voltage_divider",
                     "params": {"v_in": 5.0, "v_out": 3.3},
-                    "metric": "v_out",
-                    "target": 3.3,
+                    "requirements": [{"measure": "v_out", "value": 3.3}],
                 },
             },
             {
@@ -125,8 +121,7 @@ def test_mixed_blocks_evaluated_globally():
                 "params": {
                     "circuit_id": "rc_lowpass_passive",
                     "params": {"f_c": 1000.0},
-                    "metric": "fc",
-                    "target": 1000.0,
+                    "requirements": [{"measure": "fc", "value": 1000.0}],
                 },
             },
         ]
@@ -157,8 +152,7 @@ def test_graph_checkpoints_state_by_thread_id():
                 "params": {
                     "circuit_id": "voltage_divider",
                     "params": {"v_in": 9.0, "v_out": 6.0},
-                    "metric": "v_out",
-                    "target": 6.0,
+                    "requirements": [{"measure": "v_out", "value": 6.0}],
                 },
             }
         ]
@@ -184,8 +178,7 @@ def test_request_text_end_to_end_with_fake_llm(monkeypatch):
                     "params": {
                         "circuit_id": "voltage_divider",
                         "params": {"v_in": 5.0, "v_out": 3.3},
-                        "metric": "v_out",
-                        "target": 3.3,
+                        "requirements": [{"measure": "v_out", "value": 3.3}],
                     },
                 }
             ]
@@ -261,8 +254,7 @@ def test_noninverting_amp_converges_end_to_end():
                 "params": {
                     "circuit_id": "opamp_noninverting_amp",
                     "params": {"v_in": 1.0, "v_out": 3.0},
-                    "metric": "v_out",
-                    "target": 3.0,
+                    "requirements": [{"measure": "v_out", "value": 3.0}],
                 },
             }
         ],
@@ -287,8 +279,7 @@ def test_noninverting_amp_high_gain_needs_the_loop():
                 "params": {
                     "circuit_id": "opamp_noninverting_amp",
                     "params": {"v_in": 0.01, "v_out": 10.0},
-                    "metric": "v_out",
-                    "target": 10.0,
+                    "requirements": [{"measure": "v_out", "value": 10.0}],
                 },
             }
         ],
@@ -312,8 +303,7 @@ def test_noninverting_amp_with_unreachable_gain_is_rejected():
                 "params": {
                     "circuit_id": "opamp_noninverting_amp",
                     "params": {"v_in": 5.0, "v_out": 2.0},
-                    "metric": "v_out",
-                    "target": 2.0,
+                    "requirements": [{"measure": "v_out", "value": 2.0}],
                 },
             }
         ],
@@ -351,8 +341,7 @@ def test_un_circuito_fuera_del_catalogo_se_resuelve_por_el_camino_generico():
                 "type": "generic",
                 "params": {
                     "description": "un divisor resistivo simple",
-                    "metric": "v_out",
-                    "target": 5.0,
+                    "requirements": [{"measure": "v_out", "value": 5.0}],
                     "netlist": netlist,
                 },
             }
@@ -389,8 +378,7 @@ def test_el_camino_generico_tambien_llega_desde_lenguaje_natural(monkeypatch):
                     "type": "generic",
                     "params": {
                         "description": "filtro pasa-bajas de 1 kHz",
-                        "metric": "f_c",
-                        "target": 1000.0,
+                        "requirements": [{"measure": "f_c", "value": 1000.0}],
                         "netlist": netlist,
                     },
                 }
@@ -446,8 +434,7 @@ def test_un_bloque_generico_fuera_de_meta_se_repara_y_converge(monkeypatch):
                 "type": "generic",
                 "params": {
                     "description": "un divisor resistivo",
-                    "metric": "v_out",
-                    "target": 5.0,
+                    "requirements": [{"measure": "v_out", "value": 5.0}],
                     "netlist": fuera_de_meta,
                 },
             }
@@ -490,8 +477,7 @@ def test_un_generico_cuyo_modelo_repite_el_mismo_netlist_se_rechaza_sin_agotar_i
                 "type": "generic",
                 "params": {
                     "description": "un divisor resistivo",
-                    "metric": "v_out",
-                    "target": 5.0,
+                    "requirements": [{"measure": "v_out", "value": 5.0}],
                     "netlist": fuera_de_meta,
                 },
             }
@@ -519,8 +505,7 @@ def test_sin_llm_un_generico_fuera_de_meta_termina_con_un_motivo_legible():
                 "type": "generic",
                 "params": {
                     "description": "un divisor resistivo",
-                    "metric": "v_out",
-                    "target": 5.0,
+                    "requirements": [{"measure": "v_out", "value": 5.0}],
                     "netlist": fuera_de_meta,
                 },
             }
@@ -542,8 +527,7 @@ def test_sin_llm_el_divisor_termina_aceptado_sin_documentacion():
                 "params": {
                     "circuit_id": "voltage_divider",
                     "params": {"v_in": 5.0, "v_out": 3.3},
-                    "metric": "v_out",
-                    "target": 3.3,
+                    "requirements": [{"measure": "v_out", "value": 3.3}],
                 },
             }
         ]
@@ -580,8 +564,7 @@ def test_el_grafo_documenta_el_divisor_y_descarta_componentes_inventados(monkeyp
                 "params": {
                     "circuit_id": "voltage_divider",
                     "params": {"v_in": 5.0, "v_out": 3.3},
-                    "metric": "v_out",
-                    "target": 3.3,
+                    "requirements": [{"measure": "v_out", "value": 3.3}],
                 },
             }
         ]
@@ -663,8 +646,7 @@ def test_catalog_zener_regulator_converges_first_iteration():
                 "params": {
                     "circuit_id": "zener_regulated_power_supply",
                     "params": {"v_z": 9.0, "i_l_max": 0.05, "v_sec_rms": 12.0},
-                    "metric": "vout",
-                    "target": 9.0,
+                    "requirements": [{"measure": "vout", "value": 9.0}],
                 },
             }
         ],

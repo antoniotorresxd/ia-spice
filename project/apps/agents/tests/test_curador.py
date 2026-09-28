@@ -1,33 +1,33 @@
 import pytest
 
-from agents.curador.policy import ADJUST_RULES, evaluate_block, perturb
+from agents.curador.policy import ADJUST_RULES, evaluate_requirement, perturb
 
 
-GOAL = {"metric": "v_out", "target": 3.3, "tolerance": 0.05}
+REQUIREMENT = {"measure": "v_out", "value": 3.3, "tolerance": 0.05}
 
 
-def test_evaluate_block_ok_within_tolerance():
-    status, rel_err = evaluate_block(GOAL, {"metrics": {"v_out": 3.31}, "sim_error": None})
+def test_evaluate_requirement_ok_within_tolerance():
+    status, rel_err = evaluate_requirement(REQUIREMENT, {"metrics": {"v_out": 3.31}, "sim_error": None})
     assert status == "ok"
     assert rel_err == pytest.approx(0.01 / 3.3)
 
 
-def test_evaluate_block_off_outside_tolerance():
-    status, rel_err = evaluate_block(GOAL, {"metrics": {"v_out": 4.0}, "sim_error": None})
+def test_evaluate_requirement_off_outside_tolerance():
+    status, rel_err = evaluate_requirement(REQUIREMENT, {"metrics": {"v_out": 4.0}, "sim_error": None})
     assert status == "off"
     assert rel_err > 0.05
 
 
-def test_evaluate_block_error_when_sim_failed():
-    status, rel_err = evaluate_block(GOAL, {"metrics": None, "sim_error": "boom"})
+def test_evaluate_requirement_error_when_sim_failed():
+    status, rel_err = evaluate_requirement(REQUIREMENT, {"metrics": None, "sim_error": "boom"})
     assert status == "error"
     assert rel_err is None
 
 
-def test_evaluate_block_gain_inverting_magnitude():
-    gain_goal = {"metric": "gain", "target": 100.0, "tolerance": 0.05}
+def test_evaluate_requirement_gain_inverting_magnitude():
+    gain_requirement = {"measure": "gain", "value": 100.0, "tolerance": 0.05}
     # En amplificador inversor BJT, la ganancia simulada sale negativa (-99.78)
-    status, rel_err = evaluate_block(gain_goal, {"metrics": {"gain": -99.78}, "sim_error": None})
+    status, rel_err = evaluate_requirement(gain_requirement, {"metrics": {"gain": -99.78}, "sim_error": None})
     assert status == "ok"
     assert rel_err == pytest.approx(0.22 / 100.0)
 
@@ -71,10 +71,9 @@ def _state(sim_results, iteration=0, max_iterations=5, history=None):
                     "params": {
                         "circuit_id": "voltage_divider",
                         "params": {"v_in": 5.0, "v_out": 3.3},
-                        "metric": "v_out",
-                        "target": 3.3,
+                        "requirements": [{"measure": "v_out", "value": 3.3}],
                     },
-                    "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
+                    "requirements": [{"measure": "v_out", "value": 3.3, "tolerance": 0.05}],
                 },
             ],
             "max_iterations": max_iterations,
@@ -320,18 +319,18 @@ def test_best_iteration_is_the_one_with_the_highest_reward():
     assert result["verdict"]["best_iteration"] == 1
 
 
-def _block(tolerance):
-    return {"id": "b1", "goal": {"metric": "v_out", "target": 3.3, "tolerance": tolerance}}
+def _requirement(tolerance):
+    return ("b1", 0, tolerance)
 
 
 def test_accept_is_admissible_within_the_slack_over_the_declared_tolerance():
     # 6.06 % de error contra una tolerancia del 5 %: 1.21 veces, cabe en 1.5
-    assert accept_is_admissible([_block(0.05)], {"b1": ("off", 0.0606)}, POLICY_CFG)
+    assert accept_is_admissible([_requirement(0.05)], {("b1", 0): ("off", 0.0606)}, POLICY_CFG)
 
 
 def test_accept_is_not_admissible_beyond_the_slack():
     # 24 % contra 5 %: casi cinco veces la tolerancia
-    assert not accept_is_admissible([_block(0.05)], {"b1": ("off", 0.2424)}, POLICY_CFG)
+    assert not accept_is_admissible([_requirement(0.05)], {("b1", 0): ("off", 0.2424)}, POLICY_CFG)
 
 
 def test_admissibility_scales_with_each_blocks_own_tolerance():
@@ -339,22 +338,22 @@ def test_admissibility_scales_with_each_blocks_own_tolerance():
     meta. Es la regresión que atrapó test_graph.py: el LED declara tolerancia
     del 1 % y cae 5.9 % fuera; un tope global en puntos de APE lo habría dado
     por bueno incumpliendo su meta por casi seis veces."""
-    evaluations = {"b1": ("off", 0.0589)}
+    evaluations = {("b1", 0): ("off", 0.0589)}
 
-    assert accept_is_admissible([_block(0.05)], evaluations, POLICY_CFG)
-    assert not accept_is_admissible([_block(0.01)], evaluations, POLICY_CFG)
+    assert accept_is_admissible([_requirement(0.05)], evaluations, POLICY_CFG)
+    assert not accept_is_admissible([_requirement(0.01)], evaluations, POLICY_CFG)
 
 
 def test_accept_is_never_admissible_when_a_block_could_not_be_measured():
-    assert not accept_is_admissible([_block(0.05)], {"b1": ("error", None)}, POLICY_CFG)
+    assert not accept_is_admissible([_requirement(0.05)], {("b1", 0): ("error", None)}, POLICY_CFG)
 
 
 def test_accept_needs_every_block_to_be_admissible():
     blocks = [
-        {"id": "b1", "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05}},
-        {"id": "b2", "goal": {"metric": "f_c", "target": 1000.0, "tolerance": 0.05}},
+        ("b1", 0, 0.05),
+        ("b2", 0, 0.05),
     ]
-    evaluations = {"b1": ("off", 0.06), "b2": ("off", 0.40)}
+    evaluations = {("b1", 0): ("off", 0.06), ("b2", 0): ("off", 0.40)}
 
     assert not accept_is_admissible(blocks, evaluations, POLICY_CFG)
 
@@ -372,10 +371,9 @@ def _two_block_state(sim_results):
                     "params": {
                         "circuit_id": "voltage_divider",
                         "params": {"v_in": 5.0, "v_out": 3.3},
-                        "metric": "v_out",
-                        "target": 3.3,
+                        "requirements": [{"measure": "v_out", "value": 3.3}],
                     },
-                    "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.05},
+                    "requirements": [{"measure": "v_out", "value": 3.3, "tolerance": 0.05}],
                 },
                 {
                     "id": "estricto",
@@ -383,10 +381,9 @@ def _two_block_state(sim_results):
                     "params": {
                         "circuit_id": "voltage_divider",
                         "params": {"v_in": 5.0, "v_out": 3.3},
-                        "metric": "v_out",
-                        "target": 3.3,
+                        "requirements": [{"measure": "v_out", "value": 3.3}],
                     },
-                    "goal": {"metric": "v_out", "target": 3.3, "tolerance": 0.001},
+                    "requirements": [{"measure": "v_out", "value": 3.3, "tolerance": 0.001}],
                 },
             ],
             "max_iterations": 5,
@@ -438,7 +435,7 @@ def test_curador_accepts_by_reward_when_every_block_is_admissible():
     recompensa decide y acepta."""
     # 3.102 -> 6 % con tolerancia 5 %; 3.366 -> 2 % con tolerancia... también 5 %
     state = _two_block_state({"holgado": _measured(3.102), "estricto": _measured(3.366)})
-    state["normalized_spec"]["blocks"][1]["goal"]["tolerance"] = 0.05
+    state["normalized_spec"]["blocks"][1]["requirements"][0]["tolerance"] = 0.05
 
     result = curador_node(state)
 
@@ -474,10 +471,9 @@ def _generic_state(netlist, sim_results, iteration=0, max_iterations=5):
                     "type": "generic",
                     "params": {
                         "description": "algo fuera del catálogo",
-                        "metric": "v_out",
-                        "target": 5.0,
+                        "requirements": [{"measure": "v_out", "value": 5.0}],
                     },
-                    "goal": {"metric": "v_out", "target": 5.0, "tolerance": 0.05},
+                    "requirements": [{"measure": "v_out", "value": 5.0, "tolerance": 0.05}],
                 },
             ],
             "max_iterations": max_iterations,
@@ -503,7 +499,7 @@ def test_curador_rejects_a_generic_block_whose_repair_did_not_change_anything(mo
     monkeypatch.setattr(
         curador_module,
         "reparar_netlist_del_bloque",
-        lambda block, values, sim_result, config: values["netlist"],
+        lambda block, values, requirements_fallidos, config: values["netlist"],
         raising=False,
     )
 
@@ -530,7 +526,7 @@ def test_curador_accepts_a_generic_block_whose_repair_changed_something(monkeypa
     monkeypatch.setattr(
         curador_module,
         "reparar_netlist_del_bloque",
-        lambda block, values, sim_result, config: netlist_corregido,
+        lambda block, values, requirements_fallidos, config: netlist_corregido,
         raising=False,
     )
 
@@ -546,3 +542,110 @@ def test_curador_accepts_a_generic_block_whose_repair_changed_something(monkeypa
 
 
 
+
+
+@pytest.mark.parametrize("comparator,actual,value,tolerance,status,error", [
+    ("le", 9, 10, 0.05, "ok", 0.0),
+    ("le", 10, 10, 0.05, "ok", 0.0),
+    ("le", 10.5, 10, 0.05, "ok", 0.05),
+    ("le", 11, 10, 0.05, "off", 0.1),
+    ("ge", 11, 10, 0.05, "ok", 0.0),
+    ("ge", 10, 10, 0.05, "ok", 0.0),
+    ("ge", 9.5, 10, 0.05, "ok", 0.05),
+    ("ge", 9, 10, 0.05, "off", 0.1),
+    ("le", -9, -10, 0.05, "off", 0.1),
+    ("ge", -11, -10, 0.05, "off", 0.1),
+    ("le", 1e-12, 0, 0.05, "off", 1.0),
+    ("ge", -1e-12, 0, 0.05, "off", 1.0),
+    ("approx", 0.01, 0, 0.05, "ok", 0.01),
+    ("approx", 0.01, 1e-12, 0.05, "ok", 0.01 - 1e-12),
+])
+def test_policy_comparators(comparator, actual, value, tolerance, status, error):
+    requirement = {"measure": "gain", "value": value, "comparator": comparator, "tolerance": tolerance}
+    result = evaluate_requirement(requirement, {"metrics": {"gain": actual}, "sim_error": None})
+    assert result == (status, pytest.approx(error))
+
+
+def test_policy_missing_measurement_is_error():
+    assert evaluate_requirement(REQUIREMENT, {"metrics": {}, "sim_error": None}) == ("error", None)
+
+
+def test_admissibility_checks_each_requirement_tolerance():
+    requirements = [("a", 0, 0.05), ("a", 1, 0.001)]
+    evaluations = {("a", 0): ("ok", 0.01), ("a", 1): ("off", 0.02)}
+    assert not accept_is_admissible(requirements, evaluations, POLICY_CFG)
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_curador_adjusts_catalog_once_using_worst_requirement(reverse):
+    state = _state({"div1": {"metrics": {"v_out": 2.5, "gain": 1.0}, "converged": True, "sim_error": None}})
+    requirements = state["normalized_spec"]["blocks"][0]["requirements"]
+    requirements.append({"measure": "gain", "value": 4.0, "tolerance": 0.05})
+    if reverse:
+        requirements.reverse()
+    result = curador_node(state)
+    assert result["pending_blocks"] == ["div1"]
+    assert result["component_values"]["div1"] == {"R1": 1000.0, "R2": 4000.0}
+    assert result["history"][0]["weighted_ape"] == pytest.approx(100 * 0.8 / 3.3 + 75)
+    assert result["history"][0]["reward"] == pytest.approx(10 - (100 * 0.8 / 3.3 + 75))
+
+
+def test_curador_checks_all_requirements_even_when_reward_favors_accept():
+    state = _state({"div1": {"metrics": {"v_out": 3.3, "gain": 0.98}, "converged": True, "sim_error": None}})
+    state["normalized_spec"]["blocks"][0]["requirements"].append(
+        {"measure": "gain", "value": 1.0, "tolerance": 0.001}
+    )
+    result = curador_node(state)
+    assert result["history"][0]["decision"] == "adjust"
+    assert result["component_values"]["div1"]["R2"] == pytest.approx(1000 / 0.98)
+
+
+@pytest.mark.parametrize("sim_error", [None, "boom"])
+def test_generic_repair_receives_only_failed_requirements_with_measurements(monkeypatch, sim_error):
+    import agents.curador.node as module
+
+    captured = []
+    monkeypatch.setattr(module, "get_chat_model", lambda user_id: user_id)
+    def repair(model, **kwargs):
+        assert model == "user-1"
+        captured.append(kwargs["requirements_fallidos"])
+        return "fixed"
+    monkeypatch.setattr(module, "repair_netlist", repair)
+    state = _generic_state("broken", {"gen1": {
+        "metrics": {"v_out": 1.0, "gain": 1.0, "current": 0.01} if sim_error is None else None,
+        "converged": sim_error is None, "sim_error": sim_error,
+    }})
+    requirements = [
+        {"measure": "v_out", "value": 5.0, "comparator": "approx", "tolerance": 0.05},
+        {"measure": "gain", "value": 4.0, "comparator": "ge", "tolerance": 0.01},
+        {"measure": "current", "value": 0.02, "comparator": "le", "tolerance": 0.01},
+    ]
+    state["normalized_spec"]["blocks"][0]["requirements"] = requirements
+    result = curador_node(state, {"configurable": {"user_id": "user-1"}})
+    expected = requirements if sim_error else requirements[:2]
+    assert captured == [[{**req, "measured": None if sim_error else 1.0, "sim_error": sim_error} for req in expected]]
+    assert result["pending_blocks"] == ["gen1"]
+    assert result["component_values"] == {"gen1": {"netlist": "fixed"}}
+
+
+def test_catalog_missing_measurement_perturbs_once():
+    state = _state({"div1": {"metrics": {}, "converged": True, "sim_error": None}})
+    result = curador_node(state)
+    assert result["component_values"]["div1"] == {"R1": 1050.0, "R2": 1050.0}
+
+
+@pytest.mark.parametrize("actual,iteration,decision", [(3.3, 0, "accept"), (3.1, 0, "accept"), (2.5, 0, "adjust"), (2.5, 4, "reject"), (0.01, 0, "accept")])
+def test_single_requirement_exact_numeric_compatibility(actual, iteration, decision):
+    from agents.config import get_config
+
+    state = _state({"div1": _measured(actual)}, iteration=iteration)
+    target = 0.0 if actual == 0.01 else 3.3
+    state["normalized_spec"]["blocks"][0]["requirements"][0]["value"] = target
+    state["normalized_spec"]["connections"] = []
+    cfg = get_config()["curador"]
+    old_error = abs(actual - target) / (abs(target) if abs(target) > 1e-12 else 1.0)
+    old_ape = cfg["weights"].get("v_out", cfg["weights"]["default"]) * (old_error * 100.0)
+    record = curador_node(state)["history"][0]
+    assert record["decision"] == decision
+    assert record["weighted_ape"] == old_ape
+    assert record["reward"] == -old_ape + cfg["beta"] - cfg["gamma"] * iteration

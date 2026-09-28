@@ -452,6 +452,40 @@
   font-weight: 500;
 }
 
+.composerCollapsible {
+  margin-bottom: 1.5rem;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.composerCollapsible[open] {
+  padding: 1rem;
+  border-color: rgba(200, 121, 61, 0.3);
+}
+
+.composerCollapsibleSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  user-select: none;
+  list-style: none;
+}
+
+.composerCollapsibleSummary::-webkit-details-marker {
+  display: none;
+}
+
+.composerCollapsibleSummary:hover {
+  color: var(--foreground);
+}
+
 :global(.home-demo-badge) {
   display: inline-flex;
   margin: 0 0 0.85rem;

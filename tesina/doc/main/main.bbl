@@ -338,89 +338,6 @@
       \verb https://arxiv.org/abs/2603.18102
       \endverb
     \endentry
-    \entry{ngspice_manual}{manual}{}{}
-      \name{author}{1}{}{%
-        {{hash=127c04584906445d1bb3a09d6ac3d370}{%
-           family={{Ngspice Development Team}},
-           familyi={N\bibinitperiod}}}%
-      }
-      \strng{namehash}{127c04584906445d1bb3a09d6ac3d370}
-      \strng{fullhash}{127c04584906445d1bb3a09d6ac3d370}
-      \strng{fullhashraw}{127c04584906445d1bb3a09d6ac3d370}
-      \strng{bibnamehash}{127c04584906445d1bb3a09d6ac3d370}
-      \strng{authorbibnamehash}{127c04584906445d1bb3a09d6ac3d370}
-      \strng{authornamehash}{127c04584906445d1bb3a09d6ac3d370}
-      \strng{authorfullhash}{127c04584906445d1bb3a09d6ac3d370}
-      \strng{authorfullhashraw}{127c04584906445d1bb3a09d6ac3d370}
-      \field{sortinit}{7}
-      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{note}{Version 44}
-      \field{title}{Ngspice User's Manual}
-      \verb{urlraw}
-      \verb https://ngspice.sourceforge.io/docs/ngspice-manual.pdf
-      \endverb
-      \verb{url}
-      \verb https://ngspice.sourceforge.io/docs/ngspice-manual.pdf
-      \endverb
-    \endentry
-    \entry{langgraph}{online}{}{}
-      \name{author}{1}{}{%
-        {{hash=8de59538e5206b848891f2b0e1898dfb}{%
-           family={{LangChain}},
-           familyi={L\bibinitperiod}}}%
-      }
-      \strng{namehash}{8de59538e5206b848891f2b0e1898dfb}
-      \strng{fullhash}{8de59538e5206b848891f2b0e1898dfb}
-      \strng{fullhashraw}{8de59538e5206b848891f2b0e1898dfb}
-      \strng{bibnamehash}{8de59538e5206b848891f2b0e1898dfb}
-      \strng{authorbibnamehash}{8de59538e5206b848891f2b0e1898dfb}
-      \strng{authornamehash}{8de59538e5206b848891f2b0e1898dfb}
-      \strng{authorfullhash}{8de59538e5206b848891f2b0e1898dfb}
-      \strng{authorfullhashraw}{8de59538e5206b848891f2b0e1898dfb}
-      \field{sortinit}{8}
-      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{title}{LangGraph: Building stateful, multi-actor applications with LLMs}
-      \field{year}{2024}
-      \verb{urlraw}
-      \verb https://github.com/langchain-ai/langgraph
-      \endverb
-      \verb{url}
-      \verb https://github.com/langchain-ai/langgraph
-      \endverb
-    \endentry
-    \entry{pyspice}{misc}{}{}
-      \name{author}{1}{}{%
-        {{hash=ba384781d3a38282fb7da900949dd77c}{%
-           family={Salvaire},
-           familyi={S\bibinitperiod},
-           given={Fabrice},
-           giveni={F\bibinitperiod}}}%
-      }
-      \strng{namehash}{ba384781d3a38282fb7da900949dd77c}
-      \strng{fullhash}{ba384781d3a38282fb7da900949dd77c}
-      \strng{fullhashraw}{ba384781d3a38282fb7da900949dd77c}
-      \strng{bibnamehash}{ba384781d3a38282fb7da900949dd77c}
-      \strng{authorbibnamehash}{ba384781d3a38282fb7da900949dd77c}
-      \strng{authornamehash}{ba384781d3a38282fb7da900949dd77c}
-      \strng{authorfullhash}{ba384781d3a38282fb7da900949dd77c}
-      \strng{authorfullhashraw}{ba384781d3a38282fb7da900949dd77c}
-      \field{sortinit}{9}
-      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{title}{PySpice: Simulate electronic circuit using Python and the Ngspice/Xyce simulators}
-      \field{year}{2021}
-      \verb{urlraw}
-      \verb https://github.com/PySpice-org/PySpice
-      \endverb
-      \verb{url}
-      \verb https://github.com/PySpice-org/PySpice
-      \endverb
-    \endentry
     \entry{adollm}{online}{}{}
       \name{author}{4}{}{%
         {{hash=40092fbe5df3ce34be43155a90c97780}{%
@@ -517,6 +434,89 @@
       \endverb
       \verb{url}
       \verb https://arxiv.org/abs/2410.20553
+      \endverb
+    \endentry
+    \entry{ngspice_manual}{manual}{}{}
+      \name{author}{1}{}{%
+        {{hash=127c04584906445d1bb3a09d6ac3d370}{%
+           family={{Ngspice Development Team}},
+           familyi={N\bibinitperiod}}}%
+      }
+      \strng{namehash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{fullhash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{fullhashraw}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{bibnamehash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{authorbibnamehash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{authornamehash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{authorfullhash}{127c04584906445d1bb3a09d6ac3d370}
+      \strng{authorfullhashraw}{127c04584906445d1bb3a09d6ac3d370}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Version 44}
+      \field{title}{Ngspice User's Manual}
+      \verb{urlraw}
+      \verb https://ngspice.sourceforge.io/docs/ngspice-manual.pdf
+      \endverb
+      \verb{url}
+      \verb https://ngspice.sourceforge.io/docs/ngspice-manual.pdf
+      \endverb
+    \endentry
+    \entry{langgraph}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=8de59538e5206b848891f2b0e1898dfb}{%
+           family={{LangChain}},
+           familyi={L\bibinitperiod}}}%
+      }
+      \strng{namehash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{fullhash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{fullhashraw}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{bibnamehash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{authorbibnamehash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{authornamehash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{authorfullhash}{8de59538e5206b848891f2b0e1898dfb}
+      \strng{authorfullhashraw}{8de59538e5206b848891f2b0e1898dfb}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{LangGraph: Building stateful, multi-actor applications with LLMs}
+      \field{year}{2024}
+      \verb{urlraw}
+      \verb https://github.com/langchain-ai/langgraph
+      \endverb
+      \verb{url}
+      \verb https://github.com/langchain-ai/langgraph
+      \endverb
+    \endentry
+    \entry{pyspice}{misc}{}{}
+      \name{author}{1}{}{%
+        {{hash=ba384781d3a38282fb7da900949dd77c}{%
+           family={Salvaire},
+           familyi={S\bibinitperiod},
+           given={Fabrice},
+           giveni={F\bibinitperiod}}}%
+      }
+      \strng{namehash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{fullhash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{fullhashraw}{ba384781d3a38282fb7da900949dd77c}
+      \strng{bibnamehash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{authorbibnamehash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{authornamehash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{authorfullhash}{ba384781d3a38282fb7da900949dd77c}
+      \strng{authorfullhashraw}{ba384781d3a38282fb7da900949dd77c}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{PySpice: Simulate electronic circuit using Python and the Ngspice/Xyce simulators}
+      \field{year}{2021}
+      \verb{urlraw}
+      \verb https://github.com/PySpice-org/PySpice
+      \endverb
+      \verb{url}
+      \verb https://github.com/PySpice-org/PySpice
       \endverb
     \endentry
     \entry{vaswani2017attention}{inproceedings}{}{}

@@ -169,7 +169,7 @@ export function WorkspaceShell({ onSignOut, service, userName }: WorkspaceShellP
           {loadError ? (
             <p role="alert">No pudimos cargar tu espacio.</p>
           ) : (
-            <Outlet context={{ snapshot, refreshSnapshot, deleteConversation: handleDeleteConversation, deleteProject: handleDeleteProject }} />
+            <Outlet context={{ snapshot, refreshSnapshot, deleteConversation: handleDeleteConversation, deleteProject: handleDeleteProject, isTourOpen: tutorial.isOpen }} />
           )}
           {assignmentNotice.status === 'saving' ? <p aria-live="polite" className={styles.toastNotice}>Moviendo conversación…</p> : null}
           {assignmentNotice.status === 'saved' ? <div aria-live="polite" className={styles.toastNotice} role="status">Conversación movida <button onClick={() => void undoAssignment()} type="button">Deshacer</button></div> : null}

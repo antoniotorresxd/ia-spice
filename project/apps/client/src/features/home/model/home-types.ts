@@ -44,6 +44,30 @@ export type ConversationExecution = {
   files: GeneratedFile[]
 }
 
+export type UsageTimeSeriesPoint = {
+  date: string
+  tokens: number
+  executions: number
+  costUsd: number
+}
+
+export type AgentNodeMetric = {
+  nodeId: 'orquestador' | 'calculo' | 'sintesis' | 'curador' | 'documentador'
+  label: string
+  callCount: number
+  avgLatencyMs: number
+  tokens: number
+  successRate?: number
+}
+
+export type ModelUsageMetric = {
+  modelName: string
+  label: string
+  tokens: number
+  percentage: number
+  callCount: number
+}
+
 export type UsageMetrics = {
   period: UsagePeriod
   tokens: { used: number; limit: number } | null
@@ -52,6 +76,10 @@ export type UsageMetrics = {
   successRate: number
   processingMinutes: number
   generatedFiles: number
+  avgLatencyMs?: number
+  timeSeries?: UsageTimeSeriesPoint[]
+  agentBreakdown?: AgentNodeMetric[]
+  modelDistribution?: ModelUsageMetric[]
 }
 
 export type HomeOverviewData = {
@@ -64,7 +92,7 @@ export type HomeOverviewData = {
   recentConversations: ConversationSummary[]
   recentFiles: GeneratedFile[]
   recentExecutions: ConversationExecution[]
-  isDemo: true
+  isDemo: boolean
 }
 
 export type PromptInput = { text: string }

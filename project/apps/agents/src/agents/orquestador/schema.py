@@ -20,18 +20,25 @@ def find_unresolved_placeholders(netlist: str) -> list[str]:
     return list(dict.fromkeys(name for name in names if name.lower() not in defined))
 
 
+class Requirement(BaseModel):
+    measure: str = Field(min_length=1)
+    node: str = ""  # Reservado para la composición en Slice B.
+    comparator: Literal["approx", "le", "ge"] = "approx"
+    value: float
+    tolerance: float | None = None
+
+
 class GenericParams(BaseModel):
     """Un circuito fuera del catálogo curado.
 
-    El LLM entrega el netlist ya hecho. Eso no lo vuelve confiable: ngspice
+    El LLM entrega el netlist ya hecho y su lista de requisitos. Eso no lo vuelve confiable: ngspice
     sigue siendo el árbitro, igual que con los tipos curados. La diferencia con
     los trabajos que generan netlists con un LLM no es que aquí se genere
     mejor, es que aquí no se cree lo generado.
     """
 
     description: str = Field(min_length=1)
-    metric: str = Field(min_length=1)
-    target: float
+    requirements: list[Requirement] = Field(min_length=1)
     netlist: str = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -65,8 +72,7 @@ class CatalogParams(BaseModel):
 
     circuit_id: str = Field(min_length=1)
     params: dict[str, float] = Field(default_factory=dict)
-    metric: str = Field(min_length=1)
-    target: float
+    requirements: list[Requirement] = Field(min_length=1)
     description: str = Field(default="")
 
 
@@ -94,6 +100,7 @@ class CircuitSpec(BaseModel):
     deberá producir exactamente este schema."""
 
     blocks: list[Block] = Field(min_length=1)
+    connections: list[tuple[str, str]] = Field(default_factory=list)
     # Los valores por omisión salen de config/curador.yaml, no del código: el
     # RNF-04.2 de la tesina exige poder ajustar el máximo de iteraciones y la
     # tolerancia durante la evaluación experimental sin recompilar. Se leen con

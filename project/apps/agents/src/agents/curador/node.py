@@ -6,7 +6,8 @@ from agents.curador.policy import (
     accept_is_admissible,
     choose_action,
     estimate_action_rewards,
-    evaluate_block,
+    evaluate_requirement,
+    metric_key,
     observed_reduction,
     perturb,
 )
@@ -22,7 +23,7 @@ ACCEPTED_BY_REWARD = (
 
 
 def reparar_netlist_del_bloque(
-    block: dict, values: dict, sim_result: dict, config: RunnableConfig | None
+    block: dict, values: dict, requirements_fallidos: list[dict], config: RunnableConfig | None
 ) -> str:
     """Resuelve el LLM del curador para el usuario de la corrida y le pide un
     netlist corregido para este bloque genérico.
@@ -41,35 +42,39 @@ def reparar_netlist_del_bloque(
 
     chat_model = get_chat_model(user_id)
     params = block["params"]
-    goal = block["goal"]
-    metric = goal["metric"]
-    sim_error = sim_result["sim_error"]
-    measured = None if sim_error is not None else sim_result["metrics"][metric]
-
     return repair_netlist(
         chat_model,
         description=params["description"],
-        metric=metric,
-        target=goal["target"],
+        requirements_fallidos=requirements_fallidos,
         netlist=values["netlist"],
-        measured=measured,
-        sim_error=sim_error,
     )
 
 
 def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> dict:
+    """Evalúa cada requisito y ajusta una vez por bloque.
+
+    Slice A ajusta un catalog con varios requisitos incumplidos usando el de
+    mayor rel_err; resolver conjuntamente los requisitos queda para B/C.
+    """
     cfg = get_config()
     spec = state["normalized_spec"]
     iteration = state["iteration"]
     blocks = spec["blocks"]
     max_iterations = spec.get("max_iterations") or cfg["curador"]["max_iterations"]
 
-    evaluations = {
-        block["id"]: evaluate_block(block["goal"], state["sim_results"][block["id"]])
+    requirements = [
+        (block["id"], req_index, requirement)
         for block in blocks
+        for req_index, requirement in enumerate(block["requirements"])
+    ]
+    evaluations = {
+        (bid, req_index): evaluate_requirement(requirement, state["sim_results"][bid])
+        for bid, req_index, requirement in requirements
     }
-
-    failing = {bid: status for bid, (status, _) in evaluations.items() if status != "ok"}
+    failing: dict[str, list[int]] = {}
+    for (bid, req_index), (status, _) in evaluations.items():
+        if status != "ok":
+            failing.setdefault(bid, []).append(req_index)
     rel_errs = [err for _, err in evaluations.values() if err is not None]
     worst_rel_err = max(rel_errs) if rel_errs else None
 
@@ -95,7 +100,15 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
         "iteration": iteration,
         "component_values": dict(state["component_values"]),
         "sim_results": dict(state["sim_results"]),
-        "evaluations": {bid: status for bid, (status, _) in evaluations.items()},
+        # Claves JSON por bloque y posiciones por requisito; las tuplas quedan
+        # internas para que history siga siendo serializable por la API.
+        "evaluations": {
+            block["id"]: [
+                evaluations[(block["id"], i)][0]
+                for i in range(len(block["requirements"]))
+            ]
+            for block in blocks
+        },
         "worst_rel_err": worst_rel_err,
         "weighted_ape": weighted_ape(measurements, cfg),
         "converged": converged,
@@ -130,7 +143,9 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
     action = choose_action(
         action_rewards,
         adjust_available=iteration + 1 < max_iterations,
-        accept_admissible=accept_is_admissible(blocks, evaluations, cfg),
+        accept_admissible=accept_is_admissible(
+            [(bid, i, req["tolerance"]) for bid, i, req in requirements], evaluations, cfg
+        ),
     )
 
     if action == "accept":
@@ -149,8 +164,8 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
         record["decision"] = "reject"
         sim_errors = [
             state["sim_results"][bid]["sim_error"]
-            for bid, status in failing.items()
-            if status == "error"
+            for bid in failing
+            if state["sim_results"][bid]["sim_error"] is not None
         ]
         reason = (
             f"simulation errors after {max_iterations} iterations: {sim_errors}"
@@ -171,16 +186,29 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
     blocks_by_id = {b["id"]: b for b in blocks}
     adjusted = {}
     reparaciones_fallidas: list[str] = []
-    for bid, status in failing.items():
+    for bid, failed_indices in failing.items():
         block = blocks_by_id[bid]
         values = state["component_values"][bid]
         if block["type"] == "generic":
             # Ni "error" ni "off" tienen ecuación que aplicar aquí: ambos se
             # reparan pidiéndole al modelo un netlist corregido, dándole
             # también el error de simulación cuando lo hay.
+            sim_result = state["sim_results"][bid]
+            metrics = sim_result.get("metrics") or {}
+            requirements_fallidos = [
+                {
+                    **block["requirements"][i],
+                    "measured": (
+                        metrics.get(metric_key(block["requirements"][i]))
+                        if sim_result["sim_error"] is None else None
+                    ),
+                    "sim_error": sim_result["sim_error"],
+                }
+                for i in failed_indices
+            ]
             try:
                 nuevo_netlist = reparar_netlist_del_bloque(
-                    block, values, state["sim_results"][bid], config
+                    block, values, requirements_fallidos, config
                 )
             except (LlmSettingsError, ReparacionError) as exc:
                 reparaciones_fallidas.append(f"{bid}: {exc}")
@@ -195,13 +223,25 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
                     )
                 else:
                     adjusted[bid] = {"netlist": nuevo_netlist}
-        elif status == "error":
-            adjusted[bid] = perturb(values)
         else:
-            actual = state["sim_results"][bid]["metrics"][block["goal"]["metric"]]
-            adjusted[bid] = ADJUST_RULES[block["type"]](
-                values, target=block["goal"]["target"], actual=actual
+            # TODO(slice-b/c): solver multi-requisito; por ahora elegir el peor.
+            # Un requisito sin medición tiene prioridad y requiere perturbación.
+            worst_index = max(
+                failed_indices,
+                key=lambda i: (
+                    float("inf") if evaluations[(bid, i)][1] is None
+                    else evaluations[(bid, i)][1]
+                ),
             )
+            requirement = block["requirements"][worst_index]
+            status, _ = evaluations[(bid, worst_index)]
+            if status == "error":
+                adjusted[bid] = perturb(values)
+            else:
+                actual = state["sim_results"][bid]["metrics"][metric_key(requirement)]
+                adjusted[bid] = ADJUST_RULES[block["type"]](
+                    values, target=requirement["value"], actual=actual
+                )
 
     if reparaciones_fallidas:
         # Nunca se deja pasar como ajuste silencioso: sin reparación posible
