@@ -156,21 +156,57 @@ banco de ejemplos: `opamp_highpass_active` (filtro) → `opamp_noninverting_amp`
 (amplificador) — es el ejemplo "filtro pasa-altas + ganancia 4" del diseño.
 No hace falta demostrarlo contra los 12 tipos en este slice.
 
-- [ ] **Task B1:** Definir el vocabulario cerrado de `measure` (`max`, `min`, `peak_to_peak`, `dc`, `current`, `fc_-3db`, `gain_at_freq`, `ripple`) y su traducción determinista a `.meas` de ngspice — una función pura por medida, sin plantillas por tipo de circuito. El nombre de cada `.meas` (y por tanto la clave que aparece en `sim_result["metrics"]`) debe coincidir exactamente con `curador.policy.metric_key(requirement)` (ver nota más abajo): sin `node`, la clave es `measure`; con `node`, es `f"{measure}@{node}"`.
-- [ ] **Task B2:** Transformador genérico spiceTemplate → `.subckt` con puertos `vin`/`vout`/`0`, con renombrado por instancia, como se describe arriba. Probado contra `opamp_highpass_active` + `opamp_noninverting_amp`.
-- [ ] **Task B3:** Ensamblador: dado `normalized_spec.blocks` + `normalized_spec.connections`, instancia cada `.subckt` con su transformador de B2, cablea las conexiones (el `vout` namespaced de un bloque se vuelve el `vin` namespaced del siguiente), conserva la fuente independiente solo en el bloque cabeza de cadena, y emite un único bloque `.control` con un `.meas` por `Requirement` (vía B1) resuelto sobre el nodo namespaced correspondiente del circuito compuesto.
-- [ ] **Task B4:** Eliminar en `escritura/node.py` el camino `if block["type"] == "catalog" and iteration == 0 and chat_model is not None` — la sustitución de parámetros en el `.subckt` ya resuelve la síntesis determinista; el LLM de escritura queda solo para `generic`.
-- [ ] **Task B5:** `shell/node.py`/`shell/ngspice_runner.py`: confirmar que corren sobre un netlist por *diseño* (no por bloque) sin cambios de fondo — puede que solo cambie cómo se buscan los tempdirs/outputs (uno por diseño, no uno por `block_id`).
+**Estado: implementado y verde (2026-09-27).** `uv run pytest` desde
+`project/apps/agents`: 312 passed, 6 skipped, 1 failed — el único rojo sigue
+siendo el mismo `test_prompts.py::test_api_attaches_handler_and_run_metadata_only_when_configured[True]`
+preexistente y ajeno (contaminación de estado entre tests de Langfuse), ya
+anotado como tal en Slice A. `tests/test_composition.py`: 11/11 en verde.
+
+- [x] **Task B1:** Definir el vocabulario cerrado de `measure` (`max`, `min`, `peak_to_peak`, `dc`, `current`, `fc_-3db`, `gain_at_freq`, `ripple`) y su traducción determinista a `.meas` de ngspice — una función pura por medida, sin plantillas por tipo de circuito. El nombre de cada `.meas` (y por tanto la clave que aparece en `sim_result["metrics"]`) coincide exactamente con `curador.policy.metric_key(requirement)`: sin `node`, la clave es `measure`; con `node`, es `f"{measure}__at__{node}"` (el separador cambió de `@` a `__at__` durante la implementación: ngspice acepta `-` en un nombre de `.meas`/variable, pero **no** `@` — `$&measure@node` falla con "bad variable name"; ver `src/agents/escritura/measurements.py`). Implementado en `src/agents/escritura/measurements.py`.
+- [x] **Task B2:** Transformador genérico spiceTemplate → `.subckt` con puertos `vin`/`vout`/`0`, con renombrado por instancia. Implementado en `src/agents/escritura/composition.py::template_to_subcircuit`. Probado contra `opamp_highpass_active` + `opamp_noninverting_amp` (`tests/test_composition.py::test_subcircuit_transform_renames_nested_definitions`).
+- [x] **Task B3:** Ensamblador en `src/agents/escritura/composition.py::assemble_composed_netlist`: dado `blocks` + `connections`, instancia cada `.subckt` con B2, cablea las conexiones (el `vout` namespaced de un bloque se vuelve el `vin` namespaced del siguiente), conserva la fuente independiente (`V{id}_in {id}_vin 0 DC 0 AC 1`) solo en el/los bloque(s) cabeza de cadena (los que ninguna conexión alimenta), y emite un único bloque `.control` con un `.meas`+`echo {block_id} {key} $&{key} >> output.txt` por `Requirement`. Un requisito sin `node` se mide en la salida propia del bloque (`{id}_vout`), con `input_node` = la entrada real de ese bloque tras el cableado — así la ganancia de una etapa aguas abajo se mide contra lo que de verdad la alimenta, no contra la entrada original de la cadena.
+- [x] **Task B4:** Eliminado en `escritura/node.py` el camino `if block["type"] == "catalog" and iteration == 0 and chat_model is not None`. `get_chat_model`/`AGENT_ID="writer"` se conservan en el módulo (sin llamador propio) porque `tests/test_composition.py::test_catalog_never_resolves_writer_llm` los monkeypatchea — borrarlos rompería ese test sin necesidad.
+- [x] **Task B5:** `shell/node.py` gana `_composed_shell` (rama nueva, activada cuando `normalized_spec["connections"]` no está vacío): corre ngspice **una vez** sobre el netlist compartido y reparte las mediciones (vía la nueva `parse_measurements` en `shell/ngspice_runner.py`) entre los `sim_results` de cada bloque según la etiqueta de bloque que trae cada línea `echo`. El camino legacy (sin `connections`) no cambia una sola línea.
+
+**Descubrimientos durante la implementación (no estaban en el diseño):**
+- El catálogo real (`knowledge/circuit_client.py::FALLBACK_CIRCUITS`) usa
+  siempre `vin`/`vout`/`0` como nodos de E/S y cada plantilla trae su propia
+  fuente `Vin` y su propio `.control` — son circuitos completos y autónomos,
+  no fragmentos componibles. `template_to_subcircuit` depende de esa
+  convención; una plantilla que no la siguiera necesitaría trabajo aparte.
+- `.meas`/`$&var` con `FIND ... AT=X` en ngspice necesita un **intervalo**,
+  no un punto: un barrido `dc`/`ac` de un solo punto en `X` falla con
+  "out of interval" aunque `X` sea exactamente el punto pedido. Por eso
+  `measure_dc`/`measure_current` barren `0` a `1` (no `0` a `0`) y
+  `measure_gain_at_freq` barre ±10 % alrededor de la frecuencia objetivo en
+  vez de un único punto.
+- `.startswith(".end")` en un parser de líneas SPICE es una trampa: matchea
+  tanto `.end` (fin de archivo) como `.ends` (fin de subcircuito). El primer
+  intento de `template_to_subcircuit` se comía todos los `.ends` anidados
+  por este bug — el chequeo correcto es `== ".end"`.
 
 **Ya resuelto, no lo repitas:** el bug de identidad de métrica que Slice B
 iba a exponer (dos requisitos con el mismo `measure` en nodos distintos
 colisionando en `sim_result["metrics"]`) ya se corrigió en Slice A/B:
 `curador/policy.py` expone `metric_key(requirement) -> str` (sufija con
-`@node` solo si `requirement["node"]` no está vacío) y tanto
+`__at__node` solo si `requirement["node"]` no está vacío) y tanto
 `evaluate_requirement` como `curador/node.py` ya lo usan en vez de indexar
 `metrics` por `requirement["measure"]` a secas. B1/B3 solo tienen que producir
 `.meas` cuyo nombre siga esa misma convención — no toques `curador/` de
 nuevo para esto.
+
+**Fuera de alcance de este slice, anotado para Slice C o futuro:**
+- Solo se probó el par `opamp_highpass_active → opamp_noninverting_amp`; los
+  otros 10 `circuit_id` del catálogo no pasaron por `template_to_subcircuit`
+  y podrían tener device types no cubiertos por
+  `composition._transform_line` (ej. BJT con 4 nodos, u otros formatos de
+  `.model`) — revisar caso por caso si Slice C los necesita en cascada.
+- El orquestador todavía no extrae `connections`/`Requirement.node` de
+  lenguaje natural (`request_text`); solo el camino `circuit_spec`
+  estructurado los puebla hoy. Eso seguía fuera de alcance, tal como decía
+  el diseño original.
+- El ajuste del curador para un bloque `catalog` compuesto sigue usando "el
+  peor requisito" (limitación heredada de Slice A, sin cambios aquí).
 
 ## Slice C — Banco de evaluación por requisito (no arrancar todavía)
 
