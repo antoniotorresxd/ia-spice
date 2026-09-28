@@ -335,6 +335,52 @@ ngspice antes de tocar código:
 Con ambos fixes, el mismo pedido converge en 2 iteraciones (VCE medido
 6.32 V contra el objetivo de 6.0 V, aceptado).
 
+**4. Auditoría completa de `curador/policy.py::_adjust_catalog` (2026-09-28),
+a pedido del usuario tras el bug de BJT.** Se verificó cada solver de
+`calculo/catalog_solver.py` contra ngspice real (valor inicial vs. objetivo)
+y, para los que ya tenían algo de error, se verificó además que la rama de
+ajuste correspondiente mueva el parámetro en la dirección correcta —
+exactamente el tipo de bug que tenía BJT. Dos más, de la misma familia:
+
+- **`diode_clipper`/`double_ended_clipper`:** sus claves (`Vbias`/`V1`,
+  `R`, `RL`) no calzaban con ninguna rama especial, así que caían en el
+  fallback genérico, que agarra "la primera clave que empieza con R" y la
+  escala — en este caso `R`. Pero `vclip ≈ Vbias + 0.7 V`: es la rama
+  ADITIVA, no una resistencia. Confirmado en ngspice: un rango de 100x en
+  `R` (100 Ω a 10 kΩ) apenas mueve `vclip` ~0.2 V, así que ese ajuste no
+  converge nunca si el punto de partida queda lejos del objetivo. Se agregó
+  una rama `Vbias`/`V1` con `nuevo = viejo + (target - actual)`.
+- **`sallen_key_lowpass_butterworth`:** la rama pensada para esta relación
+  inversa (`fc ∝ 1/(R·C)`) exigía la clave exacta `"C"`, pero este solver
+  devuelve `C1`/`C2`, no `C` — caía también en el fallback genérico, que
+  escala `R` con `* ratio` (la dirección correcta para una relación
+  DIRECTA, no esta). Confirmado con `_adjust_catalog` directamente: pedir
+  bajar `fo` de 1000 a 800 Hz de hecho SUBÍA `R`... en la dirección que la
+  hubiera bajado más, no subido — es decir, quedaba exactamente al revés.
+  Se amplió la condición para que también matchee `C1`.
+
+**Verificados y correctos, sin cambios:** `RZ` (zener — confirmado en
+ngspice que más `RZ` baja `v_out`, y la rama ya usa `/ ratio` en esa
+dirección), `Rf` (amplificador no inversor e integrador práctico —
+confirmado que más `Rf` sube la salida en ambos, coherente con `* ratio`),
+`R2` (divisor de voltaje, ya cubierto por Slice C). `zener_regulated_power_
+supply`, `rc_lowpass_passive`, `opamp_highpass_active`,
+`opamp_noninverting_amp`, `voltage_divider`, `bjt_common_emitter_amp`,
+`opamp_integrator_practical`, `sallen_key_lowpass_butterworth` y
+`diode_clamper` se simularon con sus valores iniciales de fórmula contra
+ngspice real y caen cerca de lo esperado (la mayoría <1% de error; el peor,
+`bjt_common_emitter_amp`, ~14%, dentro de lo que el lazo del curador ya
+corrige normalmente).
+
+**No investigado, señalado para quien lo necesite:** `diode_clamper` no
+tiene ningún parámetro de diseño atado a un `target` numérico — sus
+ecuaciones solo fijan `RL·C ≥ 10·T` para que el capacitor no se descargue
+entre picos, no persiguen un nivel de salida específico. Si algún pedido en
+lenguaje natural termina pidiéndole al clamper un valor de salida exacto,
+no hay ninguna vía hoy para que el curador lo alcance ajustando parámetros
+— es una pregunta de diseño (¿qué debería ajustar un "clamper" para
+cumplir un objetivo de tensión?), no un bug puntual como los de arriba.
+
 ---
 
 ## Notas para quien retome Slice B/C

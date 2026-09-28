@@ -54,7 +54,12 @@ def _adjust_catalog(values: dict, target: float, actual: float) -> dict:
     new_values = dict(values)
     if "RZ" in new_values:
         new_values["RZ"] = max(new_values["RZ"] / ratio, 1.0)
-    elif "R" in new_values and "C" in new_values:
+    elif "R" in new_values and ("C" in new_values or "C1" in new_values):
+        # fc (o fo, Sallen-Key) ∝ 1/(R·C): inversa, de ahí /ratio. Sallen-Key
+        # devuelve C1/C2, no "C" a secas — sin el `or "C1"` caía en el
+        # fallback genérico de abajo, que escala R con `* ratio` (la
+        # dirección correcta para una relación DIRECTA, no esta). Confirmado
+        # en ngspice: con esa rama, pedir bajar fo de hecho la subía.
         new_values["R"] = max(new_values["R"] / ratio, 1.0)
     elif "R2" in new_values:
         new_values["R2"] = max(new_values["R2"] * ratio, 1.0)
@@ -67,6 +72,15 @@ def _adjust_catalog(values: dict, target: float, actual: float) -> dict:
         # empuja en la dirección que empeora el error: si actual > target
         # (VCEQ de más), ratio < 1 encoge RC, lo que sube VCEQ todavía más.
         new_values["RC"] = max(new_values["RC"] / ratio, 1.0)
+    elif "Vbias" in new_values or "V1" in new_values:
+        # vclip ≈ Vbias + 0.7 V (la caída del diodo): una relación ADITIVA,
+        # no proporcional — nada que ver con escalar una resistencia. Sin
+        # esta rama, el fallback genérico de abajo agarraba "R" (el primer
+        # nombre que empieza con R) y lo escalaba: confirmado en ngspice que
+        # un rango de 100x en R apenas mueve vclip ~0.2 V, así que ese
+        # ajuste no converge nunca si el punto de partida queda lejos.
+        key = "Vbias" if "Vbias" in new_values else "V1"
+        new_values[key] = round(new_values[key] + (target - actual), 4)
     else:
         for k in list(new_values.keys()):
             if k.upper().startswith("R") and isinstance(new_values[k], (int, float)):
