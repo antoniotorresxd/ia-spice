@@ -795,8 +795,37 @@ export async function getDashboardMetrics(userId: string, period: DashboardPerio
     },
   ];
 
-  // Model distribution: estimated proportions from real Langfuse data.
-  const modelDistribution = [
+  // Intentar consultar métricas reales consolidadas desde Langfuse a través del servicio de agentes
+  let realLangfuseMetrics: any = null;
+  try {
+    const res = await fetch(`${env.AGENTS_BASE_URL}/metrics/summary?days=${days}&user_id=${userId}`, {
+      headers: {
+        authorization: `Bearer ${env.AGENTS_API_TOKEN}`,
+      },
+    });
+    if (res.ok) {
+      const body = await res.json();
+      if (body.status === "ok" && body.metrics) {
+        realLangfuseMetrics = body.metrics;
+      }
+    }
+  } catch {
+    // Si el servicio de agentes o Langfuse no está disponible, se usan los cálculos de DB
+  }
+
+  // Token counts y costos: reales de Langfuse si están disponibles, de lo contrario estimación basada en DB
+  const finalTokens =
+    realLangfuseMetrics && realLangfuseMetrics.totalTokens > 0
+      ? realLangfuseMetrics.totalTokens
+      : estimatedTokens;
+
+  const finalCostUsd =
+    realLangfuseMetrics && realLangfuseMetrics.totalCostUsd > 0
+      ? realLangfuseMetrics.totalCostUsd
+      : Math.round(estimatedTokens * COST_PER_1K_TOKENS) / 1000;
+
+  // Model distribution estimada como fallback si Langfuse no reporta datos
+  const estimatedModelDistribution = [
     {
       modelName: "models/gemini-3.5-flash-lite",
       label: "Gemini 3.5 Flash Lite",
@@ -820,10 +849,17 @@ export async function getDashboardMetrics(userId: string, period: DashboardPerio
     },
   ];
 
+  const finalModelDistribution =
+    realLangfuseMetrics &&
+    realLangfuseMetrics.modelDistribution &&
+    realLangfuseMetrics.modelDistribution.length > 0
+      ? realLangfuseMetrics.modelDistribution
+      : estimatedModelDistribution;
+
   return {
     period,
-    tokens: { used: estimatedTokens },
-    estimatedCostUsd: Math.round(estimatedTokens * COST_PER_1K_TOKENS) / 1000,
+    tokens: { used: finalTokens },
+    estimatedCostUsd: finalCostUsd,
     executions: totalExecs,
     successRate: Math.round(successRate * 1000) / 1000,
     processingMinutes,
@@ -831,8 +867,8 @@ export async function getDashboardMetrics(userId: string, period: DashboardPerio
     avgLatencyMs,
     timeSeries,
     agentBreakdown,
-    modelDistribution,
-    isDemo: totalExecs === 0,
+    modelDistribution: finalModelDistribution,
+    isDemo: totalExecs === 0 && (!realLangfuseMetrics || realLangfuseMetrics.totalTokens === 0),
   };
 }
 

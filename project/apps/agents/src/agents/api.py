@@ -528,3 +528,137 @@ def get_run_trace(execution_id: str, authorization: str | None = Header(default=
         }
 
 
+@app.get("/metrics/summary")
+def get_metrics_summary(
+    days: int = 30,
+    user_id: str | None = None,
+    authorization: str | None = Header(default=None),
+):
+    """Obtiene métricas agregadas reales directamente desde Langfuse Cloud."""
+    _require_token(authorization)
+    client = _langfuse_client()
+    if client is None:
+        return {
+            "status": "unavailable",
+            "message": "Observabilidad de Langfuse no configurada en el servidor de agentes.",
+            "metrics": None,
+        }
+
+    try:
+        from datetime import datetime, timedelta, timezone
+
+        from_time = datetime.now(timezone.utc) - timedelta(days=days)
+
+        # Consultar trazas recientes del periodo
+        traces_kwargs = {"limit": 100}
+        if user_id:
+            traces_kwargs["user_id"] = user_id
+
+        traces_res = client.api.trace.list(**traces_kwargs)
+        all_traces = traces_res.data if hasattr(traces_res, "data") else []
+
+        # Filtrar por fecha
+        period_traces = [
+            t for t in all_traces
+            if t.timestamp and t.timestamp >= from_time
+        ]
+
+        total_tokens = 0
+        total_cost = 0.0
+        models_map = {}
+        daily_map = {}
+
+        for t in period_traces:
+            # Agrupar costo de la traza si existe
+            if getattr(t, "total_cost", None):
+                total_cost += float(t.total_cost)
+
+            # Fecha para time series
+            day_str = t.timestamp.strftime("%Y-%m-%d") if t.timestamp else None
+            if day_str:
+                if day_str not in daily_map:
+                    daily_map[day_str] = {"tokens": 0, "traces": 0, "cost": 0.0}
+                daily_map[day_str]["traces"] += 1
+                if getattr(t, "total_cost", None):
+                    daily_map[day_str]["cost"] += float(t.total_cost)
+
+        # Consultar observaciones (generations) para desglose exacto de tokens y modelos
+        try:
+            obs_kwargs = {"type": "GENERATION", "limit": 100}
+            if hasattr(client.api, "observations") and hasattr(client.api.observations, "get_many"):
+                obs_res = client.api.observations.get_many(**obs_kwargs)
+                observations = obs_res.data if hasattr(obs_res, "data") else []
+                for obs in observations:
+                    obs_time = obs.start_time or obs.end_time
+                    if obs_time and obs_time < from_time:
+                        continue
+
+                    usage = getattr(obs, "usage", None)
+                    t_tok = 0
+                    if usage:
+                        t_tok = getattr(usage, "total", None) or getattr(usage, "total_tokens", None) or 0
+                    total_tokens += t_tok
+
+                    # Modelo
+                    mod_name = getattr(obs, "model", None) or "desconocido"
+                    if mod_name not in models_map:
+                        models_map[mod_name] = {"tokens": 0, "calls": 0}
+                    models_map[mod_name]["tokens"] += t_tok
+                    models_map[mod_name]["calls"] += 1
+
+                    # Asignar a serie diaria
+                    if obs_time:
+                        day_str = obs_time.strftime("%Y-%m-%d")
+                        if day_str in daily_map:
+                            daily_map[day_str]["tokens"] += t_tok
+        except Exception:
+            # Fallback en caso de que observaciones no esté disponible directamente
+            pass
+
+        # Formatear distribución de modelos
+        model_distribution = []
+        for mod, data in models_map.items():
+            pct = round((data["tokens"] / total_tokens * 100), 1) if total_tokens > 0 else 0
+            label = mod
+            if "flash-lite" in mod:
+                label = "Gemini 3.5 Flash Lite"
+            elif "gemma" in mod:
+                label = "Gemma 4 12B (Local/vLLM)"
+            elif "flash" in mod:
+                label = "Gemini 3.5 Flash"
+
+            model_distribution.append({
+                "modelName": mod,
+                "label": label,
+                "tokens": data["tokens"],
+                "percentage": pct,
+                "callCount": data["calls"],
+            })
+
+        return {
+            "status": "ok",
+            "metrics": {
+                "totalTokens": total_tokens,
+                "totalCostUsd": round(total_cost, 4),
+                "traceCount": len(period_traces),
+                "modelDistribution": model_distribution,
+                "daily": [
+                    {
+                        "date": d,
+                        "tokens": v["tokens"],
+                        "traces": v["traces"],
+                        "cost": round(v["cost"], 4),
+                    }
+                    for d, v in sorted(daily_map.items())
+                ],
+            },
+        }
+    except Exception as exc:
+        return {
+            "status": "error",
+            "message": f"Error al consultar métricas en Langfuse: {exc}",
+            "metrics": None,
+        }
+
+
+

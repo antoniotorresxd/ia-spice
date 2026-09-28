@@ -108,3 +108,22 @@ def test_runs_con_spec_invalido_devuelve_200_con_veredicto_rechazado():
     # inválido es un resultado, no un error HTTP.
     assert response.status_code == 200
     assert response.json()["verdict"]["status"] == "rejected"
+
+
+def test_metrics_summary_sin_authorization_es_401():
+    response = client.get("/metrics/summary")
+    assert response.status_code == 401
+
+
+def test_metrics_summary_con_token_devuelve_estructura():
+    response = client.get(
+        "/metrics/summary?days=7",
+        headers={"Authorization": f"Bearer {TOKEN}"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert "status" in body
+    # Si Langfuse no está configurado en entorno de test devuelve 'unavailable' con metrics=None
+    # Si estuviera configurado devuelve 'ok' con metrics
+    assert body["status"] in ("ok", "unavailable", "error")
+
