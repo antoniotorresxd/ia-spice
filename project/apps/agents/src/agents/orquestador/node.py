@@ -65,10 +65,23 @@ def _requirements_for(block, params: dict, tolerance: float) -> list[dict]:
 
 
 def _normalize(spec: CircuitSpec) -> dict:
+    # Un bloque sin conexiones se sintetiza y simula solo: su plantilla mide
+    # UNA magnitud (lo que su propio .control calcula), así que un segundo
+    # requisito ahí nunca tiene medición y rechaza siempre, por bien resuelto
+    # que esté todo lo demás. El prompt del orquestador le pide al LLM que no
+    # haga esto, pero no siempre lo respeta (confirmado: pide icq+vceq sobre
+    # un BJT suelto pese a la instrucción explícita) — se recorta acá, de
+    # forma determinista, en vez de confiar en que el modelo obedezca.
+    connected_ids = {
+        endpoint.partition(".")[0] for pair in spec.connections for endpoint in pair
+    }
+
     blocks = []
     for block in spec.blocks:
         params = block.params.model_dump()
         requirements = _requirements_for(block, params, spec.tolerance)
+        if block.id not in connected_ids and len(requirements) > 1:
+            requirements = requirements[:1]
         blocks.append(
             {
                 "id": block.id,
