@@ -388,7 +388,7 @@ export function HomeSidebar({
                   >
                     <div className={styles.projectExpansionInner}>
                       <ul className="home-project-conversations">
-                        {children.slice(0, 5).map(conversationItem)}
+                        {children.map(conversationItem)}
                       </ul>
                     </div>
                   </div>
@@ -429,7 +429,7 @@ export function HomeSidebar({
               </div>
               {isUnassignedExpanded && (
                 <ul className="home-project-conversations">
-                  {unassignedConversations.slice(0, 5).map(conversationItem)}
+                  {unassignedConversations.map(conversationItem)}
                 </ul>
               )}
             </li>
