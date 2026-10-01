@@ -3,24 +3,23 @@
 \contentsline {section}{Planteamiento del Problema}{1}{section*.4}%
 \contentsline {section}{Objetivo General}{2}{section*.4}%
 \contentsline {section}{Objetivos Específicos}{2}{section*.4}%
-\contentsline {subsection}{\numberline {0.0.1}AnalogCoder}{2}{subsection.0.0.1}%
-\contentsline {subsection}{\numberline {0.0.2}AnalogAgent}{3}{subsection.0.0.2}%
-\contentsline {subsection}{\numberline {0.0.3}CircuitLM}{3}{subsection.0.0.3}%
-\contentsline {section}{Justificación}{4}{subsection.0.0.3}%
-\contentsline {section}{Límites y Alcances}{5}{subsection.0.0.3}%
+\contentsline {section}{Estado del Arte}{2}{Item.4}%
+\contentsline {section}{Justificación}{4}{Item.4}%
+\contentsline {section}{Límites y Alcances}{5}{Item.4}%
 \contentsline {chapter}{\numberline {1}Marco Teórico}{6}{chapter.1}%
+\contentsline {section}{Marco Teórico}{6}{section*.5}%
 \contentsline {subsection}{\numberline {1.0.1}Qué es un agente}{6}{subsection.1.0.1}%
 \contentsline {subsection}{\numberline {1.0.2}Que es un prompt}{6}{subsection.1.0.2}%
 \contentsline {subsection}{\numberline {1.0.3}Modelos de lenguaje grande}{7}{subsection.1.0.3}%
 \contentsline {subsection}{\numberline {1.0.4}LangGraph}{8}{subsection.1.0.4}%
 \contentsline {subsection}{\numberline {1.0.5}LangFuse}{8}{subsection.1.0.5}%
-\contentsline {subsection}{\numberline {1.0.6}Spice (Simulation Program with Integrated Circuit Emphasis)}{8}{subsection.1.0.6}%
+\contentsline {subsection}{\numberline {1.0.6}Spice (Simulation Program with Integrated Circuit Emphasis)}{9}{subsection.1.0.6}%
 \contentsline {subsection}{\numberline {1.0.7}PySpice}{9}{subsection.1.0.7}%
 \contentsline {subsection}{\numberline {1.0.8}Generacion Aumentada por Recuperación (RAG)}{9}{subsection.1.0.8}%
 \contentsline {subsection}{\numberline {1.0.9}Sistemas multiagente y orquestación}{10}{subsection.1.0.9}%
 \contentsline {subsection}{\numberline {1.0.10}Arquitectura de software: principios y patrones de coordinación}{11}{subsection.1.0.10}%
 \contentsline {subsection}{\numberline {1.0.11}Separacion de intereses}{11}{subsection.1.0.11}%
-\contentsline {subsection}{\numberline {1.0.12}Ausencia de estado en el componente a escalar}{11}{subsection.1.0.12}%
+\contentsline {subsection}{\numberline {1.0.12}Ausencia de estado en el componente a escalar}{12}{subsection.1.0.12}%
 \contentsline {subsection}{\numberline {1.0.13}La ausencia de estado entre solicitudes convive con una exigencia opuesta dentro de cada solicitud}{12}{subsection.1.0.13}%
 \contentsline {section}{\numberline {1.1}El diseño de circuitos analógicos como proceso iterativo}{12}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Síntesis del marco teórico}{13}{section.1.2}%
@@ -50,5 +49,5 @@
 \contentsline {subsection}{\numberline {2.13.3}Riesgos residuales}{35}{subsection.2.13.3}%
 \contentsline {chapter}{\numberline {3}Pruebas y Análisis de Resultados}{37}{chapter.3}%
 \contentsline {chapter}{\numberline {4}Conclusiones y Trabajo Futuro}{38}{chapter.4}%
-\contentsline {chapter}{Referencias}{39}{chapter*.15}%
-\contentsline {chapter}{\numberline {A}Diagramas de casos de uso}{41}{appendix.Alph1}%
+\contentsline {chapter}{Referencias}{39}{chapter*.16}%
+\contentsline {chapter}{\numberline {A}Diagramas de casos de uso}{41}{appendix.A}%
