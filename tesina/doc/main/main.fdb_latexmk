@@ -1,12 +1,12 @@
 # Fdb version 4
-["biber main"] 1790552264.54419 "main.bcf" "main.bbl" "main" 1790552271.55192 0
+["biber main"] 1790552264.54419 "main.bcf" "main.bbl" "main" 1790566686.4518 0
   "./lib/referencias.bib" 1783994054.84653 9937 010c9094c106581356266a6ab1716f52 ""
-  "main.bcf" 1790552271.43474 110263 775d5c8d08749ab9dc330e2bee77b59d "pdflatex"
+  "main.bcf" 1790566686.35327 110263 775d5c8d08749ab9dc330e2bee77b59d "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1790552265.76347 "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" "main.pdf" "main" 1790552271.55232 0
+["pdflatex"] 1790566681.82951 "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" "main.pdf" "main" 1790566686.45208 0
   "../src/diagrams/c4_l1_v4.png" 1781587247.73669 416435 fed0c5cdd43cbc1ca807bf020b7a258c ""
   "../src/diagrams/c4_l2_v4.png" 1781587247.82469 716545 52398934ce80488959d5a5868e83b76d ""
   "../src/diagrams/c4_l3_v4.png" 1781587248.00869 749967 ad76a54919aa71e8d58fb10e411dd9bf ""
@@ -21,7 +21,7 @@
   "../src/pantallas/Picture1.png" 1784243698.76469 189098 e62a80dc7dedad24d21186541c45f9b8 ""
   "../src/pantallas/Picture2.png" 1784243698.84869 81843 6d8d0bca80719c62bd5d9de7453785e2 ""
   "/etc/texmf/web2c/texmf.cnf" 1769274164.80754 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" 1790542161.44032 7392 bbf63203b001c4c11e3b7c4f05db2340 ""
+  "/home/antonioxd/projects/spice/tesina/doc/main/main.tex" 1790566512.57757 7392 bbf63203b001c4c11e3b7c4f05db2340 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/times/psyro.tfm" 1136768653 1544 23a042a74981a3e4b6ce2e350e390409 ""
@@ -328,17 +328,17 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1741904018 41538 c016915c1d51223b6dbbfe27341748a8 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1769274180 5467255 9a64d1b40e0b893fc5588ecce9d8accf ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1769274199 3349532 fbed41e341f01964829f3646eccd5e10 ""
-  "main.aux" 1790552271.42274 18578 301030f2ce0ebcf24ca12794270a584a "pdflatex"
-  "main.bbl" 1790552265.71171 38329 dc04206a34463e9b1093b3764eeb2e57 "biber main"
-  "main.lof" 1790552271.43966 1653 cd1dc07816b5fcdd609c83d015448595 "pdflatex"
-  "main.out" 1790552271.43074 10910 0c2d875f40a0e502703d289a0a320760 "pdflatex"
-  "main.run.xml" 1790552271.43966 2409 046fe2279f185af2dca0cfbed2298fd7 "pdflatex"
-  "main.tex" 1790542161.44032 7392 bbf63203b001c4c11e3b7c4f05db2340 ""
-  "main.toc" 1790552271.43966 4879 7c3de90d206bc65c875eb036d9af08a8 "pdflatex"
+  "main.aux" 1790566686.34295 18587 33a56ee6d4812797ba2ed499607d7557 "pdflatex"
+  "main.bbl" 1790558794.68917 38329 dc04206a34463e9b1093b3764eeb2e57 "biber main"
+  "main.lof" 1790566686.35709 1654 fc9dae9be07de94b505beab343f317ff "pdflatex"
+  "main.out" 1790566686.35095 11000 095177da3c4bf99b8a5e6498f04e5ad6 "pdflatex"
+  "main.run.xml" 1790566686.35709 2409 046fe2279f185af2dca0cfbed2298fd7 "pdflatex"
+  "main.tex" 1790566512.57757 7392 bbf63203b001c4c11e3b7c4f05db2340 ""
+  "main.toc" 1790566686.35709 4845 ee874a2b4cc736c2759f8010f823ef65 "pdflatex"
   "sections/apendices.tex" 1782095897.79589 1165 266dd00467fd99bbf6d009bd102968a6 ""
   "sections/conclusiones.tex" 1780981187.05291 0 d41d8cd98f00b204e9800998ecf8427e ""
   "sections/desarrollo.tex" 1784243992.38332 12555 3e980cfe2617c629308559edb41ac0a9 ""
-  "sections/estado_arte.tex" 1790552256.18674 4978 ffa257628f95fd8028d96457c551af8f ""
+  "sections/estado_arte.tex" 1790566676.78347 5169 3877c4369d3f3d7c43f670653bac0a02 ""
   "sections/justificacion.tex" 1790525375.92031 2259 2be9780ecad12c4ddda0d538a67fcda7 ""
   "sections/limites_alcances.tex" 1780983935.46858 1533 1aeb5a5948941f29dc6c6d39ba12ad2d ""
   "sections/marco_teorico.tex" 1790541926.7176 20428 feb30b18829c4d0166461f1de933791e ""
