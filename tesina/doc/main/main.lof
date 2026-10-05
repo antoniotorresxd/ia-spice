@@ -1,17 +1,17 @@
 \babel@toc {spanish}{}\relax 
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {2.1}{\ignorespaces Diagrama funcional del sistema.}}{18}{figure.caption.6}%
-\contentsline {figure}{\numberline {2.2}{\ignorespaces Diagrama de casos de uso: flujo de simulación y validación.}}{19}{figure.caption.7}%
-\contentsline {figure}{\numberline {2.3}{\ignorespaces C4 Nivel 1: Diagrama de contexto.}}{20}{figure.caption.8}%
-\contentsline {figure}{\numberline {2.4}{\ignorespaces C4 Nivel 2: Diagrama de contenedores.}}{21}{figure.caption.9}%
-\contentsline {figure}{\numberline {2.5}{\ignorespaces C4 Nivel 3: Diagrama de componentes.}}{22}{figure.caption.10}%
-\contentsline {figure}{\numberline {2.6}{\ignorespaces Diagrama de secuencia del flujo de generación.}}{24}{figure.caption.11}%
-\contentsline {figure}{\numberline {2.7}{\ignorespaces Pantalla de inicio de sesión del prototipo, con la ruta de solución del pipeline de generación.}}{32}{figure.caption.13}%
-\contentsline {figure}{\numberline {2.8}{\ignorespaces Espacio de trabajo autenticado: solicitud en lenguaje natural, resumen operativo, actividad reciente y archivos generados.}}{33}{figure.caption.14}%
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Diagrama funcional del sistema.}}{13}{figure.caption.6}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Diagrama de casos de uso: flujo de simulación y validación.}}{14}{figure.caption.7}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces C4 Nivel 1: Diagrama de contexto.}}{15}{figure.caption.8}%
+\contentsline {figure}{\numberline {2.4}{\ignorespaces C4 Nivel 2: Diagrama de contenedores.}}{16}{figure.caption.9}%
+\contentsline {figure}{\numberline {2.5}{\ignorespaces C4 Nivel 3: Diagrama de componentes.}}{17}{figure.caption.10}%
+\contentsline {figure}{\numberline {2.6}{\ignorespaces Diagrama de secuencia del flujo de generación.}}{19}{figure.caption.11}%
+\contentsline {figure}{\numberline {2.7}{\ignorespaces Pantalla de inicio de sesión del prototipo, con la ruta de solución del pipeline de generación.}}{22}{figure.caption.12}%
+\contentsline {figure}{\numberline {2.8}{\ignorespaces Espacio de trabajo autenticado: solicitud en lenguaje natural, resumen operativo, actividad reciente y archivos generados.}}{23}{figure.caption.13}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {A.1}{\ignorespaces Diagrama de casos de uso: acceso y gestión de sesiones.}}{41}{figure.caption.17}%
-\contentsline {figure}{\numberline {A.2}{\ignorespaces Diagrama de casos de uso: generación de circuito.}}{42}{figure.caption.18}%
-\contentsline {figure}{\numberline {A.3}{\ignorespaces Diagrama de casos de uso: decisión del agente curador.}}{42}{figure.caption.19}%
+\contentsline {figure}{\numberline {A.1}{\ignorespaces Diagrama de casos de uso: acceso y gestión de sesiones.}}{31}{figure.caption.16}%
+\contentsline {figure}{\numberline {A.2}{\ignorespaces Diagrama de casos de uso: generación de circuito.}}{32}{figure.caption.17}%
+\contentsline {figure}{\numberline {A.3}{\ignorespaces Diagrama de casos de uso: decisión del agente curador.}}{32}{figure.caption.18}%

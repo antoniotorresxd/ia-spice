@@ -1,12 +1,12 @@
 % Capítulo 4: Propuesta de solución
-\section{Propuesta de Diseño}
+\section{Diseño Conceptual}
 \label{sec:prop-intro}
 
 En el capítulo anterior se revisó el estado del arte de los sistemas multiagente basados en LLM para el diseño de circuitos analógicos, y se identificó que los trabajos reportados operan a nivel de transistor sobre un nodo tecnológico (PDK), mientras que la generación y validación de circuitos a nivel de componentes comerciales (COTS) con simulación SPICE dentro del lazo de diseño permanece como una brecha abierta. Este capítulo presenta la propuesta de solución que atiende esa brecha.
 
 El propósito del capítulo es exponer el diseño del sistema antes de su construcción: las premisas que lo fundamentan, su descomposición funcional, su arquitectura estructural y su comportamiento en ejecución. Las decisiones de diseño se justifican a partir de la naturaleza del problema, de los principios de la ingeniería de software y de los hallazgos del estado del arte; los artefactos de análisis y diseño elaborados a lo largo del proyecto —la Especificación de Requisitos de Software (SRS), el modelo de casos de uso, el diagrama funcional, el modelo arquitectónico C4 de tres niveles y el diagrama de secuencia— registran y representan esas decisiones, de modo que cada una quede expresada en un artefacto verificable.
 
-La exposición sigue un orden de lo abstracto a lo concreto. Primero se establecen el problema que el diseño debe resolver, las premisas que lo orientan y el papel del SRS como registro de los requisitos (sección~\ref{sec:prop-premisas}). A continuación se describe \textit{qué} hace el sistema mediante su descomposición funcional y sus casos de uso (sección~\ref{sec:prop-funcional}). Después se describe \textit{cómo} se estructura, mediante el modelo C4 en sus tres niveles (sección~\ref{sec:prop-c4}). Enseguida se describe \textit{cómo se comporta} en ejecución, mediante el diagrama de secuencia del flujo principal de generación (sección~\ref{sec:prop-dinamico}). Finalmente se explican los atributos de calidad y seguridad que se desprenden del diseño (secciones~\ref{sec:prop-calidad} y~\ref{sec:prop-seguridad}), se enuncian los criterios de aceptación que la propuesta deberá satisfacer (sección~\ref{sec:prop-criterios}) y se cierra con una síntesis del diseño y su conexión con la evaluación del sistema (sección~\ref{sec:prop-sintesis}).
+*Agregar imagen de Diseño Conceptual*
 
 
 \section{Descomposición funcional y casos de uso}

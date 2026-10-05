@@ -2401,16 +2401,9 @@
     <bcf:citekey order="22" intorder="1">analogcoder</bcf:citekey>
     <bcf:citekey order="22" intorder="2">analogagent</bcf:citekey>
     <bcf:citekey order="23" intorder="1">chen2021evaluating</bcf:citekey>
-    <bcf:citekey order="24" intorder="1">pressman2010software</bcf:citekey>
-    <bcf:citekey order="25" intorder="1">fielding2000architectural</bcf:citekey>
-    <bcf:citekey order="26" intorder="1">langgraph</bcf:citekey>
-    <bcf:citekey order="27" intorder="1">sedra2015microelectronic</bcf:citekey>
-    <bcf:citekey order="28" intorder="1">skywater_pdk</bcf:citekey>
-    <bcf:citekey order="29" intorder="1">iso_25010</bcf:citekey>
-    <bcf:citekey order="30" intorder="1">stallings2018computer</bcf:citekey>
-    <bcf:citekey order="31" intorder="1">betterauth</bcf:citekey>
-    <bcf:citekey order="32" intorder="1">owasp_top10</bcf:citekey>
-    <bcf:citekey order="33" intorder="1">owasp_top10</bcf:citekey>
+    <bcf:citekey order="24" intorder="1">sedra2015microelectronic</bcf:citekey>
+    <bcf:citekey order="25" intorder="1">skywater_pdk</bcf:citekey>
+    <bcf:citekey order="26" intorder="1">owasp_top10</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">
