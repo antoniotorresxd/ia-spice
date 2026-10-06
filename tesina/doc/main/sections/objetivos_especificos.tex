@@ -1,14 +1,15 @@
 \section*{Objetivos Específicos}
+
 \addcontentsline{toc}{section}{Objetivos Específicos}
 
 \begin{enumerate}
     
-    \item \textbf{Desarrollar} el ecosistema multiagente (orquestador,master-workers, curador, escritura y shell) para la correcta comunicación de los módulos de cada agente mediante LangGraph y conexiones mediante API’s y sistemas externos.
+    \item \textbf{Desarrollar} una interfaz web modular con autenticación y gestión de credenciales basada en Better Auth y Drizzle ORM sobre PostgreSQL/Neon, que permita al usuario parametrizar restricciones de diseño analógico en lenguaje técnico y visualizar de forma integrada el código netlist generado, la documentación funcional del circuito, el esquema resultante y los gráficos derivados de la emulación eléctrica.   
     
-    \item \textbf{Entrenar e implementar} el agente curador para: indexar, recuperar topologías y reglas de diseño validadas y evitar que los demás agentes alucinen, esto mediante un aprendizaje RAG.
+    \item \textbf{Entrenar e implementar} un ecosistema multiagente coordinado mediante grafos de estado en LangGraph, integrando un módulo de cálculo y un agente curador sustentado en Generación Aumentada por Recuperación (RAG) para consultar especificaciones de componentes comerciales (COTS), gobernado por un lazo de retroalimentación acotado a un presupuesto estricto de máximo 10 iteraciones de auto-corrección.
 
-    \item \textbf{Integrar} ngspice mediante PySpice, para cerrar el lazo de realimentación que permite ajustar los valores de los componentes de forma iterativa.
-    \item \textbf{Diseñar} la arquitectura para la gestión y alojamiento de los módulos(cliente web, ecosistema multiagente, conexión a LLM’s), utilizando React, typeScript y Docker.
+    \item \textbf{Desplegar} una arquitectura de microservicios desacoplada en contenedores Docker independientes para el cliente y el servidor stateless, configurando la pasarela de llamadas hacia APIs externas de LLMs y habilitando la ejecución segura del motor ngspice mediante PySpice en un entorno de pruebas aislado (sandbox). 
+    \item \textbf{Evaluar} el desempeño global del sistema mediante un banco de pruebas de circuitos CA/CD a nivel COTS, cuantificando la tasa de convergencia en simulación (solve rate dentro de las 10 iteraciones permitidas) y la precisión de las restricciones eléctricas frente a las metas solicitadas. 
     
-
+    
 \end{enumerate}
