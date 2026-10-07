@@ -495,3 +495,46 @@ it('coloca colector y emisor del BJT a la derecha del transistor', () => {
   expect(diagram.nodeXs.vc).toBeGreaterThan(q.cx + 26)
   expect(diagram.nodeXs.ve).toBeGreaterThan(q.cx + 26)
 })
+
+const SALLEN_KEY = [
+  '* Sallen-Key 2nd Order Butterworth Lowpass Filter',
+  'Vin vin 0 DC 0 AC 1',
+  'R1 vin n1 1125.4',
+  'R2 n1 vplus 1125.4',
+  'C1 n1 vout 1.0000e-08',
+  'C2 vplus 0 5.0000e-09',
+  'X1 vplus vout vout opamp',
+  '.subckt opamp inp inn out',
+  'Rin inp inn 1e6',
+  'Egain n1 0 inp inn 1e5',
+  'Rp n1 n2 1k',
+  'Cp n2 0 159n',
+  'Eout out 0 n2 0 1',
+  '.ends',
+  '.control',
+  'ac dec 100 10 1e6',
+  'meas ac fo WHEN vdb(vout)=-3.0103',
+  'echo $&fo > output.txt',
+  '.endc',
+  '.end',
+].join('\n')
+
+it('Sallen-Key: la entrada + del opamp queda a la izquierda del triángulo y C1 no pisa su etiqueta', () => {
+  const diagram = buildDiagram(parseNetlist(SALLEN_KEY))
+  const op = diagram.symbols.find((s) => s.type === 'opamp')
+  expect(op?.type).toBe('opamp')
+  if (op?.type !== 'opamp') return
+  const left = op.left ?? op.cx - 32
+  const right = op.right ?? op.cx + 32
+  // vplus (entrada +) a la izquierda del cuerpo, vout a la derecha
+  expect(diagram.nodeXs.vplus).toBeLessThan(left)
+  expect(diagram.nodeXs.vout).toBeGreaterThan(right)
+  // R2 (n1 -> vplus) no atraviesa el opamp
+  const r2 = diagram.symbols.find((s) => s.type === 'resistorH' && s.name === 'R2')
+  if (r2?.type !== 'resistorH') throw new Error('R2 no es horizontal')
+  expect(r2.x2).toBeLessThan(left)
+  // C1 (n1 -> vout) pasa por encima del opamp, por encima de su etiqueta
+  const c1 = diagram.symbols.find((s) => s.type === 'capacitorH' && s.name === 'C1')
+  if (c1?.type !== 'capacitorH') throw new Error('C1 no es horizontal')
+  expect(c1.y).toBeLessThan(140)
+})

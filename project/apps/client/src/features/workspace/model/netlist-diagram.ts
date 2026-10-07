@@ -1056,8 +1056,11 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     const inputs = [pins.inp, pins.inn].filter(
       (n, i, arr) => n !== GROUND && n !== pins.out && !opampOuts.has(n) && arr.indexOf(n) === i,
     )
+    // Una entrada a la misma profundidad que la salida también se mueve: en un
+    // seguidor (Sallen-Key, `X1 vplus vout vout`) vplus y vout empatan y el
+    // orden alfabético dejaba la entrada + a la derecha del triángulo.
     const outIdx = sortedNodes.indexOf(pins.out)
-    if (outIdx < 0 || inputs.some((n) => sortedNodes.indexOf(n) < 0 || sortedNodes.indexOf(n) > outIdx)) continue
+    if (outIdx < 0 || inputs.some((n) => sortedNodes.indexOf(n) < 0 || depth[n] > depth[pins.out])) continue
     const rest = sortedNodes.filter((n) => !inputs.includes(n))
     rest.splice(rest.indexOf(pins.out), 0, ...inputs)
     sortedNodes.splice(0, sortedNodes.length, ...rest)
@@ -1234,6 +1237,15 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
   })
   const crossesInpRoute = (x1: number, x2: number, y: number) =>
     y < OPAMP_INP_Y && inpRouteSpans.some((r) => [x1, x2].some((x) => x > r.from && x < r.to))
+  // Zona del opamp: cuerpo, etiqueta "X1 · opamp" (encima) y lazo del
+  // seguidor (debajo). Una pista que pase sobre ella, como el C1 de un
+  // Sallen-Key (n1 -> vout), se tachaba con la etiqueta.
+  const opampZones = opampElements.flatMap((op) => {
+    const left = opampLeftX.get(op)
+    return left === undefined ? [] : [{ x1: left - 16, x2: left + 64 + 20, y1: RAIL_Y - 75, y2: RAIL_Y + 50 }]
+  })
+  const crossesOpamp = (x1: number, x2: number, y: number) =>
+    opampZones.some((z) => y > z.y1 && y < z.y2 && x1 < z.x2 && x2 > z.x1)
 
   for (const e of seriesElements) {
     const [a, b] = e.nodes
@@ -1258,6 +1270,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     for (const track of yTracks) {
       const collides =
         crossesInpRoute(x1, x2, track) ||
+        crossesOpamp(x1, x2, track) ||
         placedHorizontal.some((p) => p.y === track && !(x2 <= p.x1 + 10 || x1 >= p.x2 - 10))
       if (!collides) {
         targetY = track
