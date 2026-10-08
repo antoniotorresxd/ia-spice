@@ -13,9 +13,9 @@
 <circle cx="80" cy="219" r="6" fill="#FBBF24"/>
 <circle cx="98" cy="219" r="6" fill="#34D399"/>
 <text x="124.0" y="226.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#115E59" text-anchor="start">Aplicación web</text>
-<g transform="translate(58.0,259.0) scale(1.6667)" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5" /> <path d="M20 21a8 8 0 0 0-16 0" /></g>
-<text x="108.0" y="279.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="#0F172A" text-anchor="start">Usuario</text>
-<text x="108.0" y="301.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="400" fill="#475569" text-anchor="start">ingeniero o estudiante</text>
+<g transform="translate(56.0,259.0) scale(1.7500)" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" /> <path d="M22 10v6" /> <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" /></g>
+<text x="108.0" y="279.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="#0F172A" text-anchor="start">Estudiante</text>
+<text x="108.0" y="301.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="400" fill="#475569" text-anchor="start">pide en sus palabras</text>
 <rect x="129.7" y="306.0" width="158.3" height="64.0" rx="14" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
 <text x="144.7" y="333.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="500" fill="#1E293B" text-anchor="start">Quiero un filtro</text>
 <text x="144.7" y="356.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="500" fill="#1E293B" text-anchor="start">pasa-bajas</text>
