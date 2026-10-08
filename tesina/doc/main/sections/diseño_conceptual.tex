@@ -6,7 +6,16 @@ En el capítulo anterior se revisó el estado del arte de los sistemas multiagen
 
 El propósito del capítulo es exponer el diseño del sistema antes de su construcción: las premisas que lo fundamentan, su descomposición funcional, su arquitectura estructural y su comportamiento en ejecución. Las decisiones de diseño se justifican a partir de la naturaleza del problema, de los principios de la ingeniería de software y de los hallazgos del estado del arte; los artefactos de análisis y diseño elaborados a lo largo del proyecto —la Especificación de Requisitos de Software (SRS), el modelo de casos de uso, el diagrama funcional, el modelo arquitectónico C4 de tres niveles y el diagrama de secuencia— registran y representan esas decisiones, de modo que cada una quede expresada en un artefacto verificable.
 
-*Agregar imagen de Diseño Conceptual*
+La figura~\ref{fig:diagrama-conceptual} resume la propuesta en una sola vista. El proceso no es lineal: el orquestador puede responder directamente o pedir los datos que faltan sin iniciar un diseño; el cálculo reparte los bloques del circuito para resolverlos en paralelo; y la escritura, la simulación y el curador forman un ciclo de prueba y ajuste que se repite hasta que el circuito cumple su meta o se agota el número de intentos. Toda respuesta vuelve a la aplicación, de modo que el usuario puede continuar la conversación sobre el mismo diseño.
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{%
+        \hspace*{-0.5cm}\includegraphics[width=1.3\textwidth, keepaspectratio]{../src/diagrams/diagrama_conceptual.png}%
+    }
+    \caption{Diagrama conceptual del sistema.}
+    \label{fig:diagrama-conceptual}
+\end{figure}
 
 
 \section{Descomposición funcional y casos de uso}
