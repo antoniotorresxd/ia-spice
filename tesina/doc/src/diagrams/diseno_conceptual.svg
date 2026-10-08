@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+<title>Diseño conceptual del sistema multiagente para el diseño de circuitos analógicos</title>
+<defs><marker id="ah-334155" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#334155"/></marker><marker id="ah-D97706" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#D97706"/></marker><marker id="ah-16A34A" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#16A34A"/></marker><marker id="ah-DC2626" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#DC2626"/></marker><marker id="ah-2563EB" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#2563EB"/></marker><filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.08"/></filter></defs>
+<rect width="1920" height="1080" fill="#FFFFFF"/>
+<text x="40.0" y="50.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#6D28D9" text-anchor="start" letter-spacing="1.8">SISTEMA MULTIAGENTE PARA EL DISEÑO DE CIRCUITOS ANALÓGICOS</text>
+<text x="38.0" y="98.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="44" font-weight="800" fill="#0F172A" text-anchor="start">Diseño conceptual</text>
+<path d="M363,125 H1867 A28,28 0 0 1 1895,153 V1032 A28,28 0 0 1 1867,1060 H1575 A28,28 0 0 1 1547,1032 V790 A22,22 0 0 0 1525,768 H363 A28,28 0 0 1 335,740 V153 A28,28 0 0 1 363,125 Z" fill="#FAF8FF" stroke="#C4B5FD" stroke-width="2"/>
+<g transform="translate(363.0,143.0) scale(1.3333)" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8" /> <rect width="16" height="12" x="4" y="8" rx="2" /> <path d="M2 14h2" /> <path d="M20 14h2" /> <path d="M15 13v2" /> <path d="M9 13v2" /></g>
+<text x="407.0" y="167.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="800" fill="#6D28D9" text-anchor="start" letter-spacing="1.8">EQUIPO DE AGENTES DE IA</text>
+<rect x="40.0" y="195.0" width="262.0" height="845.0" rx="20" fill="#FFFFFF" stroke="#5EEAD4" stroke-width="2" filter="url(#shadow)"/>
+<path d="M40,243 V215 A20,20 0 0 1 60,195 H282 A20,20 0 0 1 302,215 V243 Z" fill="#CCFBF1" stroke="#5EEAD4" stroke-width="2"/>
+<circle cx="62" cy="219" r="6" fill="#F87171"/>
+<circle cx="80" cy="219" r="6" fill="#FBBF24"/>
+<circle cx="98" cy="219" r="6" fill="#34D399"/>
+<text x="124.0" y="226.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#115E59" text-anchor="start">Aplicación web</text>
+<g transform="translate(58.0,259.0) scale(1.6667)" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5" /> <path d="M20 21a8 8 0 0 0-16 0" /></g>
+<text x="108.0" y="279.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="#0F172A" text-anchor="start">Usuario</text>
+<text x="108.0" y="301.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="400" fill="#475569" text-anchor="start">ingeniero o estudiante</text>
+<rect x="129.7" y="306.0" width="158.3" height="64.0" rx="14" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
+<text x="144.7" y="333.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="500" fill="#1E293B" text-anchor="start">Quiero un filtro</text>
+<text x="144.7" y="356.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="500" fill="#1E293B" text-anchor="start">pasa-bajas</text>
+<text x="58.0" y="430.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="400" fill="#64748B" text-anchor="start">Aquí conversa, guarda</text>
+<text x="58.0" y="451.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="400" fill="#64748B" text-anchor="start">proyectos y archivos, ve el</text>
+<text x="58.0" y="472.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="400" fill="#64748B" text-anchor="start">avance en vivo y elige el</text>
+<text x="58.0" y="493.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="400" fill="#64748B" text-anchor="start">modelo de IA de cada agente.</text>
+<rect x="54.0" y="628.0" width="186.2" height="64.0" rx="14" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="69.0" y="655.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="500" fill="#1E293B" text-anchor="start">¿A qué frecuencia</text>
+<text x="69.0" y="678.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="500" fill="#1E293B" text-anchor="start">de corte?</text>
+<rect x="194.6" y="709.5" width="93.4" height="41.0" rx="14" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
+<text x="209.6" y="736.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="500" fill="#1E293B" text-anchor="start">A 1 kHz</text>
+<rect x="54.0" y="895.0" width="159.7" height="64.0" rx="14" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="69.0" y="922.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="500" fill="#166534" text-anchor="start">Listo: aquí está</text>
+<text x="69.0" y="945.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="500" fill="#166534" text-anchor="start">tu circuito</text>
+<rect x="137.2" y="980.5" width="150.8" height="41.0" rx="14" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
+<text x="152.2" y="1007.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="500" fill="#1E293B" text-anchor="start">Ahora a 2 kHz</text>
+<rect x="370.0" y="195.0" width="260.0" height="210.0" rx="20" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.8" filter="url(#shadow)"/>
+<circle cx="400" cy="225" r="19" fill="#6D28D9"/>
+<text x="400.0" y="232.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+<g transform="translate(474.0,215.0) scale(2.1667)" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" /> <path d="M9 13a4.5 4.5 0 0 0 3-4" /> <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" /> <path d="M3.477 10.896a4 4 0 0 1 .585-.396" /> <path d="M6 18a4 4 0 0 1-1.967-.516" /> <path d="M12 13h4" /> <path d="M12 18h6a2 2 0 0 1 2 2v1" /> <path d="M12 8h8" /> <path d="M16 8V5a2 2 0 0 1 2-2" /> <circle cx="16" cy="13" r=".5" /> <circle cx="18" cy="3" r=".5" /> <circle cx="20" cy="21" r=".5" /> <circle cx="20" cy="8" r=".5" /></g>
+<text x="500.0" y="295.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="700" fill="#64748B" text-anchor="middle" letter-spacing="1.5">ORQUESTADOR</text>
+<text x="500.0" y="326.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="middle">Entiende el pedido</text>
+<text x="500.0" y="357.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">Lee el mensaje y decide</text>
+<text x="500.0" y="382.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">qué tipo de pedido es</text>
+<path d="M306,330 L362,330" fill="none" stroke="#334155" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<path d="M500.0,409 L500.0,660" fill="none" stroke="#2563EB" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 7"/>
+<path d="M354.0,540 L310,540" fill="none" stroke="#2563EB" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 7" marker-end="url(#ah-2563EB)"/>
+<rect x="358.0" y="494.0" width="284.0" height="92.0" rx="14" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.8"/>
+<g transform="translate(374.0,524.0) scale(1.3333)" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></g>
+<text x="418.0" y="535.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19.5" font-weight="700" fill="#2563EB" text-anchor="start">¿Solo es una duda?</text>
+<text x="418.0" y="560.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">La responde directo</text>
+<path d="M354.0,660 L310,660" fill="none" stroke="#2563EB" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 7" marker-end="url(#ah-2563EB)"/>
+<rect x="358.0" y="614.0" width="284.0" height="92.0" rx="14" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.8"/>
+<g transform="translate(374.0,644.0) scale(1.3333)" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /> <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /> <path d="M12 17h.01" /></g>
+<text x="418.0" y="655.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19.5" font-weight="700" fill="#2563EB" text-anchor="start">¿Faltan datos?</text>
+<text x="418.0" y="680.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">Le pregunta al usuario</text>
+<rect x="790.0" y="195.0" width="260.0" height="272.0" rx="20" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.8" filter="url(#shadow)"/>
+<circle cx="820" cy="225" r="19" fill="#6D28D9"/>
+<text x="820.0" y="232.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+<g transform="translate(894.0,215.0) scale(2.1667)" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" /> <line x1="8" x2="16" y1="6" y2="6" /> <line x1="16" x2="16" y1="14" y2="18" /> <path d="M16 10h.01" /> <path d="M12 10h.01" /> <path d="M8 10h.01" /> <path d="M12 14h.01" /> <path d="M8 14h.01" /> <path d="M12 18h.01" /> <path d="M8 18h.01" /></g>
+<text x="920.0" y="295.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="700" fill="#64748B" text-anchor="middle" letter-spacing="1.5">CÁLCULO</text>
+<text x="920.0" y="326.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="middle">Calcula los valores</text>
+<text x="920.0" y="357.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">Aplica fórmulas de</text>
+<text x="920.0" y="382.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">diseño a cada bloque</text>
+<rect x="832.0" y="397.0" width="52.0" height="34.0" rx="9" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1.5"/>
+<text x="858.0" y="420.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#6D28D9" text-anchor="middle">B1</text>
+<rect x="892.0" y="397.0" width="52.0" height="34.0" rx="9" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1.5"/>
+<text x="918.0" y="420.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#6D28D9" text-anchor="middle">B2</text>
+<rect x="952.0" y="397.0" width="52.0" height="34.0" rx="9" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1.5"/>
+<text x="978.0" y="420.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#6D28D9" text-anchor="middle">B3</text>
+<text x="920.0" y="455.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="600" fill="#6D28D9" text-anchor="middle">todos los bloques a la vez</text>
+<path d="M634,330 L782,330" fill="none" stroke="#334155" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<text x="710.0" y="314.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#0F172A" text-anchor="middle">Es un diseño</text>
+<text x="710.0" y="360.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">lo divide en</text>
+<text x="710.0" y="380.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">bloques con</text>
+<text x="710.0" y="400.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">metas</text>
+<rect x="790.0" y="497.0" width="260.0" height="208.0" rx="16" fill="#FFFFFF" stroke="#C4B5FD" stroke-width="1.6" stroke-dasharray="7 6"/>
+<g transform="translate(806.0,515.0) scale(1.1667)" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /> <path d="M9 18h6" /> <path d="M10 22h4" /></g>
+<text x="844.0" y="535.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18.5" font-weight="700" fill="#1E293B" text-anchor="start">¿No está en el</text>
+<text x="844.0" y="558.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18.5" font-weight="700" fill="#1E293B" text-anchor="start">catálogo?</text>
+<text x="808.0" y="593.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">La IA propone el circuito</text>
+<text x="808.0" y="615.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">completo y se prueba</text>
+<text x="808.0" y="637.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">igual que los demás.</text>
+<rect x="1160.0" y="140.0" width="715.0" height="593.0" rx="24" fill="#FFFBEB" stroke="#FCD34D" stroke-width="2"/>
+<g transform="translate(1182.0,155.0) scale(1.2500)" fill="none" stroke="#D97706" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></g>
+<text x="1222.0" y="178.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="800" fill="#D97706" text-anchor="start" letter-spacing="1.5">CICLO DE PRUEBA Y AJUSTE</text>
+<text x="1853.0" y="178.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="700" fill="#D97706" text-anchor="end">hasta 5 intentos</text>
+<rect x="1188.0" y="195.0" width="260.0" height="210.0" rx="20" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.8" filter="url(#shadow)"/>
+<circle cx="1218" cy="225" r="19" fill="#6D28D9"/>
+<text x="1218.0" y="232.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+<g transform="translate(1292.0,215.0) scale(2.1667)" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.5 8 15l2 2.5" /> <path d="m14 12.5 2 2.5-2 2.5" /> <path d="M14 2v4a2 2 0 0 0 2 2h4" /> <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" /></g>
+<text x="1318.0" y="295.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="700" fill="#64748B" text-anchor="middle" letter-spacing="1.5">ESCRITURA</text>
+<text x="1318.0" y="326.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="middle">Escribe el circuito</text>
+<text x="1318.0" y="357.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">Lo pasa a código SPICE,</text>
+<text x="1318.0" y="382.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">listo para simular</text>
+<rect x="1587.0" y="195.0" width="260.0" height="210.0" rx="20" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.8" filter="url(#shadow)"/>
+<circle cx="1617" cy="225" r="19" fill="#6D28D9"/>
+<text x="1617.0" y="232.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+<g transform="translate(1691.0,215.0) scale(2.1667)" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2" /> <path d="M8.5 2h7" /> <path d="M7 16h10" /></g>
+<text x="1717.0" y="295.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="700" fill="#64748B" text-anchor="middle" letter-spacing="1.5">SIMULACIÓN</text>
+<text x="1717.0" y="326.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="middle">Prueba el circuito</text>
+<text x="1717.0" y="357.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">Lo simula en ngspice</text>
+<text x="1717.0" y="382.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">y mide el resultado</text>
+<rect x="1587.0" y="495.0" width="260.0" height="210.0" rx="20" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.8" filter="url(#shadow)"/>
+<circle cx="1617" cy="525" r="19" fill="#6D28D9"/>
+<text x="1617.0" y="532.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">5</text>
+<g transform="translate(1691.0,515.0) scale(2.1667)" fill="none" stroke="#6D28D9" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /> <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /> <path d="M7 21h10" /> <path d="M12 3v18" /> <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></g>
+<text x="1717.0" y="595.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="700" fill="#64748B" text-anchor="middle" letter-spacing="1.5">CURADOR</text>
+<text x="1717.0" y="626.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="middle">Revisa y decide</text>
+<text x="1717.0" y="657.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">Compara lo medido</text>
+<text x="1717.0" y="682.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">contra la meta</text>
+<rect x="1188.0" y="495.0" width="260.0" height="210.0" rx="20" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.8" filter="url(#shadow)"/>
+<g transform="translate(1292.0,515.0) scale(2.1667)" fill="none" stroke="#D97706" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></g>
+<text x="1318.0" y="595.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="700" fill="#D97706" text-anchor="middle" letter-spacing="1.5">AJUSTE DEL CURADOR</text>
+<text x="1318.0" y="626.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="middle">Corrige</text>
+<text x="1318.0" y="657.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">Cambia valores o</text>
+<text x="1318.0" y="682.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">repara el circuito</text>
+<path d="M1054,330 L1180,330" fill="none" stroke="#334155" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<path d="M1452,330 L1579,330" fill="none" stroke="#334155" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<path d="M1717.0,409 L1717.0,487" fill="none" stroke="#334155" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<text x="1731.0" y="456.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="600" fill="#475569" text-anchor="start">mediciones</text>
+<path d="M1583,630 L1456,630" fill="none" stroke="#D97706" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-D97706)"/>
+<text x="1517.5" y="616.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="700" fill="#D97706" text-anchor="middle">Aún no</text>
+<path d="M1318.0,491 L1318.0,413" fill="none" stroke="#D97706" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-D97706)"/>
+<text x="1304.0" y="456.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="700" fill="#D97706" text-anchor="end">otra vez</text>
+<circle cx="1517.5" cy="450.0" r="32" fill="#FFFFFF" stroke="#FCD34D" stroke-width="1.8"/>
+<g transform="translate(1499.5,432.0) scale(1.5000)" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></g>
+<rect x="1587.0" y="830.0" width="260.0" height="210.0" rx="20" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.8" filter="url(#shadow)"/>
+<circle cx="1617" cy="860" r="19" fill="#16A34A"/>
+<text x="1617.0" y="867.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">6</text>
+<g transform="translate(1691.0,850.0) scale(2.1667)" fill="none" stroke="#16A34A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14" /> <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></g>
+<text x="1717.0" y="930.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="700" fill="#64748B" text-anchor="middle" letter-spacing="1.5">DOCUMENTADOR</text>
+<text x="1717.0" y="961.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="middle">Explica el resultado</text>
+<text x="1717.0" y="992.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">Lo describe en</text>
+<text x="1717.0" y="1017.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" fill="#475569" text-anchor="middle">lenguaje sencillo</text>
+<path d="M1679,709 L1679,822" fill="none" stroke="#16A34A" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-16A34A)"/>
+<text x="1665.0" y="788.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#16A34A" text-anchor="end">Cumple</text>
+<path d="M1735,709 L1735,822" fill="none" stroke="#DC2626" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-DC2626)"/>
+<text x="1749.0" y="778.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="700" fill="#DC2626" text-anchor="start">Sin éxito tras</text>
+<text x="1749.0" y="798.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="700" fill="#DC2626" text-anchor="start">5 intentos</text>
+<rect x="690.0" y="830.0" width="807.0" height="210.0" rx="20" fill="#F0FDF4" stroke="#86EFAC" stroke-width="2" filter="url(#shadow)"/>
+<g transform="translate(714.0,856.0) scale(2.1667)" fill="none" stroke="#16A34A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 2 2 4-4" /> <path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14" /> <path d="m7.5 4.27 9 5.15" /> <polyline points="3.29 7 12 12 20.71 7" /> <line x1="12" x2="12" y1="22" y2="12" /></g>
+<text x="714.0" y="948.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="start">Resultado</text>
+<text x="714.0" y="976.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">lo que recibe</text>
+<text x="714.0" y="997.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">el usuario</text>
+<circle cx="890.0" cy="886" r="24" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.6"/>
+<g transform="translate(876.0,872.0) scale(1.1667)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /> <path d="M11 9h4a2 2 0 0 0 2-2V3" /> <circle cx="9" cy="9" r="2" /> <path d="M7 21v-4a2 2 0 0 1 2-2h4" /> <circle cx="15" cy="15" r="2" /></g>
+<text x="924.0" y="882.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18.5" font-weight="700" fill="#1E293B" text-anchor="start">Esquema</text>
+<text x="924.0" y="905.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" fill="#475569" text-anchor="start">del circuito</text>
+<circle cx="1096.3333333333333" cy="886" r="24" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.6"/>
+<g transform="translate(1082.3,872.0) scale(1.1667)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /> <path d="m19 9-5 5-4-4-3 3" /></g>
+<text x="1130.3" y="882.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18.5" font-weight="700" fill="#1E293B" text-anchor="start">Gráficas</text>
+<text x="1130.3" y="905.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" fill="#475569" text-anchor="start">de la simulación</text>
+<circle cx="1302.6666666666667" cy="886" r="24" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.6"/>
+<g transform="translate(1288.7,872.0) scale(1.1667)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.5 8 15l2 2.5" /> <path d="m14 12.5 2 2.5-2 2.5" /> <path d="M14 2v4a2 2 0 0 0 2 2h4" /> <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" /></g>
+<text x="1336.7" y="882.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18.5" font-weight="700" fill="#1E293B" text-anchor="start">Código SPICE</text>
+<text x="1336.7" y="905.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" fill="#475569" text-anchor="start">listo para usar</text>
+<circle cx="890.0" cy="974" r="24" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.6"/>
+<g transform="translate(876.0,960.0) scale(1.1667)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h.01" /> <path d="M3 18h.01" /> <path d="M3 6h.01" /> <path d="M8 12h13" /> <path d="M8 18h13" /> <path d="M8 6h13" /></g>
+<text x="924.0" y="970.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18.5" font-weight="700" fill="#1E293B" text-anchor="start">Valores</text>
+<text x="924.0" y="993.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" fill="#475569" text-anchor="start">de componentes</text>
+<circle cx="1096.3333333333333" cy="974" r="24" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.6"/>
+<g transform="translate(1082.3,960.0) scale(1.1667)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14" /> <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></g>
+<text x="1130.3" y="970.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18.5" font-weight="700" fill="#1E293B" text-anchor="start">Explicación</text>
+<text x="1130.3" y="993.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" fill="#475569" text-anchor="start">en palabras simples</text>
+<circle cx="1302.6666666666667" cy="974" r="24" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.6"/>
+<g transform="translate(1288.7,960.0) scale(1.1667)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" /> <path d="m9 12 2 2 4-4" /></g>
+<text x="1336.7" y="970.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18.5" font-weight="700" fill="#1E293B" text-anchor="start">Veredicto</text>
+<text x="1336.7" y="993.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" fill="#475569" text-anchor="start">si cumple y por qué</text>
+<path d="M1583,935.0 L1505,935.0" fill="none" stroke="#334155" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<path d="M686,935.0 L310,935.0" fill="none" stroke="#2563EB" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 7" marker-end="url(#ah-2563EB)"/>
+<text x="496.0" y="919.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="700" fill="#2563EB" text-anchor="middle">Vuelve a la aplicación</text>
+<text x="496.0" y="967.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="500" fill="#2563EB" text-anchor="middle">y la conversación sigue</text>
+</svg>
