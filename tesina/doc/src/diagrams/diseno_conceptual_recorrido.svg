@@ -7,215 +7,79 @@
 <rect x="465.9" y="66.0" width="273.5" height="38.0" rx="19" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.4"/>
 <g transform="translate(479.9,75.0) scale(0.8333)" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" /> <path d="M22 10v6" /> <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" /></g>
 <text x="507.9" y="91.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="600" fill="#2563EB" text-anchor="start">El recorrido del estudiante</text>
-<text x="40.0" y="148.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="800" fill="#2563EB" text-anchor="start" letter-spacing="1.6">PRIMERO</text>
-<text x="130.0" y="148.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" fill="#64748B" text-anchor="start">entra y se prepara</text>
-<rect x="40.0" y="168.0" width="420.0" height="272.0" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.6" filter="url(#shadow)"/>
-<rect x="56.0" y="184.0" width="388.0" height="118.0" rx="14" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.2"/>
-<circle cx="76" cy="331" r="18" fill="#2563EB"/>
-<text x="76.0" y="338.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">1</text>
-<text x="104.0" y="338.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="23" font-weight="700" fill="#0F172A" text-anchor="start">Entra desde su navegador</text>
-<text x="60.0" y="370.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">Desde su computadora, tableta o celular. No</text>
-<text x="60.0" y="392.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">necesita instalar nada.</text>
-<g transform="translate(115.0,196.0) scale(3.8333)" fill="none" stroke="#2563EB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16" /></g>
-<g transform="translate(237.0,220.0) scale(2.8333)" fill="none" stroke="#2563EB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2" /> <line x1="12" x2="12.01" y1="18" y2="18" /></g>
-<g transform="translate(335.0,238.0) scale(2.0833)" fill="none" stroke="#2563EB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /> <path d="M12 18h.01" /></g>
-<circle cx="410" cy="214" r="18" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1.3"/>
-<g transform="translate(399.0,203.0) scale(0.9167)" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path d="M2 12h20" /></g>
-<rect x="40.0" y="474.0" width="420.0" height="272.0" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.6" filter="url(#shadow)"/>
-<rect x="56.0" y="490.0" width="388.0" height="118.0" rx="14" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.2"/>
-<circle cx="76" cy="637" r="18" fill="#2563EB"/>
-<text x="76.0" y="644.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">2</text>
-<text x="104.0" y="644.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="23" font-weight="700" fill="#0F172A" text-anchor="start">Inicia sesión</text>
-<text x="60.0" y="676.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">Con su correo y contraseña o con su cuenta</text>
-<text x="60.0" y="698.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">de Google. Si es nuevo, crea su cuenta ahí</text>
-<text x="60.0" y="721.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">mismo.</text>
-<rect x="78.0" y="500.0" width="206.0" height="98.0" rx="10" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1.2"/>
-<text x="90.0" y="520.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="start">Iniciar sesión</text>
-<rect x="90.0" y="528.0" width="182.0" height="18.0" rx="5" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
-<g transform="translate(95.0,531.0) scale(0.5000)" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /> <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></g>
-<text x="112.0" y="541.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="11" font-weight="500" fill="#94A3B8" text-anchor="start">tu@correo.com</text>
-<rect x="90.0" y="550.0" width="182.0" height="18.0" rx="5" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
-<g transform="translate(95.0,553.0) scale(0.5000)" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></g>
-<text x="112.0" y="563.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="11" font-weight="500" fill="#94A3B8" text-anchor="start">••••••••</text>
-<rect x="90.0" y="574.0" width="182.0" height="18.0" rx="5" fill="#2563EB" stroke="#2563EB" stroke-width="1"/>
-<text x="181.0" y="587.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Entrar</text>
-<text x="306.0" y="555.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="600" fill="#64748B" text-anchor="middle">o</text>
-<rect x="324.0" y="530.0" width="118.0" height="38.0" rx="10" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1.2"/>
-<svg x="336.0" y="539.0" width="20" height="20" viewBox="0 0 24 24" fill="#4285F4"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
-<text x="364.0" y="555.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" fill="#1E293B" text-anchor="start">Google</text>
-<rect x="40.0" y="780.0" width="420.0" height="272.0" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.6" filter="url(#shadow)"/>
-<rect x="56.0" y="796.0" width="388.0" height="118.0" rx="14" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.2"/>
-<circle cx="76" cy="943" r="18" fill="#2563EB"/>
-<text x="76.0" y="950.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">3</text>
-<text x="104.0" y="950.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="23" font-weight="700" fill="#0F172A" text-anchor="start">Conecta su IA</text>
-<text x="60.0" y="982.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">En Ajustes pega su llave de acceso (API),</text>
-<text x="60.0" y="1004.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">prueba que funcione y elige qué modelo usa</text>
-<text x="60.0" y="1027.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">cada agente.</text>
-<rect x="72.0" y="806.0" width="232.0" height="98.0" rx="10" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1.2"/>
-<g transform="translate(82.0,814.0) scale(0.5833)" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /> <circle cx="12" cy="12" r="3" /></g>
-<text x="102.0" y="826.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#0F172A" text-anchor="start">Ajustes · Modelos</text>
-<rect x="82.0" y="836.0" width="212.0" height="22.0" rx="5" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
-<g transform="translate(88.0,840.0) scale(0.5833)" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></g>
-<text x="108.0" y="852.0" font-family="'DejaVu Sans Mono', Menlo, monospace" font-size="12" font-weight="500" fill="#475569" text-anchor="start">sk-••••••••••••</text>
-<rect x="82.0" y="868.0" width="66.0" height="24.0" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
-<text x="115.0" y="884.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1E293B" text-anchor="middle">Probar</text>
-<rect x="156.0" y="868.0" width="108.0" height="24.0" rx="12" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
-<g transform="translate(163.0,873.0) scale(0.5833)" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /> <path d="m9 12 2 2 4-4" /></g>
-<text x="182.0" y="884.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="11.5" font-weight="700" fill="#166534" text-anchor="start">Conectado</text>
-<circle cx="338" cy="828" r="20" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1.2"/>
-<svg x="327.0" y="817.0" width="22" height="22" viewBox="0 0 24 24" fill="#191919" fill-rule="evenodd"><path d="M13.827 3.52h3.603L24 20h-3.603l-6.57-16.48zm-7.258 0h3.767L16.906 20h-3.674l-1.343-3.461H5.017l-1.344 3.46H0L6.57 3.522zm4.132 9.959L8.453 7.687 6.205 13.48H10.7z"></path></svg>
-<circle cx="388" cy="828" r="20" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1.2"/>
-<svg x="377.0" y="817.0" width="22" height="22" viewBox="0 0 24 24" fill="#111111"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg>
-<circle cx="338" cy="880" r="20" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1.2"/>
-<svg x="327.0" y="869.0" width="22" height="22" viewBox="0 0 24 24"><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="#3186FF"></path><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#lobe-icons-gemini-0-_R_0_)"></path><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#lobe-icons-gemini-1-_R_0_)"></path><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#lobe-icons-gemini-2-_R_0_)"></path><defs><linearGradient gradientUnits="userSpaceOnUse" id="lobe-icons-gemini-0-_R_0_" x1="7" x2="11" y1="15.5" y2="12"><stop stop-color="#08B962"></stop><stop offset="1" stop-color="#08B962" stop-opacity="0"></stop></linearGradient><linearGradient gradientUnits="userSpaceOnUse" id="lobe-icons-gemini-1-_R_0_" x1="8" x2="11.5" y1="5.5" y2="11"><stop stop-color="#F94543"></stop><stop offset="1" stop-color="#F94543" stop-opacity="0"></stop></linearGradient><linearGradient gradientUnits="userSpaceOnUse" id="lobe-icons-gemini-2-_R_0_" x1="3.5" x2="17.5" y1="13.5" y2="12"><stop stop-color="#FABC12"></stop><stop offset=".46" stop-color="#FABC12" stop-opacity="0"></stop></linearGradient></defs></svg>
-<circle cx="388" cy="880" r="20" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1.2"/>
-<svg x="377.0" y="869.0" width="22" height="22" viewBox="0 0 24 24" fill="#111111" fill-rule="evenodd"><path d="M7.905 1.09c.216.085.411.225.588.41.295.306.544.744.734 1.263.191.522.315 1.1.362 1.68a5.054 5.054 0 012.049-.636l.051-.004c.87-.07 1.73.087 2.48.474.101.053.2.11.297.17.05-.569.172-1.134.36-1.644.19-.52.439-.957.733-1.264a1.67 1.67 0 01.589-.41c.257-.1.53-.118.796-.042.401.114.745.368 1.016.737.248.337.434.769.561 1.287.23.934.27 2.163.115 3.645l.053.04.026.019c.757.576 1.284 1.397 1.563 2.35.435 1.487.216 3.155-.534 4.088l-.018.021.002.003c.417.762.67 1.567.724 2.4l.002.03c.064 1.065-.2 2.137-.814 3.19l-.007.01.01.024c.472 1.157.62 2.322.438 3.486l-.006.039a.651.651 0 01-.747.536.648.648 0 01-.54-.742c.167-1.033.01-2.069-.48-3.123a.643.643 0 01.04-.617l.004-.006c.604-.924.854-1.83.8-2.72-.046-.779-.325-1.544-.8-2.273a.644.644 0 01.18-.886l.009-.006c.243-.159.467-.565.58-1.12a4.229 4.229 0 00-.095-1.974c-.205-.7-.58-1.284-1.105-1.683-.595-.454-1.383-.673-2.38-.61a.653.653 0 01-.632-.371c-.314-.665-.772-1.141-1.343-1.436a3.288 3.288 0 00-1.772-.332c-1.245.099-2.343.801-2.67 1.686a.652.652 0 01-.61.425c-1.067.002-1.893.252-2.497.703-.522.39-.878.935-1.066 1.588a4.07 4.07 0 00-.068 1.886c.112.558.331 1.02.582 1.269l.008.007c.212.207.257.53.109.785-.36.622-.629 1.549-.673 2.44-.05 1.018.186 1.902.719 2.536l.016.019a.643.643 0 01.095.69c-.576 1.236-.753 2.252-.562 3.052a.652.652 0 01-1.269.298c-.243-1.018-.078-2.184.473-3.498l.014-.035-.008-.012a4.339 4.339 0 01-.598-1.309l-.005-.019a5.764 5.764 0 01-.177-1.785c.044-.91.278-1.842.622-2.59l.012-.026-.002-.002c-.293-.418-.51-.953-.63-1.545l-.005-.024a5.352 5.352 0 01.093-2.49c.262-.915.777-1.701 1.536-2.269.06-.045.123-.09.186-.132-.159-1.493-.119-2.73.112-3.67.127-.518.314-.95.562-1.287.27-.368.614-.622 1.015-.737.266-.076.54-.059.797.042zm4.116 9.09c.936 0 1.8.313 2.446.855.63.527 1.005 1.235 1.005 1.94 0 .888-.406 1.58-1.133 2.022-.62.375-1.451.557-2.403.557-1.009 0-1.871-.259-2.493-.734-.617-.47-.963-1.13-.963-1.845 0-.707.398-1.417 1.056-1.946.668-.537 1.55-.849 2.485-.849zm0 .896a3.07 3.07 0 00-1.916.65c-.461.37-.722.835-.722 1.25 0 .428.21.829.61 1.134.455.347 1.124.548 1.943.548.799 0 1.473-.147 1.932-.426.463-.28.7-.686.7-1.257 0-.423-.246-.89-.683-1.256-.484-.405-1.14-.643-1.864-.643zm.662 1.21l.004.004c.12.151.095.37-.056.49l-.292.23v.446a.375.375 0 01-.376.373.375.375 0 01-.376-.373v-.46l-.271-.218a.347.347 0 01-.052-.49.353.353 0 01.494-.051l.215.172.22-.174a.353.353 0 01.49.051zm-5.04-1.919c.478 0 .867.39.867.871a.87.87 0 01-.868.871.87.87 0 01-.867-.87.87.87 0 01.867-.872zm8.706 0c.48 0 .868.39.868.871a.87.87 0 01-.868.871.87.87 0 01-.867-.87.87.87 0 01.867-.872zM7.44 2.3l-.003.002a.659.659 0 00-.285.238l-.005.006c-.138.189-.258.467-.348.832-.17.692-.216 1.631-.124 2.782.43-.128.899-.208 1.404-.237l.01-.001.019-.034c.046-.082.095-.161.148-.239.123-.771.022-1.692-.253-2.444-.134-.364-.297-.65-.453-.813a.628.628 0 00-.107-.09L7.44 2.3zm9.174.04l-.002.001a.628.628 0 00-.107.09c-.156.163-.32.45-.453.814-.29.794-.387 1.776-.23 2.572l.058.097.008.014h.03a5.184 5.184 0 011.466.212c.086-1.124.038-2.043-.128-2.722-.09-.365-.21-.643-.349-.832l-.004-.006a.659.659 0 00-.285-.239h-.004z"></path></svg>
-<rect x="274.3" y="930.0" width="138.9" height="26.0" rx="13" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.2"/>
-<text x="343.7" y="948.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#92400E" text-anchor="middle">solo la primera vez</text>
-<path d="M250.0,444 L250.0,467" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-2563EB)"/>
-<path d="M250.0,750 L250.0,773" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-2563EB)"/>
-<text x="520.0" y="148.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="800" fill="#6D28D9" text-anchor="start" letter-spacing="1.6">LUEGO</text>
-<text x="589.4" y="148.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" fill="#64748B" text-anchor="start">crea sus circuitos, las veces que quiera</text>
-<rect x="520.0" y="226.0" width="310.0" height="378.0" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.6" filter="url(#shadow)"/>
-<rect x="536.0" y="242.0" width="278.0" height="160.0" rx="14" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1.2"/>
-<circle cx="556" cy="431" r="18" fill="#6D28D9"/>
-<text x="556.0" y="438.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">4</text>
-<text x="584.0" y="438.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22.5" font-weight="700" fill="#0F172A" text-anchor="start">Pide su circuito</text>
-<text x="540.0" y="470.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">Lo describe con sus palabras en</text>
-<text x="540.0" y="492.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">el chat, como si le hablara a un</text>
-<text x="540.0" y="515.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">compañero, y lo puede guardar</text>
-<text x="540.0" y="537.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">en un proyecto.</text>
-<rect x="548.0" y="254.0" width="254.0" height="136.0" rx="10" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1.2"/>
-<rect x="626.8" y="266.0" width="163.2" height="52.0" rx="12" fill="#2563EB" stroke="#2563EB" stroke-width="1"/>
-<text x="638.8" y="287.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="500" fill="#FFFFFF" text-anchor="start">Quiero un filtro</text>
-<text x="638.8" y="306.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="500" fill="#FFFFFF" text-anchor="start">pasa-bajas de 1 kHz</text>
-<rect x="560.0" y="344.0" width="230.0" height="32.0" rx="16" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
-<text x="576.0" y="365.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="500" fill="#94A3B8" text-anchor="start">Describe tu circuito…</text>
-<circle cx="772" cy="360" r="13" fill="#6D28D9"/>
-<g transform="translate(764.0,352.0) scale(0.6667)" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z" /> <path d="M6 12h16" /></g>
-<rect x="870.0" y="226.0" width="310.0" height="378.0" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.6" filter="url(#shadow)"/>
-<rect x="886.0" y="242.0" width="278.0" height="160.0" rx="14" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1.2"/>
-<circle cx="906" cy="431" r="18" fill="#6D28D9"/>
-<text x="906.0" y="438.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">5</text>
-<text x="934.0" y="438.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22.5" font-weight="700" fill="#0F172A" text-anchor="start">La IA lo diseña</text>
-<text x="890.0" y="470.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">Un equipo de agentes calcula,</text>
-<text x="890.0" y="492.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">arma y simula el circuito, y lo</text>
-<text x="890.0" y="515.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">corrige hasta que cumple. Ve el</text>
-<text x="890.0" y="537.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">avance en vivo.</text>
-<circle cx="1025.0" cy="280" r="25" fill="#EDE9FE" stroke="#DDD6FE" stroke-width="1.4"/>
-<g transform="translate(1010.0,265.0) scale(1.2500)" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8" /> <rect width="16" height="12" x="4" y="8" rx="2" /> <path d="M2 14h2" /> <path d="M20 14h2" /> <path d="M15 13v2" /> <path d="M9 13v2" /></g>
-<line x1="1025.0" y1="305" x2="922.5" y2="326" stroke="#DDD6FE" stroke-width="1.4"/>
-<line x1="1025.0" y1="305" x2="963.5" y2="326" stroke="#DDD6FE" stroke-width="1.4"/>
-<line x1="1025.0" y1="305" x2="1004.5" y2="326" stroke="#DDD6FE" stroke-width="1.4"/>
-<line x1="1025.0" y1="305" x2="1045.5" y2="326" stroke="#DDD6FE" stroke-width="1.4"/>
-<line x1="1025.0" y1="305" x2="1086.5" y2="326" stroke="#DDD6FE" stroke-width="1.4"/>
-<line x1="1025.0" y1="305" x2="1127.5" y2="326" stroke="#DDD6FE" stroke-width="1.4"/>
-<circle cx="922.5" cy="340" r="16" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1.3"/>
-<g transform="translate(913.5,331.0) scale(0.7500)" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" /> <path d="M9 13a4.5 4.5 0 0 0 3-4" /> <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" /> <path d="M3.477 10.896a4 4 0 0 1 .585-.396" /> <path d="M6 18a4 4 0 0 1-1.967-.516" /> <path d="M12 13h4" /> <path d="M12 18h6a2 2 0 0 1 2 2v1" /> <path d="M12 8h8" /> <path d="M16 8V5a2 2 0 0 1 2-2" /> <circle cx="16" cy="13" r=".5" /> <circle cx="18" cy="3" r=".5" /> <circle cx="20" cy="21" r=".5" /> <circle cx="20" cy="8" r=".5" /></g>
-<circle cx="963.5" cy="340" r="16" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1.3"/>
-<g transform="translate(954.5,331.0) scale(0.7500)" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" /> <line x1="8" x2="16" y1="6" y2="6" /> <line x1="16" x2="16" y1="14" y2="18" /> <path d="M16 10h.01" /> <path d="M12 10h.01" /> <path d="M8 10h.01" /> <path d="M12 14h.01" /> <path d="M8 14h.01" /> <path d="M12 18h.01" /> <path d="M8 18h.01" /></g>
-<circle cx="1004.5" cy="340" r="16" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1.3"/>
-<g transform="translate(995.5,331.0) scale(0.7500)" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.5 8 15l2 2.5" /> <path d="m14 12.5 2 2.5-2 2.5" /> <path d="M14 2v4a2 2 0 0 0 2 2h4" /> <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" /></g>
-<circle cx="1045.5" cy="340" r="16" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1.3"/>
-<g transform="translate(1036.5,331.0) scale(0.7500)" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2" /> <path d="M8.5 2h7" /> <path d="M7 16h10" /></g>
-<circle cx="1086.5" cy="340" r="16" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1.3"/>
-<g transform="translate(1077.5,331.0) scale(0.7500)" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /> <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /> <path d="M7 21h10" /> <path d="M12 3v18" /> <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></g>
-<circle cx="1127.5" cy="340" r="16" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1.3"/>
-<g transform="translate(1118.5,331.0) scale(0.7500)" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14" /> <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></g>
-<rect x="920.0" y="368.0" width="210.0" height="8.0" rx="4" fill="#E9E5F5" stroke="#E9E5F5" stroke-width="0"/>
-<rect x="920.0" y="368.0" width="138.6" height="8.0" rx="4" fill="#6D28D9" stroke="#6D28D9" stroke-width="0"/>
-<g transform="translate(933.0,380.0) scale(0.5417)" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></g>
-<text x="951.0" y="391.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#475569" text-anchor="start">Diseñando y probando… 4 de 6</text>
-<rect x="1220.0" y="226.0" width="310.0" height="378.0" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.6" filter="url(#shadow)"/>
-<rect x="1236.0" y="242.0" width="278.0" height="160.0" rx="14" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1.2"/>
-<circle cx="1256" cy="431" r="18" fill="#6D28D9"/>
-<text x="1256.0" y="438.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">6</text>
-<text x="1284.0" y="438.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22.5" font-weight="700" fill="#0F172A" text-anchor="start">Recibe su circuito</text>
-<text x="1240.0" y="470.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">El esquema, la gráfica de la</text>
-<text x="1240.0" y="492.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">simulación, el código SPICE, el</text>
-<text x="1240.0" y="515.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">valor de cada componente y una</text>
-<text x="1240.0" y="537.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">explicación sencilla.</text>
-<rect x="1248.0" y="260.0" width="76.0" height="92.0" rx="10" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1.2"/>
-<text x="1286.0" y="374.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1E293B" text-anchor="middle">Esquema</text>
-<rect x="1337.0" y="260.0" width="76.0" height="92.0" rx="10" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1.2"/>
-<text x="1375.0" y="374.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1E293B" text-anchor="middle">Gráfica</text>
-<rect x="1426.0" y="260.0" width="76.0" height="92.0" rx="10" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1.2"/>
-<text x="1464.0" y="374.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1E293B" text-anchor="middle">Código</text>
-<path d="M1258.0,290 H1268.0 l3,-6 l5,12 l5,-12 l5,12 l5,-12 l3,6 H1314.0 M1302.0,290 V310 M1292.0,310 H1312.0 M1292.0,317 H1312.0 M1302.0,317 V332 M1294.0,332 H1310.0 M1297.0,337 H1307.0" stroke="#334155" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="1258.0" cy="290" r="3" fill="#6D28D9"/><circle cx="1314.0" cy="290" r="3" fill="#6D28D9"/>
-<path d="M1349.0,274 V338 H1403.0" stroke="#94A3B8" stroke-width="1.6" fill="none"/><path d="M1351.0,290 H1373.0 C1383.0,290 1387.0,306 1401.0,332" stroke="#16A34A" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-<rect x="1438.0" y="276.0" width="44.0" height="5.0" rx="2.5" fill="#6D28D9" stroke="#6D28D9" stroke-width="0"/>
-<rect x="1438.0" y="287.0" width="30.0" height="5.0" rx="2.5" fill="#2563EB" stroke="#2563EB" stroke-width="0"/>
-<rect x="1446.0" y="298.0" width="44.0" height="5.0" rx="2.5" fill="#64748B" stroke="#64748B" stroke-width="0"/>
-<rect x="1446.0" y="309.0" width="28.0" height="5.0" rx="2.5" fill="#D97706" stroke="#D97706" stroke-width="0"/>
-<rect x="1438.0" y="320.0" width="24.0" height="5.0" rx="2.5" fill="#6D28D9" stroke="#6D28D9" stroke-width="0"/>
-<rect x="1438.0" y="331.0" width="46.0" height="5.0" rx="2.5" fill="#64748B" stroke="#64748B" stroke-width="0"/>
-<rect x="1570.0" y="226.0" width="310.0" height="378.0" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.6" filter="url(#shadow)"/>
-<rect x="1586.0" y="242.0" width="278.0" height="160.0" rx="14" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1.2"/>
-<circle cx="1606" cy="431" r="18" fill="#6D28D9"/>
-<text x="1606.0" y="438.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">7</text>
-<text x="1634.0" y="438.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22.5" font-weight="700" fill="#0F172A" text-anchor="start">Lo explora</text>
-<text x="1590.0" y="470.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">En el visualizador lo ve dibujado,</text>
-<text x="1590.0" y="492.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">revisa la simulación y el código,</text>
-<text x="1590.0" y="515.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">lee qué hace y descarga sus</text>
-<text x="1590.0" y="537.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">archivos.</text>
-<rect x="1598.0" y="254.0" width="254.0" height="136.0" rx="10" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1.2"/>
-<text x="1616.0" y="276.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="#64748B" text-anchor="start">Esquema</text>
-<text x="1685.5" y="276.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#6D28D9" text-anchor="start">Simulación</text>
-<rect x="1681.5" y="282.0" width="71.9" height="3.0" rx="1.5" fill="#6D28D9" stroke="#6D28D9" stroke-width="0"/>
-<text x="1765.4" y="276.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="#64748B" text-anchor="start">Código</text>
-<line x1="1598" y1="286" x2="1852" y2="286" stroke="#E2E8F0" stroke-width="1.2"/>
-<g transform="translate(1828.0,263.0) scale(0.6250)" fill="none" stroke="#6D28D9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <polyline points="7 10 12 15 17 10" /> <line x1="12" x2="12" y1="15" y2="3" /></g>
-<path d="M1612,298 V354 H1726" stroke="#94A3B8" stroke-width="1.5" fill="none"/><path d="M1614,310 H1664 C1682,310 1690,330 1722,350" stroke="#16A34A" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-<text x="1740.0" y="308.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#0F172A" text-anchor="start">¿Qué hace?</text>
-<rect x="1740.0" y="318.0" width="96.0" height="5.0" rx="2.5" fill="#E2E8F0" stroke="#E2E8F0" stroke-width="0"/>
-<rect x="1740.0" y="329.0" width="84.0" height="5.0" rx="2.5" fill="#E2E8F0" stroke="#E2E8F0" stroke-width="0"/>
-<rect x="1740.0" y="340.0" width="100.0" height="5.0" rx="2.5" fill="#E2E8F0" stroke="#E2E8F0" stroke-width="0"/>
-<rect x="1740.0" y="351.0" width="70.0" height="5.0" rx="2.5" fill="#E2E8F0" stroke="#E2E8F0" stroke-width="0"/>
-<path d="M834,322 L863,322" fill="none" stroke="#6D28D9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-6D28D9)"/>
-<path d="M1184,322 L1213,322" fill="none" stroke="#6D28D9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-6D28D9)"/>
-<path d="M1534,322 L1563,322" fill="none" stroke="#6D28D9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-6D28D9)"/>
-<path d="M464,855 H490.0 V322 H513" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-2563EB)"/>
-<path d="M1025.0,222 V200 H675.0 V219" fill="none" stroke="#D97706" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 7" marker-end="url(#ah-D97706)"/>
-<rect x="723.9" y="183.0" width="252.2" height="34.0" rx="17" fill="#FFFFFF" stroke="#D97706" stroke-width="1.6"/>
-<g transform="translate(736.9,191.0) scale(0.7500)" fill="none" stroke="#D97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /> <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /> <path d="M12 17h.01" /></g>
-<text x="760.9" y="206.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#D97706" text-anchor="start">¿Falta un dato? Le pregunta</text>
-<path d="M1725.0,608 V644 H675.0 V611" fill="none" stroke="#6D28D9" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 7" marker-end="url(#ah-6D28D9)"/>
-<rect x="981.0" y="627.0" width="437.9" height="34.0" rx="17" fill="#FFFFFF" stroke="#6D28D9" stroke-width="1.6"/>
-<g transform="translate(994.0,635.0) scale(0.7500)" fill="none" stroke="#6D28D9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4" /> <path d="M3 11v-1a4 4 0 0 1 4-4h14" /> <path d="m7 22-4-4 4-4" /> <path d="M21 13v1a4 4 0 0 1-4 4H3" /></g>
-<text x="1018.0" y="650.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="700" fill="#6D28D9" text-anchor="start">¿Quiere cambios? Lo pide otra vez: “Ahora a 2 kHz”</text>
-<text x="520.0" y="758.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="800" fill="#16A34A" text-anchor="start" letter-spacing="1.6">SIEMPRE</text>
-<text x="607.5" y="758.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" fill="#64748B" text-anchor="start">todo queda guardado</text>
-<rect x="520.0" y="780.0" width="1360.0" height="272.0" rx="20" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.6"/>
-<circle cx="588" cy="854" r="38" fill="#DCFCE7"/>
-<g transform="translate(566.0,832.0) scale(1.8333)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path d="M3 3v5h5" /> <path d="M12 7v5l4 2" /></g>
-<text x="550.0" y="928.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="23" font-weight="700" fill="#0F172A" text-anchor="start">Vuelve cuando quiera</text>
-<text x="550.0" y="960.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">Desde cualquier dispositivo, retoma</text>
-<text x="550.0" y="982.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">sus circuitos anteriores tal como los</text>
-<text x="550.0" y="1005.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="start">dejó.</text>
-<rect x="880.0" y="798.0" width="235.0" height="236.0" rx="16" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.3"/>
-<circle cx="997.5" cy="871.0" r="30" fill="#DCFCE7"/>
-<g transform="translate(980.5,854.0) scale(1.4167)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></g>
-<text x="997.5" y="935.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#0F172A" text-anchor="middle">Proyectos</text>
-<text x="997.5" y="963.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">Agrupa sus circuitos por</text>
-<text x="997.5" y="984.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">tema</text>
-<rect x="1129.0" y="798.0" width="235.0" height="236.0" rx="16" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.3"/>
-<circle cx="1246.5" cy="871.0" r="30" fill="#DCFCE7"/>
-<g transform="translate(1229.5,854.0) scale(1.4167)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" /> <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" /></g>
-<text x="1246.5" y="935.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#0F172A" text-anchor="middle">Conversaciones</text>
-<text x="1246.5" y="963.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">Todo lo que habló con la IA</text>
-<rect x="1378.0" y="798.0" width="235.0" height="236.0" rx="16" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.3"/>
-<circle cx="1495.5" cy="871.0" r="30" fill="#DCFCE7"/>
-<g transform="translate(1478.5,854.0) scale(1.4167)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3a2 2 0 0 1-2-2V2" /> <path d="M9 18a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h7l4 4v10a2 2 0 0 1-2 2Z" /> <path d="M3 7.6v12.8A1.6 1.6 0 0 0 4.6 22h9.8" /></g>
-<text x="1495.5" y="935.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#0F172A" text-anchor="middle">Archivos</text>
-<text x="1495.5" y="963.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">Netlists, gráficas y</text>
-<text x="1495.5" y="984.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">resultados</text>
-<rect x="1627.0" y="798.0" width="235.0" height="236.0" rx="16" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.3"/>
-<circle cx="1744.5" cy="871.0" r="30" fill="#DCFCE7"/>
-<g transform="translate(1727.5,854.0) scale(1.4167)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /> <circle cx="12" cy="12" r="3" /></g>
-<text x="1744.5" y="935.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#0F172A" text-anchor="middle">Visualizador</text>
-<text x="1744.5" y="963.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">Abre cualquier circuito</text>
-<text x="1744.5" y="984.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">anterior</text>
-<path d="M1834,609 L1834,772" fill="none" stroke="#16A34A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-16A34A)" marker-start="url(#ah-16A34A)"/>
-<text x="1820.0" y="750.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#16A34A" text-anchor="end">se guarda solo</text>
+<rect x="52.0" y="150.0" width="898.0" height="626.0" rx="28" fill="#F8FAFF" stroke="#DBEAFE" stroke-width="1.6"/>
+<rect x="974.0" y="150.0" width="898.0" height="626.0" rx="28" fill="#FBFAFF" stroke="#E9E5FB" stroke-width="1.6"/>
+<text x="82.0" y="194.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="800" fill="#2563EB" text-anchor="start" letter-spacing="1.8">PARA EMPEZAR</text>
+<text x="1004.0" y="194.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="800" fill="#6D28D9" text-anchor="start" letter-spacing="1.8">CADA VEZ QUE QUIERE UN CIRCUITO</text>
+<circle cx="222" cy="410" r="82" fill="#FFFFFF" stroke="#DBEAFE" stroke-width="10" filter="url(#shadow)"/>
+<g transform="translate(188.0,376.0) scale(2.8333)" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8" /> <path d="M10 19v-3.96 3.15" /> <path d="M7 19h5" /> <rect width="6" height="10" x="16" y="12" rx="2" /></g>
+<circle cx="150" cy="338" r="18" fill="#2563EB"/>
+<text x="150.0" y="345.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+<text x="222.0" y="572.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="29" font-weight="800" fill="#0F172A" text-anchor="middle">Entra</text>
+<text x="222.0" y="608.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">desde cualquier</text>
+<text x="222.0" y="635.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">navegador</text>
+<circle cx="518" cy="410" r="82" fill="#FFFFFF" stroke="#DBEAFE" stroke-width="10" filter="url(#shadow)"/>
+<g transform="translate(484.0,376.0) scale(2.8333)" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /> <polyline points="10 17 15 12 10 7" /> <line x1="15" x2="3" y1="12" y2="12" /></g>
+<circle cx="446" cy="338" r="18" fill="#2563EB"/>
+<text x="446.0" y="345.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+<text x="518.0" y="572.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="29" font-weight="800" fill="#0F172A" text-anchor="middle">Inicia sesión</text>
+<text x="518.0" y="608.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">con su correo</text>
+<text x="518.0" y="635.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">o con Google</text>
+<circle cx="814" cy="410" r="82" fill="#FFFFFF" stroke="#DBEAFE" stroke-width="10" filter="url(#shadow)"/>
+<g transform="translate(780.0,376.0) scale(2.8333)" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></g>
+<circle cx="742" cy="338" r="18" fill="#2563EB"/>
+<text x="742.0" y="345.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+<text x="814.0" y="572.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="29" font-weight="800" fill="#0F172A" text-anchor="middle">Conecta su IA</text>
+<text x="814.0" y="608.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">pega su llave</text>
+<text x="814.0" y="635.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">de acceso (API)</text>
+<circle cx="1110" cy="410" r="82" fill="#FFFFFF" stroke="#EDE9FE" stroke-width="10" filter="url(#shadow)"/>
+<g transform="translate(1076.0,376.0) scale(2.8333)" fill="none" stroke="#6D28D9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /> <path d="M13 8H7" /> <path d="M17 12H7" /></g>
+<circle cx="1038" cy="338" r="18" fill="#6D28D9"/>
+<text x="1038.0" y="345.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+<text x="1110.0" y="572.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="29" font-weight="800" fill="#0F172A" text-anchor="middle">Pide su circuito</text>
+<text x="1110.0" y="608.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">con sus palabras,</text>
+<text x="1110.0" y="635.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">como en un chat</text>
+<circle cx="1406" cy="410" r="82" fill="#FFFFFF" stroke="#EDE9FE" stroke-width="10" filter="url(#shadow)"/>
+<g transform="translate(1372.0,376.0) scale(2.8333)" fill="none" stroke="#6D28D9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8" /> <rect width="16" height="12" x="4" y="8" rx="2" /> <path d="M2 14h2" /> <path d="M20 14h2" /> <path d="M15 13v2" /> <path d="M9 13v2" /></g>
+<circle cx="1334" cy="338" r="18" fill="#6D28D9"/>
+<text x="1334.0" y="345.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">5</text>
+<text x="1406.0" y="572.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="29" font-weight="800" fill="#0F172A" text-anchor="middle">La IA lo diseña</text>
+<text x="1406.0" y="608.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">lo calcula, lo simula</text>
+<text x="1406.0" y="635.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">y lo corrige</text>
+<circle cx="1702" cy="410" r="82" fill="#FFFFFF" stroke="#EDE9FE" stroke-width="10" filter="url(#shadow)"/>
+<g transform="translate(1668.0,376.0) scale(2.8333)" fill="none" stroke="#6D28D9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /> <path d="M11 9h4a2 2 0 0 0 2-2V3" /> <circle cx="9" cy="9" r="2" /> <path d="M7 21v-4a2 2 0 0 1 2-2h4" /> <circle cx="15" cy="15" r="2" /></g>
+<circle cx="1630" cy="338" r="18" fill="#6D28D9"/>
+<text x="1630.0" y="345.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">6</text>
+<text x="1702.0" y="572.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="29" font-weight="800" fill="#0F172A" text-anchor="middle">Recibe su circuito</text>
+<text x="1702.0" y="608.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">esquema, gráfica,</text>
+<text x="1702.0" y="635.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="400" fill="#475569" text-anchor="middle">código y explicación</text>
+<rect x="732.4" y="658.0" width="163.2" height="32.0" rx="16" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.3"/>
+<text x="814.0" y="679.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#92400E" text-anchor="middle">solo la primera vez</text>
+<path d="M318,410 L420,410" fill="none" stroke="#2563EB" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-2563EB)"/>
+<path d="M614,410 L716,410" fill="none" stroke="#2563EB" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-2563EB)"/>
+<path d="M910,410 L1012,410" fill="none" stroke="#6D28D9" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-6D28D9)"/>
+<path d="M1206,410 L1308,410" fill="none" stroke="#6D28D9" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-6D28D9)"/>
+<path d="M1502,410 L1604,410" fill="none" stroke="#6D28D9" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-6D28D9)"/>
+<path d="M1316,456 C1286,482 1230,482 1200,456" fill="none" stroke="#D97706" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#ah-D97706)"/>
+<text x="1258.0" y="506.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#D97706" text-anchor="middle">¿falta un dato?</text>
+<text x="1258.0" y="526.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="600" fill="#D97706" text-anchor="middle">le pregunta</text>
+<path d="M1702,316 V284 H1110 V312" fill="none" stroke="#6D28D9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="9 7" marker-end="url(#ah-6D28D9)"/>
+<rect x="1234.1" y="267.0" width="343.8" height="34.0" rx="17" fill="#FFFFFF" stroke="#6D28D9" stroke-width="1.6"/>
+<g transform="translate(1247.1,275.0) scale(0.7500)" fill="none" stroke="#6D28D9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4" /> <path d="M3 11v-1a4 4 0 0 1 4-4h14" /> <path d="m7 22-4-4 4-4" /> <path d="M21 13v1a4 4 0 0 1-4 4H3" /></g>
+<text x="1271.1" y="290.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="700" fill="#6D28D9" text-anchor="start">¿Quiere cambios? Lo vuelve a pedir</text>
+<rect x="52.0" y="820.0" width="1820.0" height="196.0" rx="24" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.6"/>
+<circle cx="142" cy="918.0" r="48" fill="#DCFCE7"/>
+<g transform="translate(114.0,890.0) scale(2.3333)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path d="M3 3v5h5" /> <path d="M12 7v5l4 2" /></g>
+<text x="218.0" y="910.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="30" font-weight="800" fill="#0F172A" text-anchor="start">Todo queda guardado</text>
+<text x="218.0" y="946.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="500" fill="#475569" text-anchor="start">Vuelve cuando quiera, desde cualquier dispositivo.</text>
+<circle cx="1064.0" cy="918.0" r="30" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.5"/>
+<g transform="translate(1047.0,901.0) scale(1.4167)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></g>
+<text x="1106.0" y="926.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="#1E293B" text-anchor="start">Proyectos</text>
+<circle cx="1292.359375" cy="918.0" r="30" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.5"/>
+<g transform="translate(1275.4,901.0) scale(1.4167)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" /> <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" /></g>
+<text x="1334.4" y="926.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="#1E293B" text-anchor="start">Conversaciones</text>
+<circle cx="1586.96875" cy="918.0" r="30" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1.5"/>
+<g transform="translate(1570.0,901.0) scale(1.4167)" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3a2 2 0 0 1-2-2V2" /> <path d="M9 18a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h7l4 4v10a2 2 0 0 1-2 2Z" /> <path d="M3 7.6v12.8A1.6 1.6 0 0 0 4.6 22h9.8" /></g>
+<text x="1629.0" y="926.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="#1E293B" text-anchor="start">Archivos</text>
+<path d="M1702,782 L1702,812" fill="none" stroke="#16A34A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-16A34A)"/>
 </svg>
