@@ -133,8 +133,7 @@
 <text x="1244.0" y="770.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="600" fill="#0F172A" text-anchor="start">Gráfica de la simulación</text>
 <circle cx="1204" cy="860" r="26" fill="#EDE9FE" stroke="#FFFFFF" stroke-width="4"/>
 <g transform="translate(1190.0,846.0) scale(1.1667)" fill="none" stroke="#6D28D9" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.5 8 15l2 2.5" /> <path d="m14 12.5 2 2.5-2 2.5" /> <path d="M14 2v4a2 2 0 0 0 2 2h4" /> <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" /></g>
-<text x="1244.0" y="855.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="600" fill="#0F172A" text-anchor="start">Código SPICE, que puede</text>
-<text x="1244.0" y="877.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="600" fill="#0F172A" text-anchor="start">editar</text>
+<text x="1244.0" y="866.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="600" fill="#0F172A" text-anchor="start">Código SPICE del circuito</text>
 <circle cx="1204" cy="956" r="26" fill="#EDE9FE" stroke="#FFFFFF" stroke-width="4"/>
 <g transform="translate(1190.0,942.0) scale(1.1667)" fill="none" stroke="#6D28D9" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14" /> <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></g>
 <text x="1244.0" y="951.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="600" fill="#0F172A" text-anchor="start">Explicación sencilla y</text>
