@@ -46,6 +46,12 @@ export type WorkspaceFile = {
   simResult?: BlockSimResult | null
 }
 
+// Lo que el agente documentador escribió sobre el netlist final de un bloque.
+export type CircuitDocumentation = Pick<
+  WorkspaceFile,
+  'summary' | 'tags' | 'components' | 'measurementExplanation'
+>
+
 export type TraceStepUsage = {
   promptTokens?: number | null
   completionTokens?: number | null

@@ -12,6 +12,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { parseNetlist } from '../model/netlist-diagram'
 import type {
   BlockSimResult,
+  CircuitDocumentation,
   WorkspaceConversationDetail,
   WorkspaceFileItem,
   WorkspaceSnapshot,
@@ -179,7 +180,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
   const [files, setFiles] = useState<WorkspaceFileItem[] | null>(null)
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
   const [selectedWorkspaceFileId, setSelectedWorkspaceFileId] = useState<string>('')
-  const [activeFileSummary, setActiveFileSummary] = useState<string | null>(null)
+  const [activeFileDocumentation, setActiveFileDocumentation] = useState<CircuitDocumentation | null>(null)
   const [activeFileSimResult, setActiveFileSimResult] = useState<BlockSimResult | null>(null)
   const [viewMode, setViewMode] = useState<'schematic' | 'code' | 'simulation'>('schematic')
   const [cache, setCache] = useState<Record<string, WorkspaceConversationDetail>>({})
@@ -239,7 +240,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
       if (fileObj?.content) {
         setCode(fileObj.content)
         setDrawnNetlist(fileObj.content)
-        setActiveFileSummary(fileObj.summary ?? null)
+        setActiveFileDocumentation(fileObj)
         setActiveFileSimResult(fileObj.simResult ?? null)
       }
     }
@@ -256,7 +257,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
   const handleSelectWorkspaceFile = (fileId: string) => {
     setSelectedWorkspaceFileId(fileId)
     if (!fileId) {
-      setActiveFileSummary(null)
+      setActiveFileDocumentation(null)
       setActiveFileSimResult(null)
       setSearchParams({}, { replace: true })
       return
@@ -273,7 +274,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
       if (fileObj?.content) {
         setCode(fileObj.content)
         setDrawnNetlist(fileObj.content)
-        setActiveFileSummary(fileObj.summary ?? null)
+        setActiveFileDocumentation(fileObj)
         setActiveFileSimResult(fileObj.simResult ?? null)
       }
     } else {
@@ -285,7 +286,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
           if (fileObj?.content) {
             setCode(fileObj.content)
             setDrawnNetlist(fileObj.content)
-            setActiveFileSummary(fileObj.summary ?? null)
+            setActiveFileDocumentation(fileObj)
             setActiveFileSimResult(fileObj.simResult ?? null)
           }
         })
@@ -422,7 +423,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
         ) : (
           <NetlistDiagram
             netlistText={drawnNetlist}
-            workspaceSummary={activeFileSummary}
+            documentation={activeFileDocumentation}
             showExplanation={false}
           />
         )}
@@ -434,7 +435,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
           <>
             <CircuitExplanation
               netlist={parsedNetlist}
-              workspaceSummary={activeFileSummary}
+              documentation={activeFileDocumentation}
               compact={false}
             />
           </>
