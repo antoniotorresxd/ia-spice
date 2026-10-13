@@ -1,8 +1,22 @@
 % Capítulo 5: Desarrollo del proyecto
-\section{Introducción}
+\section{Desarrollo}
 \label{sec:des-intro}
 
-El capítulo anterior expuso el diseño del sistema: su arquitectura en el modelo C4, su descomposición funcional y de casos de uso, su comportamiento dinámico, y los marcos de calidad (sección~\ref{sec:prop-calidad}) y de seguridad (sección~\ref{sec:prop-seguridad}) que orientan la construcción. Este capítulo presenta la materialización de ese diseño en un prototipo funcional: el código fuente que lo implementa y su organización en el repositorio, las pantallas del prototipo en operación, y el análisis de seguridad de la implementación, que contrasta los controles previstos en el diseño con los efectivamente construidos.
+Anteriormente se expuso el diseño del sistema: su arquitectura en el modelo C4, su descomposición funcional y de casos de uso, su comportamiento dinámico, y los marcos de calidad (sección~\ref{sec:prop-calidad}) y de seguridad (sección~\ref{sec:prop-seguridad}) que orientan la construcción. Este capítulo presenta la materialización de ese diseño en un prototipo funcional: el código fuente que lo implementa y su organización en el repositorio, las pantallas del prototipo en operación, y el análisis de seguridad de la implementación, que contrasta los controles previstos en el diseño con los efectivamente construidos.
+
+Podemos observar un resumen de como se comporta el sistema en su totalidad.
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{%
+        \hspace*{-0.5cm}\includegraphics[width=1.3\textwidth, keepaspectratio]{../src/diagrams/c4_l2_contenedores.png}%
+    }
+    \caption{Diagrama de contenedores.}
+    \label{fig:diagrama-contenedores}
+
+\end{figure}
+
+
 
 \section{Código fuente del proyecto}
 \label{sec:des-codigo}
@@ -49,3 +63,7 @@ Tras autenticarse, el usuario accede a su espacio de trabajo personal (figura~\r
     \caption{Espacio de trabajo autenticado: solicitud en lenguaje natural, resumen operativo, actividad reciente y archivos generados.}
     \label{fig:pantalla-workspace}
 \end{figure}
+
+Posteriormente se diseñó un pequeño tutorial que le indica al usuario como interactuar con el sistema, que funcion cumple cada módulo y que información se espera de cada uno. El tutorial se encuentra disponible en la sección de ayuda del sistema (figura~\ref{fig:pantalla-tutorial}).
+
+

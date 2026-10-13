@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.9.30)  5 OCT 2026 17:52
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.9.30)  13 OCT 2026 16:46
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1561,6 +1561,10 @@ LaTeX Info: Redefining \. on input line 13.
 LaTeX Info: Redefining \% on input line 13.
 Package babel Info: 'spanish' activates 'spanish' shorthands.
 (babel)             Reported on input line 13.
+
+
+LaTeX Warning: Label `fig:diagrama-funcional' multiply defined.
+
 )
 \openout1 = `main.aux'.
 
@@ -1601,8 +1605,7 @@ Package microtype Info: Patching command `\showhyphens'.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
-
-(C:\Users\alvmi\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-ptm.cfg
+ (C:\Users\alvmi\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-ptm.cfg
 File: mt-ptm.cfg 2006/04/20 v1.7 microtype config. file: Times (RS)
 )
 *geometry* driver: auto-detecting
@@ -1704,12 +1707,12 @@ Package biblatex Info: Reference section=0 on input line 146.
 Package biblatex Info: Reference segment=0 on input line 146.
 Package babel Info: Main language set to 'spanish'.
  (sections/portada.tex
-<../src/logos/ipn_logo.png, id=192, 268.00125pt x 189.70876pt>
+<../src/logos/ipn_logo.png, id=176, 268.00125pt x 189.70876pt>
 File: ../src/logos/ipn_logo.png Graphic file (type png)
 <use ../src/logos/ipn_logo.png>
 Package pdftex.def Info: ../src/logos/ipn_logo.png  used on input line 10.
 (pdftex.def)             Requested size: 113.81102pt x 80.56291pt.
-<../src/logos/esime_logo.jpg, id=193, 585.8688pt x 524.1984pt>
+<../src/logos/esime_logo.jpg, id=177, 585.8688pt x 524.1984pt>
 File: ../src/logos/esime_logo.jpg Graphic file (type jpg)
 <use ../src/logos/esime_logo.jpg>
 Package pdftex.def Info: ../src/logos/esime_logo.jpg  used on input line 15.
@@ -1773,7 +1776,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.I}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.33 ...rline {2.6}Introducción}{20}{section.2.6}
+l.33 ...mberline {2.6}Desarrollo}{21}{section.2.6}
                                                   % [1
 
 
@@ -1798,148 +1801,132 @@ LaTeX Info: Redefining \% on input line 1.
 Package hyperref Warning: The anchor of a bookmark and its parent's must not
 (hyperref)                be the same. Added a new anchor on input line 2.
 
-) (sections/objetivo_general.tex) (sections/objetivos_especificos.tex [1
+) (sections/objetivo_general.tex [1
 
 
-])
-(sections/estado_arte.tex
+]) (sections/objetivos_especificos.tex)
+(sections/estado_arte.tex [2]
 
 Package hyperref Warning: The anchor of a bookmark and its parent's must not
 (hyperref)                be the same. Added a new anchor on input line 7.
 
-[2] [3]) (sections/justificacion.tex [4]) (sections/limites_alcances.tex)
-[5]
+[3]) (sections/justificacion.tex [4]) (sections/limites_alcances.tex) [5]
 Cap\'{\i }tulo 1.
 (sections/marco_teorico.tex [6
 
 ] [7] [8] [9] [10]) [11]
 Cap\'{\i }tulo 2.
-(sections/diseño_conceptual.tex [12
+(sections/diseño_conceptual.tex
+<../src/diagrams/diseno_conceptual_fases.png, id=354, 3854.4pt x 2168.1pt>
+File: ../src/diagrams/diseno_conceptual_fases.png Graphic file (type png)
+<use ../src/diagrams/diseno_conceptual_fases.png>
+Package pdftex.def Info: ../src/diagrams/diseno_conceptual_fases.png  used on i
+nput line 13.
+(pdftex.def)             Requested size: 576.65337pt x 324.34082pt.
+ [12
 
 ]
-<../src/diagrams/diagrama_funcional.png, id=381, 4456.65pt x 2890.8pt>
+<../src/diagrams/diagrama_funcional.png, id=359, 4456.65pt x 2890.8pt>
 File: ../src/diagrams/diagrama_funcional.png Graphic file (type png)
 <use ../src/diagrams/diagrama_funcional.png>
 Package pdftex.def Info: ../src/diagrams/diagrama_funcional.png  used on input 
-line 26.
+line 34.
 (pdftex.def)             Requested size: 576.65337pt x 374.00868pt.
- [13 <../src/diagrams/diagrama_funcional.png>]
-<../src/diagrams/casos_uso_simulacion.png, id=390, 3854.4pt x 2168.1pt>
+ [13 <../src/diagrams/diseno_conceptual_fases.png (PNG copy)>]
+<../src/diagrams/casos_uso_simulacion.png, id=367, 3854.4pt x 2168.1pt>
 File: ../src/diagrams/casos_uso_simulacion.png Graphic file (type png)
 <use ../src/diagrams/casos_uso_simulacion.png>
 Package pdftex.def Info: ../src/diagrams/casos_uso_simulacion.png  used on inpu
-t line 42.
+t line 50.
 (pdftex.def)             Requested size: 576.65337pt x 324.34082pt.
-<../src/diagrams/c4_l1_v4.png, id=391, 3312.375pt x 1565.85pt>
+ [14 <../src/diagrams/diagrama_funcional.png>]
+<../src/diagrams/c4_l1_v4.png, id=373, 3312.375pt x 1565.85pt>
 File: ../src/diagrams/c4_l1_v4.png Graphic file (type png)
 <use ../src/diagrams/c4_l1_v4.png>
-Package pdftex.def Info: ../src/diagrams/c4_l1_v4.png  used on input line 59.
+Package pdftex.def Info: ../src/diagrams/c4_l1_v4.png  used on input line 67.
 (pdftex.def)             Requested size: 576.65337pt x 272.59428pt.
- [14 <../src/diagrams/casos_uso_simulacion.png>]
-
-LaTeX Warning: Reference `subsec:prop-premisas-disenio' on page 15 undefined on
- input line 67.
-
-<../src/diagrams/c4_l2_v4.png, id=397, 3312.375pt x 2499.3375pt>
-File: ../src/diagrams/c4_l2_v4.png Graphic file (type png)
-<use ../src/diagrams/c4_l2_v4.png>
-Package pdftex.def Info: ../src/diagrams/c4_l2_v4.png  used on input line 73.
-(pdftex.def)             Requested size: 576.65337pt x 435.10242pt.
-[15 <../src/diagrams/c4_l1_v4.png>]
+ [15 <../src/diagrams/casos_uso_simulacion.png>]
 
 LaTeX Warning: Reference `subsec:prop-premisas-disenio' on page 16 undefined on
- input line 81.
+ input line 75.
 
-<../src/diagrams/c4_l3_v4.png, id=404, 3312.375pt x 2649.9pt>
+<../src/diagrams/c4_l2_v4.png, id=380, 3312.375pt x 2499.3375pt>
+File: ../src/diagrams/c4_l2_v4.png Graphic file (type png)
+<use ../src/diagrams/c4_l2_v4.png>
+Package pdftex.def Info: ../src/diagrams/c4_l2_v4.png  used on input line 81.
+(pdftex.def)             Requested size: 576.65337pt x 435.10242pt.
+[16 <../src/diagrams/c4_l1_v4.png>]
+
+LaTeX Warning: Reference `subsec:prop-premisas-disenio' on page 17 undefined on
+ input line 89.
+
+<../src/diagrams/c4_l3_v4.png, id=386, 3312.375pt x 2649.9pt>
 File: ../src/diagrams/c4_l3_v4.png Graphic file (type png)
 <use ../src/diagrams/c4_l3_v4.png>
-Package pdftex.def Info: ../src/diagrams/c4_l3_v4.png  used on input line 87.
+Package pdftex.def Info: ../src/diagrams/c4_l3_v4.png  used on input line 95.
 (pdftex.def)             Requested size: 576.65337pt x 461.3134pt.
-[16 <../src/diagrams/c4_l2_v4.png>] [17 <../src/diagrams/c4_l3_v4.png>]
-<../src/diagrams/secuencia_flujo_principal.png, id=415, 3794.175pt x 3914.625pt
+[17 <../src/diagrams/c4_l2_v4.png>] [18 <../src/diagrams/c4_l3_v4.png>]
+<../src/diagrams/secuencia_flujo_principal.png, id=397, 3794.175pt x 3914.625pt
 >
 File: ../src/diagrams/secuencia_flujo_principal.png Graphic file (type png)
 <use ../src/diagrams/secuencia_flujo_principal.png>
 Package pdftex.def Info: ../src/diagrams/secuencia_flujo_principal.png  used on
- input line 105.
+ input line 113.
 (pdftex.def)             Requested size: 576.65337pt x 594.93362pt.
 
-[18] [19 <../src/diagrams/secuencia_flujo_principal.png>]
+[19] [20 <../src/diagrams/secuencia_flujo_principal.png>]
 
-LaTeX Warning: Reference `sec:prop-criterios' on page 20 undefined on input lin
-e 116.
+LaTeX Warning: Reference `sec:prop-criterios' on page 21 undefined on input lin
+e 124.
 
 ) (sections/desarrollo.tex
 
-LaTeX Warning: Reference `sec:prop-calidad' on page 20 undefined on input line 
+LaTeX Warning: Reference `sec:prop-calidad' on page 21 undefined on input line 
 5.
 
 
-LaTeX Warning: Reference `sec:prop-seguridad' on page 20 undefined on input lin
+LaTeX Warning: Reference `sec:prop-seguridad' on page 21 undefined on input lin
 e 5.
 
+<../src/diagrams/c4_l2_contenedores.png, id=410, 3854.4pt x 2168.1pt>
+File: ../src/diagrams/c4_l2_contenedores.png Graphic file (type png)
+<use ../src/diagrams/c4_l2_contenedores.png>
+Package pdftex.def Info: ../src/diagrams/c4_l2_contenedores.png  used on input 
+line 13.
+(pdftex.def)             Requested size: 576.65337pt x 324.34082pt.
+[21]
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `cmtt' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
-[20]
-<../src/pantallas/Diseño Web Inicio 1.jpeg, id=437, 1606.0pt x 1094.0875pt>
+ [22 <../src/diagrams/c4_l2_contenedores.png (PNG copy)>]
+<../src/pantallas/Diseño Web Inicio 1.jpeg, id=425, 1606.0pt x 1094.0875pt>
 File: ../src/pantallas/Diseño Web Inicio 1.jpeg Graphic file (type jpg)
 <use ../src/pantallas/Diseño Web Inicio 1.jpeg>
 Package pdftex.def Info: ../src/pantallas/Diseño Web Inicio 1.jpeg  used on in
-put line 37.
+put line 51.
 (pdftex.def)             Requested size: 443.57848pt x 302.1855pt.
- [21]
-<../src/pantallas/Diseño Web Interfaz inicial.jpeg, id=444, 1540.75626pt x 128
+ [23]
+<../src/pantallas/Diseño Web Interfaz inicial.jpeg, id=431, 1540.75626pt x 128
 8.815pt>
 File: ../src/pantallas/Diseño Web Interfaz inicial.jpeg Graphic file (type jpg
 )
 <use ../src/pantallas/Diseño Web Interfaz inicial.jpeg>
 Package pdftex.def Info: ../src/pantallas/Diseño Web Interfaz inicial.jpeg  us
-ed on input line 48.
+ed on input line 62.
 (pdftex.def)             Requested size: 443.57848pt x 371.03291pt.
- [22 <../src/pantallas/Diseño Web Inicio 1.jpeg>]
+ [24 <../src/pantallas/Diseño Web Inicio 1.jpeg>]
 
-LaTeX Warning: Reference `sec:prop-seguridad' on page 23 undefined on input lin
-e 56.
+LaTeX Warning: Reference `fig:pantalla-tutorial' on page 25 undefined on input 
+line 67.
 
-[23 <../src/pantallas/Diseño Web Interfaz inicial.jpeg>] [24]
-Overfull \hbox (1.39857pt too wide) in paragraph at lines 99--99
-[]|\T1/cmtt/m/n/10.95 middleware/session.ts\T1/ptm/m/n/10.95 (-20) ;
- []
-
-
-Overfull \hbox (24.03206pt too wide) in paragraph at lines 99--99
-[]|\T1/cmtt/m/n/10.95 modules/llm/llm.crypto.ts\T1/ptm/m/n/10.95 (-20) ;
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 99--99
-[]|\T1/cmtt/m/n/10.95 agents/src/agents/
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 99--99
-[]|\T1/cmtt/m/n/10.95 modules/auth\T1/ptm/m/n/10.95 (+20) ;
- []
-
-
-Overfull \hbox (16.29942pt too wide) in paragraph at lines 99--99
-\T1/cmtt/m/n/10.95 modules/llm/llm.index.ts| 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 99--99
-[]|\T1/cmtt/m/n/10.95 lib/env.ts\T1/ptm/m/n/10.95 (+20) ;
- []
-
-) [25] [26]
+) [25 <../src/pantallas/Diseño Web Interfaz inicial.jpeg>]
 Cap\'{\i }tulo 3.
-(sections/pruebas.tex) [27
+(sections/pruebas.tex) [26
 
 ]
 Cap\'{\i }tulo 4.
-(sections/conclusiones.tex) [28
+(sections/conclusiones.tex) [27
 
 ]
 Overfull \hbox (16.63383pt too wide) in paragraph at lines 204--204
@@ -1947,34 +1934,39 @@ Overfull \hbox (16.63383pt too wide) in paragraph at lines 204--204
 actor ap-pli-ca-tions with LLMs. ^^Tdirecci�n:
  []
 
-[29
+[28
 
 
-] (sections/apendices.tex [30]
+] (sections/apendices.tex [29]
 Ap\'{e}ndice A.
-<../src/diagrams/casos_uso_acceso.png, id=523, 3252.15pt x 1686.3pt>
+<../src/diagrams/casos_uso_acceso.png, id=497, 3252.15pt x 1686.3pt>
 File: ../src/diagrams/casos_uso_acceso.png Graphic file (type png)
 <use ../src/diagrams/casos_uso_acceso.png>
 Package pdftex.def Info: ../src/diagrams/casos_uso_acceso.png  used on input li
 ne 11.
 (pdftex.def)             Requested size: 443.57848pt x 229.98218pt.
-<../src/diagrams/casos_uso_generacion.png, id=524, 3794.175pt x 1746.525pt>
+<../src/diagrams/casos_uso_generacion.png, id=498, 3794.175pt x 1746.525pt>
 File: ../src/diagrams/casos_uso_generacion.png Graphic file (type png)
 <use ../src/diagrams/casos_uso_generacion.png>
 Package pdftex.def Info: ../src/diagrams/casos_uso_generacion.png  used on inpu
 t line 20.
 (pdftex.def)             Requested size: 443.57848pt x 204.16405pt.
-[31
+[30
 
  <../src/diagrams/casos_uso_acceso.png>]
-<../src/diagrams/casos_uso_decision.png, id=530, 3553.275pt x 1716.4125pt>
+<../src/diagrams/casos_uso_decision.png, id=504, 3553.275pt x 1716.4125pt>
 File: ../src/diagrams/casos_uso_decision.png Graphic file (type png)
 <use ../src/diagrams/casos_uso_decision.png>
 Package pdftex.def Info: ../src/diagrams/casos_uso_decision.png  used on input 
 line 29.
 (pdftex.def)             Requested size: 443.57848pt x 214.26294pt.
-) [32 <../src/diagrams/casos_uso_generacion.png> <../src/diagrams/casos_uso_dec
-ision.png>] (main.aux
+)
+
+Package caption Warning: Unused \captionsetup[table] on input line 92.
+See the caption package documentation for explanation.
+
+[31 <../src/diagrams/casos_uso_generacion.png> <../src/diagrams/casos_uso_decis
+ion.png>] (main.aux
 LaTeX Info: Redefining \. on input line 13.
 LaTeX Info: Redefining \% on input line 13.
 )
@@ -1986,34 +1978,31 @@ L3 programming layer <2026-09-09>
 
 LaTeX Warning: There were undefined references.
 
+
+LaTeX Warning: There were multiply-defined labels.
+
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: F5A7F77B6066DC05DC39BACA9224D445;7790.
-
-Package biblatex Warning: Please (re)run Biber on the file:
-(biblatex)                main
-(biblatex)                and rerun LaTeX afterwards.
-
+(rerunfilecheck)             Checksum: 5C551AB5A2E3F5A86AB04360302F50DF;6823.
 Package logreq Info: Writing requests to 'main.run.xml'.
 \openout1 = `main.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 52122 strings out of 467392
- 1184276 string characters out of 5405639
- 2156053 words of memory out of 5000000
- 80155 multiletter control sequences out of 15000+600000
- 707712 words of font info for 327 fonts, out of 8000000 for 9000
+ 51999 strings out of 467392
+ 1182952 string characters out of 5405639
+ 2155670 words of memory out of 5000000
+ 80100 multiletter control sequences out of 15000+600000
+ 690178 words of font info for 264 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  94i,12n,94p,1475b,2366s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\alvmi\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt
-1095.pk> <C:\Users\alvmi\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi60
-0\ectt1200.pk><C:/Users/alvmi/AppData/Local/Programs/MiKTeX/fonts/type1/urw/tim
-es/utmb8a.pfb><C:/Users/alvmi/AppData/Local/Programs/MiKTeX/fonts/type1/urw/tim
-es/utmr8a.pfb><C:/Users/alvmi/AppData/Local/Programs/MiKTeX/fonts/type1/urw/tim
-es/utmri8a.pfb>
-Output written on main.pdf (36 pages, 3392104 bytes).
+1200.pk><C:/Users/alvmi/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utm
+b8a.pfb><C:/Users/alvmi/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utm
+r8a.pfb><C:/Users/alvmi/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utm
+ri8a.pfb>
+Output written on main.pdf (35 pages, 4479864 bytes).
 PDF statistics:
- 670 PDF objects out of 1000 (max. 8388607)
- 112 named destinations out of 1000 (max. 500000)
- 88574 words of extra memory for PDF output out of 89155 (max. 10000000)
+ 601 PDF objects out of 1000 (max. 8388607)
+ 108 named destinations out of 1000 (max. 500000)
+ 66024 words of extra memory for PDF output out of 74296 (max. 10000000)
 
