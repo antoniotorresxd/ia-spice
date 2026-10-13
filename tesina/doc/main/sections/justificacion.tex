@@ -1,13 +1,7 @@
 \section*{Justificación}
 \addcontentsline{toc}{section}{Justificación}
 
-Automatizar el diseño de circuitos analógicos tiene valor práctico porque su ciclo de propuesta, simulación y ajuste descansa en el conocimiento experto y no puede seguirse como un procedimiento mecánico. Los modelos de lenguaje que generan diseños a partir de lenguaje natural simplifican la entrada al proceso, pero producen diseños eléctricamente inconsistentes que requieren corrección manual o, cuando los sistemas verifican internamente, lo hacen a nivel de transistor o mediante reglas eléctricas, no mediante simulación SPICE dentro del lazo de diseño.
 
-En la práctica, a partir de una descripción en lenguaje natural el sistema genera un netlist con componentes comerciales, lo simula en ngspice \cite{ngspice_manual}, extrae sus métricas eléctricas y ajusta los valores de los componentes de forma iterativa hasta que el diseño cumpla las metas especificadas. El ciclo de ajuste lo ejecuta el propio ecosistema; el usuario recibe el netlist simulado junto con las métricas y el historial de iteraciones.
+Planteamos un método diferente de utilizar múltiples agentes en un solo módulo, aplicando procesamiento en paralelo, capaces de sintetizar, dimensionar y verificar circuitos electrónicos CA/CD de manera automatizada mediante lenguaje natural. Todo mediante una implementación en la nube, descartando la necesidad de un software propietario especializado.
 
-Los destinatarios directos son ingenieros y estudiantes que trabajen con circuitos analógicos CA/CD construidos a partir de componentes comerciales con modelo SPICE disponible ---resistores, capacitores, inductores, fuentes, diodos, transistores y amplificadores operacionales de catálogo--- y que requieran una herramienta que no solo genere sino que también valide mediante simulación, sin depender de un nodo tecnológico propietario ni de herramientas de licencia costosa.
-
-Lo que se propone es trabajar con componentes comerciales y, a la vez, usar la simulación SPICE como señal de ajuste dentro del lazo de diseño, coordinado por varios agentes con un curador. Se apoya en herramientas de uso libre ---LangGraph \cite{langgraph}, PySpice \cite{pyspice} y ngspice \cite{ngspice_manual}---, desplegables en la nube y sin dependencia de licencias. Desde la ingeniería en computación.
-
-Este proyecto implementa un ecosistema multiagente, que integra tareas mediante procesamiento paralelo y obedece el comportamiento eléctrico, siendo una herramienta mas acertada en las generación y validación de circuitos mediante el uso de LLM’s.
-
+La arquitectura propuesta permite que el sistema sea utilizado para un publico abierto, sin embargo, por la naturaleza del proyecto permite a estudiantes relacionados con circuitos electrónicos analógicos CA/CD tener un aditamento en sus estudios y preparación académica.

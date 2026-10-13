@@ -4,10 +4,10 @@ import { AuthScreen } from './features/auth/components/AuthScreen'
 import { authClient } from './features/auth/services/auth-client'
 import { authService } from './features/auth/services/auth-service'
 import { HomeScreen } from './features/home/components/HomeScreen'
-import { httpHomeService } from './features/home/services/http-home-service'
+import { mockHomeService } from './features/home/services/mock-home-service'
 import { ModelSettingsScreen } from './features/settings/components/ModelSettingsScreen'
 import { ProfileSettingsScreen } from './features/settings/components/ProfileSettingsScreen'
-import { httpSettingsService } from './features/settings/services/http-settings-service'
+import { createMockSettingsService } from './features/settings/services/mock-settings-service'
 import { WorkspaceShell } from './features/workspace/components/WorkspaceShell'
 import { NewRequestScreen } from './features/workspace/components/NewRequestScreen'
 import { ProjectsScreen } from './features/workspace/components/ProjectsScreen'
@@ -16,10 +16,12 @@ import { ConversationsScreen } from './features/workspace/components/Conversatio
 import { ConversationScreen } from './features/workspace/components/ConversationScreen'
 import { FilesScreen } from './features/workspace/components/FilesScreen'
 import { VisualizerScreen } from './features/workspace/components/VisualizerScreen'
-import { httpWorkspaceService } from './features/workspace/services/http-workspace-service'
+import { createMockWorkspaceService } from './features/workspace/services/mock-workspace-service'
 import './App.css'
 
-const workspaceService = httpWorkspaceService
+// [MODO DEMO / TEMPORAL] Servicios mock para visualizar la aplicación sin backend
+const workspaceService = createMockWorkspaceService()
+const settingsService = createMockSettingsService()
 
 function UpcomingScreen({ heading }: { heading: string }) {
   return (
@@ -31,7 +33,21 @@ function UpcomingScreen({ heading }: { heading: string }) {
 }
 
 function App() {
-  const { data: session, isPending } = authClient.useSession()
+  // [MODO DEMO / TEMPORAL] Sesión ficticia para visualizar la app sin login
+  const session = {
+    user: {
+      id: 'demo-user-1',
+      name: 'Antonio Demo',
+      email: 'antonio@demo.local',
+    },
+    session: {
+      id: 'session-demo',
+      userId: 'demo-user-1',
+      expiresAt: new Date(Date.now() + 86400000),
+    },
+  }
+  const isPending = false
+  // const { data: session, isPending } = authClient.useSession()
 
   async function handleSignOut() {
     const result = await authService.signOut()
@@ -64,7 +80,7 @@ function App() {
           element={
             <HomeScreen
               onSignOut={handleSignOut}
-              service={httpHomeService}
+              service={mockHomeService}
               workspaceService={workspaceService}
               userName={session.user.name}
             />
@@ -75,7 +91,7 @@ function App() {
           element={
             <ProfileSettingsScreen
               onSignOut={handleSignOut}
-              service={httpSettingsService}
+              service={settingsService}
             />
           }
         />
@@ -84,7 +100,7 @@ function App() {
           element={
             <ModelSettingsScreen
               onSignOut={handleSignOut}
-              service={httpSettingsService}
+              service={settingsService}
             />
           }
         />
