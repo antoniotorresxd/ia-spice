@@ -31,6 +31,11 @@ NO es un diseño: responde con mode='analysis'.
 - Si la red no tiene tierra (una red pasiva entre dos terminales), NO inventes una
   conexión a 0 ni un elemento extra: el sistema toma el segundo terminal como
   referencia.
+- NUNCA inventes el valor de un componente que el problema pide encontrar (una
+  incógnita: "find Ri, Aoc and Ro", "¿qué R2 hace falta?", parámetros que se deducen
+  de mediciones). Si la red no se puede escribir sin inventar valores, NO uses
+  mode='analysis': responde con mode='chat', plantea las ecuaciones del problema y
+  resuélvelo paso a paso, diciendo que es una resolución sin verificación de ngspice.
 - Transcribe cada componente tal como lo describe el usuario, uno por línea. NO
   combines tú resistencias en serie o en paralelo (50 Ω ∥ 200 Ω son dos líneas, no
   una de 40 Ω): la reducción paso a paso la hace el sistema.

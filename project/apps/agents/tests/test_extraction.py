@@ -125,3 +125,10 @@ def test_la_guia_de_analisis_pide_no_inventar_tierra_ni_reducir():
     # leyera y juntó 50 Ω ∥ 200 Ω en una sola de 40 Ω, borrando ese paso.
     assert "NO inventes una" in GUIA_MODO_ANALISIS
     assert "NO\n  combines" in GUIA_MODO_ANALISIS
+
+
+def test_la_guia_de_analisis_prohibe_inventar_valores_de_incognitas():
+    # Caso real (Franco P1.4): con Ri, Ag y Ro como incógnitas, el LLM las
+    # transcribió con valores inventados (RI 100k, Gm 1.84, RO 100).
+    assert "NUNCA inventes" in GUIA_MODO_ANALISIS
+    assert "incógnita" in GUIA_MODO_ANALISIS
