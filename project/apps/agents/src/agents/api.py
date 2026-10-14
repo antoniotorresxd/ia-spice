@@ -211,6 +211,28 @@ STAGES_META = {
     "result": {"label": "Documentación", "actor": "Documentador"},
 }
 
+# En un análisis ngspice no simula un diseño: verifica lo que resolvieron las
+# ecuaciones (Z_eq, tensiones de nodo). Misma etapa (`simulation`), otro nombre.
+ANALYSIS_VERIFICATION_META = {"label": "Verificación", "actor": "ngspice"}
+
+
+def _resumen_verificacion(validacion: dict) -> str:
+    """Qué confirmó ngspice en un análisis: la Z_eq entre los terminales, las
+    tensiones de nodo, o por qué no hubo nada concluyente que confirmar."""
+    zeq = validacion.get("zeq") or {}
+    if validacion.get("coincide"):
+        if zeq.get("coincide"):
+            a, b = zeq["terminales"]
+            return f"ngspice confirma la Z_eq entre {a} y {b} con una fuente de prueba de 1 V."
+        return "ngspice confirma las tensiones de nodo."
+    if validacion.get("error") or zeq.get("error"):
+        return f"Verificación con ngspice: {validacion.get('error') or zeq.get('error')}"
+    if zeq:
+        return "ngspice da otra Z_eq: revisar la reducción o la transcripción de la red."
+    if validacion.get("sin_corriente"):
+        return "No concluyente: en la red transcrita no circula corriente."
+    return "Las tensiones de nodo de ngspice no coinciden con el análisis."
+
 
 def _sse(event_type: str, data: dict) -> str:
     return f"event: {event_type}\ndata: {json.dumps(data)}\n\n"
@@ -225,8 +247,9 @@ def _stream_run(initial_state: dict, config: dict):
         summary: str,
         duration_ms: int | None = None,
         metrics: list | None = None,
+        meta: dict | None = None,
     ) -> str:
-        meta = STAGES_META.get(kind, {"label": kind.capitalize(), "actor": "Agente"})
+        meta = meta or STAGES_META.get(kind, {"label": kind.capitalize(), "actor": "Agente"})
         return _sse(
             "stage",
             {
@@ -269,6 +292,9 @@ def _stream_run(initial_state: dict, config: dict):
                             summary=verdict.get("reason", "Solicitud rechazada."),
                         )
                     elif outcome and outcome.get("mode") == "analysis":
+                        # Un análisis no pasa por curación ni documentación:
+                        # se avisa ya, para que el server no las deje pendientes.
+                        yield _sse("mode", {"mode": "analysis"})
                         yield _stage_event(
                             "interpretation",
                             status="completed",
@@ -377,6 +403,10 @@ def _stream_run(initial_state: dict, config: dict):
                             )
 
                 elif node == "analisis":
+                    # Ecuaciones y verificación con ngspice corren dentro del
+                    # mismo nodo, y el stream solo ve su final: no hay forma de
+                    # separar los tiempos desde aquí. Ambas etapas llevan el
+                    # tiempo del nodo, que es lo que de verdad se midió.
                     dur = int(
                         (time.perf_counter() - stage_start_times.get("calculation", time.perf_counter()))
                         * 1000
@@ -392,11 +422,9 @@ def _stream_run(initial_state: dict, config: dict):
                     yield _stage_event(
                         "simulation",
                         status="completed" if validacion.get("coincide") else "failed",
-                        summary=(
-                            "ngspice confirma las tensiones de nodo."
-                            if validacion.get("coincide")
-                            else f"Verificación con ngspice: {validacion.get('error') or 'no coincide'}"
-                        ),
+                        duration_ms=dur,
+                        meta=ANALYSIS_VERIFICATION_META,
+                        summary=_resumen_verificacion(validacion),
                     )
 
                 elif node == "documentador":

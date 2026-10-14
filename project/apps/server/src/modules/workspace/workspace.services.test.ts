@@ -1,8 +1,10 @@
 import { afterAll, describe, expect, test } from "bun:test";
 
 import {
+  activeExecutions,
   appendUserMessage,
   createConversationWithRequest,
+  createDefaultStages,
   createProject,
   deleteConversation,
   deleteProject,
@@ -36,6 +38,34 @@ afterAll(async () => {
   for (const id of createdConversationIds) {
     await deleteConversation(TEST_USER_ID, id).catch(() => {});
   }
+});
+
+describe("etapas en vivo de un análisis", () => {
+  // No toca la BD: solo el registro en memoria de la ejecución en curso.
+  test("al saberse que es un análisis se quitan curación y documentación", async () => {
+    activeExecutions.set("exec-analisis", {
+      conversationId: "conv-analisis",
+      stages: createDefaultStages("exec-analisis"),
+    });
+
+    await makeDbSink("conv-analisis", "exec-analisis").onModeDetected?.("analysis");
+
+    const stages = activeExecutions.get("exec-analisis")!.stages;
+    expect(stages.map((s) => s.kind)).toEqual(["interpretation", "calculation", "simulation"]);
+    activeExecutions.delete("exec-analisis");
+  });
+
+  test("otro modo deja las cinco etapas de diseño", async () => {
+    activeExecutions.set("exec-diseno", {
+      conversationId: "conv-diseno",
+      stages: createDefaultStages("exec-diseno"),
+    });
+
+    await makeDbSink("conv-diseno", "exec-diseno").onModeDetected?.("design");
+
+    expect(activeExecutions.get("exec-diseno")!.stages).toHaveLength(5);
+    activeExecutions.delete("exec-diseno");
+  });
 });
 
 describe("proyectos (db)", () => {

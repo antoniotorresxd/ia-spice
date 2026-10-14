@@ -203,6 +203,84 @@ def test_reduccion_sin_terminales_lo_dice():
     assert "terminales" in r["error"]
 
 
+# --- verificación de Z_eq con fuente de prueba -------------------------------------
+
+# Caso real: el LLM transcribió la fuente de prueba de nodo_in a tierra y dejó
+# nodo_out al aire. No circula corriente: todos los nodos quedan en 1 V y
+# comparar tensiones "coincide" sin probar nada. Lo que hay que verificar es
+# la Z_eq entre los terminales.
+RED_SERIE_PARALELO = """* Analisis de red
+R1 nodo_in nA 100
+R2 nA nC 50
+R3 nA nC 200
+R4 nC nB 250
+R5 nA nD 10
+R6 nD nB 30
+R7 nB nodo_out 120
+VTEST nodo_in 0 DC 1
+"""
+REQ_SERIE_PARALELO = 100 + 1 / (1 / (40 + 250) + 1 / (10 + 30)) + 120  # 255.15 Ω
+
+
+def test_la_reduccion_se_verifica_con_una_fuente_de_prueba_entre_los_terminales():
+    r = analizar({"netlist": RED_SERIE_PARALELO, "metodo": "reduccion", "terminales": ["nodo_in", "nodo_out"]})
+
+    zeq = r["resultados"]["validacion"]["zeq"]
+    assert zeq["ngspice"] == pytest.approx(REQ_SERIE_PARALELO, rel=1e-4)
+    assert zeq["coincide"] is True
+    assert r["resultados"]["validacion"]["coincide"] is True
+    assert "VPRUEBA nodo_in nodo_out DC 1" in r["netlist_zeq"]
+    assert "fuente de prueba de 1 V entre nodo_in y nodo_out" in r["informe"]
+
+
+def test_una_red_sin_corriente_no_cuenta_como_verificada_por_sus_tensiones():
+    r = analizar({"netlist": RED_SERIE_PARALELO, "metodo": "reduccion", "terminales": ["nodo_in", "nodo_out"]})
+
+    assert r["resultados"]["validacion"]["sin_corriente"] is True
+    assert "no circula corriente" in r["informe"]
+    assert "las tensiones de nodo coinciden" not in r["informe"]
+
+    # Sin terminales no queda nada que verificar: no se da por confirmada.
+    sin_terminales = analizar({"netlist": "V1 a 0 5\nR1 a b 1k\n", "metodo": "nodos"})
+    assert sin_terminales["resultados"]["validacion"]["sin_corriente"] is True
+    assert sin_terminales["resultados"]["validacion"]["coincide"] is False
+
+
+def test_si_ngspice_da_otra_zeq_no_coincide(monkeypatch):
+    import agents.analisis.informe as informe
+
+    monkeypatch.setattr(informe, "impedancia_con_ngspice", lambda *a, **k: ("* red", 300.0, None))
+    r = analizar({"netlist": RED_SERIE_PARALELO, "metodo": "reduccion", "terminales": ["nodo_in", "nodo_out"]})
+
+    assert r["resultados"]["validacion"]["zeq"]["coincide"] is False
+    assert r["resultados"]["validacion"]["coincide"] is False
+    assert "NO coincide" in r["informe"]
+
+
+def test_thevenin_ac_verifica_la_impedancia_compleja():
+    r = analizar({
+        "netlist": "V1 in 0 AC 10\nR1 in out 1k\nC1 out 0 159.155n\n",
+        "metodo": "thevenin",
+        "terminales": ["out", "0"],
+        "frecuencia_hz": 1000,
+    })
+    zeq = r["resultados"]["validacion"]["zeq"]
+    # R ∥ C a la frecuencia de corte: 500 - 500j Ω
+    assert zeq["ngspice"]["real"] == pytest.approx(500, rel=1e-3)
+    assert zeq["ngspice"]["imag"] == pytest.approx(-500, rel=1e-3)
+    assert zeq["coincide"] is True
+
+
+def test_el_nodo_guarda_el_netlist_de_la_prueba_como_artefacto():
+    from agents.analisis.node import analisis_node
+
+    outcome = {"mode": "analysis", "netlist": RED_SERIE_PARALELO, "metodo": "reduccion", "terminales": ["nodo_in", "nodo_out"]}
+    actualizacion = analisis_node({"outcome": outcome})
+
+    assert set(actualizacion["netlists"]) == {"analisis", "analisis_zeq"}
+    assert "VPRUEBA" in actualizacion["netlists"]["analisis_zeq"]["text"]
+
+
 # --- en el grafo -------------------------------------------------------------------
 
 

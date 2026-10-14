@@ -42,6 +42,69 @@ def netlist_spice(elementos: list[Elemento], frecuencia: float | None, titulo: s
     return "\n".join(lineas)
 
 
+def netlist_impedancia(
+    elementos: list[Elemento], a: str, b: str, frecuencia: float | None, titulo: str
+) -> str:
+    """Netlist que mide la impedancia vista entre `a` y `b`.
+
+    Fuentes independientes anuladas (las de tensión en corto, las de
+    corriente abiertas) y una fuente de prueba de 1 V entre los terminales:
+    Z = 1 V / I. Escribe en output.txt `zprueba <real> <imag>` con la
+    corriente de la fuente.
+    """
+    lineas = [f"* {titulo}"]
+    for e in elementos:
+        if e.tipo == "I":
+            continue
+        if e.tipo == "V":
+            lineas.append(f"{e.nombre} {e.n1} {e.n2} {'AC 0' if frecuencia else 'DC 0'}")
+        else:
+            lineas.append(f"{e.nombre} {e.n1} {e.n2} {e.valor:.12g}")
+    lineas.append(f"VPRUEBA {a} {b} {'AC 1' if frecuencia else 'DC 1'}")
+    lineas.append(".control")
+    if frecuencia:
+        lineas.append(f"ac lin 1 {frecuencia:.12g} {frecuencia:.12g}")
+        lineas.append("let ire = real(i(VPRUEBA))")
+        lineas.append("let iim = imag(i(VPRUEBA))")
+        lineas.append("echo zprueba $&ire $&iim > output.txt")
+    else:
+        lineas.append("op")
+        lineas.append("let ire = i(VPRUEBA)")
+        lineas.append("echo zprueba $&ire 0 > output.txt")
+    lineas += [".endc", ".end", ""]
+    return "\n".join(lineas)
+
+
+def impedancia_con_ngspice(
+    elementos: list[Elemento], a: str, b: str, frecuencia: float | None, titulo: str = "Prueba de Z_eq"
+) -> tuple[str, complex | None, str | None]:
+    """(netlist, Z vista entre a y b o None, error o None)."""
+    texto = netlist_impedancia(elementos, a, b, frecuencia, titulo)
+    directorio = tempfile.mkdtemp(prefix="agents-analisis-")
+    ruta = os.path.join(directorio, "analisis_zeq.cir")
+    with open(ruta, "w") as f:
+        f.write(texto)
+    salida, error = run_ngspice(ruta)
+    if error is not None:
+        return texto, None, error
+    corriente: complex | None = None
+    with open(salida) as f:
+        for linea in f:
+            partes = linea.split()
+            if len(partes) >= 3 and partes[0] == "zprueba":
+                try:
+                    corriente = complex(float(partes[1]), float(partes[2]))
+                except ValueError:
+                    pass
+    if corriente is None:
+        return texto, None, "ngspice no reportó la corriente de la fuente de prueba"
+    if abs(corriente) < 1e-15:
+        return texto, None, f"no circula corriente entre {a} y {b}: la red está abierta entre los terminales"
+    # SPICE mide la corriente que entra por el borne + de la fuente; la que
+    # la fuente entrega a la red es la opuesta.
+    return texto, 1 / -corriente, None
+
+
 def resolver_con_ngspice(
     elementos: list[Elemento], frecuencia: float | None, titulo: str = "Analisis de red"
 ) -> tuple[str, dict[str, complex] | None, str | None]:

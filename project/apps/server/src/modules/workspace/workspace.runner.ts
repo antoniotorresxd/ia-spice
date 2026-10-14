@@ -18,7 +18,16 @@ export type AgentsOutcome =
       // verificación con ngspice); ausente si el análisis no llegó a correr.
       informe?: string;
       error?: string | null;
-      resultados?: { validacion?: { coincide?: boolean; error?: string | null } } & Record<string, unknown>;
+      resultados?: {
+        validacion?: {
+          coincide?: boolean;
+          error?: string | null;
+          // en la red transcrita no circula corriente: sus tensiones no prueban nada
+          sin_corriente?: boolean;
+          // Z_eq medida con una fuente de prueba de 1 V entre los terminales
+          zeq?: { terminales?: [string, string]; coincide?: boolean; error?: string | null };
+        };
+      } & Record<string, unknown>;
     };
 
 export type SimCurvePoint = { x: number; y: number };
@@ -183,6 +192,25 @@ export function resolveRunOutcome(result: AgentsRunResult, previousNormalizedSpe
 
 const ANALYSIS_UNREADABLE = "No se pudo analizar la red.";
 
+type AnalysisValidation = NonNullable<
+  NonNullable<Extract<AgentsOutcome, { mode: "analysis" }>["resultados"]>["validacion"]
+>;
+
+// Qué confirmó ngspice: la Z_eq entre los terminales o las tensiones de
+// nodo. Una red sin corriente no confirma nada aunque sus tensiones coincidan.
+function analysisSummary(validacion: AnalysisValidation | undefined): string {
+  const zeq = validacion?.zeq;
+  if (validacion?.coincide) {
+    return zeq?.coincide && zeq.terminales
+      ? `Red analizada; ngspice confirma la Z_eq entre ${zeq.terminales[0]} y ${zeq.terminales[1]}.`
+      : "Red analizada; ngspice confirma las tensiones de nodo.";
+  }
+  if (validacion?.sin_corriente && !zeq) {
+    return "Red analizada, pero no hay nada que verificar: en la red transcrita no circula corriente.";
+  }
+  return "Red analizada, pero ngspice no confirmó el resultado.";
+}
+
 // Un análisis no tiene veredicto de diseño: se completa si la red se pudo
 // resolver, y el resumen dice si ngspice confirmó la respuesta.
 function resolveAnalysisOutcome(
@@ -196,9 +224,7 @@ function resolveAnalysisOutcome(
   const solved = Boolean(validacion);
   const summary = !solved
     ? (outcome.error ?? ANALYSIS_UNREADABLE)
-    : validacion?.coincide
-      ? "Red analizada; ngspice confirma las tensiones de nodo."
-      : "Red analizada, pero ngspice no confirmó el resultado.";
+    : analysisSummary(validacion);
   return {
     status: solved ? "completed" : "failed",
     summary,
@@ -231,10 +257,28 @@ export type ExecutionStage = {
   metrics: Array<{ label: string; value: string }>;
 };
 
+// Un análisis solo corre interpretación, cálculo (las ecuaciones) y la
+// verificación con ngspice: no hay curación ni documentación. Las ejecuciones
+// arrancan con las cinco etapas de diseño porque el modo se sabe tarde, así
+// que hay que podarlas — también en análisis viejos guardados con las cinco.
+const ANALYSIS_STAGE_KINDS: StageKind[] = ["interpretation", "calculation", "simulation"];
+
+export function toAnalysisStages(stages: ExecutionStage[]): ExecutionStage[] {
+  return ANALYSIS_STAGE_KINDS.flatMap((kind) => {
+    const stage = stages.find((item) => item.kind === kind);
+    if (!stage) return [];
+    // ngspice no simula un diseño: verifica lo que resolvieron las ecuaciones
+    return kind === "simulation" ? [{ ...stage, label: "Verificación", actor: "ngspice" }] : [stage];
+  });
+}
+
 // El sumidero se inyecta para que todo el camino de red se pruebe en memoria:
 // sin él, comprobar la forma de la petición exigiría una base de datos.
 export type RunSink = {
   onStageUpdate?(stage: ExecutionStage): Promise<void> | void;
+  // agents avisa el modo en cuanto el orquestador lo decide (hoy, solo el de
+  // análisis), antes del resultado final.
+  onModeDetected?(mode: RunOutcome["mode"]): Promise<void> | void;
   onResult(result: AgentsRunResult): Promise<void>;
   onFailure(summary: string): Promise<void>;
 };
@@ -304,6 +348,8 @@ export async function startRun(
               const data = JSON.parse(dataStr);
               if (currentEvent === "stage") {
                 await sink.onStageUpdate?.(data as ExecutionStage);
+              } else if (currentEvent === "mode") {
+                await sink.onModeDetected?.(data.mode);
               } else if (currentEvent === "done") {
                 finalResult = data as AgentsRunResult;
               } else if (currentEvent === "error") {

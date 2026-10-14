@@ -17,11 +17,16 @@ def analisis_node(state: CircuitState) -> dict:
         error=resultado["error"],
     )
     actualizacion: dict = {"outcome": outcome}
-    netlist = resultado.get("netlist")
-    if netlist:
-        directorio = tempfile.mkdtemp(prefix="agents-analisis-")
-        ruta = os.path.join(directorio, "analisis.cir")
-        with open(ruta, "w") as f:
-            f.write(netlist)
-        actualizacion["netlists"] = {"analisis": {"path": ruta, "text": netlist}}
+    # `analisis` es la red tal cual (tensiones de nodo); `analisis_zeq`, la de
+    # la fuente de prueba entre los terminales, cuando se pidió una Z_eq.
+    netlists = {}
+    for clave, texto in (("analisis", resultado.get("netlist")), ("analisis_zeq", resultado.get("netlist_zeq"))):
+        if texto:
+            directorio = tempfile.mkdtemp(prefix="agents-analisis-")
+            ruta = os.path.join(directorio, f"{clave}.cir")
+            with open(ruta, "w") as f:
+                f.write(texto)
+            netlists[clave] = {"path": ruta, "text": texto}
+    if netlists:
+        actualizacion["netlists"] = netlists
     return actualizacion
