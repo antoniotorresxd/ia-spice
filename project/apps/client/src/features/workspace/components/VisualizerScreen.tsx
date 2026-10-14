@@ -4,6 +4,7 @@ import {
   Check,
   ChevronDown,
   FileCode2,
+  ListChecks,
   Play,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -12,12 +13,14 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { parseNetlist } from '../model/netlist-diagram'
 import type {
   BlockSimResult,
+  BomItem,
   CircuitDocumentation,
   WorkspaceConversationDetail,
   WorkspaceFileItem,
   WorkspaceSnapshot,
 } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
+import { BomTable } from './BomTable'
 import { CircuitExplanation, NetlistDiagram } from './NetlistDiagram'
 import { SimulationChart } from './SimulationChart'
 import { SpiceCodeEditor } from './SpiceCodeEditor'
@@ -182,7 +185,8 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
   const [selectedWorkspaceFileId, setSelectedWorkspaceFileId] = useState<string>('')
   const [activeFileDocumentation, setActiveFileDocumentation] = useState<CircuitDocumentation | null>(null)
   const [activeFileSimResult, setActiveFileSimResult] = useState<BlockSimResult | null>(null)
-  const [viewMode, setViewMode] = useState<'schematic' | 'code' | 'simulation'>('schematic')
+  const [activeFileBom, setActiveFileBom] = useState<BomItem[] | null>(null)
+  const [viewMode, setViewMode] = useState<'schematic' | 'code' | 'simulation' | 'bom'>('schematic')
   const [cache, setCache] = useState<Record<string, WorkspaceConversationDetail>>({})
 
   // Cargar lista de archivos y snapshot
@@ -242,6 +246,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
         setDrawnNetlist(fileObj.content)
         setActiveFileDocumentation(fileObj)
         setActiveFileSimResult(fileObj.simResult ?? null)
+        setActiveFileBom(fileObj.bom?.length ? fileObj.bom : null)
       }
     }
 
@@ -259,6 +264,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
     if (!fileId) {
       setActiveFileDocumentation(null)
       setActiveFileSimResult(null)
+      setActiveFileBom(null)
       setSearchParams({}, { replace: true })
       return
     }
@@ -276,6 +282,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
         setDrawnNetlist(fileObj.content)
         setActiveFileDocumentation(fileObj)
         setActiveFileSimResult(fileObj.simResult ?? null)
+        setActiveFileBom(fileObj.bom?.length ? fileObj.bom : null)
       }
     } else {
       service
@@ -288,6 +295,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
             setDrawnNetlist(fileObj.content)
             setActiveFileDocumentation(fileObj)
             setActiveFileSimResult(fileObj.simResult ?? null)
+            setActiveFileBom(fileObj.bom?.length ? fileObj.bom : null)
           }
         })
         .catch(() => {
@@ -386,6 +394,16 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
               <FileCode2 size={13} />
               <span>Código Netlist SPICE</span>
             </button>
+            {activeFileBom && (
+              <button
+                type="button"
+                className={`${styles.viewToggleBtn} ${viewMode === 'bom' ? styles.viewToggleBtnActive : ''}`}
+                onClick={() => setViewMode('bom')}
+              >
+                <ListChecks size={13} />
+                <span>Lista de materiales</span>
+              </button>
+            )}
             {activeFileSimResult && (
               <button
                 type="button"
@@ -402,7 +420,9 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
 
       {/* Visor Central (Diagrama / Editor de Código / Curva) */}
       <section className={styles.viewerSection} data-tour="circuit-viewer" aria-label="Lienzo y visualización del circuito">
-        {viewMode === 'simulation' && activeFileSimResult ? (
+        {viewMode === 'bom' && activeFileBom ? (
+          <BomTable items={activeFileBom} />
+        ) : viewMode === 'simulation' && activeFileSimResult ? (
           <SimulationChart
             curve={activeFileSimResult.curve}
             analysisType={activeFileSimResult.analysis_type}

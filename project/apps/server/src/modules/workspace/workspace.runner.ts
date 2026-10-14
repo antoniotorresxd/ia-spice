@@ -1,6 +1,6 @@
 import env from "@/lib/env";
 
-import type { ArtifactStatus, ExecutionStatus } from "./workspace.model";
+import type { ArtifactStatus, BomItem, ExecutionStatus } from "./workspace.model";
 
 export type AgentsVerdict = {
   status: string;
@@ -35,6 +35,9 @@ export type AgentsRunResult = {
   netlists: Record<string, { path: string; text: string }>;
   sim_results: Record<string, BlockSimResult>;
   component_values: Record<string, Record<string, number>>;
+  // Ausente en respuestas de versiones de agents anteriores a la lista de
+  // materiales; por eso opcional.
+  bom?: Record<string, BomItem[]>;
   documentation: Record<string, {
     summary: string;
     tags: string[];
@@ -55,6 +58,7 @@ export type ArtifactDraft = {
   tags: string[] | null;
   components: Record<string, string> | null;
   measurementExplanation: string | null;
+  bom: BomItem[] | null;
 };
 
 const LLM_UNAVAILABLE_PREFIX = "llm_settings_unavailable";
@@ -97,6 +101,7 @@ export function toArtifactDrafts(result: AgentsRunResult): ArtifactDraft[] {
       tags: documentation?.tags ?? null,
       components: documentation?.components ?? null,
       measurementExplanation: documentation?.measurement_explanation ?? null,
+      bom: result.bom?.[blockId] ?? null,
     };
   });
 }

@@ -267,6 +267,7 @@ export function toConversationDetail(
         tags: item.tags,
         components: item.components,
         measurementExplanation: item.measurementExplanation,
+        bom: item.bom ?? null,
         simResult,
       };
     }),

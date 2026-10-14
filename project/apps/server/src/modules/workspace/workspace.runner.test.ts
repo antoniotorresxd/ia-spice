@@ -72,8 +72,18 @@ describe("toArtifactDrafts", () => {
         tags: null,
         components: null,
         measurementExplanation: null,
+        bom: null,
       },
     ]);
+  });
+
+  test("la lista de materiales de cada bloque viaja en su artefacto", () => {
+    const bom = [
+      { nombre: "R2", tipo: "resistencia", cantidad: 1, unidad: "ohm", serie: "E24", ideal: 7142.86, valor: 7142.86, realizacion: "paralelo" as const, partes: [7500, 150000], error_pct: 0 },
+      { nombre: "Q1", tipo: "transistor", cantidad: 1, pieza: "2N3904", referencias: ["Q1"], nota: "BJT NPN", modelo_real: true },
+    ];
+    const drafts = toArtifactDrafts({ ...accepted, bom: { "block-1": bom } });
+    expect(drafts[0].bom).toEqual(bom);
   });
 
   test("mergea la documentación por bloque sin cambiar el estado de simulación", () => {
