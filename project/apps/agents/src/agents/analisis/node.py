@@ -24,9 +24,11 @@ def _problema_corregible(resultado: dict, motor: bool) -> str | None:
     reproduzca lo calculado."""
     if resultado.get("error"):
         return resultado["error"]
-    if motor and not (resultado.get("resultados") or {}).get("validacion", {}).get("coincide"):
-        fallas = (resultado.get("resultados") or {}).get("planteamiento", {}).get("fallas") or []
-        return "ngspice no reproduce lo calculado con los valores encontrados" + (f": {'; '.join(fallas)}" if fallas else "")
+    # Solo lo que ngspice contradijo: una respuesta en letras no se simula,
+    # pero no está mal y no hay nada que corregir.
+    fallas = (resultado.get("resultados") or {}).get("planteamiento", {}).get("fallas") or []
+    if motor and fallas:
+        return "ngspice no reproduce lo calculado con los valores encontrados: " + "; ".join(fallas)
     return None
 
 

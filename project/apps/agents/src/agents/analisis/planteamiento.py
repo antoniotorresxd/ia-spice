@@ -357,7 +357,7 @@ def _verificar(circuito, resueltas, escenarios, preguntas, respuestas) -> dict:
             h = respuesta["expresion"]
             if h.free_symbols - {S}:
                 fila = {"nombre": respuesta["nombre"], "ngspice": None, "frecuencias": [], "netlist": None, "coincide": False,
-                        "error": "la transferencia es simbólica: sin números no hay qué simular"}
+                        "sin_verificar": True, "error": "la transferencia es simbólica: sin números no hay qué simular"}
                 por_pregunta.append(fila)
                 continue  # una H en letras no se simula, pero tampoco está mal
             frecuencias = _frecuencias(h, [])
@@ -365,13 +365,28 @@ def _verificar(circuito, resueltas, escenarios, preguntas, respuestas) -> dict:
             ok = error is None
             fila = {"nombre": respuesta["nombre"], "ngspice": None, "frecuencias": frecuencias, "error": error, "coincide": ok, "netlist": netlist}
         else:
-            netlist, simulado, error = _medir(caso, pregunta["calcular"], resueltas)
             esperado = respuesta["valor"]
-            ok = error is None and isinstance(esperado, float) and coinciden(simulado, esperado)
+            if not isinstance(esperado, float):
+                # "V(o) = -10·k·Vin": una respuesta en letras es válida, pero
+                # sin números no hay qué simular; no cuenta como prueba.
+                por_pregunta.append({"nombre": respuesta["nombre"], "ngspice": None, "netlist": None, "coincide": False,
+                                     "sin_verificar": True, "error": "queda en letras: sin números no hay qué simular"})
+                continue
+            netlist, simulado, error = _medir(caso, pregunta["calcular"], resueltas)
+            if _en_letras(error):
+                # un valor numérico en un circuito que aún tiene símbolos (V(n-) = 0)
+                por_pregunta.append({"nombre": respuesta["nombre"], "ngspice": None, "netlist": None, "coincide": False,
+                                     "sin_verificar": True, "error": "el circuito queda en letras: sin números no hay qué simular"})
+                continue
+            ok = error is None and coinciden(simulado, esperado)
             fila = {"nombre": respuesta["nombre"], "ngspice": simulado, "error": error, "coincide": ok, "netlist": netlist}
         pruebas.append(ok)
         por_pregunta.append(fila)
-    return {"coincide": bool(pruebas) and all(pruebas), "escenarios": por_escenario, "preguntas": por_pregunta}
+    return {"coincide": bool(pruebas) and all(pruebas), "concluyente": bool(pruebas), "escenarios": por_escenario, "preguntas": por_pregunta}
+
+
+def _en_letras(error: str | None) -> bool:
+    return bool(error) and "valores simbólicos" in error
 
 
 # --- entrada desde el orquestador e informe ------------------------------------------
@@ -484,7 +499,7 @@ def _lineas_transferencia(p: dict, condiciones: str) -> list[str]:
         "",
     ]
     filas = []
-    for clave, etiqueta, unidad in (("h0", "H_0", ""), ("hinf", "H_\infty", ""), ("f0", "f_0", "Hz"), ("w0", "\omega_0", "rad/s"), ("q", "Q", "")):
+    for clave, etiqueta, unidad in (("h0", "H_0", ""), ("hinf", r"H_\infty", ""), ("f0", "f_0", "Hz"), ("w0", r"\omega_0", "rad/s"), ("q", "Q", "")):
         valor = t.get(clave)
         if valor is None:
             continue
@@ -548,7 +563,7 @@ def informe_planteamiento(spec: dict, r: dict) -> str:
         for e in v["escenarios"]
         for m in e["mediciones"]
     ] + [
-        (p["nombre"], q["calcular"], q["valor"], p["ngspice"], p["coincide"], p["error"])
+        (p["nombre"], q["calcular"], q["valor"], p["ngspice"], None if p.get("sin_verificar") else p["coincide"], p["error"])
         for p, q in zip(v["preguntas"], r["preguntas"])
         if q.get("tipo") != "transferencia"
     ]
@@ -567,11 +582,17 @@ def informe_planteamiento(spec: dict, r: dict) -> str:
         lineas += ["| Caso | Magnitud | Esperado | ngspice | |", "|---|---|---|---|---|"]
         for caso, magnitud, esperado, simulado, ok, error in filas:
             simulado_txt = _num(simulado) if simulado is not None else (error or "—")
-            lineas.append(f"| {caso} | ${_tex_expresion(magnitud)}$ | {_num(esperado)} | {simulado_txt} | {'✓' if ok else '✗'} |")
+            marca = "—" if ok is None else ("✓" if ok else "✗")
+            lineas.append(f"| {caso} | ${_tex_expresion(magnitud)}$ | {_num(esperado)} | {simulado_txt} | {marca} |")
         lineas.append("")
-        lineas.append(
-            "ngspice reproduce todo con los valores encontrados." if v["coincide"] else "ngspice **no** reproduce todo: revisar el planteamiento."
-        )
+        if not v.get("concluyente", True):
+            lineas.append(
+                "No se verificó con ngspice: la respuesta queda en letras. Para simularla, da valores numéricos a los símbolos."
+            )
+        else:
+            lineas.append(
+                "ngspice reproduce todo con los valores encontrados." if v["coincide"] else "ngspice **no** reproduce todo: revisar el planteamiento."
+            )
     return "\n".join(lineas)
 
 
@@ -583,7 +604,7 @@ def _fallas(v: dict) -> list[str]:
             if not m["coincide"]:
                 fallas.append(f"«{e['nombre']}» {m['expresion']}: se esperaba {m['medido']:.4g}, ngspice da " + (f"{m['ngspice']:.4g}" if m["ngspice"] is not None else m["error"] or "nada"))
     for p in v["preguntas"]:
-        if not p["coincide"] and p.get("error") and "simbólica" not in p["error"]:
+        if not p["coincide"] and p.get("error") and not p.get("sin_verificar"):
             fallas.append(f"«{p['nombre']}»: {p['error']}")
     return fallas
 
@@ -625,7 +646,9 @@ def analizar_planteamiento(outcome: dict) -> dict:
         "informe": informe,
         "curva": curva,
         "resultados": {
-            "validacion": {"coincide": r["verificacion"]["coincide"], "error": None},
+            # sin_verificar: la respuesta quedó en letras, ngspice no tuvo qué simular
+            "validacion": {"coincide": r["verificacion"]["coincide"], "error": None,
+                           "sin_verificar": not r["verificacion"].get("concluyente", True)},
             "planteamiento": {
                 "fallas": _fallas(r["verificacion"]),
                 "incognitas": r["incognitas"],

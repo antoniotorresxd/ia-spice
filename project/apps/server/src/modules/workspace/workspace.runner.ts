@@ -26,6 +26,8 @@ export type AgentsOutcome =
           error?: string | null;
           // en la red transcrita no circula corriente: sus tensiones no prueban nada
           sin_corriente?: boolean;
+          // la respuesta quedó en letras: ngspice no tuvo números que simular
+          sin_verificar?: boolean;
           // Z_eq medida con una fuente de prueba de 1 V entre los terminales
           zeq?: { terminales?: [string, string]; coincide?: boolean; error?: string | null };
         };
@@ -261,6 +263,9 @@ function analysisSummary(validacion: AnalysisValidation | undefined): string {
     return zeq?.coincide && zeq.terminales
       ? `Red analizada; ngspice confirma la Z_eq entre ${zeq.terminales[0]} y ${zeq.terminales[1]}.`
       : "Red analizada; ngspice confirma las tensiones de nodo.";
+  }
+  if (validacion?.sin_verificar) {
+    return "Red analizada; la respuesta queda en letras, así que ngspice no tuvo números que simular.";
   }
   if (validacion?.sin_corriente && !zeq) {
     return "Red analizada, pero no hay nada que verificar: en la red transcrita no circula corriente.";

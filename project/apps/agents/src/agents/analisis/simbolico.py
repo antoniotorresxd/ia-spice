@@ -128,11 +128,28 @@ def leer_circuito(netlist: str) -> list[Componente]:
     OPAMP)."""
     componentes: list[Componente] = []
     dentro_control = False
+    dentro_subckt = False
     for numero, cruda in enumerate(netlist.splitlines()):
         linea = cruda.split(";")[0].strip()
         if not linea or linea.startswith(("*", "+")):
             continue
         baja = linea.lower()
+        # Un `.subckt OPAMP` escrito por el LLM no es el op-amp del motor: sus
+        # elementos internos no son parte del circuito (quedarían flotando).
+        if baja.startswith(".subckt"):
+            partes = baja.split()
+            if len(partes) < 2 or partes[1] != "opamp":
+                raise RedInvalida(
+                    f"{linea}: el motor no resuelve subcircuitos; el op-amp se escribe "
+                    "`X1 in+ in- out OPAMP` (con a=, rd=, ro= si no es ideal)"
+                )
+            dentro_subckt = True
+            continue
+        if baja.startswith(".ends"):
+            dentro_subckt = False
+            continue
+        if dentro_subckt:
+            continue
         if baja.startswith(".control"):
             dentro_control = True
             continue

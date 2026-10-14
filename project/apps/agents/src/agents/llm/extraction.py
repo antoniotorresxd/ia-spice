@@ -32,7 +32,8 @@ usuario (o el (a) si no dijo cuál) y menciona en el nombre del escenario cuál 
   nodo que dio el usuario. Además de R, L, C, V e I acepta fuentes controladas
   (E/G/F/H, ver el schema) y op-amps `X1 in+ in- out OPAMP` (ideal) o
   `X1 in+ in- out OPAMP a=1e4 rd=1meg ro=75` (ganancia finita). Un op-amp con
-  "rd = ∞, ro = 0" solo lleva `a=`.
+  "rd = ∞, ro = 0" solo lleva `a=`. NUNCA escribas `.subckt` ni modelos: el sistema ya
+  sabe qué es OPAMP.
 - `metodo`: el que pidió ('nodos', 'mallas', 'reduccion', 'thevenin') o 'completo'.
 - `terminales`: los dos nodos para reducción o Thévenin (ej. ['a','0']); deben ser
   nodos que aparezcan en `netlist`.

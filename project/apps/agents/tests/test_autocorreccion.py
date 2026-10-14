@@ -82,3 +82,40 @@ def test_un_planteamiento_correcto_no_reintenta(monkeypatch):
     assert len(llamadas) == 1
     assert final["outcome"]["error"] is None
     assert "corrigió" not in final["outcome"]["informe"]
+
+
+# Franco P1.10 con flash-lite: la respuesta en letras (V(vout) = -k·10·Vin)
+# disparaba una "corrección", y en el reintento el LLM escribió su propio
+# `.subckt OPAMP`, cuyos elementos internos quedaban flotando.
+P110_EN_LETRAS = AnalysisOutcome.model_validate({
+    "mode": "analysis",
+    "netlist": "Vin vin 0 {Vin}\nRin vin vminus 10k\nRf vminus vout {k*100k}\nX1 0 vminus vout OPAMP\n",
+})
+
+
+def test_una_respuesta_en_letras_no_dispara_la_autocorreccion(monkeypatch):
+    final, llamadas = _correr(monkeypatch, [P110_EN_LETRAS])
+
+    assert len(llamadas) == 1
+    assert final["outcome"]["error"] is None
+    assert "corrigió" not in final["outcome"]["informe"]
+    assert "No se verificó con ngspice" in final["outcome"]["informe"]
+    assert final["outcome"]["resultados"]["validacion"]["sin_verificar"] is True
+
+
+def test_un_subckt_opamp_del_llm_se_ignora():
+    from agents.analisis.planteamiento import analizar_planteamiento
+
+    netlist = (
+        "Vin vin 0 1\nRin vin vminus 10k\nRf vminus vout {k*100k}\nX1 0 vminus vout OPAMP\n"
+        ".subckt OPAMP inp inn out\nRin_op inp inn 1e6\nEgain n1 0 inp inn 1e5\n"
+        "Rp n1 n2 1k\nCp n2 0 159n\nEout out 0 n2 0 1\n.ends\n"
+    )
+    resultado = analizar_planteamiento({
+        "netlist": netlist,
+        "preguntas": [{"nombre": "Ganancia maxima (k=1)", "valores": [{"simbolo": "k", "valor": "1"}], "calcular": "V(vout)/V(vin)"}],
+    })
+
+    assert resultado["error"] is None
+    assert resultado["resultados"]["planteamiento"]["preguntas"][0]["valor"] == -10
+    assert resultado["resultados"]["validacion"]["coincide"] is True

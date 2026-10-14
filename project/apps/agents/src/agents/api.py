@@ -249,6 +249,8 @@ def _resumen_verificacion(validacion: dict) -> str:
             a, b = zeq["terminales"]
             return f"ngspice confirma la Z_eq entre {a} y {b} con una fuente de prueba de 1 V."
         return "ngspice confirma las tensiones de nodo."
+    if validacion.get("sin_verificar"):
+        return "Sin verificar: la respuesta queda en letras y ngspice necesita números."
     if validacion.get("error") or zeq.get("error"):
         return f"Verificación con ngspice: {validacion.get('error') or zeq.get('error')}"
     if zeq:
@@ -466,7 +468,7 @@ def _stream_run(initial_state: dict, config: dict):
                     )
                     yield _stage_event(
                         "simulation",
-                        status="completed" if validacion.get("coincide") else "failed",
+                        status="completed" if validacion.get("coincide") or validacion.get("sin_verificar") else "failed",
                         duration_ms=dur,
                         meta=ANALYSIS_VERIFICATION_META,
                         summary=_resumen_verificacion(validacion),
