@@ -694,36 +694,148 @@
   color: #64748b;
 }
 
-/* Paso a paso del documentador: texto largo con fórmulas, a ancho de lectura */
+/* Memoria de diseño del documentador, con aire de documento LaTeX: serif de
+   Computer Modern (la KaTeX_Main que ya carga KaTeX), secciones con filete,
+   ecuaciones centradas con aire y tablas estilo booktabs. */
 .walkthrough {
   width: 100%;
-  padding: 1.5rem 1.75rem;
+  padding: 2.5rem 1.5rem;
   border: 1px solid #21262d;
   border-radius: 12px;
-  background: #161b22;
-  color: #cbd5e1;
-  font-size: 0.92rem;
-  line-height: 1.7;
+  background: #11151c;
+  color: #d4dae3;
 }
 
-.walkthrough > div {
-  max-width: 52rem;
+.walkthroughHeader,
+.walkthroughBody {
+  max-width: 46rem;
+  margin: 0 auto;
 }
 
-.walkthrough h1,
-.walkthrough h2,
-.walkthrough h3 {
+.walkthroughHeader {
+  padding-bottom: 1.1rem;
+  margin-bottom: 1.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: center;
+}
+
+.walkthroughTitle {
+  margin: 0;
+  font-family: KaTeX_Main, 'Latin Modern Roman', 'Times New Roman', serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
   color: #f1f5f9;
+}
+
+.walkthroughSubtitle {
+  margin: 0.35rem 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  color: #8b95a5;
+}
+
+.walkthroughBody {
+  font-family: KaTeX_Main, 'Latin Modern Roman', 'Times New Roman', serif;
+  font-size: 1.06rem;
+  line-height: 1.65;
+}
+
+.walkthroughBody h1,
+.walkthroughBody h2,
+.walkthroughBody h3 {
+  margin: 1.8rem 0 0.6rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: KaTeX_Main, 'Latin Modern Roman', 'Times New Roman', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #f1f5f9;
+}
+
+.walkthroughBody > :first-child {
+  margin-top: 0;
+}
+
+.walkthroughBody p {
+  margin: 0 0 0.85rem;
+  text-align: justify;
+  hyphens: auto;
+}
+
+/* Ecuación en bloque: centrada, con aire arriba y abajo como en un documento */
+.walkthroughBody :global(.katex-display) {
+  margin: 1.1rem 0 1.2rem;
+  font-size: 1.12em;
+}
+
+/* Tablas booktabs: filetes arriba y abajo, uno bajo el encabezado, sin
+   líneas verticales */
+.walkthroughBody table {
+  display: table;
+  margin: 1rem auto 1.3rem;
+  border-collapse: collapse;
+  border-top: 2px solid rgba(255, 255, 255, 0.55);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.55);
+  font-size: 0.95rem;
+}
+
+.walkthroughBody th,
+.walkthroughBody td {
+  padding: 0.35rem 1rem;
+  border: 0;
+  text-align: left;
+}
+
+.walkthroughBody thead th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  font-weight: 700;
+}
+
+.walkthroughBody ul,
+.walkthroughBody ol {
+  margin: 0 0 0.85rem;
 }
 
 :global(.light) .walkthrough {
   border-color: rgba(15, 23, 42, 0.1);
   background: #ffffff;
-  color: #1e293b;
+  color: #1f2937;
 }
 
-:global(.light) .walkthrough h1,
-:global(.light) .walkthrough h2,
-:global(.light) .walkthrough h3 {
+:global(.light) .walkthroughHeader {
+  border-bottom-color: rgba(15, 23, 42, 0.15);
+}
+
+:global(.light) .walkthroughTitle,
+:global(.light) .walkthroughBody h1,
+:global(.light) .walkthroughBody h2,
+:global(.light) .walkthroughBody h3 {
   color: #0f172a;
+}
+
+:global(.light) .walkthroughBody h1,
+:global(.light) .walkthroughBody h2,
+:global(.light) .walkthroughBody h3 {
+  border-bottom-color: rgba(15, 23, 42, 0.12);
+}
+
+:global(.light) .walkthroughBody table {
+  border-top-color: rgba(15, 23, 42, 0.7);
+  border-bottom-color: rgba(15, 23, 42, 0.7);
+}
+
+:global(.light) .walkthroughBody thead th {
+  border-bottom-color: rgba(15, 23, 42, 0.4);
+}
+
+@media (max-width: 640px) {
+  .walkthrough {
+    padding: 1.5rem 1rem;
+  }
+
+  .walkthroughBody p {
+    text-align: left;
+  }
 }

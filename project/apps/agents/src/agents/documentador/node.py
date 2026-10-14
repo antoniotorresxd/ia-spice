@@ -5,6 +5,7 @@ fallo deja al bloque sin documentación y conserva el resultado de la corrida.
 """
 
 import json
+import re
 
 from langchain_core.runnables import RunnableConfig
 
@@ -24,16 +25,36 @@ Además de los campos de siempre, llena:
 - `chat_summary`: 2 a 4 frases en Markdown, primera persona, para el chat. Qué circuito
   diseñaste, qué midió la simulación frente al objetivo (con unidades y el error) y si
   quedó dentro de tolerancia. Sin nombres internos como `gain_at_freq` ni ids de bloque.
-- `design_walkthrough`: el paso a paso de cómo se diseñó, en Markdown con secciones
-  numeradas y fórmulas LaTeX ($...$ en línea, $$...$$ en bloque):
-  1. Requisito: qué se pidió (métrica, objetivo, tolerancia).
-  2. Topología y por qué cumple el requisito.
-  3. Ecuaciones de diseño y cómo se despejan los componentes.
-  4. Valores ideales calculados y cómo se llevaron a valores comerciales (serie, error).
-  5. Simulación: qué midió ngspice y el error frente al objetivo.
-  6. Iteraciones: si hubo más de una, qué cambió entre ellas y por qué se aceptó.
+- `design_walkthrough`: el paso a paso de cómo se diseñó, como una memoria de cálculo.
+  Sigue EXACTAMENTE esta forma (títulos `##` numerados, una idea por párrafo):
+
+  ## 1. Requisito
+  Qué se pidió: métrica, objetivo y tolerancia, en una o dos frases.
+
+  ## 2. Topología
+  Qué configuración se usó y por qué cumple el requisito.
+
+  ## 3. Ecuaciones de diseño
+  Cada ecuación importante va SOLA en su propio bloque, en una línea aparte:
+
+  $$A_d = \\left(1 + \\frac{2R_1}{R_G}\\right)\\frac{R_4}{R_3}$$
+
+  y debajo, en texto, cómo se despeja cada componente (más bloques $$...$$ si hace falta).
+
+  ## 4. Valores de los componentes
+  Una tabla Markdown: | Componente | Valor ideal | Valor comercial | Serie |
+
+  ## 5. Simulación
+  Qué midió ngspice, frente al objetivo, con el error en %.
+
+  ## 6. Iteraciones
+  Solo si hubo más de una: qué cambió entre ellas y por qué se aceptó.
+
+  Reglas de notación: subíndices en LaTeX ($R_G$, $V_{out}$, nunca "RG" en una
+  fórmula), unidades con espacio fino ($10\\,\\text{k}\\Omega$), paréntesis grandes con
+  \\left( \\right). No metas ecuaciones largas dentro de una frase: van en $$...$$.
   Usa SOLO los números de "Datos del diseño"; no inventes valores ni mediciones. Si un
-  dato no está, omite ese paso en vez de suponerlo."""
+  dato no está, omite esa sección en vez de suponerlo."""
 
 
 def get_chat_model(user_id: str):
@@ -51,6 +72,42 @@ def _resultado_medicion(metric: str, measured: float | None, sim_error: str | No
     if sim_error is not None:
         return f"La simulación falló: {sim_error}"
     return f"Se midió {metric} = {measured}"
+
+
+# "Requisito: ...", "**Ecuaciones:** ...", "4. Valores: ...": una etiqueta corta
+# al inicio de línea, sin fórmulas, seguida de dos puntos.
+_ETIQUETA = re.compile(
+    r"^\s*(?:\d+[.)]\s*)?(?:\*\*)?([A-ZÁÉÍÓÚÑ][\wáéíóúñü ]{2,40}?)(?:\*\*:|:\*\*|:)\s*(.*)$"
+)
+
+
+def estructurar_paso_a_paso(texto: str) -> str:
+    """Convierte las etiquetas sueltas en secciones `## n. Etiqueta`.
+
+    La guía pide secciones, pero el modelo a veces responde con párrafos
+    "Requisito: ...", "Ecuaciones: ..." que se leen como un bloque corrido.
+    Si el texto ya trae títulos Markdown, se deja tal cual.
+    """
+    lineas = texto.strip().splitlines()
+    if any(linea.lstrip().startswith("#") for linea in lineas):
+        return texto
+    prefacio: list[str] = []
+    secciones: list[tuple[str, list[str]]] = []
+    for linea in lineas:
+        m = _ETIQUETA.match(linea)
+        if m:
+            secciones.append((m.group(1).strip(), [m.group(2)] if m.group(2) else []))
+        elif secciones:
+            secciones[-1][1].append(linea)
+        else:
+            prefacio.append(linea)
+    if not secciones:
+        return texto
+    partes = ["\n".join(prefacio).strip()] if any(l.strip() for l in prefacio) else []
+    for k, (titulo, cuerpo) in enumerate(secciones, start=1):
+        contenido = "\n".join(cuerpo).strip()
+        partes.append(f"## {k}. {titulo}" + (f"\n\n{contenido}" if contenido else ""))
+    return "\n\n".join(partes)
 
 
 def _json(valor) -> str:
@@ -148,7 +205,7 @@ def documentador_node(state: CircuitState, config: RunnableConfig | None = None)
                 "components": filtered_components,
                 "measurement_explanation": result.measurement_explanation,
                 "chat_summary": result.chat_summary,
-                "design_walkthrough": result.design_walkthrough,
+                "design_walkthrough": estructurar_paso_a_paso(result.design_walkthrough),
             }
         except Exception:  # noqa: BLE001 - la documentación nunca invalida el circuito
             documentation[block_id] = None

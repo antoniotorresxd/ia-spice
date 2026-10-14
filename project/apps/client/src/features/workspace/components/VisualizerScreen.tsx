@@ -434,7 +434,11 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
       <section className={styles.viewerSection} data-tour="circuit-viewer" aria-label="Lienzo y visualización del circuito">
         {viewMode === 'walkthrough' && activeFileDocumentation?.designWalkthrough ? (
           <article className={styles.walkthrough} aria-label="Cómo se diseñó el circuito">
-            <MarkdownText>{activeFileDocumentation.designWalkthrough}</MarkdownText>
+            <header className={styles.walkthroughHeader}>
+              <h2 className={styles.walkthroughTitle}>Memoria de diseño</h2>
+              <p className={styles.walkthroughSubtitle}>{currentWorkspaceFile?.name ?? 'Circuito'}</p>
+            </header>
+            <MarkdownText className={styles.walkthroughBody}>{activeFileDocumentation.designWalkthrough}</MarkdownText>
           </article>
         ) : viewMode === 'bom' && activeFileBom ? (
           <BomTable items={activeFileBom} />

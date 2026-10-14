@@ -55,7 +55,7 @@ def _documentation(**kwargs):
         components=kwargs.get("components", {"R1": "limita corriente"}),
         measurement_explanation="mide v_out",
         chat_summary="Diseñé un divisor que entrega 5 V.",
-        design_walkthrough="1. Requisito: v_out = 5 V.",
+        design_walkthrough="## 1. Requisito\n\nv_out = 5 V.",
     )
 
 
@@ -210,9 +210,35 @@ def test_el_prompt_de_sistema_pide_el_resumen_y_el_paso_a_paso(monkeypatch):
     assert sistema.startswith("System prompt de prueba")
     assert "chat_summary" in sistema and "design_walkthrough" in sistema
     assert result["documentation"]["b1"]["chat_summary"] == "Diseñé un divisor que entrega 5 V."
-    assert result["documentation"]["b1"]["design_walkthrough"].startswith("1. Requisito")
+    assert result["documentation"]["b1"]["design_walkthrough"].startswith("## 1. Requisito")
 
 
 @pytest.fixture(autouse=True)
 def _fake_prompt(monkeypatch):
     monkeypatch.setattr("agents.documentador.node.fetch_prompt", lambda name: "System prompt de prueba")
+
+
+def test_el_paso_a_paso_sin_secciones_se_estructura():
+    """Caso real: el LLM escribió "Requisito: ...", "Ecuaciones: ..." como
+    párrafos sueltos; se vuelven secciones numeradas sin tocar el contenido."""
+    from agents.documentador.node import estructurar_paso_a_paso
+
+    texto = (
+        "Requisito: Se solicitó una ganancia de $A_v = 2$.\n"
+        "Topología: Tres amplificadores operacionales.\n"
+        "**Ecuaciones:** La ganancia es $A_v = 1 + \\frac{2R}{R_G}$.\n"
+        "4. Valores: $R = 10\,k\Omega$."
+    )
+    assert estructurar_paso_a_paso(texto) == (
+        "## 1. Requisito\n\nSe solicitó una ganancia de $A_v = 2$.\n\n"
+        "## 2. Topología\n\nTres amplificadores operacionales.\n\n"
+        "## 3. Ecuaciones\n\nLa ganancia es $A_v = 1 + \\frac{2R}{R_G}$.\n\n"
+        "## 4. Valores\n\n$R = 10\,k\Omega$."
+    )
+
+
+def test_un_paso_a_paso_que_ya_trae_secciones_no_se_toca():
+    from agents.documentador.node import estructurar_paso_a_paso
+
+    texto = "## 1. Requisito\n\nRequisito: ganancia 2.\n\n$$A_v = 2$$"
+    assert estructurar_paso_a_paso(texto) == texto
