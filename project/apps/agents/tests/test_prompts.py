@@ -1,3 +1,4 @@
+import os
 from types import SimpleNamespace
 
 import pytest
@@ -97,10 +98,14 @@ def test_api_attaches_handler_and_run_metadata_only_when_configured(monkeypatch,
     handler = object()
     calls = []
 
-    def callback_handler():
-        calls.append(True)
+    def langfuse(**kwargs):
+        calls.append(("client", kwargs["public_key"]))
+
+    def callback_handler(*, public_key):
+        calls.append(("handler", public_key))
         return handler
 
+    monkeypatch.setattr(api, "Langfuse", langfuse)
     monkeypatch.setattr(api, "CallbackHandler", callback_handler)
     seen = []
 
@@ -123,6 +128,10 @@ def test_api_attaches_handler_and_run_metadata_only_when_configured(monkeypatch,
                 "langfuse_user_id": "user-1",
             }
         assert seen == [expected, expected]
-        assert len(calls) == int(configured)
+        # El cliente antes que el handler: si no, el handler se resuelve a un
+        # cliente desactivado y no sale ninguna traza.
+        public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
+        expected_calls = [("client", public_key), ("handler", public_key)]
+        assert calls == (expected_calls if configured else [])
     finally:
         del api.app.state.langfuse_handler

@@ -72,3 +72,24 @@ def test_trace_con_mock_langfuse_retorna_ready(monkeypatch):
     assert step["model"] == "models/gemini-3.5-flash-lite"
     assert step["durationSec"] == 1.234
     assert step["usage"]["totalTokens"] == 30
+
+
+def test_handler_con_claves_queda_con_tracing_activo(monkeypatch):
+    # Regresión: CallbackHandler(public_key=...) sin un cliente Langfuse ya
+    # inicializado con esa clave devuelve un cliente desactivado ("fake") y
+    # ninguna corrida se traza. El handler se crea al arrancar, antes que
+    # cualquier Langfuse(), así que el proceso entero quedaba sin trazas.
+    from agents import api
+
+    monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-lf-prueba-handler")
+    monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-lf-prueba-handler")
+    monkeypatch.setenv("LANGFUSE_HOST", "http://localhost:1")
+    monkeypatch.delattr(app.state, "langfuse_handler", raising=False)
+
+    handler = api._langfuse_handler()
+
+    assert handler is not None
+    lf = handler._langfuse_client
+    assert lf._tracing_enabled is True
+    assert lf._resources.public_key == "pk-lf-prueba-handler"
+    monkeypatch.delattr(app.state, "langfuse_handler", raising=False)
