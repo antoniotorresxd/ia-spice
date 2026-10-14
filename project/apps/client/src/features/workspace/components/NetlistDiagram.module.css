@@ -120,8 +120,9 @@
   border: 1px solid #21262d;
   background: #090d13;
   position: relative;
-  height: 380px;
-  min-height: 320px;
+  /* La portada del visualizador es solo el esquemático: aprovecha el alto */
+  height: clamp(460px, 62vh, 680px);
+  min-height: 400px;
   cursor: grab;
   user-select: none;
   touch-action: none;

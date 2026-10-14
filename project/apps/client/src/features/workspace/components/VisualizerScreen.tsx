@@ -416,30 +416,42 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
                 <span>Curva de Simulación SPICE</span>
               </button>
             )}
-            {activeFileDocumentation?.designWalkthrough && (
-              <button
-                type="button"
-                className={`${styles.viewToggleBtn} ${viewMode === 'walkthrough' ? styles.viewToggleBtnActive : ''}`}
-                onClick={() => setViewMode('walkthrough')}
-              >
-                <BookOpen size={13} />
-                <span>Cómo se diseñó</span>
-              </button>
-            )}
+            {/* Siempre disponible: además de la memoria del documentador, aquí
+                vive el funcionamiento con la función de cada componente. */}
+            <button
+              type="button"
+              className={`${styles.viewToggleBtn} ${viewMode === 'walkthrough' ? styles.viewToggleBtnActive : ''}`}
+              onClick={() => setViewMode('walkthrough')}
+              data-tour="circuit-explanation"
+            >
+              <BookOpen size={13} />
+              <span>Cómo se diseñó</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Visor Central (Diagrama / Editor de Código / Curva) */}
+      {/* Visor Central (Diagrama / Código / Materiales / Curva / Cómo se diseñó) */}
       <section className={styles.viewerSection} data-tour="circuit-viewer" aria-label="Lienzo y visualización del circuito">
-        {viewMode === 'walkthrough' && activeFileDocumentation?.designWalkthrough ? (
-          <article className={styles.walkthrough} aria-label="Cómo se diseñó el circuito">
-            <header className={styles.walkthroughHeader}>
-              <h2 className={styles.walkthroughTitle}>Memoria de diseño</h2>
-              <p className={styles.walkthroughSubtitle}>{currentWorkspaceFile?.name ?? 'Circuito'}</p>
-            </header>
-            <MarkdownText className={styles.walkthroughBody}>{activeFileDocumentation.designWalkthrough}</MarkdownText>
-          </article>
+        {viewMode === 'walkthrough' ? (
+          <div className={styles.explanationSection}>
+            {activeFileDocumentation?.designWalkthrough && (
+              <article className={styles.walkthrough} aria-label="Cómo se diseñó el circuito">
+                <header className={styles.walkthroughHeader}>
+                  <h2 className={styles.walkthroughTitle}>Memoria de diseño</h2>
+                  <p className={styles.walkthroughSubtitle}>{currentWorkspaceFile?.name ?? 'Circuito'}</p>
+                </header>
+                <MarkdownText className={styles.walkthroughBody}>{activeFileDocumentation.designWalkthrough}</MarkdownText>
+              </article>
+            )}
+            {parsedNetlist ? (
+              <CircuitExplanation netlist={parsedNetlist} documentation={activeFileDocumentation} compact={false} />
+            ) : (
+              <div className={styles.inspectorPlaceholder}>
+                <p>No se pudo interpretar el netlist. Revisa la sintaxis SPICE o presiona "Actualizar" para refrescar el análisis.</p>
+              </div>
+            )}
+          </div>
         ) : viewMode === 'bom' && activeFileBom ? (
           <BomTable items={activeFileBom} />
         ) : viewMode === 'simulation' && activeFileSimResult ? (
@@ -466,23 +478,6 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
             documentation={activeFileDocumentation}
             showExplanation={false}
           />
-        )}
-      </section>
-
-      {/* Sección Inferior: Análisis y Funcionamiento del Circuito */}
-      <section className={styles.explanationSection} data-tour="circuit-explanation" aria-label="Análisis y funcionamiento del circuito">
-        {parsedNetlist ? (
-          <>
-            <CircuitExplanation
-              netlist={parsedNetlist}
-              documentation={activeFileDocumentation}
-              compact={false}
-            />
-          </>
-        ) : (
-          <div className={styles.inspectorPlaceholder}>
-            <p>No se pudo interpretar el netlist. Revisa la sintaxis SPICE o presiona "Actualizar" para refrescar el análisis.</p>
-          </div>
         )}
       </section>
     </article>

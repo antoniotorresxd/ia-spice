@@ -292,17 +292,17 @@ export const TUTORIALS_REGISTRY: Record<TutorialPageKey, TutorialConfig> = {
       {
         id: 'visualizer-book-explanation',
         badge: 'Paso 4: Análisis',
-        title: 'Explicación Técnica y Componentes',
+        title: 'Cómo se diseñó',
         description:
-          'Lectura unificada vertical sin paneles superpuestos: analiza la función de cada nodo, la topología circuital y el desglose de valores comerciales normalizados.',
+          'La memoria de diseño del documentador: requisito, topología, ecuaciones, valores comerciales, simulación e iteraciones; debajo, la función de cada componente.',
         tips: [
-          'Incluye valores comerciales de series estándar (E12, E24) calculados por la IA.',
-          'Detalla los nodos de entrada, salida y conexiones de retroalimentación.',
+          'Las ecuaciones se muestran con notación matemática, como en un documento LaTeX.',
+          'Incluye los valores comerciales de series estándar (E12, E24) frente a los ideales.',
         ],
         accentColor: 'copper',
         graphicType: 'circuit',
         targetSelector: '[data-tour="circuit-explanation"]',
-        placement: 'top',
+        placement: 'bottom',
       },
     ],
   },

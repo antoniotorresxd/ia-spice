@@ -27,9 +27,14 @@ describe('VisualizerScreen', () => {
     expect(screen.getByLabelText(/seleccionar netlist/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /actualizar/i })).toBeVisible()
 
-    // Default circuit is drawn
+    // La portada es solo el esquemático: el funcionamiento vive en su pestaña
     expect(await screen.findByText('Divisor de voltaje')).toBeVisible()
-    expect(screen.getByText(/dos resistencias en serie reparten el voltaje/i)).toBeVisible()
+    expect(screen.queryByText(/dos resistencias en serie reparten el voltaje/i)).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /cómo se diseñó/i }))
+    expect(await screen.findByText(/dos resistencias en serie reparten el voltaje/i)).toBeVisible()
+    // Sin paso a paso del documentador no hay memoria de diseño
+    expect(screen.queryByRole('heading', { name: 'Memoria de diseño' })).not.toBeInTheDocument()
 
     // Sin documentación del agente no hay etiquetas ni columna de función
     expect(screen.queryByRole('list', { name: /etiquetas del circuito/i })).not.toBeInTheDocument()
@@ -86,6 +91,7 @@ describe('VisualizerScreen', () => {
       </MemoryRouter>,
     )
 
+    await userEvent.click(await screen.findByRole('button', { name: /cómo se diseñó/i }))
     expect(await screen.findByText('Reparte 10 V entre R1 y R2 para obtener la salida.')).toBeVisible()
     expect(screen.queryByText(/dos resistencias en serie reparten el voltaje/i)).not.toBeInTheDocument()
 
@@ -103,8 +109,8 @@ describe('VisualizerScreen', () => {
     // V1 no tiene rol documentado
     expect(within(screen.getByRole('row', { name: /^V1/ })).getByText('—')).toBeVisible()
 
-    // Sin paso a paso del documentador no hay pestaña "Cómo se diseñó"
-    expect(screen.queryByRole('button', { name: /cómo se diseñó/i })).not.toBeInTheDocument()
+    // Sin paso a paso del documentador no hay memoria, pero sí el funcionamiento
+    expect(screen.queryByRole('heading', { name: 'Memoria de diseño' })).not.toBeInTheDocument()
   })
 
   it('muestra el paso a paso del documentador en su pestaña', async () => {
