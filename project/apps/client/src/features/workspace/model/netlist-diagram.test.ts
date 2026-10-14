@@ -3,9 +3,11 @@ import { expect, it } from 'vitest'
 import {
   NetlistParseError,
   buildDiagram,
+  componentValue,
   computeDepths,
   describeCircuit,
   fmtFarads,
+  fmtGain,
   fmtOhms,
   fmtSource,
   measurementText,
@@ -607,5 +609,158 @@ const BJT_CE = [
 it('ningún fixture dibuja un elemento horizontal a través de un nodo ajeno', () => {
   for (const netlist of [RC_LOWPASS, DIVIDER, LED, AMP, COMPOSED, OPAMP_BIAS, SALLEN_KEY, RED_DOS_RAMAS, BJT_CE]) {
     expect(horizontalsThroughForeignNodes(netlist)).toEqual([])
+  }
+})
+
+// Fuentes controladas y opamps parametrizados (motor de análisis, 2026-10).
+const FRANCO_GM = [
+  '* Franco P1.4 — transconductance amplifier',
+  'VS s 0 0.15',
+  'RS s i 100k',
+  'RI i 0 500k',
+  'GM 0 o i 0 2.024',
+  'RO o 0 400',
+  'RL o 0 40',
+].join('\n')
+
+const VOLTAGE_AMP = [
+  '* voltage amplifier model',
+  'VS s 0 0.2',
+  'RS s i 10k',
+  'RI i 0 30k',
+  'EA x 0 i 0 80',
+  'RO x o 2',
+  'RL o 0 10',
+].join('\n')
+
+const OPAMP_PARAMS = [
+  '* op-amp with finite gain (params after OPAMP)',
+  'VI i 0 0.1',
+  'R1 i n 10k',
+  'R2 n o 100k',
+  'X1 0 n o OPAMP a=100 rd=1meg ro=100',
+].join('\n')
+
+const CCCS = ['* CCCS', 'VS s 0 1', 'RS s a 1k', 'RA a 0 1k', 'F1 0 o VS 3', 'RL o 0 2k'].join('\n')
+
+const CCVS_SERIE = ['* CCVS en serie', 'VS s 0 1', 'RS s a 1k', 'H1 a b VS 1k', 'RL b 0 500'].join('\n')
+
+it('parsea fuentes controladas por tensión (E/G) con sus nodos de control aparte', () => {
+  const { elements } = parseNetlist(FRANCO_GM)
+  const gm = elements.find((e) => e.name === 'GM')
+  expect(gm?.kind).toBe('G')
+  expect(gm?.nodes).toEqual(['0', 'o'])
+  expect(gm?.control).toEqual({ nodes: ['i', '0'], gain: '2.024' })
+  expect(componentValue(gm!)).toBe('2.024·V(i)')
+
+  const ea = parseNetlist(VOLTAGE_AMP).elements.find((e) => e.name === 'EA')
+  expect(ea?.kind).toBe('E')
+  expect(ea?.nodes).toEqual(['x', '0'])
+  expect(componentValue(ea!)).toBe('80·V(i)')
+
+  const diff = parseNetlist('E1 o 0 a b 5\nR1 a b 1k').elements[0]
+  expect(componentValue(diff)).toBe('5·V(a,b)')
+})
+
+it('parsea fuentes controladas por corriente (F/H) con su fuente de control', () => {
+  const f1 = parseNetlist(CCCS).elements.find((e) => e.name === 'F1')
+  expect(f1?.kind).toBe('F')
+  expect(f1?.nodes).toEqual(['0', 'o'])
+  expect(f1?.control).toEqual({ source: 'VS', gain: '3' })
+  expect(componentValue(f1!)).toBe('3·I(VS)')
+
+  const h1 = parseNetlist(CCVS_SERIE).elements.find((e) => e.name === 'H1')
+  expect(h1?.kind).toBe('H')
+  expect(h1?.nodes).toEqual(['a', 'b'])
+  expect(componentValue(h1!)).toBe('1k·I(VS)')
+})
+
+it('fmtGain conserva cuatro cifras significativas y usa prefijos SI', () => {
+  expect(fmtGain('2.024')).toBe('2.024')
+  expect(fmtGain('80')).toBe('80')
+  expect(fmtGain('1k')).toBe('1k')
+  expect(fmtGain('2.5e-3')).toBe('2.5m')
+  expect(fmtGain('1meg')).toBe('1M')
+})
+
+it('dibuja una VCCS a tierra como shunt en su nodo de salida, a la derecha de lo que la controla', () => {
+  const diagram = buildDiagram(parseNetlist(FRANCO_GM))
+  expect(diagram.usedSymbols.has('dependentSource')).toBe(true)
+  expect(diagram.nodeXs.s).toBeLessThan(diagram.nodeXs.i)
+  expect(diagram.nodeXs.i).toBeLessThan(diagram.nodeXs.o)
+
+  const gm = diagram.symbols.find((s) => 'name' in s && s.name === 'GM')
+  if (gm?.type !== 'depSourceV') throw new Error('GM no es una fuente controlada vertical')
+  expect(gm.isCurrent).toBe(true)
+  // G 0 o: la corriente sale de n+ (tierra) por la fuente hacia n- (o): flecha hacia arriba.
+  expect(gm.towardTop).toBe(true)
+  expect(gm.value).toBe('2.024·V(i)')
+  expect(diagram.nodeBuses.find((b) => b.node === 'o')?.branches).toContain(gm.x)
+  expect(gm.y2).toBe(390)
+  // El nodo de control no se dibuja como cable: GM es un único símbolo.
+  expect(diagram.symbols.filter((s) => 'name' in s && s.name === 'GM')).toHaveLength(1)
+})
+
+it('dibuja una VCVS a tierra como fuente en su nodo, con el + arriba', () => {
+  const diagram = buildDiagram(parseNetlist(VOLTAGE_AMP))
+  const order = ['s', 'i', 'x', 'o']
+  for (let k = 1; k < order.length; k++) {
+    expect(diagram.nodeXs[order[k - 1]]).toBeLessThan(diagram.nodeXs[order[k]])
+  }
+  const ea = diagram.symbols.find((s) => 'name' in s && s.name === 'EA')
+  if (ea?.type !== 'depSourceV') throw new Error('EA no es una fuente controlada vertical')
+  expect(ea.isCurrent).toBe(false)
+  expect(ea.towardTop).toBe(true)
+  expect(ea.x).toBe(diagram.nodeXs.x)
+  const ro = diagram.symbols.find((s) => 'name' in s && s.name === 'RO')
+  if (ro?.type !== 'resistorH') throw new Error('RO no es horizontal')
+  expect([ro.x1, ro.x2]).toEqual([diagram.nodeXs.x, diagram.nodeXs.o])
+})
+
+it('una CCCS a tierra y una CCVS en serie usan la colocación de siempre', () => {
+  const cccs = buildDiagram(parseNetlist(CCCS))
+  const f1 = cccs.symbols.find((s) => 'name' in s && s.name === 'F1')
+  if (f1?.type !== 'depSourceV') throw new Error('F1 no es vertical')
+  expect(f1.isCurrent).toBe(true)
+  expect(f1.value).toBe('3·I(VS)')
+  expect(cccs.nodeXs.o).toBeGreaterThan(cccs.nodeXs.a)
+
+  const ccvs = buildDiagram(parseNetlist(CCVS_SERIE))
+  const h1 = ccvs.symbols.find((s) => 'name' in s && s.name === 'H1')
+  if (h1?.type !== 'depSourceH') throw new Error('H1 no es horizontal')
+  expect(h1.isCurrent).toBe(false)
+  // H1 a b: n+ = a queda a la izquierda, así que el + no va a la derecha.
+  expect(h1.towardRight).toBe(false)
+  expect([h1.x1, h1.x2]).toEqual([ccvs.nodeXs.a, ccvs.nodeXs.b])
+  expect(h1.value).toBe('1k·I(VS)')
+  expect(ccvs.usedSymbols.has('dependentSource')).toBe(true)
+})
+
+it('acepta OPAMP en mayúsculas con parámetros y lo dibuja como el opamp de siempre', () => {
+  const parsed = parseNetlist(OPAMP_PARAMS)
+  const x1 = parsed.elements.find((e) => e.name === 'X1')
+  expect(x1?.kind).toBe('X')
+  expect(x1?.nodes).toEqual(['0', 'n', 'o'])
+  expect(x1?.extra).toBe('opamp')
+  expect(x1?.params).toBe('a=100 rd=1meg ro=100')
+
+  const diagram = buildDiagram(parsed)
+  const op = diagram.symbols.find((s) => s.type === 'opamp')
+  if (op?.type !== 'opamp') throw new Error('sin opamp')
+  expect(op.value).toBe('opamp a=100 rd=1meg ro=100')
+  expect(op.inpIsGround).toBe(true)
+  const r2 = diagram.symbols.find((s) => 'name' in s && s.name === 'R2')
+  expect(r2 && 'y' in r2 && r2.y).toBeGreaterThan(200)
+
+  const description = describeCircuit(parsed)
+  expect(description).toContain('amplificador inversor')
+  expect(description).toContain('-10')
+})
+
+it('las fuentes controladas no dibujan horizontales a través de nodos ajenos', () => {
+  for (const netlist of [FRANCO_GM, VOLTAGE_AMP, OPAMP_PARAMS, CCCS, CCVS_SERIE]) {
+    expect(horizontalsThroughForeignNodes(netlist)).toEqual([])
+    const xs = Object.values(buildDiagram(parseNetlist(netlist)).nodeXs)
+    expect(new Set(xs).size).toBe(xs.length)
   }
 })

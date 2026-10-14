@@ -2,14 +2,32 @@
 // Diseñado para interpretar cualquier netlist SPICE (R, C, L, V, I, D, X)
 // y generar un esquema geométrico limpio con soporte anti-colisión.
 
-export type ElementKind = 'R' | 'C' | 'L' | 'V' | 'I' | 'D' | 'X' | 'Q'
+export type ElementKind = 'R' | 'C' | 'L' | 'V' | 'I' | 'D' | 'X' | 'Q' | 'E' | 'G' | 'F' | 'H'
+
+/** Fuentes controladas: E (VCVS), G (VCCS), F (CCCS), H (CCVS). */
+export const DEPENDENT_KINDS: readonly ElementKind[] = ['E', 'G', 'F', 'H']
+
+export function isDependentSource(e: NetlistElement): boolean {
+  return DEPENDENT_KINDS.includes(e.kind)
+}
+
+/**
+ * De qué depende una fuente controlada: los nodos de control (E/G) o la
+ * fuente cuya corriente la controla (F/H), y la ganancia. No son conexiones
+ * del dibujo: se muestran en la etiqueta.
+ */
+export type DependentControl = { nodes?: [string, string]; source?: string; gain: string }
 
 export type NetlistElement = {
   kind: ElementKind
   name: string
+  /** Para E/G/F/H, solo los terminales de salida (n+, n-). */
   nodes: string[]
   /** Resto de la línea tras el nombre y los nodos: valor, directivas o subcircuito. */
   extra: string
+  control?: DependentControl
+  /** Parámetros `clave=valor` de una instancia X (p. ej. `a=100 rd=1meg ro=100`). */
+  params?: string
 }
 
 export type Measurement = { name: string; condition: string }
@@ -137,11 +155,15 @@ export function parseNetlist(text: string): ParsedNetlist {
     const tokens = line.split(/\s+/)
     const name = tokens[0]
     const kind = name[0]?.toUpperCase() ?? ''
-    if (!'RCVDXLIQ'.includes(kind)) return
+    if (!kind || !'RCVDXLIQEGFH'.includes(kind)) return
 
     if (kind === 'X') {
-      const subckt = tokens[tokens.length - 1]
-      const nodes = tokens.slice(1, tokens.length - 1).map((n) => rename(normalizeNode(n)))
+      // `X1 0 n o OPAMP a=100 rd=1meg ro=100`: los `clave=valor` finales (y un
+      // `params:` opcional) no son nodos ni el nombre del subcircuito.
+      const params = tokens.slice(1).filter((t) => t.includes('='))
+      const positional = tokens.filter((t) => !t.includes('=') && t.toLowerCase() !== 'params:')
+      const subckt = positional[positional.length - 1]
+      const nodes = positional.slice(1, positional.length - 1).map((n) => rename(normalizeNode(n)))
       if (nodes.length < 2) return
       const def = subckts[subckt.toLowerCase()]
       if (def && isComposite(def) && def.ports.length === nodes.length && depth < MAX_EXPANSION_DEPTH) {
@@ -153,7 +175,25 @@ export function parseNetlist(text: string): ParsedNetlist {
         return
       }
       const pins = def && def.ports.length === nodes.length ? orderOpampNodes(def, nodes) : nodes
-      elements.push({ kind, name, nodes: pins, extra: subckt })
+      const element: NetlistElement = { kind, name, nodes: pins, extra: /^opamp$/i.test(subckt) ? 'opamp' : subckt }
+      if (params.length) element.params = params.join(' ')
+      elements.push(element)
+    } else if (kind === 'E' || kind === 'G' || kind === 'F' || kind === 'H') {
+      // E/G <n+> <n-> <nc+> <nc-> <ganancia> · F/H <n+> <n-> <Vcontrol> <ganancia>.
+      // Las formas no lineales (POLY, VALUE={...}) quedan sin `control` y
+      // muestran el resto de la línea tal cual.
+      if (tokens.length < 4) return
+      const nodes = [tokens[1], tokens[2]].map((n) => rename(normalizeNode(n)))
+      const extra = tokens.slice(3).join(' ')
+      const element: NetlistElement = { kind, name, nodes, extra }
+      const linear = !/[={(]/.test(extra)
+      if (linear && (kind === 'E' || kind === 'G') && tokens.length >= 6 && isFinite(parseSpiceValue(tokens[5]))) {
+        const ctrl = [tokens[3], tokens[4]].map((n) => rename(normalizeNode(n)))
+        element.control = { nodes: [ctrl[0], ctrl[1]], gain: tokens[5] }
+      } else if (linear && (kind === 'F' || kind === 'H') && tokens.length >= 5 && isFinite(parseSpiceValue(tokens[4]))) {
+        element.control = { source: tokens[3], gain: tokens[4] }
+      }
+      elements.push(element)
     } else if (kind === 'Q') {
       // Q<nombre> <colector> <base> <emisor> [<substrato>] <modelo>
       if (tokens.length < 5) return
@@ -211,7 +251,7 @@ export function parseNetlist(text: string): ParsedNetlist {
   }
 
   if (elements.length === 0) {
-    throw new NetlistParseError('No se encontró ningún componente (R/C/L/V/I/D/X) en el texto.')
+    throw new NetlistParseError('No se encontró ningún componente (R/C/L/V/I/D/X/Q/E/G/F/H) en el texto.')
   }
   return { title, elements, measurements }
 }
@@ -268,9 +308,8 @@ export function computeDepths(elements: NetlistElement[]): Record<string, number
   if (!start) start = Object.keys(adj)[0] ?? null
 
   const depth: Record<string, number> = {}
-  if (start) {
-    depth[start] = 0
-    const queue = [start]
+  const spread = (from: string) => {
+    const queue = [from]
     while (queue.length) {
       const n = queue.shift() as string
       for (const m of adj[n] ?? []) {
@@ -279,6 +318,36 @@ export function computeDepths(elements: NetlistElement[]): Record<string, number
           queue.push(m)
         }
       }
+    }
+  }
+  if (start) {
+    depth[start] = 0
+    spread(start)
+  }
+
+  // La salida de una fuente controlada suele no tener camino eléctrico hacia
+  // lo que la controla (solo comparten tierra, p. ej. `GM 0 o i 0 2.024`): se
+  // ubica un paso a la derecha de su control, que es como se lee en un libro.
+  // Solo para nodos que el recorrido no alcanzó: si hay camino real, manda.
+  const controlNodes = (e: NetlistElement): string[] => {
+    if (e.control?.nodes) return e.control.nodes
+    const src = e.control?.source?.toLowerCase()
+    return src ? (elements.find((o) => o.name.toLowerCase() === src)?.nodes ?? []) : []
+  }
+  let reached = true
+  while (reached) {
+    reached = false
+    for (const e of elements) {
+      if (!e.control) continue
+      const known = controlNodes(e).filter((n) => n !== GROUND && n in depth)
+      const outs = e.nodes.filter((n) => n !== GROUND && !(n in depth))
+      if (!known.length || !outs.length) continue
+      const base = Math.max(...known.map((n) => depth[n])) + 1
+      for (const n of outs) {
+        depth[n] = base
+        spread(n)
+      }
+      reached = true
     }
   }
 
@@ -364,6 +433,36 @@ export function fmtSource(extra: string): string {
   return isFinite(n) ? `${n} V` : extra
 }
 
+/** Ganancia de una fuente controlada: hasta 4 cifras significativas y prefijo SI, sin unidad. */
+export function fmtGain(raw: string): string {
+  const n = parseSpiceValue(raw)
+  if (!isFinite(n)) return raw
+  const sig = (v: number) => Number(v.toPrecision(4)).toString()
+  const abs = Math.abs(n)
+  if (abs === 0) return '0'
+  if (abs >= 1e6) return `${sig(n / 1e6)}M`
+  if (abs >= 1e3) return `${sig(n / 1e3)}k`
+  if (abs < 1e-3) return `${sig(n * 1e6)}µ`
+  if (abs < 1) return `${sig(n * 1e3)}m`
+  return sig(n)
+}
+
+/** `2.024·V(i)`, `5·V(a,b)`, `3·I(VS)`: la dependencia de una fuente controlada. */
+export function dependencyText(e: NetlistElement): string {
+  const control = e.control
+  if (!control) return e.extra
+  let variable: string
+  if (control.source) variable = `I(${control.source})`
+  else if (control.nodes && control.nodes[1] !== GROUND) variable = `V(${control.nodes[0]},${control.nodes[1]})`
+  else variable = `V(${control.nodes?.[0] ?? '?'})`
+  return `${fmtGain(control.gain)}·${variable}`
+}
+
+/** G y F entregan corriente (flecha); E y H, tensión (+/−). */
+export function isCurrentControlledOutput(e: NetlistElement): boolean {
+  return e.kind === 'G' || e.kind === 'F'
+}
+
 export function fmtFrequency(hz: number): string {
   if (!isFinite(hz) || hz <= 0) return ''
   if (hz >= 1e6) return `${trimNum(hz / 1e6)} MHz`
@@ -392,6 +491,21 @@ export function describeCircuit(parsed: ParsedNetlist): string {
 
   // Amplificador Op-Amp
   if (hasX) {
+    // Entrada + a tierra: inversor (Av = −Rf/Rin), no el no inversor de siempre.
+    const op = parsed.elements.find((e) => e.kind === 'X')!
+    const pins = getOpampPins(op.nodes)
+    if (pins.inp === GROUND && pins.inn !== pins.out) {
+      const rf = rElements.find((r) => r.nodes.includes(pins.out) && r.nodes.includes(pins.inn))
+      const rin = rElements.find((r) => r !== rf && r.nodes.includes(pins.inn))
+      const finite = op.params && /(^|\s)a=/i.test(op.params) ? ' Con ganancia de lazo abierto finita (a) la ganancia real es algo menor.' : ''
+      const rfVal = rf ? parseSpiceValue(rf.extra) : NaN
+      const rinVal = rin ? parseSpiceValue(rin.extra) : NaN
+      if (isFinite(rfVal) && isFinite(rinVal) && rinVal > 0) {
+        const gain = -rfVal / rinVal
+        return `Es un amplificador inversor con amplificador operacional: la ganancia ideal es Av = −(Rf / Rin) = ${trimNum(gain)} (la señal se amplifica ${trimNum(-gain)} veces e invierte su fase).${finite}`
+      }
+      return `Es un amplificador inversor con amplificador operacional: la salida es la entrada invertida y escalada por la relación entre la resistencia de realimentación y la de entrada.${finite}`
+    }
     if (rElements.length >= 2) {
       const rf = parseSpiceValue(rElements[0].extra)
       const rg = parseSpiceValue(rElements[1].extra)
@@ -459,6 +573,8 @@ export function describeCircuit(parsed: ParsedNetlist): string {
   if (qElements.length) parts.push(`${qElements.length} transistor(es) BJT`)
   const sources = parsed.elements.filter((e) => e.kind === 'V' || e.kind === 'I')
   if (sources.length) parts.push(`${sources.length} fuente(s)`)
+  const dependent = parsed.elements.filter(isDependentSource)
+  if (dependent.length) parts.push(`${dependent.length} fuente(s) controlada(s)`)
 
   return `Circuito dinámico con ${parsed.elements.length} componentes (${parts.join(', ')}) conectados a través de ${new Set(parsed.elements.flatMap((e) => e.nodes)).size} nodos.`
 }
@@ -494,7 +610,12 @@ export function componentValue(e: NetlistElement): string {
     case 'D':
       return e.extra.toUpperCase().includes('LED') ? 'Diodo LED' : e.extra || 'Diodo'
     case 'X':
-      return `subcircuito "${e.extra}"`
+      return e.params ? `subcircuito "${e.extra}" (${e.params})` : `subcircuito "${e.extra}"`
+    case 'E':
+    case 'G':
+    case 'F':
+    case 'H':
+      return dependencyText(e)
     default:
       return e.extra
   }
@@ -544,6 +665,29 @@ export type LayoutSymbol =
     }
   | { type: 'sourceV'; x: number; y1: number; y2: number; name: string; value: string; isAc: boolean }
   | { type: 'sourceH'; x1: number; x2: number; y: number; name: string; value: string; isAc: boolean }
+  // Fuente controlada (rombo). `towardTop`/`towardRight`: en una de tensión
+  // (E/H) el + queda de ese lado; en una de corriente (G/F) la flecha apunta hacia él.
+  | {
+      type: 'depSourceV'
+      x: number
+      y1: number
+      y2: number
+      name: string
+      value: string
+      isCurrent: boolean
+      towardTop: boolean
+    }
+  | {
+      type: 'depSourceH'
+      x1: number
+      x2: number
+      y: number
+      name: string
+      value: string
+      isCurrent: boolean
+      towardRight: boolean
+      labelBelow?: boolean
+    }
   | {
       type: 'opamp'
       cx: number
@@ -586,7 +730,17 @@ export type Diagram = {
   groundDrops: number[]
   topRailSpan: TopRailSpan | null
   usedSymbols: Set<
-    'resistor' | 'capacitor' | 'inductor' | 'source' | 'led' | 'diode' | 'zener' | 'opamp' | 'bjt' | 'ground'
+    | 'resistor'
+    | 'capacitor'
+    | 'inductor'
+    | 'source'
+    | 'dependentSource'
+    | 'led'
+    | 'diode'
+    | 'zener'
+    | 'opamp'
+    | 'bjt'
+    | 'ground'
   >
   width: number
   height: number
@@ -940,6 +1094,15 @@ export function buildDiodeBridgeDiagram(parsed: ParsedNetlist, bridge: DiodeBrid
   }
 }
 
+/**
+ * Hacia qué terminal "empuja" una fuente controlada: en una de tensión, el
+ * del + (n+); en una de corriente, el de la flecha (la corriente entra por n+,
+ * atraviesa la fuente y sale por n-).
+ */
+function dependentTowardNode(e: NetlistElement): string {
+  return isCurrentControlledOutput(e) ? e.nodes[1] : e.nodes[0]
+}
+
 export function buildDiagram(parsed: ParsedNetlist): Diagram {
   const bridge = findDiodeBridge(parsed.elements)
   if (bridge) {
@@ -1137,7 +1300,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     // La etiqueta de una fuente vertical ("1 V (AC, señal de prueba)") es más
     // ancha que la de un R/C: sin holgura extra se monta sobre la rama del
     // nodo siguiente.
-    if (shunts.some((e) => e.kind === 'V' || e.kind === 'I')) curX += SOURCE_LABEL_ROOM
+    if (shunts.some((e) => e.kind === 'V' || e.kind === 'I' || isDependentSource(e))) curX += SOURCE_LABEL_ROOM
   }
 
   const symbols: LayoutSymbol[] = []
@@ -1220,6 +1383,18 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
           isAc,
         })
         usedSymbols.add('source')
+      } else if (isDependentSource(e)) {
+        symbols.push({
+          type: 'depSourceV',
+          x,
+          y1: shuntY1,
+          y2: GROUND_Y,
+          name: e.name,
+          value: dependencyText(e),
+          isCurrent: isCurrentControlledOutput(e),
+          towardTop: dependentTowardNode(e) === n,
+        })
+        usedSymbols.add('dependentSource')
       }
     })
   }
@@ -1336,6 +1511,20 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
         isAc,
       })
       usedSymbols.add('source')
+    } else if (isDependentSource(e)) {
+      const rightNode = (nodeStartX[a] ?? 0) <= (nodeStartX[b] ?? 0) ? b : a
+      symbols.push({
+        type: 'depSourceH',
+        x1,
+        x2,
+        y: targetY,
+        name: e.name,
+        value: dependencyText(e),
+        isCurrent: isCurrentControlledOutput(e),
+        towardRight: dependentTowardNode(e) === rightNode,
+        labelBelow,
+      })
+      usedSymbols.add('dependentSource')
     } else {
       symbols.push({ type: 'wireH', x1, x2, y: targetY, name: e.name, value: e.extra })
     }
@@ -1365,7 +1554,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
       inBotX: inBot,
       outX: outNode,
       name: e.name,
-      value: e.extra || 'opamp',
+      value: [e.extra || 'opamp', e.params].filter(Boolean).join(' '),
       inpIsGround: pins.inp === GROUND,
       innIsGround: pins.inn === GROUND,
       isBuffer,
@@ -1424,6 +1613,19 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     } else if (elem.kind === 'L') {
       symbols.push({ type: 'inductorH', x1, x2, y: fbY, name: elem.name, value: fmtHenries(elem.extra) })
       usedSymbols.add('inductor')
+    } else if (isDependentSource(elem)) {
+      // La toma de la salida (tapX) queda a la derecha del tramo.
+      symbols.push({
+        type: 'depSourceH',
+        x1,
+        x2,
+        y: fbY,
+        name: elem.name,
+        value: dependencyText(elem),
+        isCurrent: isCurrentControlledOutput(elem),
+        towardRight: dependentTowardNode(elem) === pins.out,
+      })
+      usedSymbols.add('dependentSource')
     } else {
       symbols.push({ type: 'wireH', x1, x2, y: fbY, name: elem.name, value: elem.extra })
     }

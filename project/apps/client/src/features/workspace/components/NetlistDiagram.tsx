@@ -23,6 +23,7 @@ import styles from './NetlistDiagram.module.css'
 
 const LEGEND_ITEMS = [
   { key: 'source', label: 'Fuente', symbol: '(~)' },
+  { key: 'dependentSource', label: 'Fuente controlada', symbol: '◇' },
   { key: 'resistor', label: 'Resistencia', symbol: '—/\\/\\—' },
   { key: 'capacitor', label: 'Capacitor', symbol: '—||—' },
   { key: 'inductor', label: 'Inductor', symbol: '—∿∿—' },
@@ -462,6 +463,124 @@ function SourceH({
   )
 }
 
+/**
+ * Rombo de fuente controlada centrado en (cx, cy). Con `isCurrent` lleva una
+ * flecha hacia `toward`; si no, el + de ese lado y el − del opuesto.
+ */
+function DependentGlyph({
+  cx,
+  cy,
+  isCurrent,
+  toward,
+}: {
+  cx: number
+  cy: number
+  isCurrent: boolean
+  toward: 'up' | 'down' | 'left' | 'right'
+}) {
+  const r = 18
+  // Vector unitario hacia el lado al que "empuja" la fuente.
+  const [dx, dy] = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[toward]
+  const diamond = `${cx},${cy - r} ${cx + r},${cy} ${cx},${cy + r} ${cx - r},${cy}`
+  if (isCurrent) {
+    const len = 9
+    const tipX = cx + dx * len
+    const tipY = cy + dy * len
+    // Puntas de la flecha: hacia atrás y a los costados de la punta.
+    const head = 5
+    const h1 = `${tipX - dx * head - dy * head},${tipY - dy * head - dx * head}`
+    const h2 = `${tipX - dx * head + dy * head},${tipY - dy * head + dx * head}`
+    return (
+      <g>
+        <polygon points={diamond} className={styles.symbolStroke} fill="none" />
+        <line x1={cx - dx * len} y1={cy - dy * len} x2={tipX} y2={tipY} className={styles.symbolStroke} />
+        <polyline points={`${h1} ${tipX},${tipY} ${h2}`} className={styles.symbolStroke} fill="none" />
+      </g>
+    )
+  }
+  const off = 7
+  const s = 3.5
+  const [px, py] = [cx + dx * off, cy + dy * off]
+  const [mx, my] = [cx - dx * off, cy - dy * off]
+  return (
+    <g>
+      <polygon points={diamond} className={styles.symbolStroke} fill="none" />
+      <line x1={px - s} y1={py} x2={px + s} y2={py} className={styles.symbolStroke} />
+      <line x1={px} y1={py - s} x2={px} y2={py + s} className={styles.symbolStroke} />
+      {/* El − va perpendicular al eje de la fuente en ambos casos: horizontal. */}
+      <line x1={mx - s} y1={my} x2={mx + s} y2={my} className={styles.symbolStroke} />
+    </g>
+  )
+}
+
+function DependentSourceV({
+  x,
+  y1,
+  y2,
+  name,
+  value,
+  isCurrent,
+  towardTop,
+}: {
+  x: number
+  y1: number
+  y2: number
+  name: string
+  value: string
+  isCurrent: boolean
+  towardTop: boolean
+}) {
+  const my = (y1 + y2) / 2
+  const r = 18
+  return (
+    <g>
+      <line x1={x} y1={y1} x2={x} y2={my - r} className={styles.wire} />
+      <line x1={x} y1={my + r} x2={x} y2={y2} className={styles.wire} />
+      <DependentGlyph cx={x} cy={my} isCurrent={isCurrent} toward={towardTop ? 'up' : 'down'} />
+      <text x={x + 26} y={my - 2} textAnchor="start" className={styles.lbl}>
+        {name}
+      </text>
+      <text x={x + 26} y={my + 13} textAnchor="start" className={styles.lblSub}>
+        {value}
+      </text>
+    </g>
+  )
+}
+
+function DependentSourceH({
+  x1,
+  x2,
+  y,
+  name,
+  value,
+  isCurrent,
+  towardRight,
+  labelBelow = false,
+}: {
+  x1: number
+  x2: number
+  y: number
+  name: string
+  value: string
+  isCurrent: boolean
+  towardRight: boolean
+  labelBelow?: boolean
+}) {
+  const mx = (x1 + x2) / 2
+  const r = 18
+  return (
+    <g>
+      <DropLegs x1={x1} x2={x2} y={y} />
+      <line x1={x1} y1={y} x2={mx - r} y2={y} className={styles.wire} />
+      <line x1={mx + r} y1={y} x2={x2} y2={y} className={styles.wire} />
+      <DependentGlyph cx={mx} cy={y} isCurrent={isCurrent} toward={towardRight ? 'right' : 'left'} />
+      <text x={mx} y={labelBelow ? y + 32 : y - 24} textAnchor="middle" className={styles.lbl}>
+        {name} · {value}
+      </text>
+    </g>
+  )
+}
+
 function WireHopH({ x1, x2, y, hopX }: { x1: number; x2: number; y: number; hopX: number }) {
   const r = 10
   return (
@@ -750,6 +869,31 @@ function Symbol({ symbol }: { symbol: LayoutSymbol }) {
           name={symbol.name}
           value={symbol.value}
           isAc={symbol.isAc}
+        />
+      )
+    case 'depSourceV':
+      return (
+        <DependentSourceV
+          x={symbol.x}
+          y1={symbol.y1}
+          y2={symbol.y2}
+          name={symbol.name}
+          value={symbol.value}
+          isCurrent={symbol.isCurrent}
+          towardTop={symbol.towardTop}
+        />
+      )
+    case 'depSourceH':
+      return (
+        <DependentSourceH
+          x1={symbol.x1}
+          x2={symbol.x2}
+          y={symbol.y}
+          name={symbol.name}
+          value={symbol.value}
+          isCurrent={symbol.isCurrent}
+          towardRight={symbol.towardRight}
+          labelBelow={symbol.labelBelow}
         />
       )
     case 'opamp':

@@ -39,3 +39,33 @@ it('dibuja todas las resistencias con un cuerpo corto y fijo, sin importar la di
     expect(Math.max(w, h)).toBeLessThanOrEqual(54)
   }
 })
+
+const FRANCO_GM = [
+  '* Franco P1.4 — transconductance amplifier',
+  'VS s 0 0.15',
+  'RS s i 100k',
+  'RI i 0 500k',
+  'GM 0 o i 0 2.024',
+  'RO o 0 400',
+  'RL o 0 40',
+].join('\n')
+
+it('dibuja la fuente controlada como un rombo con su dependencia en la etiqueta, la leyenda y la tabla', () => {
+  const { container, getByText, getAllByText } = render(<NetlistDiagram netlistText={FRANCO_GM} />)
+
+  // Rombo: un polígono de cuatro vértices (los diodos/opamps son triángulos).
+  const diamonds = [...container.querySelectorAll('svg polygon')].filter(
+    (p) => (p.getAttribute('points') ?? '').trim().split(/\s+/).length === 4,
+  )
+  expect(diamonds).toHaveLength(1)
+  expect(getByText('Fuente controlada')).toBeTruthy()
+  // Una vez en el esquema y otra en la tabla de componentes.
+  expect(getAllByText('2.024·V(i)')).toHaveLength(2)
+})
+
+it('muestra los parámetros del opamp en su etiqueta', () => {
+  const netlist = ['VI i 0 0.1', 'R1 i n 10k', 'R2 n o 100k', 'X1 0 n o OPAMP a=100 rd=1meg ro=100'].join('\n')
+  const { container } = render(<NetlistDiagram netlistText={netlist} showExplanation={false} />)
+  const texts = [...container.querySelectorAll('svg text')].map((t) => t.textContent)
+  expect(texts).toContain('X1 · opamp a=100 rd=1meg ro=100')
+})
