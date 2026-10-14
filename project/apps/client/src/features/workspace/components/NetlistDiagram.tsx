@@ -17,6 +17,7 @@ import {
   measurementText,
   parseNetlist,
 } from '../model/netlist-diagram'
+import type { CircuitDocumentation } from '../model/workspace-types'
 import styles from './NetlistDiagram.module.css'
 
 const LEGEND_ITEMS = [
@@ -794,14 +795,20 @@ function Symbol({ symbol }: { symbol: LayoutSymbol }) {
 
 export function CircuitExplanation({
   netlist,
-  workspaceSummary,
+  documentation,
   compact = false,
 }: {
   netlist: ParsedNetlist
-  workspaceSummary?: string | null
+  documentation?: CircuitDocumentation | null
   compact?: boolean
 }) {
-  const explanation = workspaceSummary || describeCircuit(netlist)
+  const explanation = documentation?.summary || describeCircuit(netlist)
+  const tags = documentation?.tags ?? []
+  const measurementExplanation = documentation?.measurementExplanation
+  // Los roles vienen del netlist que documentó el agente; si el usuario edita
+  // el código, los componentes que ya no coinciden simplemente quedan sin rol.
+  const roles = documentation?.components ?? {}
+  const hasRoles = netlist.elements.some((e) => roles[e.name])
 
   return (
     <section aria-label="Descripción del circuito" className={`${styles.explainCard} ${compact ? styles.compactExplain : ''}`}>
@@ -809,17 +816,30 @@ export function CircuitExplanation({
         <div className={styles.explainHeaderDot} />
         <h5 className={styles.explainTitle}>Funcionamiento del circuito</h5>
       </div>
-      
+
+      {tags.length > 0 && (
+        <ul aria-label="Etiquetas del circuito" className={styles.tagList}>
+          {tags.map((tag, idx) => (
+            <li key={`${tag}-${idx}`} className={styles.tag}>{tag}</li>
+          ))}
+        </ul>
+      )}
+
       <p className={styles.explainText}>{explanation}</p>
 
-      {netlist.measurements.length > 0 && (
+      {(measurementExplanation || netlist.measurements.length > 0) && (
         <div className={styles.measureCallout}>
           <div className={styles.measureHeader}>
             <span className={styles.measurePrefix}>Parámetros de medición</span>
           </div>
-          <span className={styles.measureContent}>
-            {measurementText(netlist.measurements)}
-          </span>
+          {measurementExplanation && (
+            <p className={styles.measureExplanation}>{measurementExplanation}</p>
+          )}
+          {netlist.measurements.length > 0 && (
+            <span className={styles.measureContent}>
+              {measurementText(netlist.measurements)}
+            </span>
+          )}
         </div>
       )}
 
@@ -834,6 +854,7 @@ export function CircuitExplanation({
                 <th>Componente</th>
                 <th>Entre nodos</th>
                 <th>Valor</th>
+                {hasRoles && <th>Función</th>}
               </tr>
             </thead>
             <tbody>
@@ -848,6 +869,7 @@ export function CircuitExplanation({
                     </span>
                   </td>
                   <td>{componentValue(e)}</td>
+                  {hasRoles && <td className={styles.componentRole}>{roles[e.name] ?? '—'}</td>}
                 </tr>
               ))}
             </tbody>
@@ -862,12 +884,12 @@ export function NetlistDiagram({
   netlistText,
   title,
   showExplanation = true,
-  workspaceSummary,
+  documentation,
 }: {
   netlistText: string
   title?: string
   showExplanation?: boolean
-  workspaceSummary?: string | null
+  documentation?: CircuitDocumentation | null
 }) {
   const parsed = useMemo(() => {
     try {
@@ -1181,7 +1203,7 @@ export function NetlistDiagram({
 
       {/* Card 2: Explanation Card */}
       {showExplanation && (
-        <CircuitExplanation netlist={netlist} workspaceSummary={workspaceSummary} />
+        <CircuitExplanation netlist={netlist} documentation={documentation} />
       )}
 
       {showExplanation && (

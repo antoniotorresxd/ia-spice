@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -30,6 +30,78 @@ describe('VisualizerScreen', () => {
     // Default circuit is drawn
     expect(await screen.findByText('Divisor de voltaje')).toBeVisible()
     expect(screen.getByText(/dos resistencias en serie reparten el voltaje/i)).toBeVisible()
+
+    // Sin documentación del agente no hay etiquetas ni columna de función
+    expect(screen.queryByRole('list', { name: /etiquetas del circuito/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Función' })).not.toBeInTheDocument()
+  })
+
+  it('shows the documentador output for the selected workspace file', async () => {
+    const service = createMockWorkspaceService()
+
+    vi.spyOn(service, 'getFiles').mockResolvedValue([
+      {
+        id: 'file-doc',
+        conversationId: 'conv-doc',
+        name: 'divisor.cir',
+        language: 'spice',
+        status: 'complete',
+        createdAt: '2026-07-15T12:00:00.000Z',
+        conversationTitle: 'Divisor',
+        projectId: null,
+      },
+    ])
+
+    vi.spyOn(service, 'getConversation').mockResolvedValue({
+      id: 'conv-doc',
+      projectId: null,
+      title: 'Divisor',
+      preview: 'Divisor',
+      updatedAt: '2026-07-15T12:00:00.000Z',
+      executionStatus: 'completed',
+      messages: [],
+      files: [
+        {
+          id: 'file-doc',
+          name: 'divisor.cir',
+          language: 'spice',
+          content: '.title Divisor documentado\nV1 in 0 DC 10\nR1 in out 1k\nR2 out 0 2.2k\n.end',
+          status: 'complete',
+          summary: 'Reparte 10 V entre R1 y R2 para obtener la salida.',
+          tags: ['divisor de voltaje', 'DC'],
+          components: { R1: 'Resistencia superior del divisor', R2: 'Resistencia inferior del divisor' },
+          measurementExplanation: 'Se mide V(out) en el punto de operación.',
+        },
+      ],
+      execution: {
+        id: 'exec-doc',
+        status: 'completed',
+        summary: 'Completado',
+      },
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/visualizer?conversationId=conv-doc&fileId=file-doc']}>
+        <VisualizerScreen service={service} />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Reparte 10 V entre R1 y R2 para obtener la salida.')).toBeVisible()
+    expect(screen.queryByText(/dos resistencias en serie reparten el voltaje/i)).not.toBeInTheDocument()
+
+    const tags = within(screen.getByRole('list', { name: /etiquetas del circuito/i }))
+    expect(tags.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'divisor de voltaje',
+      'DC',
+    ])
+
+    expect(screen.getByText('Se mide V(out) en el punto de operación.')).toBeVisible()
+
+    expect(screen.getByRole('columnheader', { name: 'Función' })).toBeVisible()
+    expect(within(screen.getByRole('row', { name: /^R1/ })).getByText('Resistencia superior del divisor')).toBeVisible()
+    expect(within(screen.getByRole('row', { name: /^R2/ })).getByText('Resistencia inferior del divisor')).toBeVisible()
+    // V1 no tiene rol documentado
+    expect(within(screen.getByRole('row', { name: /^V1/ })).getByText('—')).toBeVisible()
   })
 
   it('allows editing SPICE netlist and correctly draws multi-shunt Zener regulator circuit without collisions', async () => {
