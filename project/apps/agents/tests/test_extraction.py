@@ -111,3 +111,10 @@ def test_extract_compiles_catalog_into_system_prompt(monkeypatch, context):
 @pytest.fixture(autouse=True)
 def _fake_prompt(monkeypatch):
     monkeypatch.setattr("agents.llm.extraction.fetch_prompt", lambda name, **kwargs: "System prompt de prueba")
+
+
+def test_la_guia_de_analisis_pide_no_agregar_la_fuente_de_prueba():
+    # Caso real: el LLM metió la "fuente de prueba de 1 V" del enunciado de un
+    # terminal a tierra con el otro al aire, y la red quedó sin corriente.
+    assert "NO agregues una fuente de prueba" in GUIA_MODO_ANALISIS
+    assert "entre los `terminales`" in GUIA_MODO_ANALISIS

@@ -219,7 +219,8 @@ class AnalysisOutcome(BaseModel):
         default=None,
         description=(
             "Los dos nodos entre los que se mira la red, para reducción (resistencia "
-            "equivalente) o Thévenin/Norton. Ej. ['a', '0']."
+            "equivalente) o Thévenin/Norton. Ej. ['a', '0']. El sistema conecta entre "
+            "ellos su propia fuente de prueba de 1 V: no la agregues al netlist."
         ),
     )
     frecuencia_hz: float | None = Field(
