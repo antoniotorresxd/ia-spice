@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import StreamingResponse
+from langfuse import Langfuse
 from langfuse.langchain import CallbackHandler
 from pydantic import BaseModel
 
@@ -68,10 +69,18 @@ def _langfuse_handler() -> CallbackHandler | None:
     """
     if not hasattr(app.state, "langfuse_handler"):
         handler = None
-        if os.environ.get("LANGFUSE_PUBLIC_KEY") and os.environ.get("LANGFUSE_SECRET_KEY"):
-            handler = CallbackHandler(
-                public_key=os.environ.get("LANGFUSE_PUBLIC_KEY"),
+        public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
+        secret_key = os.environ.get("LANGFUSE_SECRET_KEY")
+        if public_key and secret_key:
+            # El cliente va primero: CallbackHandler(public_key=...) solo busca
+            # un cliente ya inicializado con esa clave y, si no lo hay, devuelve
+            # uno desactivado en silencio —el proceso entero quedaba sin trazas.
+            Langfuse(
+                public_key=public_key,
+                secret_key=secret_key,
+                base_url=_langfuse_host(),
             )
+            handler = CallbackHandler(public_key=public_key)
         app.state.langfuse_handler = handler
     return app.state.langfuse_handler
 
