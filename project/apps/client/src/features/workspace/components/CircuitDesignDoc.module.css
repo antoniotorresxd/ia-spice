@@ -1,0 +1,508 @@
+/* CircuitDesignDoc.module.css - Memoria técnica y diseño de circuito unificado */
+
+.designDoc {
+  width: 100%;
+  max-width: 54rem;
+  margin: 0 auto;
+  padding: 2.25rem 2.5rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #131822 0%, #0d1117 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  color: #cbd5e1;
+  font-family: var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  box-sizing: border-box;
+}
+
+/* Header de la memoria */
+.docHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.headerMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(234, 129, 68, 0.12);
+  border: 1px solid rgba(234, 129, 68, 0.3);
+  color: #f0a878;
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.categoryIcon {
+  color: #ea8144;
+}
+
+.fileBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.fileIcon {
+  color: #94a3b8;
+}
+
+.docTitle {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+  line-height: 1.25;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  padding: 0.18rem 0.6rem;
+  font-size: 0.73rem;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid rgba(234, 129, 68, 0.28);
+  background: rgba(234, 129, 68, 0.08);
+  color: #f0a878;
+}
+
+/* Secciones generales */
+.sectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sectionDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ea8144;
+  flex-shrink: 0;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+/* Tarjeta de Visión General / Resumen */
+.overviewCard {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 3px solid #ea8144;
+  border-radius: 8px;
+  padding: 1.1rem 1.35rem;
+}
+
+.overviewText {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #cbd5e1;
+}
+
+.overviewText p {
+  margin: 0 0 0.6rem;
+}
+
+.overviewText p:last-child {
+  margin-bottom: 0;
+}
+
+.overviewText strong {
+  color: #ffffff;
+  font-weight: 650;
+}
+
+/* Cuerpo de la Memoria de Cálculo (Walkthrough) */
+.walkthroughCard {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 1.5rem 1.75rem;
+}
+
+.walkthroughBody {
+  font-size: 0.95rem;
+  line-height: 1.72;
+  color: #cbd5e1;
+}
+
+.walkthroughBody > :first-child {
+  margin-top: 0;
+}
+
+.walkthroughBody p {
+  margin: 0 0 1rem;
+  text-align: left;
+  hyphens: none;
+}
+
+.walkthroughBody strong {
+  color: #ffffff;
+  font-weight: 650;
+}
+
+.walkthroughBody h1,
+.walkthroughBody h2,
+.walkthroughBody h3 {
+  margin: 1.85rem 0 0.65rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #f1f5f9;
+}
+
+.walkthroughBody > h1:first-child,
+.walkthroughBody > h2:first-child,
+.walkthroughBody > h3:first-child {
+  margin-top: 0;
+}
+
+/* Fórmulas matemáticas KaTeX integradas */
+.walkthroughBody :global(.katex-display) {
+  margin: 1.25rem 0;
+  padding: 0.95rem 1.25rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.walkthroughBody ul,
+.walkthroughBody ol {
+  margin: 0 0 1rem;
+  padding-left: 1.4rem;
+}
+
+.walkthroughBody li {
+  margin: 0.3rem 0;
+}
+
+/* Callout de Medición y Validación */
+.measureCallout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.1rem 1.35rem;
+  border-radius: 8px;
+  border: 1px solid rgba(234, 129, 68, 0.25);
+  background: rgba(234, 129, 68, 0.05);
+}
+
+.measureHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.measureIcon {
+  color: #ea8144;
+  flex-shrink: 0;
+}
+
+.measurePrefix {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ea8144;
+}
+
+.measureExplanation {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+}
+
+.measureContent {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #e2e8f0;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.4rem 0.65rem;
+  border-radius: 4px;
+}
+
+/* Tabla de Componentes */
+.tableHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tableTitle {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.tableScrollWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.componentTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.82rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.componentTable th {
+  text-align: left;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
+  padding: 0.65rem 0.9rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.componentTable td {
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+}
+
+.componentTable td:first-child {
+  color: #f0f6fc;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-weight: 650;
+}
+
+.componentTable td:nth-child(2) {
+  color: #94a3b8;
+}
+
+.componentTable tr:last-child td {
+  border-bottom: none;
+}
+
+.componentTable td.componentRole {
+  line-height: 1.5;
+  min-width: 14rem;
+}
+
+.nodePills {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.nodePill {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.72rem;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: #cbd5e1;
+}
+
+/* Modo Claro (Light Mode) */
+:global(.light) .designDoc {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+  color: #334155;
+}
+
+:global(.light) .docHeader {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .docTitle {
+  color: #0f172a;
+}
+
+:global(.light) .categoryBadge {
+  background: rgba(200, 121, 61, 0.1);
+  border-color: rgba(200, 121, 61, 0.3);
+  color: #9a5520;
+}
+
+:global(.light) .categoryIcon {
+  color: #c8793d;
+}
+
+:global(.light) .fileBadge {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #64748b;
+}
+
+:global(.light) .fileIcon {
+  color: #64748b;
+}
+
+:global(.light) .tag {
+  border-color: rgba(200, 121, 61, 0.35);
+  background: rgba(200, 121, 61, 0.08);
+  color: #9a5520;
+}
+
+:global(.light) .sectionTitle,
+:global(.light) .tableTitle {
+  color: #64748b;
+}
+
+:global(.light) .overviewCard {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.08);
+  border-left-color: var(--color-mint, #c8793d);
+}
+
+:global(.light) .overviewText {
+  color: #334155;
+}
+
+:global(.light) .overviewText strong,
+:global(.light) .walkthroughBody strong {
+  color: #0f172a;
+}
+
+:global(.light) .walkthroughCard {
+  background: #fdfdfd;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+:global(.light) .walkthroughBody {
+  color: #334155;
+}
+
+:global(.light) .walkthroughBody h1,
+:global(.light) .walkthroughBody h2,
+:global(.light) .walkthroughBody h3 {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+}
+
+:global(.light) .walkthroughBody :global(.katex-display) {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .measureCallout {
+  background: rgba(200, 121, 61, 0.06);
+  border-color: rgba(200, 121, 61, 0.25);
+}
+
+:global(.light) .measurePrefix {
+  color: #9a5520;
+}
+
+:global(.light) .measureExplanation {
+  color: #334155;
+}
+
+:global(.light) .measureContent {
+  background: rgba(0, 0, 0, 0.05);
+  color: #0f172a;
+}
+
+:global(.light) .componentTable {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .componentTable th {
+  background: #f8fafc;
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+  color: #64748b;
+}
+
+:global(.light) .componentTable td {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+  color: #334155;
+}
+
+:global(.light) .componentTable td:first-child {
+  color: #0f172a;
+}
+
+:global(.light) .componentTable td:nth-child(2) {
+  color: #64748b;
+}
+
+:global(.light) .nodePill {
+  background: #f1f5f9;
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #475569;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .designDoc {
+    padding: 1.5rem 1.15rem;
+    gap: 1.5rem;
+  }
+
+  .docTitle {
+    font-size: 1.35rem;
+  }
+
+  .walkthroughCard {
+    padding: 1.1rem 1rem;
+  }
+}

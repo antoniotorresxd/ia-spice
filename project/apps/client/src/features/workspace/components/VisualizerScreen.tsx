@@ -12,7 +12,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { parseNetlist } from '../model/netlist-diagram'
-import { structureWalkthrough } from '../model/walkthrough-format'
 import type {
   BlockSimResult,
   BomItem,
@@ -23,8 +22,8 @@ import type {
 } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
 import { BomTable } from './BomTable'
-import { MarkdownText } from './MarkdownText'
-import { CircuitExplanation, NetlistDiagram } from './NetlistDiagram'
+import { CircuitDesignDoc } from './CircuitDesignDoc'
+import { NetlistDiagram } from './NetlistDiagram'
 import { SimulationChart } from './SimulationChart'
 import { SpiceCodeEditor } from './SpiceCodeEditor'
 import styles from './VisualizerScreen.module.css'
@@ -436,19 +435,12 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
       <section className={styles.viewerSection} data-tour="circuit-viewer" aria-label="Lienzo y visualización del circuito">
         {viewMode === 'walkthrough' ? (
           <div className={styles.explanationSection}>
-            {activeFileDocumentation?.designWalkthrough && (
-              <article className={styles.walkthrough} aria-label="Cómo se diseñó el circuito">
-                <header className={styles.walkthroughHeader}>
-                  <h2 className={styles.walkthroughTitle}>Memoria de diseño</h2>
-                  <p className={styles.walkthroughSubtitle}>{currentWorkspaceFile?.name ?? 'Circuito'}</p>
-                </header>
-                <MarkdownText className={styles.walkthroughBody}>
-                  {structureWalkthrough(activeFileDocumentation.designWalkthrough)}
-                </MarkdownText>
-              </article>
-            )}
             {parsedNetlist ? (
-              <CircuitExplanation netlist={parsedNetlist} documentation={activeFileDocumentation} compact={false} />
+              <CircuitDesignDoc
+                netlist={parsedNetlist}
+                documentation={activeFileDocumentation}
+                fileName={currentWorkspaceFile?.name ?? 'Circuito'}
+              />
             ) : (
               <div className={styles.inspectorPlaceholder}>
                 <p>No se pudo interpretar el netlist. Revisa la sintaxis SPICE o presiona "Actualizar" para refrescar el análisis.</p>
