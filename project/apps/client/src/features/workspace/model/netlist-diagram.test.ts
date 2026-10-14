@@ -538,3 +538,74 @@ it('Sallen-Key: la entrada + del opamp queda a la izquierda del triángulo y C1 
   if (c1?.type !== 'capacitorH') throw new Error('C1 no es horizontal')
   expect(c1.y).toBeLessThan(140)
 })
+
+// Caso real (2026-10): dos ramas entre nA y nB (nA–[R2∥R3]–nC–R4–nB y
+// nA–R5–nD–R6–nB). R4 (nC -> nB) iba sobre el raíl y atravesaba el punto de nD.
+const RED_DOS_RAMAS = [
+  '* Analisis de red',
+  'R1 nodo_in nA 100',
+  'R2 nA nC 50',
+  'R3 nA nC 200',
+  'R4 nC nB 250',
+  'R5 nA nD 10',
+  'R6 nD nB 30',
+  'R7 nB nodo_out 120',
+  'VTEST nodo_in 0 DC 1',
+  '.control',
+  'op',
+  '.endc',
+  '.end',
+].join('\n')
+
+// Elementos horizontales cuyo tramo pasa por el bus (punto) de un nodo al que
+// no están conectados, a la misma altura: visualmente parecerían conectados.
+function horizontalsThroughForeignNodes(netlist: string): string[] {
+  const parsed = parseNetlist(netlist)
+  const diagram = buildDiagram(parsed)
+  const nodesOf = new Map(parsed.elements.map((e) => [e.name, e.nodes]))
+  const offenders: string[] = []
+  for (const s of diagram.symbols) {
+    if (!('x1' in s) || !('name' in s)) continue
+    const own = nodesOf.get(s.name) ?? []
+    for (const bus of diagram.nodeBuses) {
+      if (own.includes(bus.node) || (bus.y ?? 200) !== s.y) continue
+      if (bus.xEnd > s.x1 && bus.xStart < s.x2) offenders.push(`${s.name} pasa por ${bus.node}`)
+    }
+  }
+  return offenders
+}
+
+it('un elemento serie no atraviesa el punto de un nodo al que no está conectado', () => {
+  expect(horizontalsThroughForeignNodes(RED_DOS_RAMAS)).toEqual([])
+  const diagram = buildDiagram(parseNetlist(RED_DOS_RAMAS))
+  const r4 = diagram.symbols.find((s) => s.type === 'resistorH' && s.name === 'R4')
+  if (r4?.type !== 'resistorH') throw new Error('R4 no es horizontal')
+  // R4 va de nc a nb (los nodos se normalizan en minúsculas) por una pista libre, no por el raíl.
+  expect(r4.y).not.toBe(200)
+  expect([r4.x1, r4.x2]).toEqual([diagram.nodeXs.nc, diagram.nodeXs.nb])
+})
+
+// Emisor común: Cout (col -> out) pasaba por el punto de emi2 y Re1 (emi -> emi2) por el de col.
+const BJT_CE = [
+  '.title BJT Common Emitter',
+  'Vcc vcc 0 DC 12',
+  'Vin in 0 SIN(0 10m 1k) AC 1',
+  'Cin in base 10u',
+  'R1 vcc base 47k',
+  'R2 base 0 10k',
+  'Rc vcc col 2.2k',
+  'Cout col out 10u',
+  'Rload out 0 10k',
+  'Re1 emi emi2 150',
+  'Re2 emi2 0 330',
+  'Ce emi2 0 100u',
+  'Q1 col base emi 2N2222',
+  '.model 2N2222 NPN(Bf=255.9)',
+  '.end',
+].join('\n')
+
+it('ningún fixture dibuja un elemento horizontal a través de un nodo ajeno', () => {
+  for (const netlist of [RC_LOWPASS, DIVIDER, LED, AMP, COMPOSED, OPAMP_BIAS, SALLEN_KEY, RED_DOS_RAMAS, BJT_CE]) {
+    expect(horizontalsThroughForeignNodes(netlist)).toEqual([])
+  }
+})

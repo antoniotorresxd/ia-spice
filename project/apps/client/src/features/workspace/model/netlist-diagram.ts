@@ -1246,6 +1246,15 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
   })
   const crossesOpamp = (x1: number, x2: number, y: number) =>
     opampZones.some((z) => y > z.y1 && y < z.y2 && x1 < z.x2 && x2 > z.x1)
+  // Un tramo que pase por el bus (y su punto) de un nodo al que el elemento no
+  // está conectado lo dibujaría como conectado a él: p. ej. dos ramas nA→nC→nB
+  // y nA→nD→nB, donde nC→nB sobre el raíl atravesaba el punto de nD. Ese
+  // elemento debe ir a otra pista, como un paralelo.
+  const busY = (n: string) => (emitterNodes.has(n) ? EMI_Y : opampInnNodes.has(n) ? OPAMP_INN_Y : RAIL_Y)
+  const crossesForeignNode = (e: NetlistElement, x1: number, x2: number, y: number) =>
+    sortedNodes.some(
+      (n) => !e.nodes.includes(n) && busY(n) === y && nodeEndX[n] > x1 && nodeStartX[n] < x2,
+    )
 
   for (const e of seriesElements) {
     const [a, b] = e.nodes
@@ -1271,6 +1280,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
       const collides =
         crossesInpRoute(x1, x2, track) ||
         crossesOpamp(x1, x2, track) ||
+        crossesForeignNode(e, x1, x2, track) ||
         placedHorizontal.some((p) => p.y === track && !(x2 <= p.x1 + 10 || x1 >= p.x2 - 10))
       if (!collides) {
         targetY = track
@@ -1509,7 +1519,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     xStart: nodeStartX[n] ?? MARGIN_X,
     xEnd: nodeEndX[n] ?? MARGIN_X,
     branches: nodeBranches[n] ?? [],
-    y: emitterNodes.has(n) ? EMI_Y : opampInnNodes.has(n) ? OPAMP_INN_Y : RAIL_Y,
+    y: busY(n),
   }))
 
   const allXs = [
