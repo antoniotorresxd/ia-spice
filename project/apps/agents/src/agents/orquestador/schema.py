@@ -190,23 +190,82 @@ class ClarifyOutcome(BaseModel):
     partial_spec: dict = Field(default_factory=dict)
 
 
+class Asignacion(BaseModel):
+    """Un símbolo del netlist y el valor que toma en un escenario o pregunta."""
+
+    simbolo: str = Field(description="El nombre usado entre llaves en el netlist, p. ej. 'RL' para {RL}.")
+    valor: str = Field(description="Con sufijo SPICE ('40', '30k', '0.15'), 'inf' para un abierto o '0' para un corto.")
+
+
+class Medicion(BaseModel):
+    """Lo que se midió o se exige en un escenario."""
+
+    expresion: str = Field(description="V(nodo), V(a,b), I(elemento) o aritmética con ellos: 'V(o)/V(i)'.")
+    valor: str = Field(description="El valor medido o exigido, con sufijo SPICE: '125m', '230m', '5'.")
+
+
+class Escenario(BaseModel):
+    """El mismo circuito con valores propios (otra carga, el pot en un extremo)
+    y lo que se midió o se exige en él."""
+
+    nombre: str | None = None
+    valores: list[Asignacion] = Field(default_factory=list)
+    mediciones: list[Medicion] = Field(default_factory=list)
+
+
+class Pregunta(BaseModel):
+    """Algo que el problema pide calcular, en las condiciones que indique."""
+
+    nombre: str | None = None
+    valores: list[Asignacion] = Field(default_factory=list)
+    calcular: str = Field(description="Expresión a calcular: 'I(RL)', 'V(o)', 'V(o)/V(i)'.")
+
+
 class AnalysisOutcome(BaseModel):
     """El usuario da un circuito YA ARMADO y pregunta por sus tensiones,
     corrientes, su resistencia/impedancia equivalente o su equivalente de
     Thévenin/Norton ("resuelve por mallas", "encuentra la corriente en R3",
-    "reduce la red entre a y b"). No se diseña nada: solo se transcribe la
-    red a netlist y el sistema la resuelve."""
+    "reduce la red entre a y b"), o pide deducir componentes a partir de
+    mediciones ("find Ri, Aoc and Ro"). No se diseña nada: solo se transcribe
+    la red a netlist y el sistema la resuelve."""
 
     mode: Literal["analysis"]
     netlist: str = Field(
         min_length=1,
         description=(
-            "La red transcrita a SPICE, un elemento por línea: R, L, C y fuentes "
-            "independientes V/I. Formato `<nombre> <nodo+> <nodo-> <valor>`, con "
-            "sufijos SPICE (1k, 4.7u, 10meg). El nodo de referencia es 0. Para una "
-            "fuente de corriente, la corriente sale por el nodo- (convención SPICE: "
-            "circula de nodo+ a nodo- por dentro de la fuente). Sin .control ni "
-            "análisis: el sistema los agrega."
+            "La red transcrita a SPICE, un elemento por línea: R, L, C, fuentes "
+            "independientes V/I, fuentes controladas (`E n+ n- nc+ nc- ganancia`, "
+            "`G n+ n- nc+ nc- gm` —la corriente circula de n+ a n- por dentro—, "
+            "`F n+ n- Vcontrol ganancia`, `H n+ n- Vcontrol r`) y op-amps "
+            "`X1 in+ in- out OPAMP` (ideal) o `X1 in+ in- out OPAMP a=1e4 rd=1meg ro=75`. "
+            "Formato `<nombre> <nodo+> <nodo-> <valor>`, con sufijos SPICE (1k, 4.7u, "
+            "10meg). El nodo de referencia es 0. Para una fuente de corriente, la "
+            "corriente sale por el nodo- (circula de nodo+ a nodo- por dentro). Un "
+            "valor que no se conoce o que cambia entre escenarios va como símbolo "
+            "entre llaves: `RI i 0 {Ri}`, `RL o 0 {RL}`. NUNCA pongas un número "
+            "inventado a una incógnita. Sin .control ni análisis: el sistema los agrega."
+        ),
+    )
+    incognitas: list[str] | None = Field(
+        default=None,
+        description=(
+            "Los símbolos del netlist que el problema pide encontrar a partir de "
+            "mediciones o requisitos: ['Ri', 'Ag', 'Ro']."
+        ),
+    )
+    escenarios: list[Escenario] | None = Field(
+        default=None,
+        description=(
+            "Cada situación con sus datos: los valores de los símbolos que no son "
+            "incógnitas y lo medido o exigido. Ej.: RL=40 con V(i)=125m e I(RL)=230m; "
+            "RL=60 con I(RL)=220m."
+        ),
+    )
+    preguntas: list[Pregunta] | None = Field(
+        default=None,
+        description=(
+            "Lo que el problema pide calcular, cada una con sus valores: la corriente "
+            "de cortocircuito es I(RL) con RL=0 y vS=100m."
         ),
     )
     metodo: Literal["nodos", "mallas", "reduccion", "thevenin", "completo"] = Field(

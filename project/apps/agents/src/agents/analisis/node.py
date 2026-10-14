@@ -2,6 +2,7 @@ import os
 import tempfile
 
 from agents.analisis.informe import analizar
+from agents.analisis.planteamiento import analizar_planteamiento, necesita_motor
 from agents.state import CircuitState
 
 
@@ -10,12 +11,16 @@ def analisis_node(state: CircuitState) -> dict:
     `outcome`. El netlist que ngspice usó para verificar queda como artefacto,
     para poder dibujar el circuito y reabrirlo."""
     outcome = dict(state["outcome"])
-    resultado = analizar(outcome)
+    # Op-amps, fuentes controladas, incógnitas o escenarios van al motor
+    # simbólico; una red pasiva sigue por el análisis de mallas y reducción.
+    resultado = analizar_planteamiento(outcome) if necesita_motor(outcome) else analizar(outcome)
     outcome.update(
         informe=resultado["informe"],
         resultados=resultado["resultados"],
         error=resultado["error"],
     )
+    if resultado.get("formato"):
+        outcome["formato"] = resultado["formato"]
     actualizacion: dict = {"outcome": outcome}
     # `analisis` es la red tal cual (tensiones de nodo); `analisis_zeq`, la de
     # la fuente de prueba entre los terminales, cuando se pidió una Z_eq.

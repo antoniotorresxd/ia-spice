@@ -19,11 +19,12 @@ medido.
 """
 
 import itertools
+import re
 from dataclasses import replace
 
 import sympy as sp
 
-from agents.analisis.red import RedInvalida
+from agents.analisis.red import RedInvalida, _ingenieria, fmt
 from agents.analisis.simbolico import (
     Componente,
     _valor,
@@ -214,4 +215,195 @@ def _verificar(circuito, resueltas, escenarios, preguntas, respuestas) -> dict:
     return {"coincide": bool(pruebas) and all(pruebas), "escenarios": por_escenario, "preguntas": por_pregunta}
 
 
-__all__ = ["resolver_planteamiento", "simbolos_libres"]
+# --- entrada desde el orquestador e informe ------------------------------------------
+
+_SUFIJO_SPICE = {"G": "g", "M": "meg", "k": "k", "": "", "m": "m", "µ": "u", "n": "n", "p": "p"}
+
+
+def _spice(x: sp.Expr) -> str:
+    """500000 -> '500k', 1e6 -> '1meg' (en SPICE 'M' es mili), 0.15 -> '150m'."""
+    numero, prefijo = _ingenieria(float(sp.N(x)), 6)
+    return f"{numero}{_SUFIJO_SPICE.get(prefijo, prefijo)}"
+
+
+def netlist_con_valores(netlist: str, valores: dict) -> str:
+    """El netlist con cada `{expresión}` reemplazada por su número, para
+    dibujarlo; lo que siga siendo simbólico queda entre llaves."""
+
+    def reemplazar(m: re.Match) -> str:
+        try:
+            x = _valor(m.group(0)).subs(valores)
+        except RedInvalida:
+            return m.group(0)
+        if x.free_symbols:
+            return m.group(0)
+        if x == sp.oo:
+            return "1e15"  # un abierto se dibuja como una R enorme
+        return _spice(x)
+
+    return re.sub(r"\{[^{}]*\}", reemplazar, netlist)
+
+
+def _lista_a_dict(pares, clave: str, valor: str) -> dict:
+    return {p[clave]: p[valor] for p in pares or [] if p.get(clave)}
+
+
+def spec_desde_outcome(outcome: dict) -> dict:
+    """AnalysisOutcome (listas de pares, cómodas para el structured output)
+    -> el planteamiento que entiende `resolver_planteamiento`."""
+    return {
+        "netlist": outcome["netlist"],
+        "incognitas": outcome.get("incognitas") or [],
+        "escenarios": [
+            {
+                "nombre": e.get("nombre"),
+                "valores": _lista_a_dict(e.get("valores"), "simbolo", "valor"),
+                "mediciones": _lista_a_dict(e.get("mediciones"), "expresion", "valor"),
+            }
+            for e in outcome.get("escenarios") or []
+        ],
+        "preguntas": [
+            {"nombre": p.get("nombre"), "valores": _lista_a_dict(p.get("valores"), "simbolo", "valor"), "calcular": p["calcular"]}
+            for p in outcome.get("preguntas") or []
+            if p.get("calcular")
+        ],
+    }
+
+
+def necesita_motor(outcome: dict) -> bool:
+    """¿El análisis de redes pasivas no alcanza? Sí si hay incógnitas,
+    escenarios o preguntas, símbolos, o elementos que aquel no acepta."""
+    if outcome.get("incognitas") or outcome.get("escenarios") or outcome.get("preguntas"):
+        return True
+    netlist = outcome.get("netlist") or ""
+    if "{" in netlist:
+        return True
+    return any(re.match(r"\s*[EGFHX][A-Za-z0-9_]*\s", linea, re.IGNORECASE) for linea in netlist.splitlines())
+
+
+def _tex(x) -> str:
+    """LaTeX con los símbolos como en un cuaderno: Ri -> R_{i}, vS -> v_{S}."""
+    expr = sp.sympify(x)
+    nombres = {
+        sim: f"{sim.name[0]}_{{{sim.name[1:]}}}"
+        for sim in expr.free_symbols
+        if len(sim.name) > 1 and sim.name[1:].isalnum() and "_" not in sim.name
+    }
+    return sp.latex(expr, symbol_names=nombres)
+
+
+def _num(x) -> str:
+    if isinstance(x, (int, float)):
+        return fmt(x)
+    if isinstance(x, dict):
+        return fmt(complex(x["real"], x["imag"]))
+    return f"${_tex(x)}$" if x is not None else "—"
+
+
+def _tex_expresion(expresion: str) -> str:
+    """`V(o)/V(i)` -> `V_{o}/V_{i}`, `I(RL)` -> `I_{RL}` para LaTeX."""
+    texto = re.sub(r"\bV\(\s*([^,()\s]+)\s*,\s*([^,()\s]+)\s*\)", r"V_{\1\2}", expresion)
+    texto = re.sub(r"\bV\(\s*([^()\s]+)\s*\)", r"V_{\1}", texto)
+    texto = re.sub(r"\bI\(\s*([^()\s]+)\s*\)", r"I_{\1}", texto)
+    # un guión bajo dentro de un nombre de nodo (nodo_in) es texto, no subíndice
+    return re.sub(r"_(?!\{)", r"\\_", texto)
+
+
+def informe_planteamiento(spec: dict, r: dict) -> str:
+    lineas = ["## 1. Planteamiento", "", "```spice", spec["netlist"].strip(), "```", ""]
+    if spec.get("incognitas"):
+        lineas.append("Incógnitas: " + ", ".join(f"${_tex(sp.Symbol(i))}$" for i in spec["incognitas"]) + ".")
+        lineas.append("")
+    if r.get("error"):
+        lineas += ["## 2. No se pudo resolver", "", r["error"] + "."]
+        return "\n".join(lineas)
+
+    seccion = 2
+    if r["escenarios"]:
+        lineas += [f"## {seccion}. Ecuaciones", ""]
+        seccion += 1
+        for e in r["escenarios"]:
+            condiciones = ", ".join(f"{k} = {v}" for k, v in e["valores"].items())
+            lineas.append(f"**{e['nombre']}**" + (f" ({condiciones})" if condiciones else "") + ":")
+            lineas.append("")
+            for fila in e["ecuaciones"]:
+                lineas.append(f"$${_tex(fila['ecuacion'])}$$")
+            lineas.append("")
+
+    if r["incognitas"]:
+        lineas += [f"## {seccion}. Resultado", "", "| Incógnita | Valor |", "|---|---|"]
+        lineas += [f"| ${_tex(sp.Symbol(k))}$ | {_num(v)} |" for k, v in r["incognitas"].items()]
+        lineas.append("")
+        seccion += 1
+
+    if r["preguntas"]:
+        lineas += [f"## {seccion}. Respuestas", ""]
+        seccion += 1
+        for p in r["preguntas"]:
+            condiciones = ", ".join(f"{k} = {v}" for k, v in p["valores"].items())
+            lineas.append(
+                f"- ${_tex_expresion(p['calcular'])}$" + (f" con {condiciones}" if condiciones else "") + f" = **{_num(p['valor'])}**"
+            )
+        lineas.append("")
+
+    v = r["verificacion"]
+    lineas += [f"## {seccion}. Verificación con ngspice", ""]
+    filas = [
+        (e["nombre"], m["expresion"], m["medido"], m["ngspice"], m["coincide"], m["error"])
+        for e in v["escenarios"]
+        for m in e["mediciones"]
+    ] + [
+        (p["nombre"], q["calcular"], q["valor"], p["ngspice"], p["coincide"], p["error"])
+        for p, q in zip(v["preguntas"], r["preguntas"])
+    ]
+    if not filas:
+        lineas.append("No hubo nada que simular.")
+    else:
+        lineas += ["| Caso | Magnitud | Esperado | ngspice | |", "|---|---|---|---|---|"]
+        for caso, magnitud, esperado, simulado, ok, error in filas:
+            simulado_txt = _num(simulado) if simulado is not None else (error or "—")
+            lineas.append(f"| {caso} | ${_tex_expresion(magnitud)}$ | {_num(esperado)} | {simulado_txt} | {'✓' if ok else '✗'} |")
+        lineas.append("")
+        lineas.append(
+            "ngspice reproduce todo con los valores encontrados." if v["coincide"] else "ngspice **no** reproduce todo: revisar el planteamiento."
+        )
+    return "\n".join(lineas)
+
+
+def analizar_planteamiento(outcome: dict) -> dict:
+    """Mismo contrato que `informe.analizar`, para el nodo analisis."""
+    spec = spec_desde_outcome(outcome)
+    if not spec["incognitas"] and not spec["preguntas"]:
+        # "find vN, vP y vO": sin preguntas explícitas, todas las tensiones de nodo
+        try:
+            circuito = leer_circuito(spec["netlist"])
+        except RedInvalida as exc:
+            return {"error": str(exc), "informe": f"No se pudo leer la red: {exc}", "resultados": {}, "netlist": None, "netlist_zeq": None}
+        nodos: list[str] = []
+        for c in circuito:
+            for n in c.nodos:
+                if n != "0" and n not in nodos:
+                    nodos.append(n)
+        spec["preguntas"] = [{"nombre": f"V({n})", "valores": {}, "calcular": f"V({n})"} for n in nodos]
+    r = resolver_planteamiento(spec)
+    informe = informe_planteamiento(spec, r)
+    if r["error"]:
+        return {"error": r["error"], "informe": informe, "resultados": {}, "netlist": None, "netlist_zeq": None, "formato": "markdown"}
+    valores = {sp.Symbol(k): sp.nsimplify(v, rational=True) for k, v in r["incognitas"].items() if isinstance(v, float)}
+    primero = (spec["escenarios"] or spec["preguntas"] or [{}])[0]
+    for k, v in (primero.get("valores") or {}).items():
+        valores[sp.Symbol(k)] = _cantidad(v)
+    return {
+        "error": None,
+        "informe": informe,
+        "resultados": {
+            "validacion": {"coincide": r["verificacion"]["coincide"], "error": None},
+            "planteamiento": {
+                "incognitas": r["incognitas"],
+                "preguntas": [{"calcular": p["calcular"], "valor": p["valor"]} for p in r["preguntas"]],
+            },
+        },
+        "netlist": netlist_con_valores(spec["netlist"], valores),
+        "netlist_zeq": None,
+        "formato": "markdown",
+    }

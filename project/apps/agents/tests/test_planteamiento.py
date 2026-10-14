@@ -112,3 +112,66 @@ def test_diseno_por_ecuaciones_con_potenciometro():
 def test_una_expresion_que_no_existe_es_un_error_claro():
     r = resolver_planteamiento({**P1_4, "escenarios": [{"valores": {"vS": 0.15, "RL": 40}, "mediciones": {"V(zz)": 1}}]})
     assert "V(zz)" in r["error"]
+
+
+# --- en el nodo analisis, con la forma que entrega el schema del orquestador -----------
+
+from agents.analisis.node import analisis_node  # noqa: E402
+
+
+def _como_schema(spec: dict) -> dict:
+    """El planteamiento con listas de pares, como lo produce AnalysisOutcome."""
+    pares = lambda d, k, v: [{k: a, v: str(b)} for a, b in (d or {}).items()]  # noqa: E731
+    return {
+        "mode": "analysis",
+        "netlist": spec["netlist"],
+        "metodo": "completo",
+        "terminales": None,
+        "frecuencia_hz": None,
+        "incognitas": spec.get("incognitas"),
+        "escenarios": [
+            {"nombre": e.get("nombre"), "valores": pares(e.get("valores"), "simbolo", "valor"), "mediciones": pares(e.get("mediciones"), "expresion", "valor")}
+            for e in spec.get("escenarios") or []
+        ],
+        "preguntas": [
+            {"nombre": p.get("nombre"), "valores": pares(p.get("valores"), "simbolo", "valor"), "calcular": p["calcular"]}
+            for p in spec.get("preguntas") or []
+        ],
+    }
+
+
+def test_el_nodo_analisis_resuelve_un_planteamiento_y_lo_explica():
+    actualizacion = analisis_node({"outcome": _como_schema(P1_4)})
+    outcome = actualizacion["outcome"]
+
+    assert outcome["error"] is None
+    assert outcome["formato"] == "markdown"
+    assert outcome["resultados"]["validacion"]["coincide"] is True
+    informe = outcome["informe"]
+    assert "## " in informe and "$$" in informe  # secciones y ecuaciones
+    assert "500" in informe and "2.024" in informe and "400" in informe
+    assert "168.7" in informe
+    # el artefacto es el circuito con los valores encontrados, dibujable
+    texto = actualizacion["netlists"]["analisis"]["text"]
+    assert "{" not in texto
+    assert "RI i 0 500k" in texto
+
+
+def test_un_circuito_con_op_amp_sin_preguntas_da_las_tensiones_de_nodo():
+    # P1.15: "find vN, vP y vO" — sin incógnitas ni preguntas explícitas.
+    outcome = {
+        "mode": "analysis",
+        "netlist": "R1 n 0 10k\nV4 o n 4\nX1 p n o OPAMP\nR3 p 0 30k\nR2 p o 20k\n",
+        "metodo": "completo", "terminales": None, "frecuencia_hz": None,
+    }
+    resultado = analisis_node({"outcome": outcome})["outcome"]
+    assert resultado["error"] is None
+    assert resultado["resultados"]["validacion"]["coincide"] is True
+    assert "V(o)" in resultado["informe"] and "10" in resultado["informe"]
+
+
+def test_una_red_pasiva_sigue_por_el_analisis_de_siempre():
+    outcome = {"mode": "analysis", "netlist": "V1 a 0 10\nR1 a b 1k\nR2 b 0 1k\n", "metodo": "nodos", "terminales": None, "frecuencia_hz": None}
+    resultado = analisis_node({"outcome": outcome})["outcome"]
+    assert resultado.get("formato") != "markdown"
+    assert "MÉTODO DE NODOS" in resultado["informe"]
