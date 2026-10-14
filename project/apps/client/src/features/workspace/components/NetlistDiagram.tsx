@@ -35,11 +35,16 @@ const LEGEND_ITEMS = [
 ] as const
 
 function ResistorZigzag({ x1, x2, y }: { x1: number; x2: number; y: number }) {
-  const lead = 20
+  // Cuerpo fijo y centrado, igual que ResistorV: el tramo entre nodos lo
+  // cubre el cable. Estirar el zigzag a todo el ancho dejaba resistencias de
+  // casi 200 px entre nodos lejanos. Solo se encoge si el tramo no alcanza.
+  const minLead = 8
   const amp = 9
   const segs = 6
-  const zx1 = x1 + lead
-  const zx2 = x2 - lead
+  const bodyW = Math.min(segs * 9, x2 - x1 - 2 * minLead)
+  const mx = (x1 + x2) / 2
+  const zx1 = mx - bodyW / 2
+  const zx2 = mx + bodyW / 2
   const step = (zx2 - zx1) / segs
   const points: string[] = [`${zx1},${y}`]
   for (let i = 1; i < segs; i++) points.push(`${zx1 + i * step},${y + (i % 2 ? -amp : amp)}`)
