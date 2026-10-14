@@ -92,7 +92,7 @@ export function toConversationSummary(
   };
 }
 
-import type { ExecutionStage } from "./workspace.runner";
+import { type ExecutionStage, toAnalysisStages } from "./workspace.runner";
 
 export function deriveExecutionMode(
   latestExecution: ExecutionRow | undefined,
@@ -290,7 +290,11 @@ export function toConversationDetail(
         status: latestExecution?.status ?? ("failed" as const),
         summary: latestExecution?.summary ?? MISSING_EXECUTION_SUMMARY,
         mode,
-        stages: mode === "chat" || mode === "clarify" ? [] : (stages ?? deriveExecutionStages(latestExecution, artifacts)),
+        stages: (() => {
+          if (mode === "chat" || mode === "clarify") return [];
+          const all = stages ?? deriveExecutionStages(latestExecution, artifacts);
+          return mode === "analysis" ? toAnalysisStages(all) : all;
+        })(),
         simResults: (verdict?.sim_results as Record<string, any> | undefined) ?? null,
       };
     })(),

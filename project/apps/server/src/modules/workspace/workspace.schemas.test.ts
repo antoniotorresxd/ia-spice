@@ -231,4 +231,46 @@ describe("toConversationDetail", () => {
     const detail = toConversationDetail(conversationRow, messageRows, [], clarifyExec);
     expect(detail.execution.mode).toBe("clarify");
   });
+
+  const storedStage = (kind: string, status: string, durationMs: number | null) => ({
+    id: `exec-1-${kind}`,
+    kind,
+    label: kind,
+    actor: kind,
+    status,
+    durationMs,
+    summary: "",
+    metrics: [],
+  });
+
+  test("un análisis guardado con las cinco etapas de diseño muestra solo las tres que corrieron", () => {
+    // Así quedaban guardados los análisis: curación y documentación pendientes
+    // para siempre, como si la corrida se hubiera quedado en la simulación.
+    const analysisExec = {
+      ...executionRow,
+      verdict: {
+        mode: "analysis",
+        stages: [
+          storedStage("interpretation", "completed", 900),
+          storedStage("calculation", "completed", 40),
+          storedStage("simulation", "completed", null),
+          storedStage("curation", "pending", null),
+          storedStage("result", "pending", null),
+        ],
+      },
+    };
+    const detail = toConversationDetail(conversationRow, messageRows, [artifactRow], analysisExec);
+
+    expect(detail.execution.mode).toBe("analysis");
+    expect(detail.execution.stages.map((s) => s.kind)).toEqual(["interpretation", "calculation", "simulation"]);
+    expect(detail.execution.stages.every((s) => s.status === "completed")).toBe(true);
+    expect(detail.execution.stages[2]!.label).toBe("Verificación");
+  });
+
+  test("un análisis sin etapas guardadas tampoco inventa curación ni documentación", () => {
+    const analysisExec = { ...executionRow, verdict: { mode: "analysis" } };
+    const detail = toConversationDetail(conversationRow, messageRows, [artifactRow], analysisExec);
+
+    expect(detail.execution.stages.map((s) => s.kind)).toEqual(["interpretation", "calculation", "simulation"]);
+  });
 });

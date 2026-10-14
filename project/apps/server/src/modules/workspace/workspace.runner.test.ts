@@ -2,9 +2,11 @@ import { describe, expect, test } from "bun:test";
 
 import {
   type AgentsRunResult,
+  type ExecutionStage,
   mapVerdictToStatus,
   resolveRunOutcome,
   startRun,
+  toAnalysisStages,
   toArtifactDrafts,
   toAssistantMessage,
   type RunSink,
@@ -378,6 +380,34 @@ describe("resolveRunOutcome en modo análisis", () => {
     expect(outcome.summary).toContain("no confirmó");
   });
 
+  test("con Z_eq verificada el resumen dice qué confirmó ngspice", () => {
+    const outcome = resolveRunOutcome({
+      ...analysis,
+      outcome: {
+        mode: "analysis",
+        informe: "x",
+        error: null,
+        resultados: {
+          validacion: {
+            coincide: true,
+            sin_corriente: true,
+            zeq: { terminales: ["nodo_in", "nodo_out"], coincide: true, error: null },
+          },
+        },
+      },
+    });
+    expect(outcome.summary).toBe("Red analizada; ngspice confirma la Z_eq entre nodo_in y nodo_out.");
+  });
+
+  test("una red sin corriente y sin Z_eq que verificar no se da por confirmada", () => {
+    const outcome = resolveRunOutcome({
+      ...analysis,
+      outcome: { mode: "analysis", informe: "x", error: null, resultados: { validacion: { coincide: false, sin_corriente: true } } },
+    });
+    expect(outcome.status).toBe("completed");
+    expect(outcome.summary).toContain("no circula corriente");
+  });
+
   test("una red ilegible es un análisis fallido", () => {
     const outcome = resolveRunOutcome({
       ...analysis,
@@ -387,5 +417,62 @@ describe("resolveRunOutcome en modo análisis", () => {
     expect(outcome.status).toBe("failed");
     expect(outcome.summary).toContain("solo se analizan");
     expect(outcome.assistantMessage).toBe("No se pudo leer la red: Q1");
+  });
+});
+
+const stage = (kind: ExecutionStage["kind"], overrides: Partial<ExecutionStage> = {}): ExecutionStage => ({
+  id: `exec-1-${kind}`,
+  kind,
+  label: kind,
+  actor: kind,
+  status: "pending",
+  durationMs: null,
+  summary: "",
+  metrics: [],
+  ...overrides,
+});
+
+describe("toAnalysisStages", () => {
+  test("deja solo interpretación, cálculo y verificación, en ese orden", () => {
+    const stages = toAnalysisStages([
+      stage("interpretation", { status: "completed", durationMs: 300 }),
+      stage("calculation", { status: "completed", durationMs: 50 }),
+      stage("simulation", { label: "Simulación", actor: "Simulación", status: "completed", durationMs: 50 }),
+      stage("curation"),
+      stage("result"),
+    ]);
+
+    expect(stages.map((s) => s.kind)).toEqual(["interpretation", "calculation", "simulation"]);
+    // en un análisis ngspice no diseña: verifica lo que resolvieron las ecuaciones
+    expect(stages[2]!.label).toBe("Verificación");
+    expect(stages[2]!.actor).toBe("ngspice");
+    expect(stages[2]!.durationMs).toBe(50);
+  });
+
+  test("no inventa etapas que no llegaron", () => {
+    expect(toAnalysisStages([stage("interpretation")]).map((s) => s.kind)).toEqual(["interpretation"]);
+  });
+});
+
+describe("startRun con el evento de modo", () => {
+  test("avisa al sumidero cuando agents decide que la corrida es un análisis", async () => {
+    const sseBody = [
+      'event: mode\ndata: {"mode":"analysis"}\n\n',
+      `event: done\ndata: ${JSON.stringify(accepted)}\n\n`,
+    ].join("");
+    const fakeFetch = async () =>
+      new Response(sseBody, { status: 200, headers: { "content-type": "text/event-stream" } });
+
+    const modes: string[] = [];
+    const { sink, results } = recordingSink();
+
+    await startRun(
+      { userId: "user-1", requestText: "analiza esta red", executionId: "exec-1" },
+      { ...sink, onModeDetected: (mode) => { modes.push(mode); } },
+      fakeFetch as unknown as typeof fetch,
+    );
+
+    expect(modes).toEqual(["analysis"]);
+    expect(results).toEqual([accepted]);
   });
 });

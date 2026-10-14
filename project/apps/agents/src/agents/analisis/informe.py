@@ -6,7 +6,7 @@ from agents.analisis.ecuaciones import Solucion, analisis_mallas, analisis_nodal
 from agents.analisis.red import TIERRA, RedInvalida, fmt, leer_red, preparar_dc
 from agents.analisis.reduccion import reducir
 from agents.analisis.thevenin import thevenin
-from agents.analisis.validacion import resolver_con_ngspice
+from agents.analisis.validacion import impedancia_con_ngspice, resolver_con_ngspice
 
 METODOS = ("nodos", "mallas", "reduccion", "thevenin")
 
@@ -56,6 +56,8 @@ def analizar(spec: dict) -> dict:
     resultados: dict = {"regimen": "ac" if frecuencia else "dc"}
     errores: list[str] = []
     referencia: Solucion | None = None
+    # (a, b, Z) que dio la reducción o Thévenin: lo que ngspice debe confirmar.
+    zeq: tuple[str, str, sp.Expr] | None = None
 
     if "nodos" in metodos or "mallas" in metodos:
         try:
@@ -106,6 +108,7 @@ def analizar(spec: dict) -> dict:
             lineas += [f"  {k + 1}. {paso}" for k, paso in enumerate(reduccion.pasos)]
             lineas += [f"  Z_eq({a}, {b}) = {fmt(reduccion.equivalente, 'Ω')}", ""]
             resultados["reduccion"] = {"terminales": [a, b], "equivalente": _numero(reduccion.equivalente)}
+            zeq = (a, b, reduccion.equivalente)
 
     if terminales and "thevenin" in metodos:
         a, b = terminales
@@ -131,6 +134,7 @@ def analizar(spec: dict) -> dict:
                 "zth": _numero(th.zth),
                 "in": _numero(th.norton) if th.norton is not None else None,
             }
+            zeq = (a, b, th.zth)
 
     netlist_ngspice, tensiones_ngspice, error_ngspice = resolver_con_ngspice(red, frecuencia)
     resultados["validacion"] = {"error": error_ngspice}
@@ -139,23 +143,71 @@ def analizar(spec: dict) -> dict:
             referencia = analisis_nodal(red, frecuencia)
         except RedInvalida:
             referencia = None
+    # Cada verificación que sí prueba algo suma una condición; si ninguna
+    # aplica, el análisis no queda confirmado.
+    pruebas: list[bool] = []
     if error_ngspice:
         lineas.append(f"VERIFICACIÓN CON NGSPICE: no se pudo simular ({error_ngspice}).")
     elif referencia is not None and tensiones_ngspice is not None:
-        coinciden = _coinciden(referencia.tensiones, tensiones_ngspice)
-        resultados["validacion"]["coincide"] = coinciden
-        lineas.append(
-            "VERIFICACIÓN CON NGSPICE: "
-            + ("las tensiones de nodo coinciden con el análisis." if coinciden else "NO coinciden; revisar la transcripción de la red.")
-        )
-        for n, v in tensiones_ngspice.items():
-            lineas.append(f"  V({n}) ngspice = {fmt(v if v.imag else v.real, 'V')}")
+        # Sin corriente en ninguna rama, todas las tensiones son triviales
+        # (iguales a la fuente o a cero) y coincidirían con cualquier análisis.
+        sin_corriente = all(abs(_complejo(i)) < 1e-12 for i in referencia.corrientes.values())
+        resultados["validacion"]["sin_corriente"] = sin_corriente
+        if sin_corriente:
+            lineas.append(
+                "VERIFICACIÓN DE TENSIONES CON NGSPICE: no concluyente — en la red tal como se "
+                "transcribió no circula corriente (¿un terminal quedó al aire?), así que las "
+                "tensiones de nodo no prueban nada."
+            )
+        else:
+            coinciden = _coinciden(referencia.tensiones, tensiones_ngspice)
+            resultados["validacion"]["tensiones_coinciden"] = coinciden
+            pruebas.append(coinciden)
+            lineas.append(
+                "VERIFICACIÓN DE TENSIONES CON NGSPICE: "
+                + ("las tensiones de nodo coinciden con el análisis." if coinciden else "NO coinciden; revisar la transcripción de la red.")
+            )
+            for n, v in tensiones_ngspice.items():
+                lineas.append(f"  V({n}) ngspice = {fmt(v if v.imag else v.real, 'V')}")
+
+    netlist_zeq = None
+    if zeq is not None:
+        a, b, z_analisis = zeq
+        netlist_zeq, z_ngspice, error_zeq = impedancia_con_ngspice(red, a, b, frecuencia)
+        lineas += [
+            "",
+            f"VERIFICACIÓN DE Z_eq CON NGSPICE: fuente de prueba de 1 V entre {a} y {b}, "
+            "fuentes independientes anuladas, Z = 1 V / I.",
+        ]
+        if error_zeq or z_ngspice is None:
+            lineas.append(f"  No se pudo medir: {error_zeq}.")
+            resultados["validacion"]["zeq"] = {"error": error_zeq, "coincide": False}
+            pruebas.append(False)
+        else:
+            esperado = _complejo(z_analisis)
+            coincide_zeq = abs(z_ngspice - esperado) <= _TOLERANCIA_VALIDACION * max(1.0, abs(esperado))
+            pruebas.append(coincide_zeq)
+            resultados["validacion"]["zeq"] = {
+                "terminales": [a, b],
+                "ngspice": _numero(z_ngspice),
+                "analisis": _numero(z_analisis),
+                "coincide": coincide_zeq,
+                "error": None,
+            }
+            lineas += [
+                f"  I = {fmt(1 / z_ngspice, 'A')}  →  Z_eq ngspice = {fmt(z_ngspice, 'Ω')}",
+                f"  Z_eq análisis = {fmt(z_analisis, 'Ω')}: "
+                + ("coincide." if coincide_zeq else "NO coincide; revisar la reducción o la transcripción."),
+            ]
+
+    resultados["validacion"]["coincide"] = bool(pruebas) and all(pruebas)
 
     return {
         "error": "; ".join(errores) or None,
         "informe": "\n".join(lineas).rstrip(),
         "resultados": resultados,
         "netlist": netlist_ngspice,
+        "netlist_zeq": netlist_zeq,
     }
 
 

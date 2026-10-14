@@ -74,3 +74,80 @@ def test_runs_stream_emite_etapas_y_done():
     done_event = next(e[1] for e in events if e[0] == "done")
     assert done_event["verdict"]["status"] == "accepted"
     assert "block-1" in done_event["netlists"]
+
+
+def _parse_sse(text: str) -> list[tuple[str, dict]]:
+    events = []
+    current_event = None
+    for line in text.strip().split("\n"):
+        if line.startswith("event: "):
+            current_event = line.replace("event: ", "").strip()
+        elif line.startswith("data: ") and current_event:
+            events.append((current_event, json.loads(line.replace("data: ", "").strip())))
+            current_event = None
+    return events
+
+
+class _GrafoDeAnalisis:
+    """Grafo falso que reproduce las actualizaciones de una corrida en modo
+    análisis: el stream se prueba sin LLM (el modo lo decide el orquestador
+    a partir de texto libre)."""
+
+    def __init__(self, coincide: bool = True):
+        self._coincide = coincide
+        self._outcome = {
+            "mode": "analysis",
+            "informe": "ANÁLISIS DE LA RED",
+            "error": None,
+            "resultados": {"nodos": {"a": 5.0}, "validacion": {"coincide": coincide, "error": None}},
+        }
+
+    def stream(self, initial_state, config=None, stream_mode=None):
+        yield {"orquestador": {"outcome": {"mode": "analysis", "netlist": "R1 a 0 1k"}}}
+        yield {"analisis": {"outcome": self._outcome}}
+
+    def get_state(self, config):
+        class _Snapshot:
+            values = {"outcome": self._outcome, "verdict": None}
+
+        return _Snapshot()
+
+
+def test_runs_stream_en_modo_analisis_solo_emite_sus_tres_etapas(monkeypatch):
+    monkeypatch.setattr("agents.api._graph", lambda: _GrafoDeAnalisis())
+    response = client.post(
+        "/runs",
+        json={"user_id": "user-1", "request_text": "analiza esta red"},
+        headers={"Authorization": f"Bearer {TOKEN}", "Accept": "text/event-stream"},
+    )
+    assert response.status_code == 200
+    events = _parse_sse(response.text)
+
+    # El server necesita saber cuanto antes que no habrá curación ni
+    # documentación, para no dejarlas pendientes en el timeline.
+    assert ("mode", {"mode": "analysis"}) in events
+
+    stages = [data for name, data in events if name == "stage"]
+    assert {s["kind"] for s in stages} == {"interpretation", "calculation", "simulation"}
+
+    # Cada etapa terminada lleva su duración, también la verificación.
+    finales = {s["kind"]: s for s in stages if s["status"] != "active"}
+    assert set(finales) == {"interpretation", "calculation", "simulation"}
+    for s in finales.values():
+        assert s["status"] == "completed"
+        assert isinstance(s["durationMs"], int)
+
+    verificacion = finales["simulation"]
+    assert verificacion["label"] == "Verificación"
+    assert verificacion["actor"] == "ngspice"
+
+
+def test_el_resumen_de_la_verificacion_dice_que_confirmo_ngspice():
+    from agents.api import _resumen_verificacion
+
+    zeq_ok = {"terminales": ["nodo_in", "nodo_out"], "coincide": True, "error": None}
+    assert "Z_eq entre nodo_in y nodo_out" in _resumen_verificacion({"coincide": True, "sin_corriente": True, "zeq": zeq_ok})
+    assert _resumen_verificacion({"coincide": True}) == "ngspice confirma las tensiones de nodo."
+    assert "otra Z_eq" in _resumen_verificacion({"coincide": False, "zeq": {**zeq_ok, "coincide": False}})
+    assert "No concluyente" in _resumen_verificacion({"coincide": False, "sin_corriente": True})
+    assert "abierta" in _resumen_verificacion({"coincide": False, "zeq": {"coincide": False, "error": "la red está abierta"}})

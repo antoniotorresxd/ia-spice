@@ -15,6 +15,7 @@ import {
 import { composeRequestText } from "./workspace.context";
 import {
   resolveRunOutcome,
+  toAnalysisStages,
   type AgentsRunResult,
   type ExecutionStage,
   type RunSink,
@@ -524,12 +525,24 @@ export function makeDbSink(conversationId: string, executionId: string, previous
       });
     },
 
+    // Con el modo análisis ya decidido, curación y documentación no van a
+    // llegar: se quitan antes de que el timeline las muestre pendientes.
+    onModeDetected(mode) {
+      const active = activeExecutions.get(executionId);
+      if (active && mode === "analysis") {
+        active.stages = toAnalysisStages(active.stages);
+      }
+    },
+
     async onResult(result: AgentsRunResult) {
       const active = activeExecutions.get(executionId);
-      const finalStages = active ? [...active.stages] : undefined;
-      activeExecutions.delete(executionId);
-
       const outcome = resolveRunOutcome(result, previousNormalizedSpec);
+      const finalStages = active
+        ? outcome.mode === "analysis"
+          ? toAnalysisStages(active.stages)
+          : [...active.stages]
+        : undefined;
+      activeExecutions.delete(executionId);
 
       await db.insert(message).values({
         conversationId,
