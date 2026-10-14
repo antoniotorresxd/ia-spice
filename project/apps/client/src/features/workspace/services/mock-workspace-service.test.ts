@@ -152,3 +152,17 @@ describe('createMockWorkspaceService', () => {
     }
   })
 })
+
+describe('imágenes adjuntas (mock)', () => {
+  it('el mensaje del usuario conserva sus imágenes al crear y al continuar', async () => {
+    const service = createMockWorkspaceService()
+    const attachments = [{ mediaType: 'image/png' as const, data: 'iVBORw0KGgo=' }]
+
+    const created = await service.submitRequest('resuelve la Fig. P2.7', attachments)
+    expect(created.messages[0].attachments).toEqual(attachments)
+
+    const continued = await service.continueConversation(created.id, 'otra figura', attachments)
+    const lastUser = continued.messages.filter((message) => message.role === 'user').at(-1)
+    expect(lastUser?.attachments).toEqual(attachments)
+  })
+})

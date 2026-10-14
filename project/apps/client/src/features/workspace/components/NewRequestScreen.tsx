@@ -2,7 +2,10 @@ import { Plus, Send, Sparkles } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { MAX_IMAGES } from '../model/image-attachments'
+import { useImageAttachments } from '../model/use-image-attachments'
 import type { WorkspaceService } from '../services/workspace-service'
+import { AttachImageButton, AttachmentPreviews } from './ImageAttachments'
 import styles from './NewRequestScreen.module.css'
 
 type NewRequestScreenProps = {
@@ -20,6 +23,7 @@ export function NewRequestScreen({ service }: NewRequestScreenProps) {
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const images = useImageAttachments()
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -34,7 +38,10 @@ export function NewRequestScreen({ service }: NewRequestScreenProps) {
     setIsSubmitting(true)
 
     try {
-      const conversation = await service.submitRequest(normalizedText)
+      // Sin imágenes la llamada queda como siempre, con un solo argumento.
+      const conversation = images.attachments.length
+        ? await service.submitRequest(normalizedText, images.attachments)
+        : await service.submitRequest(normalizedText)
       navigate(`/conversations/${conversation.id}`)
     } catch {
       setError('No pudimos iniciar la solicitud. Inténtalo de nuevo.')
@@ -56,7 +63,12 @@ export function NewRequestScreen({ service }: NewRequestScreenProps) {
           <p>Describe el circuito, restricciones o resultado que necesitas.</p>
         </header>
 
-        <form className={styles.composer} onSubmit={handleSubmit}>
+        <form
+          className={styles.composer}
+          data-dragging={images.isDragging ? 'true' : undefined}
+          onSubmit={handleSubmit}
+          {...images.dropHandlers}
+        >
           <label className={styles.srOnly} htmlFor="new-request-prompt">
             Describe qué quieres diseñar
           </label>
@@ -65,14 +77,28 @@ export function NewRequestScreen({ service }: NewRequestScreenProps) {
             disabled={isSubmitting}
             id="new-request-prompt"
             onChange={(event) => setText(event.target.value)}
+            onPaste={images.onPaste}
             placeholder="Diseña un filtro pasa bajas de 1 kHz alimentado a 5 V…"
             rows={5}
             value={text}
+          />
+          <AttachmentPreviews
+            attachments={images.attachments}
+            disabled={isSubmitting}
+            onRemove={images.remove}
           />
           <div className={styles.tools}>
             <button className={styles.context} disabled={isSubmitting} type="button">
               <Plus aria-hidden="true" size={15} /> Contexto
             </button>
+            <AttachImageButton
+              className={styles.context}
+              disabled={isSubmitting}
+              full={images.attachments.length >= MAX_IMAGES}
+              onFiles={(files) => void images.addFiles(files)}
+            >
+              Imagen
+            </AttachImageButton>
             <span className={styles.mode}>
               <Sparkles aria-hidden="true" size={14} /> Automático
             </span>
@@ -86,6 +112,10 @@ export function NewRequestScreen({ service }: NewRequestScreenProps) {
         {error ? (
           <p className={styles.error} id="new-request-error" role="alert">
             {error}
+          </p>
+        ) : images.error ? (
+          <p className={styles.error} role="alert">
+            {images.error}
           </p>
         ) : null}
 

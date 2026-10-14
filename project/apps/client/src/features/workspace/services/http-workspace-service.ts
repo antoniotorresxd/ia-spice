@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../../../lib/api-base'
 import type {
+  MessageAttachment,
   ProjectInput,
   TraceResponse,
   WorkspaceConversation,
@@ -34,6 +35,11 @@ function getCuratorParamsPayload(): { maxIterations?: number; tolerance?: number
     // localStorage might not be available or accessible
   }
   return payload
+}
+
+// Sin imágenes el cuerpo queda como siempre: la clave solo aparece si hay alguna.
+function attachmentsPayload(attachments: MessageAttachment[] | undefined) {
+  return attachments?.length ? { attachments } : {}
 }
 
 export function createHttpWorkspaceService(options: Options = {}): WorkspaceService {
@@ -147,23 +153,26 @@ export function createHttpWorkspaceService(options: Options = {}): WorkspaceServ
       })
     },
 
-    async submitRequest(text): Promise<WorkspaceConversationDetail> {
+    async submitRequest(text, attachments): Promise<WorkspaceConversationDetail> {
       cache.invalidate('workspace:snapshot')
       cache.invalidate('workspace:files')
       const curatorParams = getCuratorParamsPayload()
       return request<WorkspaceConversationDetail>('/api/workspace/conversations', {
         method: 'POST',
-        body: JSON.stringify({ text: text.trim(), ...curatorParams }),
+        body: JSON.stringify({ text: text.trim(), ...curatorParams, ...attachmentsPayload(attachments) }),
       })
     },
 
-    async continueConversation(conversationId, text): Promise<WorkspaceConversationDetail> {
+    async continueConversation(conversationId, text, attachments): Promise<WorkspaceConversationDetail> {
       cache.invalidate(`workspace:conversation:${conversationId}`)
       cache.invalidate('workspace:files')
       const curatorParams = getCuratorParamsPayload()
       return request<WorkspaceConversationDetail>(
         `/api/workspace/conversations/${conversationId}/messages`,
-        { method: 'POST', body: JSON.stringify({ text: text.trim(), ...curatorParams }) },
+        {
+          method: 'POST',
+          body: JSON.stringify({ text: text.trim(), ...curatorParams, ...attachmentsPayload(attachments) }),
+        },
       )
     },
 

@@ -1,7 +1,7 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
-import { afterEach, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createMockWorkspaceService } from '../services/mock-workspace-service'
 import type { WorkspaceService } from '../services/workspace-service'
@@ -101,4 +101,64 @@ it('uses an example prompt without submitting it', async () => {
 
   expect(screen.getByRole('textbox')).toHaveValue('Diseña un filtro RC pasa bajas de 1 kHz')
   expect(service.submitRequest).not.toHaveBeenCalled()
+})
+
+describe('imágenes adjuntas', () => {
+  const figura = () => new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])], 'fig-p2-7.png', { type: 'image/png' })
+
+  it('adjunta una imagen con el selector, la muestra y la manda con la solicitud', async () => {
+    const service = createMockWorkspaceService()
+    service.submitRequest = vi.fn().mockResolvedValue({ id: 'conversation-new' })
+    const { user } = renderScreen(service)
+
+    await user.upload(screen.getByLabelText('Adjuntar imagen'), figura())
+    expect(await screen.findByRole('img', { name: 'Imagen adjunta 1' })).toBeVisible()
+
+    await user.type(screen.getByRole('textbox'), 'Resuelve la Fig. P2.7')
+    await user.click(screen.getByRole('button', { name: 'Enviar solicitud' }))
+
+    expect(service.submitRequest).toHaveBeenCalledWith('Resuelve la Fig. P2.7', [
+      { mediaType: 'image/png', data: 'iVBORw0KGgo=' },
+    ])
+  })
+
+  it('quita una imagen antes de enviar', async () => {
+    const service = createMockWorkspaceService()
+    service.submitRequest = vi.fn().mockResolvedValue({ id: 'conversation-new' })
+    const { user } = renderScreen(service)
+
+    await user.upload(screen.getByLabelText('Adjuntar imagen'), figura())
+    await user.click(await screen.findByRole('button', { name: 'Quitar imagen 1' }))
+    expect(screen.queryByRole('img', { name: 'Imagen adjunta 1' })).not.toBeInTheDocument()
+
+    await user.type(screen.getByRole('textbox'), 'Sin figura')
+    await user.click(screen.getByRole('button', { name: 'Enviar solicitud' }))
+    expect(service.submitRequest).toHaveBeenCalledWith('Sin figura')
+  })
+
+  it('acepta una imagen pegada y otra arrastrada', async () => {
+    renderScreen()
+    const textbox = screen.getByRole('textbox')
+
+    fireEvent.paste(textbox, { clipboardData: { files: [figura()], items: [], types: ['Files'] } })
+    expect(await screen.findByRole('img', { name: 'Imagen adjunta 1' })).toBeVisible()
+
+    fireEvent.drop(textbox.closest('form')!, { dataTransfer: { files: [figura()], types: ['Files'] } })
+    expect(await screen.findByRole('img', { name: 'Imagen adjunta 2' })).toBeVisible()
+  })
+
+  it('rechaza formatos no admitidos y más de tres imágenes con un aviso', async () => {
+    renderScreen()
+    const textbox = screen.getByRole('textbox')
+
+    const gif = new File([new Uint8Array([1])], 'anim.gif', { type: 'image/gif' })
+    fireEvent.paste(textbox, { clipboardData: { files: [gif], items: [], types: ['Files'] } })
+    expect(await screen.findByRole('alert')).toHaveTextContent('anim.gif')
+
+    fireEvent.paste(textbox, {
+      clipboardData: { files: [figura(), figura(), figura(), figura()], items: [], types: ['Files'] },
+    })
+    await waitFor(() => expect(screen.getAllByRole('img', { name: /Imagen adjunta/ })).toHaveLength(3))
+    expect(screen.getByRole('alert')).toHaveTextContent('3 imágenes')
+  })
 })

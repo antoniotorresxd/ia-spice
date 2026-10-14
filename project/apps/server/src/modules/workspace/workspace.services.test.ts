@@ -113,6 +113,19 @@ describe("conversaciones (db)", () => {
     expect(detail!.files).toEqual([]);
   });
 
+  t("las imágenes adjuntas quedan con el mensaje y vuelven en el detalle", async () => {
+    const attachments = [{ mediaType: "image/png" as const, data: "iVBORw0KGgo=" }];
+    const created = await createConversationWithRequest(TEST_USER_ID, "resuelve la Fig. P2.7", attachments);
+    createdConversationIds.push(created.conversation.id);
+
+    const followUp = await appendUserMessage(TEST_USER_ID, created.conversation.id, "y sin figura");
+    expect(followUp).not.toBeNull();
+
+    const detail = await getConversationDetail(TEST_USER_ID, created.conversation.id);
+    expect(detail!.messages[0]!.attachments).toEqual(attachments);
+    expect(detail!.messages[1]!.attachments).toEqual([]);
+  });
+
   t("un seguimiento añade mensaje y abre una ejecución nueva con el contexto", async () => {
     const created = await createConversationWithRequest(TEST_USER_ID, "un divisor de 12V a 5V");
     createdConversationIds.push(created.conversation.id);

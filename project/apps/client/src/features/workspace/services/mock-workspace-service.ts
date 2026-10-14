@@ -139,7 +139,7 @@ export function createMockWorkspaceService(): WorkspaceService {
         conversations: project.conversationIds.map((id) => summary(getConversationRecord(id))),
       })
     },
-    async submitRequest(text) {
+    async submitRequest(text, attachments) {
       const id = `conversation-created-${conversationSequence++}`
       const created: WorkspaceConversationDetail = {
         id,
@@ -149,7 +149,13 @@ export function createMockWorkspaceService(): WorkspaceService {
         updatedAt: '2026-07-15T12:00:00.000Z',
         executionStatus: 'active',
         messages: [
-          { id: `${id}-message-1`, role: 'user', content: text, createdAt: '2026-07-15T12:00:00.000Z' },
+          {
+            id: `${id}-message-1`,
+            role: 'user',
+            content: text,
+            ...(attachments?.length ? { attachments } : {}),
+            createdAt: '2026-07-15T12:00:00.000Z',
+          },
         ],
         files: [],
         execution: { id: `${id}-execution`, status: 'active', summary: 'Pensando...' },
@@ -158,11 +164,17 @@ export function createMockWorkspaceService(): WorkspaceService {
       awaitingCompletion.add(id)
       return clone(created)
     },
-    async continueConversation(conversationId, text) {
+    async continueConversation(conversationId, text, attachments) {
       const conversation = getConversationRecord(conversationId)
       const next = conversation.messages.length + 1
       conversation.messages.push(
-        { id: `${conversationId}-message-${next}`, role: 'user', content: text, createdAt: '2026-07-15T12:01:00.000Z' },
+        {
+          id: `${conversationId}-message-${next}`,
+          role: 'user',
+          content: text,
+          ...(attachments?.length ? { attachments } : {}),
+          createdAt: '2026-07-15T12:01:00.000Z',
+        },
         { id: `${conversationId}-message-${next + 1}`, role: 'assistant', content: 'Incorporé la nueva indicación.', createdAt: '2026-07-15T12:01:01.000Z' },
       )
       conversation.preview = text

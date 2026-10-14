@@ -101,6 +101,12 @@
     0 20px 48px -12px rgba(0, 0, 0, 0.08);
 }
 
+/* Una imagen arrastrada sobre el compositor */
+.composer[data-dragging='true'] {
+  border-color: var(--color-mint);
+  border-style: dashed;
+}
+
 .composer:focus-within {
   border-color: var(--color-mint);
   box-shadow:
@@ -176,6 +182,12 @@
   background: rgba(255, 255, 255, 0.04);
   color: var(--foreground);
   cursor: pointer;
+}
+
+/* El botón de adjuntar imagen es un <label>: hereda la forma de los botones. */
+.tools label.context {
+  min-height: 40px;
+  border-radius: 0.65rem;
 }
 
 :global(.light) .context {

@@ -726,3 +726,46 @@ def test_normalization_keeps_first_requirement_projection_for_slice_b_c_consumer
     spec = orquestador_node(_state(VALID_SPEC))["normalized_spec"]
     assert spec["connections"] == []
     assert spec["blocks"][0]["goal"] == {"metric": "v_out", "target": 3.3, "tolerance": 0.05}
+
+
+# --- Fase 7: imágenes de entrada -------------------------------------------
+
+
+def test_las_imagenes_del_estado_llegan_a_la_extraccion(monkeypatch):
+    from agents.orquestador.schema import ChatOutcome
+
+    images = [{"media_type": "image/png", "data": "iVBORw0KGgo="}]
+    seen = {}
+
+    def extract(chat_model, text, images=None):
+        seen["text"] = text
+        seen["images"] = images
+        return ChatOutcome(mode="chat", reply="ok")
+
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
+    monkeypatch.setattr(orquestador_module, "extract_orchestrator_outcome", extract)
+
+    state = {**_state(request_text="resuelve la Fig. P2.7"), "images": images}
+    result = orquestador_node(state, {"configurable": {"user_id": "user-1"}})
+
+    assert result == {"outcome": {"mode": "chat", "reply": "ok"}}
+    assert seen == {"text": "resuelve la Fig. P2.7", "images": images}
+
+
+def test_un_fallo_con_imagenes_rechaza_con_su_propio_motivo(monkeypatch):
+    from agents.llm.extraction import ImageInputError
+
+    def extract(chat_model, text, images=None):
+        raise ImageInputError("el modelo no acepta imágenes")
+
+    monkeypatch.setattr(orquestador_module, "get_chat_model", lambda user_id: MagicMock())
+    monkeypatch.setattr(orquestador_module, "extract_orchestrator_outcome", extract)
+
+    state = {
+        **_state(request_text="resuelve la figura"),
+        "images": [{"media_type": "image/png", "data": "iVBORw0KGgo="}],
+    }
+    result = orquestador_node(state, {"configurable": {"user_id": "user-1"}})
+
+    assert result["verdict"]["status"] == "rejected"
+    assert result["verdict"]["reason"].startswith("llm_image_input_failed: ")

@@ -200,7 +200,12 @@ class Asignacion(BaseModel):
 class Medicion(BaseModel):
     """Lo que se midió o se exige en un escenario."""
 
-    expresion: str = Field(description="V(nodo), V(a,b), I(elemento) o aritmética con ellos: 'V(o)/V(i)'.")
+    expresion: str = Field(
+        description=(
+            "V(nodo), V(a,b), I(elemento) o aritmética con ellos: 'V(o)/V(i)'. Para "
+            "requisitos de frecuencia: 'f0(V(o)/V(i))', 'Q(V(o)/V(i))', 'db(V(o)/V(i), 100)'."
+        )
+    )
     valor: str = Field(description="El valor medido o exigido, con sufijo SPICE: '125m', '230m', '5'.")
 
 
@@ -217,8 +222,21 @@ class Pregunta(BaseModel):
     """Algo que el problema pide calcular, en las condiciones que indique."""
 
     nombre: str | None = None
+    tipo: Literal["valor", "transferencia"] = Field(
+        default="valor",
+        description=(
+            "'transferencia' para pedir la función de transferencia H(s) de `calcular` "
+            "(su forma, polos, ceros, H0, f0, Q y su Bode); 'valor' para un número."
+        ),
+    )
     valores: list[Asignacion] = Field(default_factory=list)
-    calcular: str = Field(description="Expresión a calcular: 'I(RL)', 'V(o)', 'V(o)/V(i)'.")
+    calcular: str = Field(
+        description=(
+            "Expresión a calcular: 'I(RL)', 'V(o)', 'V(o)/V(i)'. Admite parámetros de "
+            "una transferencia: 'f0(V(o)/V(i))', 'Q(V(o)/V(i))', 'H0(V(o)/V(i))', "
+            "'db(V(o)/V(i), 1k)', 'fase(V(o)/V(i), 1k)'."
+        )
+    )
 
 
 class AnalysisOutcome(BaseModel):

@@ -12,6 +12,10 @@ class CircuitState(TypedDict):
     # Entrada cruda del caller (uno de los dos, o ambos — ver orquestador)
     circuit_spec: dict
     request_text: str | None
+    # Imágenes adjuntas al mensaje del turno (la figura del enunciado), como
+    # [{"media_type", "data" (base64)}]. Solo las lee el orquestador; None
+    # cuando el turno no trae ninguna.
+    images: list | None
 
     # Escrito por 'orquestador'
     normalized_spec: dict | None

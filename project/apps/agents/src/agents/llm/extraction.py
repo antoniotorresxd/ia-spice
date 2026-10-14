@@ -12,13 +12,18 @@ from agents.orquestador.schema import (
 # este código, y su instrucción tiene que viajar con él aunque el prompt
 # publicado sea anterior.
 GUIA_MODO_ANALISIS = """## MODO ANÁLISIS (mode='analysis')
-Si el usuario da un circuito YA ARMADO (con sus valores) y pregunta por tensiones,
-corrientes, la resistencia o impedancia equivalente, o el equivalente de Thévenin/Norton
-—"resuelve por mallas", "por nodos", "reduce la red", "encuentra la corriente en R3"—,
-NO es un diseño: responde con mode='analysis'.
-- `netlist`: transcribe la red a SPICE, un elemento por línea (R, L, C, V, I), nodo de
-  referencia 0, sufijos SPICE (1k, 4.7u). No agregues .control ni análisis. Usa los
-  nombres de nodo que dio el usuario.
+Úsalo cuando el circuito YA ESTÁ DADO (en el texto o en una figura adjunta) y se pide
+resolverlo: tensiones, corrientes, resistencia/impedancia equivalente, Thévenin/Norton,
+la función de transferencia, o los valores de componentes que cumplen ciertas
+mediciones o requisitos sobre ESA topología ("find Ri, Aoc and Ro", "¿qué R2 hace
+falta para una ganancia de 5?", "specify component values for f0 = 1 kHz"). NO es un
+diseño (mode='design' es para cuando hay que proponer el circuito desde una aplicación).
+- `netlist`: transcribe la red a SPICE, un elemento por línea, nodo de referencia 0,
+  sufijos SPICE (1k, 4.7u, 1meg). No agregues .control ni análisis. Usa los nombres de
+  nodo que dio el usuario. Además de R, L, C, V e I acepta fuentes controladas
+  (E/G/F/H, ver el schema) y op-amps `X1 in+ in- out OPAMP` (ideal) o
+  `X1 in+ in- out OPAMP a=1e4 rd=1meg ro=75` (ganancia finita). Un op-amp con
+  "rd = ∞, ro = 0" solo lleva `a=`.
 - `metodo`: el que pidió ('nodos', 'mallas', 'reduccion', 'thevenin') o 'completo'.
 - `terminales`: los dos nodos para reducción o Thévenin (ej. ['a','0']); deben ser
   nodos que aparezcan en `netlist`.
@@ -32,14 +37,28 @@ NO es un diseño: responde con mode='analysis'.
   conexión a 0 ni un elemento extra: el sistema toma el segundo terminal como
   referencia.
 - NUNCA inventes el valor de un componente que el problema pide encontrar (una
-  incógnita: "find Ri, Aoc and Ro", "¿qué R2 hace falta?", parámetros que se deducen
-  de mediciones). Si la red no se puede escribir sin inventar valores, NO uses
-  mode='analysis': responde con mode='chat', plantea las ecuaciones del problema y
-  resuélvelo paso a paso, diciendo que es una resolución sin verificación de ngspice.
+  incógnita). Escríbelo como símbolo entre llaves en el netlist y declara:
+  · `incognitas`: los símbolos a encontrar (['Ri', 'Ag', 'Ro']);
+  · `escenarios`: cada situación del enunciado con los valores de los demás símbolos
+    y lo medido o exigido en ella (`mediciones`: 'V(i)' = '125m', 'I(RL)' = '230m',
+    'V(o)/V(i)' = '5', 'f0(V(o)/V(i))' = '1k');
+  · `preguntas`: lo que se pide calcular con lo encontrado, con sus valores
+    ('I(RL)' con RL = '0' es la corriente de cortocircuito; RL = 'inf' es un abierto).
+  Ejemplo (amplificador de transconductancia): netlist `VS s 0 {vS}`, `RS s i 100k`,
+  `RI i 0 {Ri}`, `GM 0 o i 0 {Ag}`, `RO o 0 {Ro}`, `RL o 0 {RL}`; un escenario por
+  cada carga medida. Un potenciómetro de 100k con cursor k es `{k*100k}` y
+  `{(1-k)*100k}`, con un escenario por extremo (k = 0 y k = 1). Un barrido ("para
+  a = 10², 10⁴ y 10⁶") es una pregunta por valor.
+- Función de transferencia, Bode, polos, f0 o Q: una pregunta con `tipo`
+  'transferencia' y `calcular` = 'V(salida)/V(entrada)'; la fuente de entrada va con
+  `AC 1`. Si los componentes no tienen valor, déjalos como símbolos: se deriva en letras.
+- Si se elige libremente un valor ("usa C = 10 nF", "R1 = R2"), ponlo en los valores
+  del escenario o repite el mismo símbolo; si el enunciado no lo fija y hace falta para
+  que el sistema tenga solución, elige un valor estándar y dilo en el nombre del escenario.
 - Transcribe cada componente tal como lo describe el usuario, uno por línea. NO
   combines tú resistencias en serie o en paralelo (50 Ω ∥ 200 Ω son dos líneas, no
   una de 40 Ω): la reducción paso a paso la hace el sistema.
-- `frecuencia_hz`: solo si es un problema de AC con fasores.
+- `frecuencia_hz`: solo si es un problema de AC con fasores a una sola frecuencia.
 No resuelvas tú las ecuaciones: el sistema las arma, las resuelve y las verifica con ngspice."""
 
 
@@ -47,8 +66,57 @@ class ExtractionError(Exception):
     """El LLM no produjo un resultado de orquestación válido."""
 
 
+class ImageInputError(ExtractionError):
+    """La llamada con imágenes adjuntas falló.
+
+    No hay forma portable de saber si fue porque el modelo no acepta imágenes
+    (cada provider lo dice distinto), así que el mensaje lo plantea como la
+    causa probable y conserva el detalle original.
+    """
+
+
+# Va junto al mensaje del usuario, no en el prompt de sistema: solo aplica
+# cuando de verdad hay imágenes, y así el turno sin ellas queda idéntico.
+NOTA_IMAGENES = (
+    "El usuario adjuntó imágenes. Pueden contener la figura del circuito a la que se "
+    "refiere el texto (p. ej. «Fig. P2.7»). Transcribe de la figura los componentes, "
+    "sus valores y cómo se conectan (los nodos). NUNCA inventes un valor que no puedas "
+    "leer en la figura ni en el texto: si un valor es ilegible o falta, trátalo como "
+    "dato faltante en lugar de suponerlo."
+)
+
+
+def _user_content(request_text: str, images: list[dict] | None):
+    """El contenido del mensaje del usuario: texto plano sin imágenes, o el
+    formato multimodal de LangChain (que entienden langchain-openai,
+    langchain-google-genai y langchain-anthropic) con ellas."""
+    if not images:
+        return request_text
+    return [
+        {"type": "text", "text": request_text},
+        {"type": "text", "text": NOTA_IMAGENES},
+        *(
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:{image['media_type']};base64,{image['data']}"},
+            }
+            for image in images
+        ),
+    ]
+
+
+def _image_error(exc: Exception) -> ImageInputError:
+    return ImageInputError(
+        "no se pudieron procesar las imágenes adjuntas; es probable que el modelo "
+        f"asignado al Orquestador no acepte imágenes (visión). Detalle: {exc}"
+    )
+
+
 def extract_orchestrator_outcome(
-    chat_model, request_text: str, circuit_context: str | None = None
+    chat_model,
+    request_text: str,
+    circuit_context: str | None = None,
+    images: list[dict] | None = None,
 ) -> ChatOutcome | ClarifyOutcome | DesignOutcome | AnalysisOutcome:
     structured_model = chat_model.with_structured_output(OrchestratorResult)
 
@@ -72,7 +140,7 @@ def extract_orchestrator_outcome(
 
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": request_text},
+        {"role": "user", "content": _user_content(request_text, images)},
     ]
     try:
         result = structured_model.invoke(messages)
@@ -84,7 +152,11 @@ def extract_orchestrator_outcome(
                 )
                 result = fallback_model.invoke(messages)
             except Exception as fallback_exc:
+                if images:
+                    raise _image_error(fallback_exc) from fallback_exc
                 raise ExtractionError(f"LLM extraction failed: {fallback_exc}") from fallback_exc
+        elif images:
+            raise _image_error(exc) from exc
         else:
             raise ExtractionError(f"LLM extraction failed: {exc}") from exc
 

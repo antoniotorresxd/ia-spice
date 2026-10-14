@@ -207,3 +207,47 @@ describe('ConversationScreen', () => {
     expect(await screen.findByRole('complementary', { name: 'Panel de inspección y circuitos' })).toBeVisible()
   })
 })
+
+describe('ConversationScreen con imágenes adjuntas', () => {
+  const attachment = { mediaType: 'image/png' as const, data: 'iVBORw0KGgo=' }
+
+  it('muestra las imágenes de un mensaje y abre la imagen completa', async () => {
+    const user = userEvent.setup()
+    const service = createMockWorkspaceService()
+    const original = await service.getConversation('conversation-rc')
+    vi.spyOn(service, 'getConversation').mockResolvedValue({
+      ...original,
+      messages: [
+        { id: 'with-image', role: 'user', content: 'Resuelve la Fig. P2.7', attachments: [attachment], createdAt: original.updatedAt },
+        ...original.messages,
+      ],
+    })
+    renderScreen(service)
+
+    const thumbnail = await screen.findByRole('button', { name: 'Ver imagen 1 en tamaño completo' })
+    await user.click(thumbnail)
+    const dialog = screen.getByRole('dialog', { name: 'Imagen adjunta' })
+    expect(dialog.querySelector('img')).toHaveAttribute('src', 'data:image/png;base64,iVBORw0KGgo=')
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar imagen' }))
+    expect(screen.queryByRole('dialog', { name: 'Imagen adjunta' })).not.toBeInTheDocument()
+  })
+
+  it('continúa la conversación con una imagen adjunta', async () => {
+    const user = userEvent.setup()
+    const service = createMockWorkspaceService()
+    const continueConversation = vi.spyOn(service, 'continueConversation')
+    renderScreen(service)
+    const input = await screen.findByLabelText('Nueva indicación')
+
+    const figura = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])], 'fig.png', { type: 'image/png' })
+    await user.upload(screen.getByLabelText('Adjuntar imagen'), figura)
+    expect(await screen.findByRole('img', { name: 'Imagen adjunta 1' })).toBeVisible()
+
+    await user.type(input, 'Ahora la figura 2')
+    await user.click(screen.getByRole('button', { name: 'Continuar conversación' }))
+
+    await waitFor(() => expect(continueConversation).toHaveBeenCalledWith('conversation-rc', 'Ahora la figura 2', [attachment]))
+    await waitFor(() => expect(screen.queryByRole('img', { name: 'Imagen adjunta 1' })).not.toBeInTheDocument())
+  })
+})

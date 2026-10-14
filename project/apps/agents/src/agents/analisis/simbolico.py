@@ -363,11 +363,19 @@ def _nombre_spice(c: Componente) -> str:
     return c.nombre if c.nombre[0] == c.tipo else f"{c.tipo}{c.nombre}"
 
 
-def netlist_ngspice(circuito: list[Componente], titulo: str = "Verificacion") -> str:
-    """El circuito para ngspice en DC, con el op-amp ideal como VCVS de
-    ganancia 1e9 y el no ideal como sus partes. Escribe en output.txt la
-    tensión de cada nodo (`<nodo> <valor>`) y la corriente de cada fuente de
-    tensión (`I:<nombre> <valor>`)."""
+def netlist_ngspice(
+    circuito: list[Componente], titulo: str = "Verificacion", frecuencias: list[float] | None = None
+) -> str:
+    """El circuito para ngspice, con el op-amp ideal como VCVS de ganancia
+    1e9 y el no ideal como sus partes.
+
+    En DC escribe en output.txt la tensión de cada nodo (`<nodo> <valor>`) y
+    la corriente de cada fuente de tensión (`I:<nombre> <valor>`). Con
+    `frecuencias` corre un `.ac` por frecuencia y escribe `ac_<k>.txt` con
+    `wrdata` (ternas frecuencia, real, imaginario por vector, en el orden:
+    nodos y luego corrientes de las fuentes de tensión)."""
+    if frecuencias:
+        return _netlist_ac(circuito, titulo, frecuencias)
     lineas = [f"* {titulo}"]
     nodos: list[str] = []
     fuentes_v: list[Componente] = []
@@ -400,6 +408,95 @@ def netlist_ngspice(circuito: list[Componente], titulo: str = "Verificacion") ->
         k += 1
     lineas += [".endc", ".end", ""]
     return "\n".join(lineas)
+
+
+def _nodos_y_fuentes(primitivos: list[Componente]) -> tuple[list[str], list[Componente]]:
+    nodos: list[str] = []
+    for c in primitivos:
+        for n in c.nodos:
+            if n != TIERRA and n not in nodos:
+                nodos.append(n)
+    return nodos, [c for c in primitivos if c.tipo == "V"]
+
+
+def _netlist_ac(circuito: list[Componente], titulo: str, frecuencias: list[float]) -> str:
+    primitivos = _expandir(circuito)
+    nombres = {c.nombre: _nombre_spice(c) for c in primitivos}
+    nodos, fuentes_v = _nodos_y_fuentes(primitivos)
+    lineas = [f"* {titulo} (AC)"]
+    for c in primitivos:
+        nombre = nombres[c.nombre]
+        if c.tipo in "RLC":
+            lineas.append(f"{nombre} {c.nodos[0]} {c.nodos[1]} {_numero(c.valor):.12g}")
+        elif c.tipo in "VI":
+            # la misma amplitud que usó el motor en el dominio s
+            ac = c.params.get("ac", c.valor)
+            lineas.append(f"{nombre} {c.nodos[0]} {c.nodos[1]} DC {_numero(c.valor):.12g} AC {_numero(ac):.12g}")
+        elif c.tipo in "EG":
+            lineas.append(f"{nombre} {' '.join(c.nodos)} {_numero(c.valor):.12g}")
+        elif c.tipo in "FH":
+            lineas.append(f"{nombre} {c.nodos[0]} {c.nodos[1]} {nombres.get(c.control, c.control)} {_numero(c.valor):.12g}")
+        elif c.tipo == "X":
+            mas, menos, salida = c.nodos
+            lineas.append(f"E{c.nombre} {salida} 0 {mas} {menos} {_GANANCIA_IDEAL:g}")
+    vectores = " ".join([f"v({n})" for n in nodos] + [f"i({nombres[c.nombre]})" for c in fuentes_v])
+    lineas.append(".control")
+    for k, f in enumerate(frecuencias):
+        lineas += [f"ac lin 1 {f:.12g} {f:.12g}", f"wrdata ac_{k}.txt {vectores}"]
+    lineas += ["echo listo > output.txt", ".endc", ".end", ""]
+    return "\n".join(lineas)
+
+
+def medir_ac(
+    circuito: list[Componente], frecuencias: list[float]
+) -> tuple[str | None, list[tuple[float, SolucionSimbolica]] | None, str | None]:
+    """(netlist, [(f, solución medida en fasores)], error): lo que ngspice
+    mide en cada frecuencia, evaluable con `evaluar` igual que el motor."""
+    libres = simbolos_libres(circuito)
+    if libres:
+        nombres = ", ".join(sorted(str(x) for x in libres))
+        return None, None, f"hay valores simbólicos ({nombres}): sin números no hay qué simular"
+    texto = netlist_ngspice(circuito, frecuencias=frecuencias)
+    directorio = tempfile.mkdtemp(prefix="agents-simbolico-ac-")
+    ruta = os.path.join(directorio, "verificacion_ac.cir")
+    with open(ruta, "w") as f:
+        f.write(texto)
+    _, error = run_ngspice(ruta)
+    if error is not None:
+        return texto, None, error
+    primitivos = _expandir(circuito)
+    nodos, fuentes_v = _nodos_y_fuentes(primitivos)
+    medidas = []
+    for k, f in enumerate(frecuencias):
+        try:
+            with open(os.path.join(directorio, f"ac_{k}.txt")) as archivo:
+                numeros = [float(x) for x in archivo.read().split()]
+        except (OSError, ValueError):
+            return texto, None, f"ngspice no escribió el barrido AC en {f:g} Hz"
+        ternas = [numeros[i : i + 3] for i in range(0, len(numeros), 3)]
+        if len(ternas) < len(nodos) + len(fuentes_v):
+            return texto, None, f"ngspice devolvió menos vectores de los esperados en {f:g} Hz"
+        valores = [complex(t[1], t[2]) for t in ternas]
+        tensiones = {n: sp.sympify(valores[i]) for i, n in enumerate(nodos)}
+        v = {**tensiones, TIERRA: sp.Integer(0)}
+        omega = 2 * sp.pi * f
+        corrientes: dict[str, sp.Expr] = {
+            c.nombre: sp.sympify(valores[len(nodos) + j]) for j, c in enumerate(fuentes_v)
+        }
+        for c in primitivos:
+            a, b = c.nodos[0], c.nodos[1]
+            if c.tipo == "R":
+                corrientes[c.nombre] = (v[a] - v[b]) / c.valor
+            elif c.tipo == "C":
+                corrientes[c.nombre] = (v[a] - v[b]) * sp.I * omega * c.valor
+            elif c.tipo == "I":
+                corrientes[c.nombre] = c.params.get("ac", c.valor)
+            elif c.tipo == "G":
+                corrientes[c.nombre] = c.valor * (v[c.nodos[2]] - v[c.nodos[3]])
+            elif c.tipo == "F" and c.control in corrientes:
+                corrientes[c.nombre] = c.valor * corrientes[c.control]
+        medidas.append((f, SolucionSimbolica("ac", [], tensiones, corrientes, circuito)))
+    return texto, medidas, None
 
 
 def simbolos_libres(circuito: list[Componente]) -> set[sp.Symbol]:

@@ -127,3 +127,67 @@ def test_metrics_summary_con_token_devuelve_estructura():
     # Si estuviera configurado devuelve 'ok' con metrics
     assert body["status"] in ("ok", "unavailable", "error")
 
+
+
+# --- Fase 7: imágenes de entrada -------------------------------------------
+
+
+class _GrafoQueCaptura:
+    def __init__(self):
+        self.estado = None
+
+    def invoke(self, initial_state, config=None):
+        self.estado = initial_state
+        return {
+            **initial_state,
+            "verdict": None,
+            "outcome": {"mode": "chat", "reply": "ok"},
+        }
+
+
+def test_runs_lleva_las_imagenes_al_estado_inicial(monkeypatch):
+    import agents.api as api_module
+
+    grafo = _GrafoQueCaptura()
+    monkeypatch.setattr(api_module, "_graph", lambda: grafo)
+    images = [{"media_type": "image/png", "data": "iVBORw0KGgo="}]
+
+    response = client.post(
+        "/runs",
+        json={"user_id": "user-1", "request_text": "resuelve la Fig. P2.7", "images": images},
+        headers={"Authorization": f"Bearer {TOKEN}"},
+    )
+
+    assert response.status_code == 200
+    assert grafo.estado["images"] == images
+    # las imágenes no vuelven en la respuesta: el server ya las tiene
+    assert "images" not in response.json()
+
+
+def test_runs_sin_imagenes_deja_el_canal_vacio(monkeypatch):
+    import agents.api as api_module
+
+    grafo = _GrafoQueCaptura()
+    monkeypatch.setattr(api_module, "_graph", lambda: grafo)
+
+    response = client.post(
+        "/runs",
+        json={"user_id": "user-1", "request_text": "hola"},
+        headers={"Authorization": f"Bearer {TOKEN}"},
+    )
+
+    assert response.status_code == 200
+    assert grafo.estado["images"] is None
+
+
+def test_runs_rechaza_un_tipo_de_imagen_fuera_de_la_lista():
+    response = client.post(
+        "/runs",
+        json={
+            "user_id": "user-1",
+            "request_text": "x",
+            "images": [{"media_type": "image/svg+xml", "data": "PHN2Zz4="}],
+        },
+        headers={"Authorization": f"Bearer {TOKEN}"},
+    )
+    assert response.status_code == 422

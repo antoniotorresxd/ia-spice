@@ -11,6 +11,13 @@ export type ExecutionStatus = (typeof EXECUTION_STATUSES)[number];
 export const ARTIFACT_STATUSES = ["complete", "partial"] as const;
 export type ArtifactStatus = (typeof ARTIFACT_STATUSES)[number];
 
+// Los formatos de imagen que aceptan a la vez OpenAI, Gemini y Anthropic.
+export const ATTACHMENT_MEDIA_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
+export type AttachmentMediaType = (typeof ATTACHMENT_MEDIA_TYPES)[number];
+
+// Una imagen adjunta a un mensaje: el contenido en base64, sin el prefijo `data:`.
+export type MessageAttachment = { mediaType: AttachmentMediaType; data: string };
+
 export const project = pgTable(
   "project",
   {
@@ -67,6 +74,9 @@ export const message = pgTable(
       .references(() => conversation.id, { onDelete: "cascade" }),
     role: text("role", { enum: MESSAGE_ROLES }).notNull(),
     content: text("content").notNull(),
+    // Imágenes que el usuario adjuntó al mensaje (la figura del enunciado),
+    // en base64. Null en mensajes sin imágenes y en los anteriores a ellas.
+    attachments: jsonb("attachments").$type<MessageAttachment[]>(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [index("message_conversationId_idx").on(table.conversationId)],

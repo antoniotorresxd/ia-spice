@@ -1,6 +1,12 @@
 import pytest
 
-from agents.llm.extraction import GUIA_MODO_ANALISIS, ExtractionError, extract_orchestrator_outcome
+from agents.llm.extraction import (
+    GUIA_MODO_ANALISIS,
+    NOTA_IMAGENES,
+    ExtractionError,
+    ImageInputError,
+    extract_orchestrator_outcome,
+)
 from agents.orquestador.schema import ChatOutcome, ClarifyOutcome, DesignOutcome, CircuitSpec, OrchestratorResult
 
 
@@ -132,3 +138,72 @@ def test_la_guia_de_analisis_prohibe_inventar_valores_de_incognitas():
     # transcribió con valores inventados (RI 100k, Gm 1.84, RO 100).
     assert "NUNCA inventes" in GUIA_MODO_ANALISIS
     assert "incógnita" in GUIA_MODO_ANALISIS
+
+
+# --- Fase 7: imágenes de entrada -------------------------------------------
+
+PNG = {"media_type": "image/png", "data": "iVBORw0KGgo="}
+JPEG = {"media_type": "image/jpeg", "data": "/9j/4AAQ"}
+
+
+def _capturing(monkeypatch, result):
+    messages_seen = []
+
+    def invoke(self, messages):
+        messages_seen.extend(messages)
+        if isinstance(self._result, Exception):
+            raise self._result
+        return self._result
+
+    monkeypatch.setattr(_FakeStructuredModel, "invoke", invoke)
+    return messages_seen
+
+
+def test_con_imagenes_el_mensaje_del_usuario_es_multimodal(monkeypatch):
+    fixed = OrchestratorResult(outcome=ChatOutcome(mode="chat", reply="ok"))
+    messages_seen = _capturing(monkeypatch, fixed)
+
+    outcome = extract_orchestrator_outcome(
+        _FakeChatModel(fixed), "resuelve la Fig. P2.7", "catálogo", images=[PNG, JPEG]
+    )
+
+    assert outcome == fixed.outcome
+    system, user = messages_seen
+    assert system == {"role": "system", "content": "System prompt de prueba"}
+    assert user["role"] == "user"
+    content = user["content"]
+    assert content[0] == {"type": "text", "text": "resuelve la Fig. P2.7"}
+    # la nota sobre las figuras va como texto aparte, antes de las imágenes
+    assert content[1] == {"type": "text", "text": NOTA_IMAGENES}
+    assert content[2:] == [
+        {"type": "image_url", "image_url": {"url": "data:image/png;base64,iVBORw0KGgo="}},
+        {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,/9j/4AAQ"}},
+    ]
+
+
+def test_la_nota_de_imagenes_pide_transcribir_la_figura_sin_inventar():
+    assert "figura" in NOTA_IMAGENES
+    assert "transcribe" in NOTA_IMAGENES.lower()
+    assert "NUNCA inventes" in NOTA_IMAGENES
+
+
+@pytest.mark.parametrize("images", [None, []])
+def test_sin_imagenes_el_mensaje_del_usuario_sigue_siendo_texto(monkeypatch, images):
+    fixed = OrchestratorResult(outcome=ChatOutcome(mode="chat", reply="ok"))
+    messages_seen = _capturing(monkeypatch, fixed)
+
+    extract_orchestrator_outcome(_FakeChatModel(fixed), "hola", "catálogo", images=images)
+
+    assert messages_seen[1] == {"role": "user", "content": "hola"}
+
+
+def test_un_modelo_que_rechaza_imagenes_falla_con_un_mensaje_claro(monkeypatch):
+    _capturing(monkeypatch, None)
+    chat_model = _FakeChatModel(RuntimeError("Invalid content type: image_url is not supported"))
+
+    with pytest.raises(ImageInputError, match="imágenes") as excinfo:
+        extract_orchestrator_outcome(chat_model, "resuelve la figura", "catálogo", images=[PNG])
+
+    # sigue siendo un ExtractionError: quien solo conoce ese tipo lo atrapa igual
+    assert isinstance(excinfo.value, ExtractionError)
+    assert "image_url is not supported" in str(excinfo.value)

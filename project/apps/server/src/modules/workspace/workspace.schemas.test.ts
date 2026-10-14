@@ -4,6 +4,7 @@ import {
   createProjectSchema,
   derivePreview,
   deriveTitle,
+  MAX_ATTACHMENT_BYTES,
   moveConversationSchema,
   submitTextSchema,
   toConversationDetail,
@@ -92,6 +93,7 @@ const messageRows = [
     conversationId: "conv-1",
     role: "user" as const,
     content: "un divisor de 12V a 5V",
+    attachments: null,
     createdAt: new Date("2026-07-29T12:00:00Z"),
   },
   {
@@ -99,6 +101,7 @@ const messageRows = [
     conversationId: "conv-1",
     role: "assistant" as const,
     content: "all blocks within tolerance",
+    attachments: null,
     createdAt: new Date("2026-07-29T12:00:05Z"),
   },
 ];
@@ -160,8 +163,8 @@ describe("toConversationDetail", () => {
   test("arma mensajes, archivos y ejecución con fechas serializadas", () => {
     const detail = toConversationDetail(conversationRow, messageRows, [artifactRow], executionRow);
     expect(detail.messages).toEqual([
-      { id: "msg-1", role: "user", content: "un divisor de 12V a 5V", createdAt: "2026-07-29T12:00:00.000Z" },
-      { id: "msg-2", role: "assistant", content: "all blocks within tolerance", createdAt: "2026-07-29T12:00:05.000Z" },
+      { id: "msg-1", role: "user", content: "un divisor de 12V a 5V", attachments: [], createdAt: "2026-07-29T12:00:00.000Z" },
+      { id: "msg-2", role: "assistant", content: "all blocks within tolerance", attachments: [], createdAt: "2026-07-29T12:00:05.000Z" },
     ]);
     expect(detail.files).toEqual([
       {
@@ -276,5 +279,65 @@ describe("toConversationDetail", () => {
     const detail = toConversationDetail(conversationRow, messageRows, [artifactRow], analysisExec);
 
     expect(detail.execution.stages.map((s) => s.kind)).toEqual(["interpretation", "calculation", "simulation"]);
+  });
+});
+
+describe("submitTextSchema con imágenes adjuntas", () => {
+  const png = { mediaType: "image/png", data: "iVBORw0KGgo=" };
+
+  test("acepta hasta tres imágenes png/jpeg/webp", () => {
+    const parsed = submitTextSchema.parse({
+      text: "resuelve la Fig. P2.7",
+      attachments: [png, { ...png, mediaType: "image/jpeg" }, { ...png, mediaType: "image/webp" }],
+    });
+    expect(parsed.attachments).toHaveLength(3);
+  });
+
+  test("sin adjuntos el resultado no gana la clave", () => {
+    expect(submitTextSchema.parse({ text: "hola" })).toEqual({ text: "hola" });
+  });
+
+  test("rechaza más de tres imágenes", () => {
+    const result = submitTextSchema.safeParse({ text: "x", attachments: [png, png, png, png] });
+    expect(result.success).toBe(false);
+  });
+
+  test("rechaza un tipo fuera de la lista", () => {
+    const result = submitTextSchema.safeParse({
+      text: "x",
+      attachments: [{ mediaType: "image/svg+xml", data: "PHN2Zz4=" }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rechaza datos que no son base64", () => {
+    const result = submitTextSchema.safeParse({
+      text: "x",
+      attachments: [{ mediaType: "image/png", data: "esto no es base64!" }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rechaza una imagen de más de 2 MB", () => {
+    const tooBig = "A".repeat(Math.ceil((MAX_ATTACHMENT_BYTES + 3) / 3) * 4);
+    const result = submitTextSchema.safeParse({
+      text: "x",
+      attachments: [{ mediaType: "image/png", data: tooBig }],
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("toConversationDetail con imágenes adjuntas", () => {
+  test("cada mensaje expone sus adjuntos, vacío si no tiene", () => {
+    const attachments = [{ mediaType: "image/png" as const, data: "iVBORw0KGgo=" }];
+    const detail = toConversationDetail(
+      conversationRow,
+      [{ ...messageRows[0]!, attachments }, messageRows[1]!],
+      [],
+      executionRow,
+    );
+    expect(detail.messages[0]!.attachments).toEqual(attachments);
+    expect(detail.messages[1]!.attachments).toEqual([]);
   });
 });

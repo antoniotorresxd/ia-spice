@@ -147,7 +147,11 @@ export const workspaceRouter = createRouter()
       return c.json({ error: z.treeifyError(parsed.error) }, 400);
     }
 
-    const created = await createConversationWithRequest(userId, parsed.data.text);
+    const created = await createConversationWithRequest(
+      userId,
+      parsed.data.text,
+      parsed.data.attachments,
+    );
 
     // Sin await: la corrida puede tardar decenas de segundos y la respuesta
     // sale ya. El client sondea hasta ver la ejecución cerrada.
@@ -158,6 +162,7 @@ export const workspaceRouter = createRouter()
         executionId: created.execution.id,
         maxIterations: parsed.data.maxIterations,
         tolerance: parsed.data.tolerance,
+        images: parsed.data.attachments,
       },
       makeDbSink(created.conversation.id, created.execution.id),
     );
@@ -173,7 +178,12 @@ export const workspaceRouter = createRouter()
       return c.json({ error: z.treeifyError(parsed.error) }, 400);
     }
 
-    const appended = await appendUserMessage(userId, conversationId, parsed.data.text);
+    const appended = await appendUserMessage(
+      userId,
+      conversationId,
+      parsed.data.text,
+      parsed.data.attachments,
+    );
     if (!appended) return c.json({ error: "Not Found" }, 404);
 
     void startRun(
@@ -183,6 +193,8 @@ export const workspaceRouter = createRouter()
         executionId: appended.execution.id,
         maxIterations: parsed.data.maxIterations,
         tolerance: parsed.data.tolerance,
+        // Solo las imágenes de este turno: las de mensajes anteriores no se reenvían.
+        images: parsed.data.attachments,
       },
       makeDbSink(conversationId, appended.execution.id, appended.previousNormalizedSpec),
     );

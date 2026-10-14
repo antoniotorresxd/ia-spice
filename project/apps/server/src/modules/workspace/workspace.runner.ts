@@ -1,6 +1,6 @@
 import env from "@/lib/env";
 
-import type { ArtifactStatus, BomItem, ExecutionStatus } from "./workspace.model";
+import type { ArtifactStatus, BomItem, ExecutionStatus, MessageAttachment } from "./workspace.model";
 
 export type AgentsVerdict = {
   status: string;
@@ -17,6 +17,8 @@ export type AgentsOutcome =
       // Informe en texto (nodos, mallas, reducción, Thévenin y la
       // verificación con ngspice); ausente si el análisis no llegó a correr.
       informe?: string;
+      // "markdown": informe del motor simbólico (secciones y LaTeX); sin él, texto plano.
+      formato?: "markdown";
       error?: string | null;
       resultados?: {
         validacion?: {
@@ -85,7 +87,24 @@ export type ArtifactDraft = {
 const LLM_UNAVAILABLE_PREFIX = "llm_settings_unavailable";
 const LLM_UNAVAILABLE_SUMMARY =
   "No hay un modelo asignado al orquestador. Ve a Configuración → Modelos y providers.";
+const IMAGE_INPUT_FAILED_PREFIX = "llm_image_input_failed";
+const IMAGE_INPUT_FAILED_SUMMARY =
+  "El orquestador no pudo leer las imágenes adjuntas. Es probable que el modelo asignado " +
+  "al Orquestador no acepte imágenes: asigna uno con visión en Configuración → Modelos y " +
+  "providers, o describe el circuito por texto.";
 const NO_VERDICT_SUMMARY = "La corrida terminó sin veredicto.";
+
+// Rechazos que no son de diseño sino de configuración: el mensaje del chat es
+// la explicación tal cual, sin "no conseguí un diseño dentro de tolerancia".
+const SETUP_REJECTIONS: Array<[prefix: string, summary: string]> = [
+  [LLM_UNAVAILABLE_PREFIX, LLM_UNAVAILABLE_SUMMARY],
+  [IMAGE_INPUT_FAILED_PREFIX, IMAGE_INPUT_FAILED_SUMMARY],
+];
+
+function setupRejectionSummary(verdict: AgentsVerdict | null): string | null {
+  if (verdict?.status !== "rejected") return null;
+  return SETUP_REJECTIONS.find(([prefix]) => verdict.reason.startsWith(prefix))?.[1] ?? null;
+}
 
 // Un circuito rechazado no es un error técnico, pero para la interfaz es un
 // resultado fallido: no obtuviste un circuito. El motivo va en el resumen.
@@ -97,12 +116,7 @@ export function mapVerdictToStatus(verdict: AgentsVerdict | null): {
     return { status: "completed", summary: verdict.reason };
   }
   if (verdict?.status === "rejected") {
-    return {
-      status: "failed",
-      summary: verdict.reason.startsWith(LLM_UNAVAILABLE_PREFIX)
-        ? LLM_UNAVAILABLE_SUMMARY
-        : verdict.reason,
-    };
+    return { status: "failed", summary: setupRejectionSummary(verdict) ?? verdict.reason };
   }
   return { status: "failed", summary: NO_VERDICT_SUMMARY };
 }
@@ -163,6 +177,9 @@ export function toAssistantMessage(result: AgentsRunResult): string {
       : "";
     return summaries.join("\n\n") + walkthrough;
   }
+
+  const setup = setupRejectionSummary(result.verdict);
+  if (setup && summaries.length === 0) return setup;
 
   // iteration es 0-based en CircuitState; lo que interesa es cuántas corrió
   const runs = result.iteration + 1;
@@ -270,7 +287,8 @@ function resolveAnalysisOutcome(
     summary,
     // El chat renderiza Markdown; el informe es texto con columnas y `*` de
     // las ecuaciones, así que va en un bloque de texto que lo deja intacto.
-    assistantMessage: solved ? "```text\n" + informe + "\n```" : informe,
+    // El del motor simbólico ya viene en Markdown con LaTeX y va tal cual.
+    assistantMessage: solved && outcome.formato !== "markdown" ? "```text\n" + informe + "\n```" : informe,
     normalizedSpec: previousNormalizedSpec,
     artifacts: toArtifactDrafts(result),
     mode: "analysis",
@@ -332,6 +350,8 @@ export async function startRun(
     executionId: string;
     maxIterations?: number;
     tolerance?: number;
+    // Las imágenes del mensaje de este turno (no las de turnos anteriores).
+    images?: MessageAttachment[];
   },
   sink: RunSink,
   fetchImpl: typeof fetch = fetch,
@@ -354,6 +374,12 @@ export async function startRun(
         execution_id: input.executionId,
         max_iterations: input.maxIterations,
         tolerance: input.tolerance,
+        // Solo si las hay: sin imágenes la petición queda como siempre.
+        ...(input.images?.length
+          ? {
+              images: input.images.map((image) => ({ media_type: image.mediaType, data: image.data })),
+            }
+          : {}),
       }),
     });
 

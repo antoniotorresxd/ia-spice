@@ -18,7 +18,9 @@ pregunta con los valores encontrados y se comprueba que reproduzca lo
 medido.
 """
 
+import cmath
 import itertools
+import math
 import re
 from dataclasses import replace
 
@@ -26,14 +28,25 @@ import sympy as sp
 
 from agents.analisis.red import RedInvalida, _ingenieria, fmt
 from agents.analisis.simbolico import (
+    S,
     Componente,
     _valor,
+    a_sympy,
     coinciden,
     evaluar,
+    expresion_segura,
     leer_circuito,
+    medir_ac,
     medir_con_ngspice,
     resolver,
     simbolos_libres,
+)
+from agents.analisis.transferencia import (
+    caracterizar,
+    en_frecuencia,
+    expandir_funciones,
+    rango_bode,
+    tiene_funciones,
 )
 
 
@@ -63,10 +76,46 @@ def _sustituir(circuito: list[Componente], valores: dict) -> tuple[list[Componen
     return resultado, abiertos
 
 
-def _evaluar(solucion, expresion: str, abiertos: set[str]) -> sp.Expr:
-    for nombre in abiertos:
-        solucion.corrientes.setdefault(nombre, sp.Integer(0))
-    return evaluar(solucion, expresion)
+class _Caso:
+    """Un escenario o una pregunta: el circuito con sus valores y, a pedido,
+    su solución en DC y en s (se calculan una sola vez; un integrador no
+    tiene solución DC y no hace falta pedírsela si no se usa)."""
+
+    def __init__(self, circuito: list[Componente], valores: dict):
+        self.circuito, self.abiertos = _sustituir(circuito, valores)
+        self._dc = None
+        self._s = None
+
+    def _abrir(self, solucion):
+        for nombre in self.abiertos:
+            solucion.corrientes.setdefault(nombre, sp.Integer(0))
+        return solucion
+
+    def dc(self):
+        if self._dc is None:
+            self._dc = self._abrir(resolver(self.circuito))
+        return self._dc
+
+    def s(self):
+        if self._s is None:
+            self._s = self._abrir(resolver(self.circuito, dominio="s"))
+        return self._s
+
+    def calcular(self, expresion: str) -> sp.Expr:
+        """Una expresión del motor; si trae f0(…), Q(…), db(…, f)… esos
+        términos se evalúan en el dominio s."""
+        if not tiene_funciones(expresion):
+            return evaluar(self.dc(), expresion) if _usa_circuito(expresion) else a_sympy(expresion_segura(expresion))
+        texto, valores, _ = expandir_funciones(expresion, lambda a: evaluar(self.s(), a), _cantidad)
+        resto = evaluar(self.dc(), texto) if _usa_circuito(texto) else a_sympy(texto)
+        return sp.simplify(resto.subs({sp.Symbol(k): v for k, v in valores.items()}))
+
+    def transferencia(self, expresion: str) -> sp.Expr:
+        return sp.simplify(evaluar(self.s(), expresion))
+
+
+def _usa_circuito(expresion: str):
+    return re.search(r"\b[VI]\s*\(", expresion)
 
 
 def _valores(d: dict | None) -> dict:
@@ -140,12 +189,10 @@ def _resolver_planteamiento(spec: dict) -> dict:
     ecuaciones: list[sp.Eq] = []
     planteados = []
     for k, escenario in enumerate(escenarios):
-        circ, abiertos = _sustituir(circuito, _valores(escenario.get("valores")))
-        solucion = resolver(circ)
+        caso = _Caso(circuito, _valores(escenario.get("valores")))
         filas = []
         for expresion, medido in (escenario.get("mediciones") or {}).items():
-            izquierda = _evaluar(solucion, expresion, abiertos)
-            ecuacion = sp.Eq(izquierda, _cantidad(medido))
+            ecuacion = sp.Eq(caso.calcular(expresion), _cantidad(medido))
             ecuaciones.append(ecuacion)
             filas.append({"expresion": expresion, "ecuacion": ecuacion, "medido": _a_float(_cantidad(medido))})
         planteados.append({"nombre": escenario.get("nombre") or f"escenario {k + 1}", "valores": escenario.get("valores") or {}, "ecuaciones": filas})
@@ -159,16 +206,23 @@ def _resolver_planteamiento(spec: dict) -> dict:
     # 2. Las preguntas, con las incógnitas ya resueltas.
     respuestas = []
     for k, pregunta in enumerate(preguntas):
-        valores = {**resueltas, **_valores(pregunta.get("valores"))}
-        circ, abiertos = _sustituir(circuito, valores)
-        valor = _evaluar(resolver(circ), pregunta["calcular"], abiertos).subs(resueltas)
-        respuestas.append({
+        caso = _Caso(circuito, {**resueltas, **_valores(pregunta.get("valores"))})
+        respuesta = {
             "nombre": pregunta.get("nombre") or f"pregunta {k + 1}",
             "calcular": pregunta["calcular"],
             "valores": pregunta.get("valores") or {},
-            "expresion": valor,
-            "valor": _a_float(valor),
-        })
+            "tipo": pregunta.get("tipo") or "valor",
+        }
+        if respuesta["tipo"] == "transferencia":
+            h = caso.transferencia(pregunta["calcular"]).subs(resueltas)
+            respuesta["expresion"] = h
+            respuesta["transferencia"] = caracterizar(h)
+            respuesta["valor"] = respuesta["transferencia"]["h"]
+        else:
+            valor = caso.calcular(pregunta["calcular"]).subs(resueltas)
+            respuesta["expresion"] = valor
+            respuesta["valor"] = _a_float(valor)
+        respuestas.append(respuesta)
 
     # 3. ngspice: cada escenario reproduce sus mediciones, cada pregunta su valor.
     verificacion = _verificar(circuito, resueltas, escenarios, preguntas, respuestas)
@@ -181,24 +235,96 @@ def _resolver_planteamiento(spec: dict) -> dict:
     }
 
 
-def _medir(circuito, valores: dict, expresion: str):
-    circ, abiertos = _sustituir(circuito, valores)
-    texto, medida, error = medir_con_ngspice(circ)
+# --- verificación con ngspice ----------------------------------------------------------
+
+
+def _medir_dc(caso: _Caso, expresion: str):
+    texto, medida, error = medir_con_ngspice(caso.circuito)
     if error:
         return texto, None, error
     try:
-        return texto, float(sp.N(_evaluar(medida, expresion, abiertos))), None
+        for nombre in caso.abiertos:
+            medida.corrientes.setdefault(nombre, sp.Integer(0))
+        return texto, float(sp.N(evaluar(medida, expresion))), None
     except (RedInvalida, KeyError, TypeError) as exc:
         return texto, None, f"no se puede medir {expresion} con ngspice ({exc})"
+
+
+def _frecuencias(h: sp.Expr, extra: list[float]) -> list[float]:
+    fmin, fmax = rango_bode(h)
+    puntos = [fmin * (fmax / fmin) ** (k / 4) for k in range(5)]
+    return sorted(set(puntos + extra))
+
+
+def _comparar_h(caso: _Caso, argumento: str, h: sp.Expr, frecuencias: list[float]):
+    """¿La H(s) del motor coincide con lo que mide ngspice en cada
+    frecuencia? Devuelve (netlist, {f: H medida}, error)."""
+    texto, medidas, error = medir_ac(caso.circuito, frecuencias)
+    if error:
+        return texto, None, error
+    medidas_h = {}
+    for f, medida in medidas:
+        for nombre in caso.abiertos:
+            medida.corrientes.setdefault(nombre, sp.Integer(0))
+        try:
+            medido = complex(sp.N(evaluar(medida, argumento)))
+        except (RedInvalida, KeyError, TypeError) as exc:
+            return texto, None, f"no se puede medir {argumento} con ngspice ({exc})"
+        esperado = complex(sp.N(en_frecuencia(h, f)))
+        if abs(medido - esperado) > max(1e-3 * abs(esperado), 1e-9):
+            return texto, None, f"en {f:.4g} Hz ngspice da {abs(medido):.4g}∠{math.degrees(cmath.phase(medido)):.1f}° y el análisis {abs(esperado):.4g}∠{math.degrees(cmath.phase(esperado)):.1f}°"
+        medidas_h[f] = medido
+    return texto, medidas_h, None
+
+
+def _medir_s(caso: _Caso, expresion: str, resueltas: dict):
+    """Una expresión con funciones de s: cada H(s) se contrasta con un
+    barrido .ac; mag/db/fase se recalculan con lo medido, y f0/Q/H0 quedan
+    verificados a través de su H."""
+    texto, valores, llamadas = expandir_funciones(expresion, lambda a: evaluar(caso.s(), a), _cantidad)
+    netlist, sustitutos, frecuencias_usadas = None, {}, []
+    for k, llamada in enumerate(llamadas):
+        h = sp.simplify(llamada["h"].subs(resueltas))
+        if (h.free_symbols - {S}):
+            return None, None, "la transferencia es simbólica: sin números no hay qué simular", []
+        extra = [float(sp.N(llamada["frecuencia"]))] if llamada["frecuencia"] is not None else []
+        frecuencias = _frecuencias(h, extra)
+        frecuencias_usadas += frecuencias
+        netlist, medidas_h, error = _comparar_h(caso, llamada["argumento"], h, frecuencias)
+        if error:
+            return netlist, None, error, frecuencias_usadas
+        marcador = sp.Symbol(f"_t{k}")
+        if llamada["frecuencia"] is not None:
+            medido = medidas_h[extra[0]]
+            sustitutos[marcador] = {
+                "mag": abs(medido),
+                "db": 20 * math.log10(abs(medido)) if abs(medido) > 0 else -300.0,
+                "fase": math.degrees(cmath.phase(medido)),
+            }[llamada["funcion"]]
+        else:
+            sustitutos[marcador] = valores[str(marcador)].subs(resueltas)
+    if _usa_circuito(texto):
+        return netlist, None, "no se verifica una expresión que mezcla funciones de s con tensiones DC", frecuencias_usadas
+    try:
+        return netlist, float(sp.N(a_sympy(texto).subs(sustitutos))), None, frecuencias_usadas
+    except (TypeError, ValueError) as exc:
+        return netlist, None, f"no se pudo evaluar {expresion} con lo medido ({exc})", frecuencias_usadas
+
+
+def _medir(caso: _Caso, expresion: str, resueltas: dict):
+    if tiene_funciones(expresion):
+        netlist, simulado, error, _ = _medir_s(caso, expresion, resueltas)
+        return netlist, simulado, error
+    return _medir_dc(caso, expresion)
 
 
 def _verificar(circuito, resueltas, escenarios, preguntas, respuestas) -> dict:
     por_escenario, por_pregunta, pruebas = [], [], []
     for escenario in escenarios:
-        valores = {**resueltas, **_valores(escenario.get("valores"))}
+        caso = _Caso(circuito, {**resueltas, **_valores(escenario.get("valores"))})
         filas, netlist = [], None
         for expresion, medido in (escenario.get("mediciones") or {}).items():
-            netlist, simulado, error = _medir(circuito, valores, expresion)
+            netlist, simulado, error = _medir(caso, expresion, resueltas)
             esperado = float(sp.N(_cantidad(medido)))
             ok = error is None and coinciden(simulado, esperado)
             filas.append({"expresion": expresion, "medido": esperado, "ngspice": simulado, "error": error, "coincide": ok})
@@ -206,12 +332,25 @@ def _verificar(circuito, resueltas, escenarios, preguntas, respuestas) -> dict:
         pruebas.append(ok)
         por_escenario.append({"nombre": escenario.get("nombre"), "mediciones": filas, "coincide": ok, "netlist": netlist})
     for pregunta, respuesta in zip(preguntas, respuestas):
-        valores = {**resueltas, **_valores(pregunta.get("valores"))}
-        netlist, simulado, error = _medir(circuito, valores, pregunta["calcular"])
-        esperado = respuesta["valor"]
-        ok = error is None and isinstance(esperado, float) and coinciden(simulado, esperado)
+        caso = _Caso(circuito, {**resueltas, **_valores(pregunta.get("valores"))})
+        if respuesta["tipo"] == "transferencia":
+            h = respuesta["expresion"]
+            if h.free_symbols - {S}:
+                fila = {"nombre": respuesta["nombre"], "ngspice": None, "frecuencias": [], "netlist": None, "coincide": False,
+                        "error": "la transferencia es simbólica: sin números no hay qué simular"}
+                por_pregunta.append(fila)
+                continue  # una H en letras no se simula, pero tampoco está mal
+            frecuencias = _frecuencias(h, [])
+            netlist, _, error = _comparar_h(caso, pregunta["calcular"], h, frecuencias)
+            ok = error is None
+            fila = {"nombre": respuesta["nombre"], "ngspice": None, "frecuencias": frecuencias, "error": error, "coincide": ok, "netlist": netlist}
+        else:
+            netlist, simulado, error = _medir(caso, pregunta["calcular"], resueltas)
+            esperado = respuesta["valor"]
+            ok = error is None and isinstance(esperado, float) and coinciden(simulado, esperado)
+            fila = {"nombre": respuesta["nombre"], "ngspice": simulado, "error": error, "coincide": ok, "netlist": netlist}
         pruebas.append(ok)
-        por_pregunta.append({"nombre": respuesta["nombre"], "ngspice": simulado, "error": error, "coincide": ok, "netlist": netlist})
+        por_pregunta.append(fila)
     return {"coincide": bool(pruebas) and all(pruebas), "escenarios": por_escenario, "preguntas": por_pregunta}
 
 
@@ -263,7 +402,12 @@ def spec_desde_outcome(outcome: dict) -> dict:
             for e in outcome.get("escenarios") or []
         ],
         "preguntas": [
-            {"nombre": p.get("nombre"), "valores": _lista_a_dict(p.get("valores"), "simbolo", "valor"), "calcular": p["calcular"]}
+            {
+                "nombre": p.get("nombre"),
+                "tipo": p.get("tipo") or "valor",
+                "valores": _lista_a_dict(p.get("valores"), "simbolo", "valor"),
+                "calcular": p["calcular"],
+            }
             for p in outcome.get("preguntas") or []
             if p.get("calcular")
         ],
@@ -309,6 +453,34 @@ def _tex_expresion(expresion: str) -> str:
     return re.sub(r"_(?!\{)", r"\\_", texto)
 
 
+def _lineas_transferencia(p: dict, condiciones: str) -> list[str]:
+    """H(s) en forma de libro y sus parámetros, con lo que se pueda decir."""
+    t = p["transferencia"]
+    h = sp.sympify(t["h"], locals={"s": S})
+    lineas = [
+        f"**${_tex_expresion(p['calcular'])}$**" + (f" con {condiciones}" if condiciones else "") + f" — {t['tipo']}, orden {t['orden']}:",
+        "",
+        f"$$H(s) = {_tex(h)}$$",
+        "",
+    ]
+    filas = []
+    for clave, etiqueta, unidad in (("h0", "H_0", ""), ("hinf", "H_\infty", ""), ("f0", "f_0", "Hz"), ("w0", "\omega_0", "rad/s"), ("q", "Q", "")):
+        valor = t.get(clave)
+        if valor is None:
+            continue
+        texto = f"${_tex(valor)}$" if isinstance(valor, str) else fmt(valor if not isinstance(valor, dict) else complex(valor["real"], valor["imag"]), unidad)
+        filas.append(f"| ${etiqueta}$ | {texto} |")
+    if filas:
+        lineas += ["| Parámetro | Valor |", "|---|---|", *filas, ""]
+    if t["polos"]:
+        lineas.append("Polos: " + ", ".join(_num(x) for x in t["polos"]) + (" · Ceros: " + ", ".join(_num(x) for x in t["ceros"]) if t["ceros"] else "") + ".")
+        lineas.append("")
+    if t["bode"]:
+        lineas.append("_El diagrama de Bode está en la pestaña **Curva de Simulación SPICE**._")
+        lineas.append("")
+    return lineas
+
+
 def informe_planteamiento(spec: dict, r: dict) -> str:
     lineas = ["## 1. Planteamiento", "", "```spice", spec["netlist"].strip(), "```", ""]
     if spec.get("incognitas"):
@@ -341,6 +513,9 @@ def informe_planteamiento(spec: dict, r: dict) -> str:
         seccion += 1
         for p in r["preguntas"]:
             condiciones = ", ".join(f"{k} = {v}" for k, v in p["valores"].items())
+            if p.get("tipo") == "transferencia":
+                lineas += _lineas_transferencia(p, condiciones)
+                continue
             lineas.append(
                 f"- ${_tex_expresion(p['calcular'])}$" + (f" con {condiciones}" if condiciones else "") + f" = **{_num(p['valor'])}**"
             )
@@ -355,7 +530,17 @@ def informe_planteamiento(spec: dict, r: dict) -> str:
     ] + [
         (p["nombre"], q["calcular"], q["valor"], p["ngspice"], p["coincide"], p["error"])
         for p, q in zip(v["preguntas"], r["preguntas"])
+        if q.get("tipo") != "transferencia"
     ]
+    for p, q in zip(v["preguntas"], r["preguntas"]):
+        if q.get("tipo") == "transferencia":
+            if p["coincide"]:
+                rango = ", ".join(fmt(f, "Hz") for f in p["frecuencias"])
+                lineas.append(f"- $H(s)$ de ${_tex_expresion(q['calcular'])}$: ngspice `.ac` coincide en {rango}. ✓")
+            else:
+                lineas.append(f"- $H(s)$ de ${_tex_expresion(q['calcular'])}$: {p['error'] or 'no coincide'}.")
+    if any(q.get("tipo") == "transferencia" for q in r["preguntas"]):
+        lineas.append("")
     if not filas:
         lineas.append("No hubo nada que simular.")
     else:
@@ -393,9 +578,19 @@ def analizar_planteamiento(outcome: dict) -> dict:
     primero = (spec["escenarios"] or spec["preguntas"] or [{}])[0]
     for k, v in (primero.get("valores") or {}).items():
         valores[sp.Symbol(k)] = _cantidad(v)
+    # La primera transferencia numérica se dibuja como Bode en la pestaña de curva.
+    curva = next(
+        (
+            {"curve": p["transferencia"]["bode"], "metric_name": f"|{p['calcular']}|"}
+            for p in r["preguntas"]
+            if p.get("tipo") == "transferencia" and p["transferencia"]["bode"]
+        ),
+        None,
+    )
     return {
         "error": None,
         "informe": informe,
+        "curva": curva,
         "resultados": {
             "validacion": {"coincide": r["verificacion"]["coincide"], "error": None},
             "planteamiento": {

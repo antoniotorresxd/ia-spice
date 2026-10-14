@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { artifact, conversation, execution, message } from "./workspace.model";
+import { ATTACHMENT_MEDIA_TYPES, type artifact, type conversation, type execution, type message } from "./workspace.model";
 
 export const TITLE_MAX = 80;
 export const PREVIEW_MAX = 120;
@@ -51,10 +51,22 @@ export const renameConversationSchema = z.object({
 
 export type RenameConversationInput = z.infer<typeof renameConversationSchema>;
 
+// Tope por imagen ya decodificada. El client reduce las fotos grandes antes de
+// mandarlas; el server igual lo verifica sobre el base64 (4 caracteres cada 3 bytes).
+export const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
+export const MAX_ATTACHMENTS = 3;
+const MAX_ATTACHMENT_BASE64 = Math.ceil(MAX_ATTACHMENT_BYTES / 3) * 4;
+
+export const attachmentSchema = z.object({
+  mediaType: z.enum(ATTACHMENT_MEDIA_TYPES),
+  data: z.base64().min(1).max(MAX_ATTACHMENT_BASE64),
+});
+
 export const submitTextSchema = z.object({
   text: z.string().trim().min(1),
   maxIterations: z.coerce.number().int().min(1).max(10).optional(),
   tolerance: z.coerce.number().positive().optional(),
+  attachments: z.array(attachmentSchema).max(MAX_ATTACHMENTS).optional(),
 });
 
 export type SubmitTextInput = z.infer<typeof submitTextSchema>;
@@ -79,7 +91,8 @@ const MISSING_EXECUTION_SUMMARY = "La ejecución no se pudo registrar.";
 
 export function toConversationSummary(
   row: ConversationRow,
-  lastMessage: MessageRow | undefined,
+  // Solo el texto: el listado de conversaciones no carga las imágenes.
+  lastMessage: Pick<MessageRow, "content"> | undefined,
   latestExecution: ExecutionRow | undefined,
 ) {
   return {
@@ -262,6 +275,7 @@ export function toConversationDetail(
       id: item.id,
       role: item.role,
       content: item.content,
+      attachments: item.attachments ?? [],
       createdAt: item.createdAt.toISOString(),
     })),
     files: artifacts.map((item) => {

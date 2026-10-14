@@ -108,3 +108,17 @@ it('un error del server se convierte en excepción con el código', async () => 
 
   await expect(service.getConversation('conv-ausente')).rejects.toThrow('404')
 })
+
+it('manda las imágenes adjuntas al crear y al continuar, solo si las hay', async () => {
+  const fetchImpl = vi.fn().mockImplementation(() => Promise.resolve(jsonResponse(conversationDetail)))
+  const service = createHttpWorkspaceService({ fetchImpl })
+  const attachments = [{ mediaType: 'image/png' as const, data: 'iVBORw0KGgo=' }]
+
+  await service.submitRequest('resuelve la Fig. P2.7', attachments)
+  await service.continueConversation('conv-1', 'y la figura 2', attachments)
+  await service.continueConversation('conv-1', 'sin figura', [])
+
+  expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toEqual({ text: 'resuelve la Fig. P2.7', attachments })
+  expect(JSON.parse(fetchImpl.mock.calls[1][1].body)).toEqual({ text: 'y la figura 2', attachments })
+  expect(JSON.parse(fetchImpl.mock.calls[2][1].body)).toEqual({ text: 'sin figura' })
+})

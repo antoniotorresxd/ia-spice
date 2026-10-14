@@ -1,7 +1,11 @@
 from langchain_core.runnables import RunnableConfig
 from pydantic import ValidationError
 
-from agents.llm.extraction import ExtractionError, extract_orchestrator_outcome
+from agents.llm.extraction import (
+    ExtractionError,
+    ImageInputError,
+    extract_orchestrator_outcome,
+)
 from agents.llm.factory import build_chat_model
 from agents.llm.settings_client import LlmSettingsError, fetch_agent_llm
 from agents.orquestador.schema import CircuitSpec
@@ -123,8 +127,16 @@ def orquestador_node(state: CircuitState, config: RunnableConfig | None = None) 
         except LlmSettingsError as exc:
             return _rejected(f"llm_settings_unavailable: {exc}")
 
+        # Las imágenes solo se pasan si las hay: sin ellas la llamada queda
+        # exactamente como antes de que existieran.
+        images = state.get("images")
         try:
-            outcome = extract_orchestrator_outcome(chat_model, request_text)
+            if images:
+                outcome = extract_orchestrator_outcome(chat_model, request_text, images=images)
+            else:
+                outcome = extract_orchestrator_outcome(chat_model, request_text)
+        except ImageInputError as exc:
+            return _rejected(f"llm_image_input_failed: {exc}")
         except ExtractionError as exc:
             return _rejected(f"llm_extraction_failed: {exc}")
 

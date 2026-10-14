@@ -1098,6 +1098,19 @@
   backdrop-filter: blur(16px);
 }
 
+/* Imágenes por enviar, alineadas con el compositor */
+.screen .composerAttachments {
+  max-width: min(100%, 78rem);
+  margin: 0 auto 0.6rem;
+  padding: 0.4rem 0.25rem 0;
+}
+
+/* Una imagen arrastrada sobre el compositor */
+.screen .composerDock[data-dragging='true'] .composer {
+  border-color: var(--color-mint);
+  border-style: dashed;
+}
+
 :global(.light) .screen .composerDock {
   border-top-color: rgba(0, 0, 0, 0.06);
   background: linear-gradient(180deg, transparent 0%, rgba(248, 250, 252, 0.7) 20%, rgba(248, 250, 252, 0.98) 100%);

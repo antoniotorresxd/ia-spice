@@ -34,4 +34,21 @@ def analisis_node(state: CircuitState) -> dict:
             netlists[clave] = {"path": ruta, "text": texto}
     if netlists:
         actualizacion["netlists"] = netlists
+    curva = resultado.get("curva")
+    if curva and "analisis" in netlists:
+        # el Bode de una transferencia, para la pestaña de curva del visualizador
+        actualizacion["sim_results"] = {
+            "analisis": {
+                "metrics": None,
+                "sim_error": None,
+                "curve": curva["curve"],
+                "analysis_type": "ac",
+                "x_unit": "Hz",
+                "y_unit": "dB",
+                "x_label": "Frecuencia",
+                "metric_name": curva["metric_name"],
+                "measured_value": None,
+                "target_value": None,
+            }
+        }
     return actualizacion

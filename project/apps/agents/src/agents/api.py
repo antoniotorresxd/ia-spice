@@ -10,6 +10,7 @@ import secrets
 import time
 import uuid
 from contextlib import asynccontextmanager
+from typing import Literal
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import StreamingResponse
@@ -85,9 +86,20 @@ def _langfuse_handler() -> CallbackHandler | None:
     return app.state.langfuse_handler
 
 
+class ImageInput(BaseModel):
+    """Una imagen adjunta al mensaje del turno, en base64 sin el prefijo
+    `data:`. El server ya validó tamaño y cantidad; aquí solo el tipo."""
+
+    media_type: Literal["image/png", "image/jpeg", "image/webp"]
+    data: str
+
+
 class RunRequest(BaseModel):
     user_id: str
     request_text: str | None = None
+    # La figura del enunciado, si el usuario la adjuntó. Solo la lee el
+    # orquestador, junto a request_text.
+    images: list[ImageInput] | None = None
     circuit_spec: dict | None = None
     # Identidad estable de la corrida. Es lo que permite retomar una ejecución
     # interrumpida: reenviarla con el mismo execution_id continúa desde el
@@ -96,6 +108,14 @@ class RunRequest(BaseModel):
     execution_id: str | None = None
     max_iterations: int | None = None
     tolerance: float | None = None
+
+
+def _images(body: RunRequest) -> list[dict] | None:
+    """Las imágenes como dicts planos para el estado del grafo (que se
+    checkpointea); None si el turno no trae ninguna."""
+    if not body.images:
+        return None
+    return [image.model_dump() for image in body.images]
 
 
 def _require_token(authorization: str | None) -> None:
@@ -140,6 +160,7 @@ def create_run(
     initial_state = {
         "circuit_spec": spec_dict,
         "request_text": body.request_text,
+        "images": _images(body),
         "normalized_spec": None,
         "pending_blocks": None,
         "component_values": {},
@@ -494,6 +515,7 @@ def create_run_stream(body: RunRequest, authorization: str | None = Header(defau
     initial_state = {
         "circuit_spec": spec_dict,
         "request_text": body.request_text,
+        "images": _images(body),
         "normalized_spec": None,
         "pending_blocks": None,
         "component_values": {},

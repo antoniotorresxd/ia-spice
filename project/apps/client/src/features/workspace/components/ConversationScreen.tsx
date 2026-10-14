@@ -31,9 +31,12 @@ import { ConfirmDeleteModal } from '@/components/ui/ConfirmDeleteModal'
 import { ConversationDetailSkeleton } from '@/components/ui/Skeleton'
 import { ActivityTimeline } from '../../home/components/ActivityTimeline'
 import type { ConversationExecution, ExecutionStage } from '../../home/model/home-types'
+import { MAX_IMAGES } from '../model/image-attachments'
 import { useConversationPolling } from '../model/use-conversation-polling'
+import { useImageAttachments } from '../model/use-image-attachments'
 import type { TraceResponse, WorkspaceConversationDetail, WorkspaceSnapshot } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
+import { AttachImageButton, AttachmentPreviews, MessageImages } from './ImageAttachments'
 import { MarkdownText } from './MarkdownText'
 import { RenameConversationDialog } from './RenameConversationDialog'
 import styles from './ConversationScreen.module.css'
@@ -54,6 +57,7 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const [text, setText] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [pending, setPending] = useState(false)
+  const images = useImageAttachments()
   const [isRenaming, setIsRenaming] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [inspectorTab, setInspectorTab] = useState<'flow' | 'trace' | 'files'>('flow')
@@ -414,8 +418,15 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
     setPending(true)
     setSubmitError('')
     try {
-      setConversation(await service.continueConversation(conversationId, nextText))
+      // Solo las imágenes de este turno; sin ellas la llamada queda como siempre.
+      const sent = images.attachments
+      setConversation(
+        sent.length
+          ? await service.continueConversation(conversationId, nextText, sent)
+          : await service.continueConversation(conversationId, nextText),
+      )
       setText('')
+      images.clear()
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'No pudimos continuar la conversación.')
     } finally {
@@ -496,6 +507,7 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                   {conversation.messages.map((message) => (
                     <article className={styles.message} data-role={message.role} key={message.id}>
                       <p className={styles.role}>{message.role === 'user' ? 'Tú' : 'Asistente'}</p>
+                      <MessageImages attachments={message.attachments} />
                       {message.role === 'assistant' ? (
                         <MarkdownText className={styles.messageText}>{message.content}</MarkdownText>
                       ) : (
@@ -564,8 +576,24 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
             ) : null}
           </div>
 
-          <form className={styles.composerDock} data-tour="conversation-composer" onSubmit={(event) => void submit(event)}>
-            {submitError ? <p id="continuation-error" role="alert">{submitError}</p> : null}
+          <form
+            className={styles.composerDock}
+            data-dragging={images.isDragging ? 'true' : undefined}
+            data-tour="conversation-composer"
+            onSubmit={(event) => void submit(event)}
+            {...images.dropHandlers}
+          >
+            {submitError ? (
+              <p id="continuation-error" role="alert">{submitError}</p>
+            ) : images.error ? (
+              <p role="alert">{images.error}</p>
+            ) : null}
+            <AttachmentPreviews
+              attachments={images.attachments}
+              className={styles.composerAttachments}
+              disabled={pending}
+              onRemove={images.remove}
+            />
             <div className={`${styles.composer} ${isEditMode ? styles.composerExpanded : ''}`}>
               {isEditMode && (
                 <div className={styles.composerFormatBar} role="toolbar" aria-label="Herramientas de formato">
@@ -635,6 +663,7 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                 aria-describedby={submitError ? 'continuation-error' : undefined}
                 onChange={(event) => setText(event.target.value)}
                 onKeyDown={handleKeyDown}
+                onPaste={images.onPaste}
                 placeholder={isEditMode ? "Escribe o edita el mensaje (Ctrl+Enter para enviar)…" : "Describe el siguiente ajuste (Enter para enviar)…"}
                 value={text}
               />
@@ -654,6 +683,11 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                   >
                     <Pencil size={15} />
                   </button>
+                  <AttachImageButton
+                    disabled={pending}
+                    full={images.attachments.length >= MAX_IMAGES}
+                    onFiles={(files) => void images.addFiles(files)}
+                  />
                   <button disabled={pending} type="submit" aria-label={pending ? 'Continuando…' : 'Continuar conversación'}>
                     <span className={styles.sendLabel}>{pending ? 'Continuando…' : 'Continuar conversación'}</span>
                     <Send aria-hidden="true" size={18} />

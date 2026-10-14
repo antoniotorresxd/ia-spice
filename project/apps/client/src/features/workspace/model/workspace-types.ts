@@ -2,10 +2,21 @@ import type { ExecutionStage } from '@/features/home/model/home-types'
 
 export type WorkspaceExecutionStatus = 'active' | 'completed' | 'failed'
 
+// Una imagen adjunta a un mensaje (la figura del enunciado), en base64 sin
+// el prefijo `data:`. Mismos formatos que acepta el server.
+export type AttachmentMediaType = 'image/png' | 'image/jpeg' | 'image/webp'
+
+export type MessageAttachment = {
+  mediaType: AttachmentMediaType
+  data: string
+}
+
 export type WorkspaceMessage = {
   id: string
   role: 'user' | 'assistant'
   content: string
+  // Ausente en fixtures y respuestas anteriores a los adjuntos.
+  attachments?: MessageAttachment[]
   createdAt: string
 }
 

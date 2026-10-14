@@ -429,6 +429,20 @@ describe("resolveRunOutcome en modo análisis", () => {
     expect(outcome.normalizedSpec).toEqual({ previo: true });
   });
 
+  test("un informe del motor simbólico ya es Markdown y va tal cual", () => {
+    const outcome = resolveRunOutcome({
+      ...analysis,
+      outcome: {
+        mode: "analysis",
+        informe: "## 1. Planteamiento\n\n$$R_i = 500\\,k\\Omega$$",
+        formato: "markdown",
+        error: null,
+        resultados: { validacion: { coincide: true, error: null } },
+      },
+    });
+    expect(outcome.assistantMessage).toBe("## 1. Planteamiento\n\n$$R_i = 500\\,k\\Omega$$");
+  });
+
   test("si ngspice no coincide se completa pero lo dice", () => {
     const outcome = resolveRunOutcome({
       ...analysis,
@@ -532,5 +546,68 @@ describe("startRun con el evento de modo", () => {
 
     expect(modes).toEqual(["analysis"]);
     expect(results).toEqual([accepted]);
+  });
+});
+
+describe("imágenes adjuntas", () => {
+  test("startRun reenvía las imágenes del turno a agents", async () => {
+    const calls: { init: RequestInit | undefined }[] = [];
+    const fakeFetch = async (_url: string | URL | Request, init?: RequestInit) => {
+      calls.push({ init });
+      return new Response(JSON.stringify(accepted), { status: 200 });
+    };
+    const { sink } = recordingSink();
+
+    await startRun(
+      {
+        userId: "user-1",
+        requestText: "resuelve la Fig. P2.7",
+        executionId: "exec-1",
+        images: [{ mediaType: "image/png", data: "iVBORw0KGgo=" }],
+      },
+      sink,
+      fakeFetch as unknown as typeof fetch,
+    );
+
+    expect(JSON.parse(calls[0]!.init!.body as string)).toEqual({
+      user_id: "user-1",
+      request_text: "resuelve la Fig. P2.7",
+      execution_id: "exec-1",
+      images: [{ media_type: "image/png", data: "iVBORw0KGgo=" }],
+    });
+  });
+
+  test("una lista vacía no agrega la clave images", async () => {
+    const calls: { init: RequestInit | undefined }[] = [];
+    const fakeFetch = async (_url: string | URL | Request, init?: RequestInit) => {
+      calls.push({ init });
+      return new Response(JSON.stringify(accepted), { status: 200 });
+    };
+    const { sink } = recordingSink();
+
+    await startRun(
+      { userId: "user-1", requestText: "x", executionId: "exec-1", images: [] },
+      sink,
+      fakeFetch as unknown as typeof fetch,
+    );
+
+    expect(JSON.parse(calls[0]!.init!.body as string)).not.toHaveProperty("images");
+  });
+
+  test("un modelo que no lee imágenes se explica sin el prefijo interno", () => {
+    const verdict = {
+      status: "rejected",
+      reason: "llm_image_input_failed: no se pudieron procesar las imágenes adjuntas. Detalle: 400",
+      best_iteration: null,
+    };
+    const result = mapVerdictToStatus(verdict);
+    expect(result.status).toBe("failed");
+    expect(result.summary).not.toContain("llm_image_input_failed");
+    expect(result.summary).toContain("imágenes");
+    expect(result.summary).toContain("Configuración");
+
+    // el mensaje del chat es la explicación, no "no conseguí un diseño dentro de tolerancia"
+    const message = toAssistantMessage({ ...accepted, verdict, netlists: {}, sim_results: {} });
+    expect(message).toBe(result.summary);
   });
 });

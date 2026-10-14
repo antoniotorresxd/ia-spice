@@ -3,7 +3,7 @@ import { and, asc, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import env from "@/lib/env";
 
-import { artifact, conversation, execution, message, project } from "./workspace.model";
+import { artifact, conversation, execution, message, project, type MessageAttachment } from "./workspace.model";
 import {
   deriveTitle,
   toConversationDetail,
@@ -145,8 +145,9 @@ export async function listConversationSummaries(
 
   const ids = conversations.map((row) => row.id);
   const [messages, executions] = await Promise.all([
+    // Sin las imágenes: el listado solo necesita el texto del último mensaje.
     db
-      .select()
+      .select({ conversationId: message.conversationId, content: message.content })
       .from(message)
       .where(inArray(message.conversationId, ids))
       .orderBy(asc(message.createdAt)),
@@ -269,7 +270,11 @@ const ACTIVE_SUMMARY = "Pensando...";
 // El driver neon-http no soporta transacciones interactivas: hacen falta los
 // ids devueltos por cada INSERT, así que van secuenciales. Si el proceso muere
 // en medio, toConversationDetail sintetiza una ejecución fallida.
-export async function createConversationWithRequest(userId: string, text: string) {
+export async function createConversationWithRequest(
+  userId: string,
+  text: string,
+  attachments: MessageAttachment[] = [],
+) {
   const [conversationRow] = await db
     .insert(conversation)
     .values({ userId, projectId: null, title: deriveTitle(text) })
@@ -277,7 +282,12 @@ export async function createConversationWithRequest(userId: string, text: string
 
   const [messageRow] = await db
     .insert(message)
-    .values({ conversationId: conversationRow!.id, role: "user", content: text })
+    .values({
+      conversationId: conversationRow!.id,
+      role: "user",
+      content: text,
+      attachments: attachments.length ? attachments : null,
+    })
     .returning();
 
   const [executionRow] = await db
@@ -396,7 +406,12 @@ export async function getConversationDetail(userId: string, id: string) {
 
 // Un seguimiento: mensaje del usuario, ejecución nueva, y el request_text
 // compuesto con el contexto de la conversación.
-export async function appendUserMessage(userId: string, id: string, text: string) {
+export async function appendUserMessage(
+  userId: string,
+  id: string,
+  text: string,
+  attachments: MessageAttachment[] = [],
+) {
   const parts = await loadConversationParts(userId, id);
   if (!parts) return null;
 
@@ -408,7 +423,12 @@ export async function appendUserMessage(userId: string, id: string, text: string
 
   const [messageRow] = await db
     .insert(message)
-    .values({ conversationId: id, role: "user", content: text })
+    .values({
+      conversationId: id,
+      role: "user",
+      content: text,
+      attachments: attachments.length ? attachments : null,
+    })
     .returning();
 
   const [executionRow] = await db
