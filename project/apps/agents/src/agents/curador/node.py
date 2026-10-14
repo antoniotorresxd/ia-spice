@@ -244,7 +244,10 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
             else:
                 actual = state["sim_results"][bid]["metrics"][metric_key(requirement)]
                 nuevos = ADJUST_RULES[block["type"]](
-                    values, target=requirement["value"], actual=actual
+                    values,
+                    target=requirement["value"],
+                    actual=actual,
+                    circuit_id=block["params"].get("circuit_id"),
                 )
             # Un ajuste menor que medio paso de la serie E no cambiaría el
             # circuito simulado: se fuerza el salto al valor comercial vecino.

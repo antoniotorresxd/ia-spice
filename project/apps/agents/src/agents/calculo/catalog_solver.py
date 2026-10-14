@@ -267,6 +267,80 @@ def solve_sallen_key(params: dict[str, Any]) -> dict[str, float]:
     return {"R": round(r, 2), "C1": c1, "C2": c2}
 
 
+def solve_opamp_inverting_amp(params: dict[str, Any]) -> dict[str, float]:
+    vin = _param(params, "v_in", "vin", default=1.0)
+    vout = _param(params, "v_out", "vout", "target", default=-2.0)
+    rin = _param(params, "rin", "r_in", default=10000.0)
+    # |A| = Rf/Rin; el signo lo pone la topología, no las resistencias.
+    gain = abs(vout / vin) if vin != 0 else 1.0
+    return {"v_in": vin, "v_out": vout, "Rin": rin, "Rf": round(gain * rin, 2)}
+
+
+def _entradas_diferenciales(params: dict[str, Any], v_d_default: float) -> dict[str, float]:
+    """Tensiones de prueba Vp/Vn a partir de diferencial y modo común."""
+    v_d = _param(params, "v_d", "vd", default=v_d_default)
+    v_cm = _param(params, "v_cm", "vcm", default=1.0)
+    return {"Vp": v_cm + v_d / 2, "Vn": v_cm - v_d / 2}
+
+
+def solve_opamp_difference_amp(params: dict[str, Any]) -> dict[str, float]:
+    gain = _param(params, "gain", "target", default=1.0)
+    rg = _param(params, "rg", default=10000.0)
+    return {
+        "gain": gain,
+        "Rg": rg,
+        "Rf": round(abs(gain) * rg, 2),
+        **_entradas_diferenciales(params, 0.1),
+    }
+
+
+# Para G = 1 la RG ideal es infinita; un valor finito muy grande deja la
+# ganancia en 1 + 2R/RG ≈ 1.00002, sin un elemento abierto que ngspice no
+# sabría resolver.
+_RG_ABIERTA = 1e9
+
+
+def solve_opamp_instrumentation_amp(params: dict[str, Any]) -> dict[str, float]:
+    gain = _param(params, "gain", "target", default=10.0)
+    r = _param(params, "r", default=10000.0)
+    rg = 2 * r / (gain - 1) if gain > 1 else _RG_ABIERTA
+    return {
+        "gain": gain,
+        "R": r,
+        "RG": round(rg, 2),
+        "Rd": 10000.0,
+        **_entradas_diferenciales(params, 0.01),
+    }
+
+
+def _barrido_resonancia(f0: float) -> dict[str, float]:
+    # Dos décadas a cada lado: la curva muestra la campana completa y la
+    # medición del cruce de fase no queda en un borde del barrido.
+    return {"f_start": f0 / 100, "f_stop": f0 * 100}
+
+
+def _l_resonante(f0: float, c: float) -> float:
+    return 1.0 / ((2 * math.pi * f0) ** 2 * c)
+
+
+def solve_rlc_series_bandpass(params: dict[str, Any]) -> dict[str, float]:
+    f0 = _param(params, "f_0", "f0", "fo", "target", default=1000.0)
+    q = _param(params, "q", default=5.0)
+    c = _param(params, "c", default=1e-8)
+    inductancia = _l_resonante(f0, c)
+    r = math.sqrt(inductancia / c) / q
+    return {"L": inductancia, "C": c, "R": round(r, 3), "f_0": f0, "q": q, **_barrido_resonancia(f0)}
+
+
+def solve_rlc_parallel_tank(params: dict[str, Any]) -> dict[str, float]:
+    f0 = _param(params, "f_0", "f0", "fo", "target", default=1000.0)
+    q = _param(params, "q", default=5.0)
+    c = _param(params, "c", default=1e-8)
+    inductancia = _l_resonante(f0, c)
+    rs = q * math.sqrt(inductancia / c)
+    return {"L": inductancia, "C": c, "Rs": round(rs, 3), "f_0": f0, "q": q, **_barrido_resonancia(f0)}
+
+
 CATALOG_SOLVERS = {
     "zener_regulated_power_supply": solve_zener_regulator,
     "linear_zener_regulator": solve_zener_regulator,
@@ -281,6 +355,11 @@ CATALOG_SOLVERS = {
     "opamp_integrator_practical": solve_opamp_integrator_practical,
     "voltage_divider": solve_voltage_divider_catalog,
     "sallen_key_lowpass_butterworth": solve_sallen_key,
+    "opamp_inverting_amp": solve_opamp_inverting_amp,
+    "opamp_difference_amp": solve_opamp_difference_amp,
+    "opamp_instrumentation_amp": solve_opamp_instrumentation_amp,
+    "rlc_series_bandpass": solve_rlc_series_bandpass,
+    "rlc_parallel_tank": solve_rlc_parallel_tank,
 }
 
 
@@ -297,6 +376,51 @@ COTAS_INFERIORES: dict[str, frozenset[str]] = {
 
 def cotas_inferiores(circuit_id: str) -> frozenset[str]:
     return COTAS_INFERIORES.get(circuit_id, frozenset())
+
+
+# Cuántas piezas físicas representa cada valor de la plantilla cuando aparece
+# en más de un lugar (las dos parejas del restador, las R del Sallen-Key):
+# la lista de materiales debe decir cuántas comprar.
+CANTIDADES: dict[str, dict[str, int]] = {
+    "sallen_key_lowpass_butterworth": {"R": 2},
+    "opamp_difference_amp": {"Rg": 2, "Rf": 2},
+    "opamp_instrumentation_amp": {"R": 2, "Rd": 4},
+}
+
+
+def cantidades(circuit_id: str) -> dict[str, int]:
+    return CANTIDADES.get(circuit_id, {})
+
+
+def _ajuste_proporcional(clave: str, exponente: float):
+    """metrica ∝ clave^exponente  =>  clave_nueva = clave · (objetivo/medido)^(1/exponente)."""
+
+    def ajustar(values: dict, target: float, actual: float) -> dict:
+        ratio = abs(target) / abs(actual)
+        return {**values, clave: max(values[clave] * ratio ** (1 / exponente), 1e-15)}
+
+    return ajustar
+
+
+def _ajuste_instrumentacion(values: dict, target: float, actual: float) -> dict:
+    # G - 1 = 2R/RG es exactamente inversa en RG; ajustar sobre G (no G - 1)
+    # se pasaría de largo con ganancias bajas.
+    if abs(actual) <= 1 or abs(target) <= 1:
+        return {**values, "RG": values["RG"] * (2 if abs(actual) > abs(target) else 0.5)}
+    return {**values, "RG": values["RG"] * (abs(actual) - 1) / (abs(target) - 1)}
+
+
+# Cómo corregir cada topología que la regla genérica del curador resolvería
+# mal (adivina la variable por el nombre: en un RLC escalaría R, que no mueve
+# f0). Con una entrada aquí el curador usa esta regla y no la genérica.
+AJUSTES: dict[str, Any] = {
+    "opamp_inverting_amp": _ajuste_proporcional("Rf", 1.0),
+    "opamp_difference_amp": _ajuste_proporcional("Rf", 1.0),
+    "opamp_instrumentation_amp": _ajuste_instrumentacion,
+    # f0 ∝ L^(-1/2): C suele ser el dato fijo (o el default), L es la que se calcula.
+    "rlc_series_bandpass": _ajuste_proporcional("L", -0.5),
+    "rlc_parallel_tank": _ajuste_proporcional("L", -0.5),
+}
 
 
 def solve_catalog_circuit(circuit_id: str, params: dict[str, Any]) -> dict[str, float]:

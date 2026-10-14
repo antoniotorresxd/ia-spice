@@ -67,8 +67,12 @@ comerciales:
   serie_capacitores: E12
   serie_inductores: E12
   # Si el valor más cercano de la serie se aleja más que el umbral (fracción,
-  # 0.01 = 1 %), se busca un par de resistencias en serie o en paralelo.
+  # 0.01 = 1 %), se busca un par de piezas en serie o en paralelo.
   combinar_resistencias: true
+  combinar_capacitores: true
+  # Los inductores casi solo vienen en E12/E6: sin combinar, un f0 exacto
+  # al 1 % suele ser inalcanzable.
+  combinar_inductores: true
   umbral_combinacion: 0.01
 
 llm:

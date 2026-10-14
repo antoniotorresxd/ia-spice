@@ -262,3 +262,96 @@ casos:
     referencia:
       - {requisito: hp, metrica: fc_-3db, objetivo: 500.0, componentes: {r: 31830.99, c: 1.0e-08, rg: 10000.0, rf: 10000.0}}
       - {requisito: amp, metrica: gain_at_freq, objetivo: 4.0, componentes: {rg: 1000.0, rf: 3000.0}}
+
+  # --- Topologías agregadas con el paso a valores comerciales (2026-10) ---
+
+  - id: inversor-ganancia-10
+    descripcion: "un amplificador inversor que convierta 0.5 V en -5 V"
+    spec:
+      blocks:
+        - id: b1
+          type: catalog
+          params:
+            circuit_id: opamp_inverting_amp
+            params: {v_in: 0.5, v_out: -5.0}
+            requirements: [{measure: v_out, value: -5.0}]
+    referencia:
+      - {requisito: b1, metrica: v_out, objetivo: -5.0, componentes: {rin: 10000.0, rf: 100000.0}}
+
+  - id: inversor-ganancia-22
+    descripcion: "un amplificador inversor de ganancia -22 para 0.2 V de entrada"
+    spec:
+      blocks:
+        - id: b1
+          type: catalog
+          params:
+            circuit_id: opamp_inverting_amp
+            params: {v_in: 0.2, v_out: -4.4}
+            requirements: [{measure: v_out, value: -4.4}]
+    referencia:
+      - {requisito: b1, metrica: v_out, objetivo: -4.4, componentes: {rin: 10000.0, rf: 220000.0}}
+
+  - id: diferencial-4v7
+    descripcion: "un amplificador diferencial (restador) de ganancia 4.7"
+    spec:
+      blocks:
+        - id: b1
+          type: catalog
+          params:
+            circuit_id: opamp_difference_amp
+            params: {gain: 4.7}
+            requirements: [{measure: gain, value: 4.7}]
+    referencia:
+      - {requisito: b1, metrica: gain, objetivo: 4.7, componentes: {rg: 10000.0, rf: 47000.0}}
+
+  - id: instrumentacion-100
+    descripcion: "un amplificador de instrumentación de tres op-amps con ganancia 100"
+    spec:
+      blocks:
+        - id: b1
+          type: catalog
+          params:
+            circuit_id: opamp_instrumentation_amp
+            params: {gain: 100.0}
+            requirements: [{measure: gain, value: 100.0}]
+    referencia:
+      - {requisito: b1, metrica: gain, objetivo: 100.0, componentes: {r: 10000.0, rg: 202.02, rd: 10000.0}}
+
+  - id: instrumentacion-3v3
+    descripcion: "un amplificador de instrumentación con ganancia 3.3"
+    spec:
+      blocks:
+        - id: b1
+          type: catalog
+          params:
+            circuit_id: opamp_instrumentation_amp
+            params: {gain: 3.3}
+            requirements: [{measure: gain, value: 3.3}]
+    referencia:
+      - {requisito: b1, metrica: gain, objetivo: 3.3, componentes: {r: 10000.0, rg: 8695.65, rd: 10000.0}}
+
+  - id: rlc-serie-10khz
+    descripcion: "un circuito RLC serie que resuene en 10 kHz con Q de 10"
+    spec:
+      blocks:
+        - id: b1
+          type: catalog
+          params:
+            circuit_id: rlc_series_bandpass
+            params: {f_0: 10000.0, q: 10.0}
+            requirements: [{measure: f0, value: 10000.0}]
+    referencia:
+      - {requisito: b1, metrica: f0, objetivo: 10000.0, componentes: {l: 0.0253303, c: 1e-08, r: 159.155}}
+
+  - id: rlc-paralelo-455khz
+    descripcion: "un tanque LC paralelo de 455 kHz (FI de AM) con Q de 20"
+    spec:
+      blocks:
+        - id: b1
+          type: catalog
+          params:
+            circuit_id: rlc_parallel_tank
+            params: {f_0: 455000.0, q: 20.0}
+            requirements: [{measure: f0, value: 455000.0}]
+    referencia:
+      - {requisito: b1, metrica: f0, objetivo: 455000.0, componentes: {l: 1.22354e-05, c: 1e-08, rs: 699.582}}

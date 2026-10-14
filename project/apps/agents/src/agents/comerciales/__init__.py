@@ -26,11 +26,24 @@ _TIPOS = (
     (re.compile(r"^L[A-Za-z0-9_]*$"), "inductor", "serie_inductores", "H"),
 )
 
+# Opción de la config que habilita combinar dos piezas, y cómo se llama la
+# conexión que suma sus valores para ese tipo de componente.
+_COMBINACION = {
+    "resistencia": ("combinar_resistencias", "serie"),
+    "capacitor": ("combinar_capacitores", "paralelo"),
+    "inductor": ("combinar_inductores", "serie"),
+}
+
 _SERIES_POR_DEFECTO = {
     "serie_resistencias": "E24",
     "serie_capacitores": "E12",
     "serie_inductores": "E12",
 }
+
+
+def marcadores(plantilla: str) -> set[str]:
+    """Nombres (normalizados) de los `{marcadores}` de una plantilla SPICE."""
+    return {_normalizar(n) for n in re.findall(r"\{([A-Za-z_][A-Za-z0-9_]*)\}", plantilla)}
 
 
 def _normalizar(nombre: str) -> str:
@@ -65,6 +78,8 @@ def config_comerciales(cfg: dict) -> dict:
         **_SERIES_POR_DEFECTO,
         "habilitado": bool(seccion.get("habilitado", True)),
         "combinar_resistencias": bool(seccion.get("combinar_resistencias", True)),
+        "combinar_capacitores": bool(seccion.get("combinar_capacitores", True)),
+        "combinar_inductores": bool(seccion.get("combinar_inductores", True)),
         "umbral_combinacion": float(seccion.get("umbral_combinacion", 0.01)),
         **{k: seccion[k] for k in _SERIES_POR_DEFECTO if k in seccion},
     }
@@ -92,6 +107,8 @@ def comercializar(
     params_usuario: dict | None,
     cfg: dict,
     minimos: frozenset[str] | set[str] = frozenset(),
+    usados: set[str] | None = None,
+    cantidades: dict[str, int] | None = None,
 ) -> tuple[dict, list[dict]]:
     """Valores listos para simular y la lista de materiales que los explica.
 
@@ -99,7 +116,10 @@ def comercializar(
     que no son componentes pasan sin tocarse. `minimos` son los componentes
     cuya ecuación es una cota inferior: se redondean hacia arriba, nunca al
     más cercano. Devuelve una copia: nunca muta la entrada, que es el estado
-    continuo del que depende el curador.
+    continuo del que depende el curador. `usados` (nombres normalizados de
+    los marcadores de la plantilla) deja fuera de la lista de materiales los
+    valores que el solver devuelve pero el circuito no usa; `cantidades`
+    dice cuántas piezas hay de cada valor repetido.
     """
     opciones = config_comerciales(cfg)
     if not opciones["habilitado"]:
@@ -111,6 +131,8 @@ def comercializar(
     for nombre, ideal in valores.items():
         if not _es_comprable(nombre, ideal, dados):
             continue
+        if usados is not None and _normalizar(nombre) not in usados:
+            continue
         tipo, clave_serie, unidad = clasificar(nombre)
         serie = opciones[clave_serie]
 
@@ -119,13 +141,13 @@ def comercializar(
         else:
             equivalente = mas_cercano(ideal, serie)
         realizacion, partes = "simple", [equivalente]
+        opcion_combinar, aditiva = _COMBINACION[tipo]
         if (
             nombre not in minimos
-            and tipo == "resistencia"
-            and opciones["combinar_resistencias"]
+            and opciones[opcion_combinar]
             and abs(error_relativo(equivalente, ideal)) > opciones["umbral_combinacion"]
         ):
-            combinada = mejor_combinacion(ideal, serie)
+            combinada = mejor_combinacion(ideal, serie, aditiva)
             if abs(error_relativo(combinada[2], ideal)) < abs(error_relativo(equivalente, ideal)):
                 realizacion, partes, equivalente = combinada
 
@@ -140,6 +162,7 @@ def comercializar(
                 "valor": equivalente,
                 "realizacion": realizacion,
                 "partes": partes,
+                "cantidad": (cantidades or {}).get(nombre, 1),
                 "error_pct": round(100 * error_relativo(equivalente, ideal), 3) + 0.0,  # sin "-0.00"
             }
         )
@@ -197,10 +220,13 @@ def comentarios_materiales(materiales: list[dict], bloque: str | None = None) ->
         if m["realizacion"] == "simple":
             comercial = partes[0]
         else:
+            # Notación de la conexión, no de la operación: dos capacitores en
+            # paralelo se suman, pero se escriben C1 || C2 igual que dos R.
             union = " + " if m["realizacion"] == "serie" else " || "
             comercial = f"{union.join(partes)} = {formatear(m['valor'], unidad)}"
+        cantidad = f" (x{m['cantidad']})" if m.get("cantidad", 1) > 1 else ""
         lineas.append(
-            f"*   {m['nombre']}: {formatear(m['ideal'], unidad)} -> {comercial}"
+            f"*   {m['nombre']}{cantidad}: {formatear(m['ideal'], unidad)} -> {comercial}"
             f" [{m['serie']}, {m['error_pct']:+.2f}%]"
         )
     return lineas

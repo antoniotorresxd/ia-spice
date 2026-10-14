@@ -55,14 +55,16 @@ def test_sintesis_generates_and_simulates_mixed_blocks():
     assert div["metrics"]["v_out"] == pytest.approx(3.3, rel=1e-3)
 
     # Lo que se simula es el valor comercial, no el teórico: C = 159.15 nF no
-    # existe y en E12 se aterriza a 150 nF, así que fc = 1/(2π·1k·150n).
+    # existe en E12 (150 nF queda a -5.7 %), así que se arma con dos
+    # capacitores en paralelo y fc vuelve a quedar dentro del 1 %.
     rc = final_state["sim_results"]["rc1"]
     assert rc["sim_error"] is None
-    assert final_state["commercial_values"]["rc1"]["C"] == pytest.approx(150e-9)
-    assert rc["metrics"]["fc"] == pytest.approx(1061.03, rel=0.02)
     materiales = {m["nombre"]: m for m in final_state["bom"]["rc1"]}
     assert materiales["R"]["error_pct"] == 0  # 1 kΩ ya es de la serie
-    assert materiales["C"]["valor"] == pytest.approx(150e-9)
+    assert materiales["C"]["realizacion"] == "paralelo"
+    assert sum(materiales["C"]["partes"]) == pytest.approx(materiales["C"]["valor"])
+    assert final_state["commercial_values"]["rc1"]["C"] == materiales["C"]["valor"]
+    assert rc["metrics"]["fc"] == pytest.approx(1000.0, rel=0.01)
     assert "Valores comerciales" in final_state["netlists"]["rc1"]["text"]
 
 

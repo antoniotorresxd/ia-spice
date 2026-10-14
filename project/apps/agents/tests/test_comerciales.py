@@ -303,3 +303,28 @@ def test_solo_con_e24_simple_el_lazo_recorre_valores_de_la_serie(config_con):
     assert all(_en_serie(r2, E24) for r2 in simulados)
     assert final["verdict"]["status"] == "accepted"
     assert final["sim_results"]["div1"]["metrics"]["v_out"] == pytest.approx(5.0, rel=0.05)
+
+
+def test_los_capacitores_se_combinan_en_paralelo():
+    # En capacitores la suma es la conexión en paralelo, al revés que en R.
+    simulados, (c,) = comercializar({"C": 159.15e-9}, None, HABILITADO)
+
+    assert c["realizacion"] == "paralelo"
+    assert sum(c["partes"]) == pytest.approx(c["valor"])
+    assert abs(c["error_pct"]) < 1
+    assert simulados["C"] == c["valor"]
+
+
+def test_los_inductores_se_combinan_en_serie():
+    _, (bobina,) = comercializar({"L": 25.33e-3}, None, HABILITADO)
+
+    assert bobina["realizacion"] == "serie"
+    assert sum(bobina["partes"]) == pytest.approx(bobina["valor"])
+
+
+def test_la_lista_de_materiales_omite_lo_que_la_plantilla_no_usa():
+    _, materiales = comercializar(
+        {"R1": 10_000.0, "Rg": 10_000.0}, None, HABILITADO, usados={"r1"}
+    )
+
+    assert [m["nombre"] for m in materiales] == ["R1"]

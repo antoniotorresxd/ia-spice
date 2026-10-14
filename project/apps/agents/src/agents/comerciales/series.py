@@ -107,14 +107,28 @@ def error_relativo(real: float, ideal: float) -> float:
     return (real - ideal) / ideal
 
 
-def mejor_combinacion(valor: float, serie: str) -> tuple[str, list[float], float]:
-    """La mejor realización con dos resistencias de la serie, en serie o en paralelo.
+def _limpio(valor: float) -> float:
+    # 150n + 9.1n da 1.5909999999999998e-07 en binario.
+    return float(f"{valor:.12g}")
+
+
+def mejor_combinacion(
+    valor: float, serie: str, aditiva: str = "serie"
+) -> tuple[str, list[float], float]:
+    """La mejor realización con dos piezas de la serie.
+
+    Dos piezas se combinan de dos formas: sumando (a + b) o por recíprocos
+    (a·b / (a + b)). Para resistencias e inductores la suma es la conexión en
+    serie; para capacitores es en paralelo, al revés. `aditiva` es el nombre
+    que lleva la suma ("serie" o "paralelo") y la otra recibe el contrario.
 
     Devuelve (realizacion, partes, valor_equivalente). La búsqueda es acotada
-    sin perder casos: en serie, la parte mayor siempre está entre valor/2 y
-    valor; en paralelo, la parte menor siempre está entre valor y 2·valor. La
-    otra parte se completa con el valor de la serie más cercano a lo que falta.
+    sin perder casos: en la suma, la parte mayor siempre está entre valor/2 y
+    valor; en la recíproca, la parte menor siempre está entre valor y 2·valor.
+    La otra parte se completa con el valor de la serie más cercano a lo que
+    falta.
     """
+    reciproca = "paralelo" if aditiva == "serie" else "serie"
     mejor: tuple[str, list[float], float] | None = None
 
     def _considerar(realizacion: str, partes: list[float], equivalente: float) -> None:
@@ -126,14 +140,14 @@ def mejor_combinacion(valor: float, serie: str) -> tuple[str, list[float], float
         resto = valor - a
         if resto > 0:
             b = mas_cercano(resto, serie)
-            _considerar("serie", [a, b], a + b)
+            _considerar(aditiva, [a, b], _limpio(a + b))
 
     for a in valores_en_rango(serie, valor, 2 * valor):
         if a <= valor:
             continue
         complemento = 1 / (1 / valor - 1 / a)
         b = mas_cercano(complemento, serie)
-        _considerar("paralelo", [a, b], a * b / (a + b))
+        _considerar(reciproca, [a, b], _limpio(a * b / (a + b)))
 
     if mejor is None:
         unico = mas_cercano(valor, serie)

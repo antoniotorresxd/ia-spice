@@ -717,6 +717,212 @@ echo $&fo > output.txt
       expected: { fo: 5000 },
     },
   },
+  {
+    id: "opamp_inverting_amp",
+    name: "Amplificador Inversor con Op-Amp",
+    category: "opamp",
+    description:
+      "Amplifica una señal invirtiendo su fase con ganancia A = -Rf / Rin.",
+    topologySummary:
+      "Vin a Rin hacia la entrada inversora (-); Rf entre (-) y vout; entrada no inversora (+) a tierra.",
+    parametersSchema: {
+      v_in: { type: "number", unit: "V", description: "Voltaje de entrada", required: true },
+      v_out: { type: "number", unit: "V", description: "Voltaje deseado de salida (signo opuesto a v_in)", required: true },
+      rin: { type: "number", unit: "Ohm", description: "Resistencia de entrada Rin (fija la impedancia de entrada)", default: 10000, required: false },
+    },
+    operatingConstraints:
+      "La impedancia de entrada es Rin. |v_out| por debajo de la alimentación del op-amp.",
+    designEquations:
+      "A = v_out / v_in (negativa). Rf = |A| * Rin.",
+    spiceTemplate: `* Inverting Op-Amp Amplifier
+Vin vin 0 DC {v_in}
+Rin vin vminus {Rin}
+Rf vminus vout {Rf}
+X1 0 vminus vout opamp
+
+.subckt opamp inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 159n
+Eout out 0 n2 0 1
+.ends
+.control
+op
+wrdata output.txt v(vout)
+.endc
+.end`,
+    numericalExample: {
+      specs: {v_in: 0.5, v_out: -5.0},
+      computed: {Rin: 10000.0, Rf: 100000.0},
+      expected: {v_out: -5.0},
+    },
+  },
+  {
+    id: "opamp_difference_amp",
+    name: "Amplificador Diferencial (Restador) con Op-Amp",
+    category: "opamp",
+    description:
+      "Amplifica la diferencia entre dos entradas, Vout = (Rf/Rg)·(Vp - Vn), y rechaza el modo común si las dos parejas de resistencias están apareadas.",
+    topologySummary:
+      "Vn a Rg hacia (-) con Rf de (-) a vout; Vp a Rg hacia (+) con Rf de (+) a tierra. Dos parejas idénticas Rg/Rf.",
+    parametersSchema: {
+      gain: { type: "number", description: "Ganancia diferencial deseada Rf/Rg", required: true },
+      v_d: { type: "number", unit: "V", description: "Tensión diferencial de prueba Vp - Vn", default: 0.1, required: false },
+      v_cm: { type: "number", unit: "V", description: "Tensión de modo común de prueba", default: 1.0, required: false },
+      rg: { type: "number", unit: "Ohm", description: "Resistencia de entrada Rg", default: 10000, required: false },
+    },
+    operatingConstraints:
+      "Las dos parejas Rg y Rf deben ser iguales (tolerancia 1 % o mejor) para un buen CMRR. Impedancia de entrada baja (Rg): si la fuente no es de baja impedancia, usar el amplificador de instrumentación.",
+    designEquations:
+      "Rf = gain * Rg. Vout = (Rf/Rg)(Vp - Vn).",
+    spiceTemplate: `* Difference Op-Amp Amplifier
+Vp vp 0 DC {Vp}
+Vn vn 0 DC {Vn}
+R1 vn vminus {Rg}
+R2 vminus vout {Rf}
+R3 vp vplus {Rg}
+R4 vplus 0 {Rf}
+X1 vplus vminus vout opamp
+
+.subckt opamp inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 159n
+Eout out 0 n2 0 1
+.ends
+.control
+op
+let gain = v(vout) / (v(vp) - v(vn))
+echo $&gain > output.txt
+.endc
+.end`,
+    numericalExample: {
+      specs: {gain: 4.7},
+      computed: {Rg: 10000.0, Rf: 47000.0},
+      expected: {gain: 4.7},
+    },
+  },
+  {
+    id: "opamp_instrumentation_amp",
+    name: "Amplificador de Instrumentación de Tres Op-Amps",
+    category: "opamp",
+    description:
+      "Amplificador diferencial de alta impedancia de entrada y alto CMRR; la ganancia se fija con una sola resistencia RG: G = 1 + 2R/RG.",
+    topologySummary:
+      "Etapa de entrada: dos seguidores no inversores (A1 en Vp, A2 en Vn) unidos por R-RG-R entre sus entradas inversoras. Etapa de salida: restador de ganancia unitaria con cuatro resistencias Rd.",
+    parametersSchema: {
+      gain: { type: "number", description: "Ganancia diferencial total deseada (>= 1)", required: true },
+      v_d: { type: "number", unit: "V", description: "Tensión diferencial de prueba Vp - Vn", default: 0.01, required: false },
+      v_cm: { type: "number", unit: "V", description: "Tensión de modo común de prueba", default: 1.0, required: false },
+      r: { type: "number", unit: "Ohm", description: "Resistencias R de la etapa de entrada", default: 10000, required: false },
+    },
+    operatingConstraints:
+      "G >= 1. Las cuatro Rd del restador deben estar apareadas. Las salidas de A1/A2 no deben saturar: |v_cm| + G·|v_d|/2 por debajo de la alimentación.",
+    designEquations:
+      "G = 1 + 2R/RG  =>  RG = 2R / (G - 1). Restador con Rd iguales (ganancia 1). Para G = 1, RG abierta (se usa un valor muy grande).",
+    spiceTemplate: `* Three Op-Amp Instrumentation Amplifier
+Vp vp 0 DC {Vp}
+Vn vn 0 DC {Vn}
+X1 vp n1 a1 opamp
+X2 vn n2 a2 opamp
+R1 a1 n1 {R}
+RG n1 n2 {RG}
+R2 a2 n2 {R}
+R3 a2 vminus {Rd}
+R4 vminus vout {Rd}
+R5 a1 vplus {Rd}
+R6 vplus 0 {Rd}
+X3 vplus vminus vout opamp
+
+.subckt opamp inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 159n
+Eout out 0 n2 0 1
+.ends
+.control
+op
+let gain = v(vout) / (v(vp) - v(vn))
+echo $&gain > output.txt
+.endc
+.end`,
+    numericalExample: {
+      specs: {gain: 100},
+      computed: {R: 10000.0, RG: 202.02, Rd: 10000.0},
+      expected: {gain: 100},
+    },
+  },
+  {
+    id: "rlc_series_bandpass",
+    name: "Circuito Resonante RLC Serie (Pasa-Banda)",
+    category: "resonancia",
+    description:
+      "Circuito RLC serie con salida en R: en la frecuencia de resonancia f0 las reactancias de L y C se cancelan, la impedancia es mínima (R) y la salida es máxima.",
+    topologySummary:
+      "Vin en serie con L y C; R entre vout y tierra (la salida se toma en R).",
+    parametersSchema: {
+      f_0: { type: "number", unit: "Hz", description: "Frecuencia de resonancia", required: true },
+      q: { type: "number", description: "Factor de calidad Q = f0 / BW", default: 5, required: false },
+      c: { type: "number", unit: "F", description: "Condensador", default: 1e-08, required: false },
+    },
+    operatingConstraints:
+      "Q alto exige R pequeña frente a sqrt(L/C). Inductores reales tienen resistencia serie (ESR) que limita Q.",
+    designEquations:
+      "f0 = 1 / (2*pi*sqrt(L*C)) => L = 1 / ((2*pi*f0)^2 * C). Q = (1/R)*sqrt(L/C) => R = sqrt(L/C) / Q. BW = f0 / Q. En resonancia X_L = X_C = 2*pi*f0*L.",
+    spiceTemplate: `* Series RLC Resonant Bandpass
+Vin vin 0 DC 0 AC 1
+L1 vin n1 {L}
+C1 n1 vout {C}
+R1 vout 0 {R}
+.control
+ac dec 1000 {f_start} {f_stop}
+meas ac f0 WHEN vp(vout)=0
+echo $&f0 > output.txt
+.endc
+.end`,
+    numericalExample: {
+      specs: {f_0: 10000, q: 10},
+      computed: {L: 0.02533, C: 1e-08, R: 159.155},
+      expected: {f0: 10000},
+    },
+  },
+  {
+    id: "rlc_parallel_tank",
+    name: "Circuito Resonante RLC Paralelo (Tanque)",
+    category: "resonancia",
+    description:
+      "Tanque L||C alimentado a través de una resistencia: en f0 la impedancia del tanque es máxima y la tensión de salida es máxima.",
+    topologySummary:
+      "Vin a Rs hacia vout; L y C en paralelo entre vout y tierra.",
+    parametersSchema: {
+      f_0: { type: "number", unit: "Hz", description: "Frecuencia de resonancia", required: true },
+      q: { type: "number", description: "Factor de calidad Q = f0 / BW", default: 5, required: false },
+      c: { type: "number", unit: "F", description: "Condensador", default: 1e-08, required: false },
+    },
+    operatingConstraints:
+      "El Q cargado depende de Rs (y de la carga en paralelo): Q = Rs * sqrt(C/L).",
+    designEquations:
+      "f0 = 1 / (2*pi*sqrt(L*C)) => L = 1 / ((2*pi*f0)^2 * C). Q = Rs*sqrt(C/L) => Rs = Q*sqrt(L/C). BW = f0 / Q.",
+    spiceTemplate: `* Parallel RLC Tank
+Vin vin 0 DC 0 AC 1
+Rs vin vout {Rs}
+L1 vout 0 {L}
+C1 vout 0 {C}
+.control
+ac dec 1000 {f_start} {f_stop}
+meas ac f0 WHEN vp(vout)=0
+echo $&f0 > output.txt
+.endc
+.end`,
+    numericalExample: {
+      specs: {f_0: 455000, q: 20},
+      computed: {L: 1.224e-05, C: 1e-08, Rs: 699.582},
+      expected: {f0: 455000},
+    },
+  },
 ];
 
 export async function listCircuits(category?: string): Promise<CircuitKnowledge[]> {

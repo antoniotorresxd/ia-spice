@@ -5,11 +5,17 @@ import tempfile
 
 from langchain_core.runnables import RunnableConfig
 
-from agents.calculo.catalog_solver import cotas_inferiores
-from agents.comerciales import comentarios_materiales, comercializar, insertar_comentarios
+from agents.calculo.catalog_solver import cantidades, cotas_inferiores
+from agents.comerciales import (
+    comentarios_materiales,
+    comercializar,
+    insertar_comentarios,
+    marcadores,
+)
 from agents.config import get_config
 from agents.escritura.composition import assemble_composed_netlist
 from agents.escritura.netlist import NETLIST_BUILDERS
+from agents.knowledge.circuit_client import fetch_circuit_detail
 from agents.llm.factory import build_chat_model
 from agents.llm.settings_client import LlmSettingsError, fetch_agent_llm
 from agents.state import CircuitState
@@ -50,8 +56,15 @@ def _comercializar_bloque(block: dict, values: dict, cfg: dict) -> tuple[dict, l
     if block["type"] != "catalog":
         return values, []
     params = block["params"]
+    circuit_id = params.get("circuit_id", "")
+    circuit = fetch_circuit_detail(circuit_id)
     return comercializar(
-        values, params.get("params"), cfg, cotas_inferiores(params.get("circuit_id", ""))
+        values,
+        params.get("params"),
+        cfg,
+        cotas_inferiores(circuit_id),
+        usados=marcadores(circuit.spiceTemplate) if circuit and circuit.spiceTemplate else None,
+        cantidades=cantidades(circuit_id),
     )
 
 
