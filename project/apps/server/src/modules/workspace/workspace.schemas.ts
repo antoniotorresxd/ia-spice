@@ -278,6 +278,7 @@ export function toConversationDetail(
         tags: item.tags,
         components: item.components,
         measurementExplanation: item.measurementExplanation,
+        designWalkthrough: item.designWalkthrough ?? null,
         bom: item.bom ?? null,
         simResult,
       };

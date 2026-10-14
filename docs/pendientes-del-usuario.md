@@ -36,6 +36,19 @@ Dos detalles que cuestan una tarde si se pasan por alto:
 Sin esta variable el sistema funciona igual, pero una corrida interrumpida se
 pierde en lugar de poder retomarse.
 
+**Migración pendiente (2026-10-14): columna `artifact.design_walkthrough`.** El
+paso a paso del documentador ("Cómo se diseñó") se guarda en una columna nueva
+de `artifact`. Desde `project/apps/server`:
+
+```bash
+bun run db:generate
+bun run db:migrate
+```
+
+Hay que correrla **antes** de desplegar ese cambio: el server lee todas las
+columnas de `artifact`, y sin esta las conversaciones dejan de abrirse (igual
+que pasó con `bom`).
+
 ## 2. Limpiar la caché de Docker
 
 Una imagen intermedia del servidor llegó a contener el `.env` con secretos
@@ -118,6 +131,14 @@ Estado por fase del diseño de la iteración
 | **6 — Correcciones a la tesina** | ⬜ Sin empezar |
 
 ### Detalle de lo que queda
+
+**Idea en pausa — recomendar contenido de internet (2026-10-14).** Que el
+documentador sugiera material para profundizar en cada circuito. Descartado
+pedirle URLs al LLM (las inventa). Opciones evaluadas: API de Wikipedia
+(gratis, sin key), Tavily (capa gratuita con key), **SearXNG autoalojado en
+Railway** (la favorita: sin límite ni key, pero un servicio más que mantener) y
+`ddgs`/DuckDuckGo (no oficial, frágil). Pendiente pensar mejor la idea antes de
+construirla.
 
 **Fase 3 — Cálculo híbrido.** El LLM propone los valores de los componentes con
 las ecuaciones de diseño en contexto, y la fórmula cerrada los verifica; si la

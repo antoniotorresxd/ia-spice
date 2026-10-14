@@ -552,6 +552,8 @@ def test_el_grafo_documenta_el_divisor_y_descarta_componentes_inventados(monkeyp
                 tags=["divisor"],
                 components={"R1": "resistencia superior", "FAKE99": "inventado"},
                 measurement_explanation="Mide el voltaje de salida",
+                chat_summary="Diseñé el divisor.",
+                design_walkthrough="1. Requisito.",
             )
 
     monkeypatch.setattr(documentador_module, "get_chat_model", lambda user_id: _ModeloFalso())
@@ -582,6 +584,8 @@ def test_el_grafo_documenta_el_divisor_y_descarta_componentes_inventados(monkeyp
         "tags": ["divisor"],
         "components": {"R1": "resistencia superior"},
         "measurement_explanation": "Mide el voltaje de salida",
+        "chat_summary": "Diseñé el divisor.",
+        "design_walkthrough": "1. Requisito.",
     }
 
 

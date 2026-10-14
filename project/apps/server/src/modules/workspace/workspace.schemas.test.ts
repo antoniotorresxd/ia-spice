@@ -128,6 +128,7 @@ const artifactRow = {
   tags: ["divisor", "resistivo"],
   components: { R1: "Resistencia de entrada." },
   measurementExplanation: "Mide el voltaje de salida.",
+  designWalkthrough: "1. Requisito: dividir 10 V a la mitad.",
   bom: null,
   createdAt: new Date("2026-07-29T12:00:05Z"),
 };
@@ -173,6 +174,7 @@ describe("toConversationDetail", () => {
         tags: ["divisor", "resistivo"],
         components: { R1: "Resistencia de entrada." },
         measurementExplanation: "Mide el voltaje de salida.",
+        designWalkthrough: "1. Requisito: dividir 10 V a la mitad.",
         bom: null,
         simResult: null,
       },
@@ -196,6 +198,7 @@ describe("toConversationDetail", () => {
       tags: null,
       components: null,
       measurementExplanation: null,
+      designWalkthrough: null,
     }], executionRow);
     expect(detail.files).toEqual([{
       id: "art-1",
@@ -207,6 +210,7 @@ describe("toConversationDetail", () => {
       tags: null,
       components: null,
       measurementExplanation: null,
+      designWalkthrough: null,
       bom: null,
       simResult: null,
     }]);

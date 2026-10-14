@@ -138,6 +138,9 @@ export const artifact = pgTable(
     tags: jsonb("tags").$type<string[]>(),
     components: jsonb("components").$type<Record<string, string>>(),
     measurementExplanation: text("measurement_explanation"),
+    // Paso a paso del diseño que escribe el documentador (Markdown con LaTeX).
+    // Null en artefactos anteriores o sin documentador configurado.
+    designWalkthrough: text("design_walkthrough"),
     // Lista de materiales del bloque tal como la arma agents (valores
     // comerciales y semiconductores reales). Null en artefactos anteriores.
     bom: jsonb("bom").$type<BomItem[]>(),

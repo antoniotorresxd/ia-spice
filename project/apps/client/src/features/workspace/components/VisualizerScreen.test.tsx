@@ -102,6 +102,61 @@ describe('VisualizerScreen', () => {
     expect(within(screen.getByRole('row', { name: /^R2/ })).getByText('Resistencia inferior del divisor')).toBeVisible()
     // V1 no tiene rol documentado
     expect(within(screen.getByRole('row', { name: /^V1/ })).getByText('—')).toBeVisible()
+
+    // Sin paso a paso del documentador no hay pestaña "Cómo se diseñó"
+    expect(screen.queryByRole('button', { name: /cómo se diseñó/i })).not.toBeInTheDocument()
+  })
+
+  it('muestra el paso a paso del documentador en su pestaña', async () => {
+    const service = createMockWorkspaceService()
+    vi.spyOn(service, 'getFiles').mockResolvedValue([
+      {
+        id: 'file-doc',
+        conversationId: 'conv-doc',
+        name: 'divisor.cir',
+        language: 'spice',
+        status: 'complete',
+        createdAt: '2026-07-15T12:00:00.000Z',
+        conversationTitle: 'Divisor',
+        projectId: null,
+      },
+    ])
+    vi.spyOn(service, 'getConversation').mockResolvedValue({
+      id: 'conv-doc',
+      projectId: null,
+      title: 'Divisor',
+      preview: 'Divisor',
+      updatedAt: '2026-07-15T12:00:00.000Z',
+      executionStatus: 'completed',
+      messages: [],
+      files: [
+        {
+          id: 'file-doc',
+          name: 'divisor.cir',
+          language: 'spice',
+          content: '.title Divisor\nV1 in 0 DC 10\nR1 in out 1k\nR2 out 0 1k\n.end',
+          status: 'complete',
+          summary: 'Divide 10 V.',
+          tags: [],
+          components: {},
+          measurementExplanation: null,
+          designWalkthrough: '## 1. Requisito\nSalida de **5 V**.\n\n$$V_{out} = V_{in}\\frac{R_2}{R_1 + R_2}$$',
+        },
+      ],
+      execution: { id: 'exec-doc', status: 'completed', summary: 'Completado' },
+    })
+
+    const { container } = render(
+      <MemoryRouter initialEntries={['/visualizer?conversationId=conv-doc&fileId=file-doc']}>
+        <VisualizerScreen service={service} />
+      </MemoryRouter>,
+    )
+
+    await userEvent.click(await screen.findByRole('button', { name: /cómo se diseñó/i }))
+
+    expect(screen.getByRole('heading', { name: '1. Requisito' })).toBeVisible()
+    expect(screen.getByText('5 V').tagName).toBe('STRONG')
+    expect(container.querySelector('.katex-display')).not.toBeNull()
   })
 
   it('allows editing SPICE netlist and correctly draws multi-shunt Zener regulator circuit without collisions', async () => {

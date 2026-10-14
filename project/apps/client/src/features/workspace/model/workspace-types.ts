@@ -63,6 +63,8 @@ export type WorkspaceFile = {
   tags: string[] | null
   components: Record<string, string> | null
   measurementExplanation: string | null
+  // Paso a paso del diseño (Markdown con LaTeX); ausente en artefactos viejos.
+  designWalkthrough?: string | null
   bom?: BomItem[] | null
   simResult?: BlockSimResult | null
 }
@@ -70,7 +72,7 @@ export type WorkspaceFile = {
 // Lo que el agente documentador escribió sobre el netlist final de un bloque.
 export type CircuitDocumentation = Pick<
   WorkspaceFile,
-  'summary' | 'tags' | 'components' | 'measurementExplanation'
+  'summary' | 'tags' | 'components' | 'measurementExplanation' | 'designWalkthrough'
 >
 
 export type TraceStepUsage = {

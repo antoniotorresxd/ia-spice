@@ -54,6 +54,8 @@ def _documentation(**kwargs):
         tags=["divisor"],
         components=kwargs.get("components", {"R1": "limita corriente"}),
         measurement_explanation="mide v_out",
+        chat_summary="Diseñé un divisor que entrega 5 V.",
+        design_walkthrough="1. Requisito: v_out = 5 V.",
     )
 
 
@@ -171,6 +173,44 @@ def test_solo_se_documentan_bloques_con_netlist(monkeypatch):
 
     assert set(result["documentation"]) == {"b1"}
     assert len(modelo.mensajes_por_llamada) == 1
+
+
+def test_el_documentador_recibe_los_datos_reales_del_diseno(monkeypatch):
+    """El paso a paso se narra sobre lo que de verdad pasó, no sobre lo que el
+    LLM imagina: requisitos, valores ideales y comerciales, BOM e iteraciones."""
+    modelo = _ModeloFalso(_documentation())
+    monkeypatch.setattr(documentador_module, "get_chat_model", lambda user_id: modelo)
+    state = _state()
+    state["normalized_spec"]["blocks"][0]["requirements"] = [{"metric": "v_out", "target": 5.0, "tolerance": 0.02}]
+    state["component_values"] = {"b1": {"R1": 1012.3, "R2": 1000.0}}
+    state["commercial_values"] = {"b1": {"R1": 1000.0, "R2": 1000.0}}
+    state["bom"] = {"b1": [{"nombre": "R1", "tipo": "resistencia", "ideal": 1012.3, "valor": 1000.0, "serie": "E24"}]}
+    state["history"] = [
+        {"iteration": 0, "decision": "adjust", "worst_rel_err": 0.04, "sim_results": {"b1": {"metrics": {"v_out": 4.8}}}},
+        {"iteration": 1, "decision": "accept", "worst_rel_err": 0.0, "sim_results": {"b1": {"metrics": {"v_out": 5.0}}}},
+    ]
+
+    documentador_node(state, {"configurable": {"user_id": "u1"}})
+
+    texto = modelo.mensajes_por_llamada[0][1]["content"]
+    assert '"tolerance": 0.02' in texto
+    assert "1012.3" in texto  # valor ideal
+    assert '"serie": "E24"' in texto  # BOM
+    assert "iteración 1: adjust" in texto and "iteración 2: accept" in texto
+    assert "v_out = 4.8" in texto
+
+
+def test_el_prompt_de_sistema_pide_el_resumen_y_el_paso_a_paso(monkeypatch):
+    modelo = _ModeloFalso(_documentation())
+    monkeypatch.setattr(documentador_module, "get_chat_model", lambda user_id: modelo)
+
+    result = documentador_node(_state(), {"configurable": {"user_id": "u1"}})
+
+    sistema = modelo.mensajes_por_llamada[0][0]["content"]
+    assert sistema.startswith("System prompt de prueba")
+    assert "chat_summary" in sistema and "design_walkthrough" in sistema
+    assert result["documentation"]["b1"]["chat_summary"] == "Diseñé un divisor que entrega 5 V."
+    assert result["documentation"]["b1"]["design_walkthrough"].startswith("1. Requisito")
 
 
 @pytest.fixture(autouse=True)

@@ -60,6 +60,9 @@ export type AgentsRunResult = {
     tags: string[];
     components: Record<string, string>;
     measurement_explanation: string;
+    // Ausentes en agents anteriores al resumen para el chat y al paso a paso.
+    chat_summary?: string;
+    design_walkthrough?: string;
   } | null> | null;
   history: unknown[];
   iteration: number;
@@ -75,6 +78,7 @@ export type ArtifactDraft = {
   tags: string[] | null;
   components: Record<string, string> | null;
   measurementExplanation: string | null;
+  designWalkthrough: string | null;
   bom: BomItem[] | null;
 };
 
@@ -118,26 +122,62 @@ export function toArtifactDrafts(result: AgentsRunResult): ArtifactDraft[] {
       tags: documentation?.tags ?? null,
       components: documentation?.components ?? null,
       measurementExplanation: documentation?.measurement_explanation ?? null,
+      designWalkthrough: documentation?.design_walkthrough ?? null,
       bom: result.bom?.[blockId] ?? null,
     };
   });
 }
 
-export function toAssistantMessage(result: AgentsRunResult): string {
-  const { summary } = mapVerdictToStatus(result.verdict);
+const ACCEPTED_BY_TOLERANCE = "all blocks within tolerance";
 
-  const lines = Object.entries(result.sim_results ?? {}).flatMap(([blockId, sim]) =>
-    sim.metrics
-      ? Object.entries(sim.metrics).map(([metric, value]) => `${blockId}.${metric} = ${value}`)
-      : [`${blockId}: ${sim.sim_error}`],
+// Una línea legible por bloque cuando el documentador no dio su resumen:
+// la medición frente al objetivo, o por qué no hubo medición.
+function blockResultLine(blockId: string, sim: BlockSimResult | undefined): string {
+  if (!sim) return `**${blockId}**: sin resultado de simulación.`;
+  if (sim.sim_error) return `**${blockId}**: la simulación falló (${sim.sim_error}).`;
+  const measured = Object.entries(sim.metrics ?? {}).map(([metric, value]) => {
+    const target = metric === sim.metric_name ? sim.target_value : null;
+    if (target == null || target === 0) return `${metric} = ${value}`;
+    const error = Number(((Math.abs(value - target) / Math.abs(target)) * 100).toPrecision(2));
+    return `${metric} = ${value} (objetivo ${target}, error ${error} %)`;
+  });
+  return `**${blockId}**: ${measured.join(", ") || "sin métricas medidas."}`;
+}
+
+// El mensaje final de un diseño, en lenguaje de persona: el resumen que
+// escribió el documentador para cada bloque o, si no lo hay, una línea
+// redactada con la medición. Nunca el volcado crudo de `bloque.métrica`.
+export function toAssistantMessage(result: AgentsRunResult): string {
+  const blockIds = Object.keys(result.netlists ?? {}).length
+    ? Object.keys(result.netlists)
+    : Object.keys(result.sim_results ?? {});
+  const documentation = result.documentation ?? {};
+  const summaries = blockIds.map(
+    (blockId) => documentation[blockId]?.chat_summary || blockResultLine(blockId, result.sim_results?.[blockId]),
   );
+  const documented = blockIds.some((blockId) => documentation[blockId]?.chat_summary);
+
+  if (documented) {
+    const walkthrough = blockIds.some((blockId) => documentation[blockId]?.design_walkthrough)
+      ? "\n\n_El paso a paso del diseño está en la pestaña **Cómo se diseñó** del visualizador._"
+      : "";
+    return summaries.join("\n\n") + walkthrough;
+  }
 
   // iteration es 0-based en CircuitState; lo que interesa es cuántas corrió
-  const iterations = `Iteraciones: ${result.iteration + 1}`;
+  const runs = result.iteration + 1;
+  const iterations = `${runs} ${runs === 1 ? "iteración" : "iteraciones"}`;
+  const verdict = result.verdict;
+  const header =
+    verdict?.status === "accepted"
+      ? verdict.reason === ACCEPTED_BY_TOLERANCE
+        ? `El diseño quedó dentro de tolerancia en ${iterations}.`
+        : `Diseño aceptado en ${iterations}: ${verdict.reason}.`
+      : verdict?.status === "rejected"
+        ? `No conseguí un diseño dentro de tolerancia: ${mapVerdictToStatus(verdict).summary}`
+        : mapVerdictToStatus(verdict).summary;
 
-  return lines.length > 0
-    ? `${summary}\n\n${lines.join("\n")}\n${iterations}`
-    : `${summary}\n\n${iterations}`;
+  return summaries.length ? `${header}\n\n${summaries.map((line) => `- ${line}`).join("\n")}` : header;
 }
 
 export type RunOutcome = {

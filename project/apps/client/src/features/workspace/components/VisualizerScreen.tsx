@@ -1,6 +1,7 @@
 import {
   Activity,
   ArrowUpRight,
+  BookOpen,
   Check,
   ChevronDown,
   FileCode2,
@@ -21,6 +22,7 @@ import type {
 } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
 import { BomTable } from './BomTable'
+import { MarkdownText } from './MarkdownText'
 import { CircuitExplanation, NetlistDiagram } from './NetlistDiagram'
 import { SimulationChart } from './SimulationChart'
 import { SpiceCodeEditor } from './SpiceCodeEditor'
@@ -186,7 +188,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
   const [activeFileDocumentation, setActiveFileDocumentation] = useState<CircuitDocumentation | null>(null)
   const [activeFileSimResult, setActiveFileSimResult] = useState<BlockSimResult | null>(null)
   const [activeFileBom, setActiveFileBom] = useState<BomItem[] | null>(null)
-  const [viewMode, setViewMode] = useState<'schematic' | 'code' | 'simulation' | 'bom'>('schematic')
+  const [viewMode, setViewMode] = useState<'schematic' | 'code' | 'simulation' | 'bom' | 'walkthrough'>('schematic')
   const [cache, setCache] = useState<Record<string, WorkspaceConversationDetail>>({})
 
   // Cargar lista de archivos y snapshot
@@ -414,13 +416,27 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
                 <span>Curva de Simulación SPICE</span>
               </button>
             )}
+            {activeFileDocumentation?.designWalkthrough && (
+              <button
+                type="button"
+                className={`${styles.viewToggleBtn} ${viewMode === 'walkthrough' ? styles.viewToggleBtnActive : ''}`}
+                onClick={() => setViewMode('walkthrough')}
+              >
+                <BookOpen size={13} />
+                <span>Cómo se diseñó</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Visor Central (Diagrama / Editor de Código / Curva) */}
       <section className={styles.viewerSection} data-tour="circuit-viewer" aria-label="Lienzo y visualización del circuito">
-        {viewMode === 'bom' && activeFileBom ? (
+        {viewMode === 'walkthrough' && activeFileDocumentation?.designWalkthrough ? (
+          <article className={styles.walkthrough} aria-label="Cómo se diseñó el circuito">
+            <MarkdownText>{activeFileDocumentation.designWalkthrough}</MarkdownText>
+          </article>
+        ) : viewMode === 'bom' && activeFileBom ? (
           <BomTable items={activeFileBom} />
         ) : viewMode === 'simulation' && activeFileSimResult ? (
           <SimulationChart

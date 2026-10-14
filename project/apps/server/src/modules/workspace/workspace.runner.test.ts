@@ -74,6 +74,7 @@ describe("toArtifactDrafts", () => {
         tags: null,
         components: null,
         measurementExplanation: null,
+        designWalkthrough: null,
         bom: null,
       },
     ]);
@@ -97,6 +98,8 @@ describe("toArtifactDrafts", () => {
           tags: ["divisor", "resistivo"],
           components: { R1: "Resistencia de entrada." },
           measurement_explanation: "Mide el voltaje de salida.",
+          chat_summary: "Diseñé un divisor.",
+          design_walkthrough: "1. Requisito: v_out = 5 V.",
         },
       },
       sim_results: { "block-1": { metrics: null, sim_error: "ngspice exited 1" } },
@@ -106,6 +109,7 @@ describe("toArtifactDrafts", () => {
       tags: ["divisor", "resistivo"],
       components: { R1: "Resistencia de entrada." },
       measurementExplanation: "Mide el voltaje de salida.",
+      designWalkthrough: "1. Requisito: v_out = 5 V.",
       status: "partial",
     });
   });
@@ -131,6 +135,7 @@ describe("toArtifactDrafts", () => {
           tags: null,
           components: null,
           measurementExplanation: null,
+          designWalkthrough: null,
         });
       }
     });
@@ -150,19 +155,72 @@ describe("toArtifactDrafts", () => {
 });
 
 describe("toAssistantMessage", () => {
-  test("incluye el resumen, las métricas medidas y las iteraciones", () => {
-    const content = toAssistantMessage(accepted);
-    expect(content).toContain("all blocks within tolerance");
-    expect(content).toContain("block-1.v_out = 5.01");
-    expect(content).toContain("Iteraciones: 1");
+  const documented = (chat_summary: string, design_walkthrough = "1. Requisito") => ({
+    summary: "s",
+    tags: [],
+    components: {},
+    measurement_explanation: "m",
+    chat_summary,
+    design_walkthrough,
   });
 
-  test("un bloque con error de simulación reporta el error en lugar de la métrica", () => {
+  test("con documentador, el mensaje es su resumen y remite al paso a paso", () => {
+    const content = toAssistantMessage({
+      ...accepted,
+      documentation: { "block-1": documented("Diseñé un divisor: la simulación midió **5.01 V**.") },
+    });
+    expect(content).toContain("Diseñé un divisor: la simulación midió **5.01 V**.");
+    expect(content).toContain("Cómo se diseñó");
+    expect(content).not.toContain("block-1.v_out");
+    expect(content).not.toContain("all blocks within tolerance");
+  });
+
+  test("sin documentador, redacta el resultado en vez de volcar parámetros", () => {
+    const content = toAssistantMessage(accepted);
+    expect(content).toContain("El diseño quedó dentro de tolerancia en 1 iteración.");
+    expect(content).toContain("**block-1**: v_out = 5.01");
+    expect(content).not.toContain("all blocks within tolerance");
+    expect(content).not.toContain("Iteraciones:");
+    expect(content).not.toContain("Cómo se diseñó");
+  });
+
+  test("con objetivo conocido dice el error frente a él", () => {
+    const content = toAssistantMessage({
+      ...accepted,
+      iteration: 2,
+      sim_results: {
+        "block-1": { metrics: { gain: 1.99992 }, sim_error: null, metric_name: "gain", measured_value: 1.99992, target_value: 2 },
+      },
+    });
+    expect(content).toContain("en 3 iteraciones");
+    expect(content).toContain("**block-1**: gain = 1.99992 (objetivo 2, error 0.004 %)");
+  });
+
+  test("un bloque con error de simulación lo dice en lugar de la métrica", () => {
     const content = toAssistantMessage({
       ...accepted,
       sim_results: { "block-1": { metrics: null, sim_error: "ngspice exited 1" } },
     });
-    expect(content).toContain("block-1: ngspice exited 1");
+    expect(content).toContain("**block-1**: la simulación falló (ngspice exited 1)");
+  });
+
+  test("un bloque sin resumen del documentador cae a la línea redactada", () => {
+    const content = toAssistantMessage({
+      ...accepted,
+      netlists: { ...accepted.netlists, "block-2": { path: "/tmp/b2.cir", text: "* b2" } },
+      sim_results: { ...accepted.sim_results, "block-2": { metrics: { i_out: 0.02 }, sim_error: null } },
+      documentation: { "block-1": documented("Resumen del bloque 1."), "block-2": null },
+    });
+    expect(content).toContain("Resumen del bloque 1.");
+    expect(content).toContain("**block-2**: i_out = 0.02");
+  });
+
+  test("un rechazo dice el motivo", () => {
+    const content = toAssistantMessage({
+      ...accepted,
+      verdict: { status: "rejected", reason: "goals not met after 5 iterations", best_iteration: 2 },
+    });
+    expect(content).toContain("No conseguí un diseño dentro de tolerancia: goals not met after 5 iterations");
   });
 });
 
