@@ -17,6 +17,15 @@ class CircuitState(TypedDict):
     # cuando el turno no trae ninguna.
     images: list | None
 
+    # Autocorrección del planteamiento (modo análisis). `correccion_analisis`
+    # la deja 'analisis' cuando el motor no pudo resolver o ngspice no
+    # reproduce lo transcrito: {"anterior": json del planteamiento, "error":
+    # texto}; el orquestador la consume y la vuelve None. `correcciones_hechas`
+    # guarda los errores que motivaron cada reintento, para el informe y para
+    # acotar los reintentos.
+    correccion_analisis: dict | None
+    correcciones_hechas: list | None
+
     # Escrito por 'orquestador'
     normalized_spec: dict | None
     pending_blocks: list | None

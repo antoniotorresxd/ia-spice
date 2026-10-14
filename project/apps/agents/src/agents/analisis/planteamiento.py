@@ -575,6 +575,19 @@ def informe_planteamiento(spec: dict, r: dict) -> str:
     return "\n".join(lineas)
 
 
+def _fallas(v: dict) -> list[str]:
+    """Lo que ngspice no reprodujo, en una línea por caso, para la autocorrección."""
+    fallas = []
+    for e in v["escenarios"]:
+        for m in e["mediciones"]:
+            if not m["coincide"]:
+                fallas.append(f"«{e['nombre']}» {m['expresion']}: se esperaba {m['medido']:.4g}, ngspice da " + (f"{m['ngspice']:.4g}" if m["ngspice"] is not None else m["error"] or "nada"))
+    for p in v["preguntas"]:
+        if not p["coincide"] and p.get("error") and "simbólica" not in p["error"]:
+            fallas.append(f"«{p['nombre']}»: {p['error']}")
+    return fallas
+
+
 def analizar_planteamiento(outcome: dict) -> dict:
     """Mismo contrato que `informe.analizar`, para el nodo analisis."""
     spec = spec_desde_outcome(outcome)
@@ -614,6 +627,7 @@ def analizar_planteamiento(outcome: dict) -> dict:
         "resultados": {
             "validacion": {"coincide": r["verificacion"]["coincide"], "error": None},
             "planteamiento": {
+                "fallas": _fallas(r["verificacion"]),
                 "incognitas": r["incognitas"],
                 "preguntas": [{"calcular": p["calcular"], "valor": p["valor"]} for p in r["preguntas"]],
             },

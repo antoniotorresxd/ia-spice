@@ -1,9 +1,37 @@
 import os
 import tempfile
 
+import json
+
 from agents.analisis.informe import analizar
 from agents.analisis.planteamiento import analizar_planteamiento, necesita_motor
 from agents.state import CircuitState
+
+
+# Un reintento: lo que no arregla una corrección con el error a la vista no
+# lo arregla repetirla, y cada vuelta cuesta una llamada al LLM.
+MAX_CORRECCIONES = 1
+
+_CAMPOS_PLANTEAMIENTO = (
+    "mode", "netlist", "metodo", "terminales", "frecuencia_hz", "incognitas", "escenarios", "preguntas",
+)
+
+
+def _problema_corregible(resultado: dict, motor: bool) -> str | None:
+    """¿Lo que falló puede ser una transcripción mal hecha? Un error del
+    planteamiento (sistema singular, mediciones incompatibles, una
+    expresión que no existe) o, en el motor simbólico, que ngspice no
+    reproduzca lo calculado."""
+    if resultado.get("error"):
+        return resultado["error"]
+    if motor and not (resultado.get("resultados") or {}).get("validacion", {}).get("coincide"):
+        fallas = (resultado.get("resultados") or {}).get("planteamiento", {}).get("fallas") or []
+        return "ngspice no reproduce lo calculado con los valores encontrados" + (f": {'; '.join(fallas)}" if fallas else "")
+    return None
+
+
+def route_after_analisis(state: CircuitState) -> str:
+    return "corregir" if state.get("correccion_analisis") else "fin"
 
 
 def analisis_node(state: CircuitState) -> dict:
@@ -13,7 +41,16 @@ def analisis_node(state: CircuitState) -> dict:
     outcome = dict(state["outcome"])
     # Op-amps, fuentes controladas, incógnitas o escenarios van al motor
     # simbólico; una red pasiva sigue por el análisis de mallas y reducción.
-    resultado = analizar_planteamiento(outcome) if necesita_motor(outcome) else analizar(outcome)
+    motor = necesita_motor(outcome)
+    resultado = analizar_planteamiento(outcome) if motor else analizar(outcome)
+    hechas = list(state.get("correcciones_hechas") or [])
+    if hechas:
+        # Este es el reintento: el informe cuenta qué se corrigió y por qué.
+        resultado["informe"] = (
+            f"> El primer planteamiento no se pudo usar ({hechas[-1]}); el orquestador "
+            "corrigió la transcripción y este es el resultado del segundo intento.\n\n"
+            + resultado["informe"]
+        )
     outcome.update(
         informe=resultado["informe"],
         resultados=resultado["resultados"],
@@ -22,6 +59,15 @@ def analisis_node(state: CircuitState) -> dict:
     if resultado.get("formato"):
         outcome["formato"] = resultado["formato"]
     actualizacion: dict = {"outcome": outcome}
+    problema = _problema_corregible(resultado, motor)
+    if problema and state.get("request_text") and len(hechas) < MAX_CORRECCIONES:
+        # Vuelve una vez al orquestador con su respuesta y el error exacto.
+        anterior = {k: v for k, v in state["outcome"].items() if k in _CAMPOS_PLANTEAMIENTO}
+        actualizacion["correccion_analisis"] = {
+            "anterior": json.dumps(anterior, ensure_ascii=False),
+            "error": problema,
+        }
+        actualizacion["correcciones_hechas"] = hechas + [problema]
     # `analisis` es la red tal cual (tensiones de nodo); `analisis_zeq`, la de
     # la fuente de prueba entre los terminales, cuando se pidió una Z_eq.
     netlists = {}

@@ -71,6 +71,17 @@ usuario (o el (a) si no dijo cuál) y menciona en el nombre del escenario cuál 
 No resuelvas tú las ecuaciones: el sistema las arma, las resuelve y las verifica con ngspice."""
 
 
+TEXTO_CORRECCION = (
+    "El sistema intentó resolver tu planteamiento anterior y encontró este problema:\n"
+    "{error}\n\n"
+    "Revisa la transcripción del circuito contra el enunciado (y la figura, si la hay): "
+    "qué nodos conecta cada componente, si van en serie o en paralelo, el sentido de las "
+    "fuentes y que los escenarios y mediciones correspondan a lo que dice el problema. "
+    "Devuelve el planteamiento corregido completo. No cambies el problema ni inventes "
+    "datos: corrige solo lo que esté mal transcrito."
+)
+
+
 class ExtractionError(Exception):
     """El LLM no produjo un resultado de orquestación válido."""
 
@@ -126,6 +137,7 @@ def extract_orchestrator_outcome(
     request_text: str,
     circuit_context: str | None = None,
     images: list[dict] | None = None,
+    correccion: dict | None = None,
 ) -> ChatOutcome | ClarifyOutcome | DesignOutcome | AnalysisOutcome:
     structured_model = chat_model.with_structured_output(OrchestratorResult)
 
@@ -151,6 +163,13 @@ def extract_orchestrator_outcome(
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": _user_content(request_text, images)},
     ]
+    if correccion:
+        # Autocorrección: la respuesta anterior y lo que el sistema encontró
+        # al resolverla, para que corrija la transcripción y no el problema.
+        messages += [
+            {"role": "assistant", "content": correccion["anterior"]},
+            {"role": "user", "content": TEXTO_CORRECCION.format(error=correccion["error"])},
+        ]
     try:
         result = structured_model.invoke(messages)
     except Exception as exc:  # noqa: BLE001 - cualquier fallo del LLM se tipa

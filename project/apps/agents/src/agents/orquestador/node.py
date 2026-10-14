@@ -114,6 +114,14 @@ def _normalize(spec: CircuitSpec) -> dict:
 
 
 def orquestador_node(state: CircuitState, config: RunnableConfig | None = None) -> dict:
+    resultado = _orquestar(state, config)
+    # Una corrección pedida por 'analisis' se usa una vez y se consume.
+    if state.get("correccion_analisis"):
+        resultado = {**resultado, "correccion_analisis": None}
+    return resultado
+
+
+def _orquestar(state: CircuitState, config: RunnableConfig | None = None) -> dict:
     request_text = state.get("request_text")
     circuit_spec = state.get("circuit_spec")
 
@@ -130,11 +138,14 @@ def orquestador_node(state: CircuitState, config: RunnableConfig | None = None) 
         # Las imágenes solo se pasan si las hay: sin ellas la llamada queda
         # exactamente como antes de que existieran.
         images = state.get("images")
+        correccion = state.get("correccion_analisis")
+        extra = {}
+        if images:
+            extra["images"] = images
+        if correccion:
+            extra["correccion"] = correccion
         try:
-            if images:
-                outcome = extract_orchestrator_outcome(chat_model, request_text, images=images)
-            else:
-                outcome = extract_orchestrator_outcome(chat_model, request_text)
+            outcome = extract_orchestrator_outcome(chat_model, request_text, **extra)
         except ImageInputError as exc:
             return _rejected(f"llm_image_input_failed: {exc}")
         except ExtractionError as exc:

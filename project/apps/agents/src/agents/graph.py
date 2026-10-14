@@ -3,7 +3,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 
-from agents.analisis.node import analisis_node
+from agents.analisis.node import analisis_node, route_after_analisis
 from agents.calculo.graph import build_calculo_graph
 from agents.curador.node import curador_node, route_after_curador
 from agents.documentador.node import documentador_node
@@ -53,7 +53,11 @@ def build_graph(checkpointer=None):
         route_after_orquestador,
         {"continue": "calculo", "stop": END, "reject": END, "analysis": "analisis"},
     )
-    builder.add_edge("analisis", END)
+    builder.add_conditional_edges(
+        "analisis",
+        route_after_analisis,
+        {"corregir": "orquestador", "fin": END},
+    )
     builder.add_edge("calculo", "sintesis")
     builder.add_edge("sintesis", "curador")
     builder.add_conditional_edges(

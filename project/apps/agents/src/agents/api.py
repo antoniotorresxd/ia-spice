@@ -339,7 +339,12 @@ def _stream_run(initial_state: dict, config: dict):
                             "interpretation",
                             status="completed",
                             duration_ms=dur,
-                            summary="Red transcrita a netlist para analizarla.",
+                            # En el reintento el orquestador consume la corrección
+                            summary=(
+                                "Planteamiento corregido tras el error del primer intento."
+                                if "correccion_analisis" in update
+                                else "Red transcrita a netlist para analizarla."
+                            ),
                         )
                         stage_start_times["calculation"] = time.perf_counter()
                         yield _stage_event(
