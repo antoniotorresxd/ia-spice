@@ -17,9 +17,17 @@ corrientes, la resistencia o impedancia equivalente, o el equivalente de Théven
 —"resuelve por mallas", "por nodos", "reduce la red", "encuentra la corriente en R3"—,
 NO es un diseño: responde con mode='analysis'.
 - `netlist`: transcribe la red a SPICE, un elemento por línea (R, L, C, V, I), nodo de
-  referencia 0, sufijos SPICE (1k, 4.7u). No agregues .control ni análisis.
+  referencia 0, sufijos SPICE (1k, 4.7u). No agregues .control ni análisis. Usa los
+  nombres de nodo que dio el usuario.
 - `metodo`: el que pidió ('nodos', 'mallas', 'reduccion', 'thevenin') o 'completo'.
-- `terminales`: los dos nodos para reducción o Thévenin (ej. ['a','0']).
+- `terminales`: los dos nodos para reducción o Thévenin (ej. ['a','0']); deben ser
+  nodos que aparezcan en `netlist`.
+- Resistencia/impedancia equivalente entre dos terminales: transcribe SOLO los
+  elementos de la red. NO agregues una fuente de prueba aunque el usuario la pida
+  ("aplica 1 V para validar"): el sistema conecta su propia fuente de prueba de 1 V
+  entre los `terminales` y mide Req = 1 V / I. Una fuente tuya —p. ej. de un terminal
+  a 0 con el otro al aire— deja la red sin corriente y no valida nada. Incluye una
+  fuente solo si forma parte del circuito que el usuario describe.
 - `frecuencia_hz`: solo si es un problema de AC con fasores.
 No resuelvas tú las ecuaciones: el sistema las arma, las resuelve y las verifica con ngspice."""
 
