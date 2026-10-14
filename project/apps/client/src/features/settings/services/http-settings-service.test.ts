@@ -81,6 +81,7 @@ describe('createHttpSettingsService', () => {
         { agentId: 'calculation', connectionId: null, model: '' },
         { agentId: 'writer', connectionId: null, model: '' },
         { agentId: 'curator', connectionId: null, model: '' },
+        { agentId: 'documenter', connectionId: 'conn-1', model: 'gpt-5-mini' },
       ]),
     )
     const service = createHttpSettingsService({ fetchImpl })
@@ -93,7 +94,10 @@ describe('createHttpSettingsService', () => {
       connectionId: 'conn-1',
       model: 'gpt-5',
     })
-    expect(result.map((a) => a.label)).toEqual(['Orquestador', 'Cálculo', 'Escritura', 'Curador'])
+    // El server asigna cinco agentes; sin el documentador en la interfaz nadie
+    // podía darle un modelo y ningún circuito quedaba documentado.
+    expect(result.map((a) => a.label)).toEqual(['Orquestador', 'Cálculo', 'Escritura', 'Curador', 'Documentador'])
+    expect(result[4]).toEqual({ agentId: 'documenter', label: 'Documentador', connectionId: 'conn-1', model: 'gpt-5-mini' })
   })
 
   it('lanza un error cuando el server responde con fallo', async () => {

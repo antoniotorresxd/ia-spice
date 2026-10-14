@@ -30,4 +30,5 @@ export const agentAssignmentsFixture: AgentAssignment[] = [
   { agentId: 'calculation', label: 'Cálculo', connectionId: 'connection-openai', model: 'gpt-5-mini' },
   { agentId: 'writer', label: 'Escritura', connectionId: null, model: '' },
   { agentId: 'curator', label: 'Curador', connectionId: null, model: '' },
+  { agentId: 'documenter', label: 'Documentador', connectionId: null, model: '' },
 ]

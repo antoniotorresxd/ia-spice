@@ -57,6 +57,13 @@ pantalla de Configuración:
   explícitamente para comparar contra el sistema.
 - Las pruebas marcadas `live_llm`, que hoy se saltan (6 de ellas).
 
+**Asignar un modelo al Documentador** (Configuración → Modelos). Hasta el
+2026-10-14 la pantalla solo mostraba cuatro agentes y el Documentador no se
+podía configurar, así que ningún circuito quedó documentado (el panel mostraba
+una descripción heurística del cliente en su lugar). Ya aparece como quinto
+agente; sin modelo, la etapa de documentación ahora lo dice. Los circuitos ya
+generados no se documentan solos: hay que volver a correrlos.
+
 ## 4. Correr las pruebas de base de datos del servidor
 
 Están gateadas y necesitan **las dos** variables, o se saltan en silencio —y un

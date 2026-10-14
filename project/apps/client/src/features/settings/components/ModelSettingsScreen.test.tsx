@@ -211,21 +211,22 @@ describe('ModelSettingsScreen', () => {
     expect(service.listAgentAssignments).toHaveBeenCalledTimes(2)
   })
 
-  it('renders exactly the four configurable agents and marks blank assignments safely', async () => {
+  it('renders exactly the five configurable agents and marks blank assignments safely', async () => {
     const assignments: AgentAssignment[] = [
       { agentId: 'orchestrator', label: 'Orquestador', connectionId: null, model: '' },
       { agentId: 'calculation', label: 'Cálculo', connectionId: null, model: '' },
       { agentId: 'writer', label: 'Escritura', connectionId: null, model: '' },
       { agentId: 'curator', label: 'Curador', connectionId: null, model: '' },
+      { agentId: 'documenter', label: 'Documentador', connectionId: null, model: '' },
     ]
     render(<ModelSettingsScreen service={makeService({ listAgentAssignments: vi.fn().mockResolvedValue(assignments) })} />)
 
     const list = await screen.findByRole('list', { name: 'Asignaciones de agentes' })
     expect(within(list).getAllByRole('listitem').map((row) => within(row).getByRole('heading').textContent)).toEqual([
-      'Orquestador', 'Cálculo', 'Escritura', 'Curador',
+      'Orquestador', 'Cálculo', 'Escritura', 'Curador', 'Documentador',
     ])
     expect(within(list).queryByText('Shell')).not.toBeInTheDocument()
-    expect(within(list).getAllByText('Sin configurar')).toHaveLength(4)
+    expect(within(list).getAllByText('Sin configurar')).toHaveLength(5)
   })
 
   it('saves independent models for agents that reuse the same connection', async () => {

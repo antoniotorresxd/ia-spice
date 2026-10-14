@@ -4,7 +4,7 @@ export type LlmProvider =
   | 'google'
   | 'openai_compatible'
 
-export type AgentId = 'orchestrator' | 'calculation' | 'writer' | 'curator'
+export type AgentId = 'orchestrator' | 'calculation' | 'writer' | 'curator' | 'documenter'
 
 export type ConnectionTestStatus = 'ok' | 'failed'
 
@@ -54,6 +54,7 @@ export const AGENT_LABELS: Record<AgentId, string> = {
   calculation: 'Cálculo',
   writer: 'Escritura',
   curator: 'Curador',
+  documenter: 'Documentador',
 }
 
-export const AGENT_ORDER: AgentId[] = ['orchestrator', 'calculation', 'writer', 'curator']
+export const AGENT_ORDER: AgentId[] = ['orchestrator', 'calculation', 'writer', 'curator', 'documenter']

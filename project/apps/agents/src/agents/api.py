@@ -234,6 +234,22 @@ def _resumen_verificacion(validacion: dict) -> str:
     return "Las tensiones de nodo de ngspice no coinciden con el análisis."
 
 
+def _resumen_documentacion(documentation: dict) -> str:
+    """Cuántos bloques documentó el documentador. Sin modelo asignado (o si
+    falla) deja cada bloque en None sin romper la corrida: la etapa lo dice en
+    vez de anunciar un éxito que no hubo."""
+    total = len(documentation)
+    hechos = sum(1 for doc in documentation.values() if doc)
+    if total and hechos == total:
+        return "Documentación generada con éxito."
+    if hechos:
+        return f"Documentación generada para {hechos} de {total} bloques."
+    return (
+        "Sin documentación: revisa que el Documentador tenga un modelo asignado "
+        "en Configuración → Modelos."
+    )
+
+
 def _sse(event_type: str, data: dict) -> str:
     return f"event: {event_type}\ndata: {json.dumps(data)}\n\n"
 
@@ -436,7 +452,7 @@ def _stream_run(initial_state: dict, config: dict):
                         "result",
                         status="completed",
                         duration_ms=dur,
-                        summary="Documentación generada con éxito.",
+                        summary=_resumen_documentacion(update.get("documentation") or {}),
                     )
 
         snapshot = graph.get_state(config)

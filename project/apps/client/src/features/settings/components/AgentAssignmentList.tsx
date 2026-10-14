@@ -9,6 +9,7 @@ const agents: ReadonlyArray<Pick<AgentAssignment, 'agentId' | 'label'>> = [
   { agentId: 'calculation', label: 'Cálculo' },
   { agentId: 'writer', label: 'Escritura' },
   { agentId: 'curator', label: 'Curador' },
+  { agentId: 'documenter', label: 'Documentador' },
 ]
 
 const agentDetails: Record<AgentId, { icon: ReactNode; desc: string; badge: string }> = {
@@ -23,14 +24,19 @@ const agentDetails: Record<AgentId, { icon: ReactNode; desc: string; badge: stri
     badge: 'Análisis numérico',
   },
   writer: {
-    icon: <FileText size={18} />,
-    desc: 'Redacta los informes técnicos y síntesis pedagógica de resultados.',
-    badge: 'Documentación técnica',
+    icon: <PenTool size={18} />,
+    desc: 'Escribe el netlist de cada bloque que después simula ngspice.',
+    badge: 'Síntesis de netlist',
   },
   curator: {
     icon: <ShieldCheck size={18} />,
     desc: 'Valida la netlist ngspice y verifica tolerancias y restricciones de seguridad.',
     badge: 'Control de calidad',
+  },
+  documenter: {
+    icon: <FileText size={18} />,
+    desc: 'Explica el circuito final: resumen, rol de cada componente y qué mide la simulación.',
+    badge: 'Documentación técnica',
   },
 }
 

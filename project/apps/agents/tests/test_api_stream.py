@@ -151,3 +151,16 @@ def test_el_resumen_de_la_verificacion_dice_que_confirmo_ngspice():
     assert "otra Z_eq" in _resumen_verificacion({"coincide": False, "zeq": {**zeq_ok, "coincide": False}})
     assert "No concluyente" in _resumen_verificacion({"coincide": False, "sin_corriente": True})
     assert "abierta" in _resumen_verificacion({"coincide": False, "zeq": {"coincide": False, "error": "la red está abierta"}})
+
+
+def test_el_resumen_de_la_documentacion_no_dice_exito_si_no_documento_nada():
+    from agents.api import _resumen_documentacion
+
+    doc = {"summary": "x", "tags": [], "components": {}, "measurement_explanation": "y"}
+    assert _resumen_documentacion({"b1": doc}) == "Documentación generada con éxito."
+    assert _resumen_documentacion({"b1": doc, "b2": None}) == "Documentación generada para 1 de 2 bloques."
+    # Caso real: el documentador sin modelo asignado devolvía None y la etapa
+    # igual decía "con éxito"; ningún circuito quedaba documentado.
+    sin_nada = _resumen_documentacion({"b1": None})
+    assert "Sin documentación" in sin_nada
+    assert "Documentador" in sin_nada
