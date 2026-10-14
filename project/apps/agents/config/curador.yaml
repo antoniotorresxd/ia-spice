@@ -74,6 +74,10 @@ comerciales:
   # al 1 % suele ser inalcanzable.
   combinar_inductores: true
   umbral_combinacion: 0.01
+  # Semiconductores reales: el zéner se lleva al 1N47xxA más cercano y los
+  # BJT se simulan con el modelo del 2N3904/2N3906 (salvo que el usuario dé
+  # su propio beta). Los op-amps solo se listan (TL081/TL082/TL084).
+  modelos_reales: true
   # Si el lazo del curador vuelve a un circuito ya simulado (oscila entre dos
   # valores comerciales que fallan por lados opuestos), al bloque se le
   # concede el siguiente paso de esta lista, acumulado sobre los anteriores.

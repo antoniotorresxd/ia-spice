@@ -107,6 +107,7 @@ def config_comerciales(cfg: dict, nivel: int = 0) -> dict:
     for paso_extra in escalamiento[:nivel]:
         opciones = _opciones(opciones, paso_extra)
     opciones["habilitado"] = bool(seccion.get("habilitado", True))
+    opciones["modelos_reales"] = bool(seccion.get("modelos_reales", False))
     opciones["niveles"] = len(escalamiento)
     return opciones
 
@@ -258,8 +259,11 @@ def comentarios_materiales(materiales: list[dict], bloque: str | None = None) ->
     if not materiales:
         return []
     titulo = f"bloque {bloque}" if bloque else "circuito"
+    pasivos = [m for m in materiales if "ideal" in m]
+    if not pasivos:
+        return []
     lineas = [f"* Valores comerciales ({titulo}): ideal -> comercial"]
-    for m in materiales:
+    for m in pasivos:
         unidad = m["unidad"]
         partes = [formatear(p, unidad) for p in m["partes"]]
         if m["realizacion"] == "simple":

@@ -154,8 +154,10 @@ def test_la_topologia_cumple_al_uno_por_ciento_con_valores_comerciales(
 def test_el_restador_lista_dos_piezas_por_pareja():
     final = _correr("opamp_difference_amp", {"gain": 4.7}, "gain", 4.7, thread="dif-bom")
 
-    cantidades = {m["nombre"]: m["cantidad"] for m in final["bom"]["b"]}
+    cantidades = {m["nombre"]: m["cantidad"] for m in final["bom"]["b"] if "ideal" in m}
     assert cantidades == {"Rg": 2, "Rf": 2}
+    (opamp,) = [m for m in final["bom"]["b"] if m["tipo"] == "op-amp"]
+    assert (opamp["pieza"], opamp["cantidad"]) == ("TL081", 1)
 
 
 def test_el_curador_corrige_el_rlc_moviendo_l_y_no_r():

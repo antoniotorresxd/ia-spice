@@ -8,9 +8,16 @@ from langchain_core.runnables import RunnableConfig
 from agents.calculo.catalog_solver import cantidades, cotas_inferiores
 from agents.comerciales import (
     comentarios_materiales,
+    config_comerciales,
     comercializar,
     insertar_comentarios,
     marcadores,
+)
+from agents.comerciales.piezas import (
+    aterrizar_zener,
+    comentarios_piezas,
+    identificar_semiconductores,
+    usar_modelos_reales,
 )
 from agents.config import get_config
 from agents.escritura.composition import assemble_composed_netlist
@@ -71,6 +78,39 @@ def _comercializar_bloque(
     )
 
 
+def _beta_dado(block: dict) -> bool:
+    params = block["params"].get("params") or {}
+    return any(k.lower() in ("beta", "hfe", "h_fe") for k in params)
+
+
+def _armar_bloque(
+    block: dict, builder, values: dict, materiales: list[dict], cfg: dict
+) -> tuple[str, dict, list[dict]]:
+    """Netlist del bloque con semiconductores reales y su lista de materiales."""
+    opciones = config_comerciales(cfg)
+    reales = opciones["habilitado"] and opciones["modelos_reales"] and block["type"] == "catalog"
+    vz_pedido = None
+    if reales:
+        values, vz_pedido = aterrizar_zener(values)
+
+    netlist_text = builder(block["params"], values)
+    # Un beta dado por el usuario describe SU transistor: se respeta el
+    # modelo genérico con ese BF en vez de imponer el de un 2N3904.
+    if reales and not _beta_dado(block):
+        netlist_text = usar_modelos_reales(netlist_text)
+
+    piezas = identificar_semiconductores(netlist_text) if opciones["habilitado"] else []
+    if vz_pedido is not None:
+        for pieza in piezas:
+            if pieza["tipo"] == "zener":
+                pieza["nota"] += f"; se pidió {vz_pedido:g} V, que no se fabrica"
+    materiales = materiales + piezas
+    netlist_text = insertar_comentarios(
+        netlist_text, comentarios_materiales(materiales) + comentarios_piezas(piezas)
+    )
+    return netlist_text, values, materiales
+
+
 def escritura_node(state: CircuitState, config: RunnableConfig | None = None) -> dict:
     blocks_list = state["normalized_spec"]["blocks"]
     blocks = {b["id"]: b for b in blocks_list}
@@ -116,9 +156,8 @@ def escritura_node(state: CircuitState, config: RunnableConfig | None = None) ->
         builder = NETLIST_BUILDERS.get(block["type"])
         if not builder:
             raise ValueError(f"Tipo de bloque no soportado: {block['type']}")
-        netlist_text = insertar_comentarios(
-            builder(block["params"], commercial[block_id]),
-            comentarios_materiales(bom[block_id]),
+        netlist_text, commercial[block_id], bom[block_id] = _armar_bloque(
+            block, builder, commercial[block_id], bom[block_id], cfg
         )
 
         netlist_path = _write(f"agents-escritura-{block_id}-", netlist_text)
