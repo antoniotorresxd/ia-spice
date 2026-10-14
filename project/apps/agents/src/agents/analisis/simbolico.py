@@ -63,14 +63,49 @@ def _nodo(texto: str) -> str:
     return TIERRA if texto.lower() in ("0", "gnd") else texto
 
 
+_EXPRESION_SEGURA = re.compile(r"[A-Za-z0-9_.+\-*/^() ,]*")
+
+
+def expresion_segura(texto: str) -> str:
+    """El texto viene del LLM y sympify lo evalúa como Python: solo pasan
+    letras, números y operadores aritméticos, sin dobles guiones bajos."""
+    if not _EXPRESION_SEGURA.fullmatch(texto) or "__" in texto:
+        raise RedInvalida(f"expresión no permitida: {texto!r}")
+    return texto
+
+
+_FUNCIONES = {"sqrt": sp.sqrt, "pi": sp.pi, "exp": sp.exp, "log": sp.log}
+
+
+def a_sympy(texto: str, locales: dict | None = None) -> sp.Expr:
+    """Texto ya validado -> expresión. Todo identificador es un símbolo: sin
+    esto, `I`, `E`, `S` o `N` serían la unidad imaginaria, el número e…"""
+    locales = dict(locales or {})
+    for nombre in set(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", texto)):
+        if nombre not in locales:
+            locales[nombre] = _FUNCIONES.get(nombre, sp.Symbol(nombre))
+    return sp.sympify(texto, locals=locales)
+
+
 def _valor(texto: str) -> sp.Expr:
-    """`4.7k` -> 4700 (racional exacto); `{Ri}` -> Symbol('Ri')."""
+    """`4.7k` -> 4700 (racional exacto); `{Ri}` -> Symbol('Ri');
+    `{(1-k)*100k}` -> la expresión, con sufijos SPICE dentro."""
     texto = texto.strip()
     if texto.startswith("{") and texto.endswith("}"):
-        nombre = texto[1:-1].strip()
-        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", nombre):
-            raise RedInvalida(f"símbolo inválido: {texto!r}")
-        return sp.Symbol(nombre)
+        interior = texto[1:-1].strip()
+        if not interior:
+            raise RedInvalida(f"símbolo vacío: {texto!r}")
+        # sufijos SPICE dentro de la expresión: 100k -> 100000
+        interior = re.sub(
+            r"(?<![A-Za-z_])(\d*\.?\d+(?:[eE][-+]?\d+)?)(meg|[tgkmunpf])(?![A-Za-z0-9_])",
+            lambda m: repr(valor_spice(m.group(0))),
+            interior,
+            flags=re.IGNORECASE,
+        )
+        try:
+            return sp.nsimplify(a_sympy(expresion_segura(interior)), rational=True)
+        except (sp.SympifyError, SyntaxError, TypeError) as exc:
+            raise RedInvalida(f"valor inválido: {texto!r}") from exc
     if texto.lower() in ("inf", "infinito", "∞"):
         return sp.oo
     return sp.nsimplify(valor_spice(texto), rational=True)
@@ -310,9 +345,10 @@ def evaluar(solucion: SolucionSimbolica, expresion: str) -> sp.Expr:
         locales[clave] = solucion.corrientes[nombre]
         return f"({clave})"
 
+    expresion_segura(expresion)
     texto = _I.sub(sustituir_i, _V.sub(sustituir_v, expresion))
     try:
-        return sp.simplify(sp.sympify(texto, locals={**locales, "s": S}))
+        return sp.simplify(a_sympy(texto, {**locales, "s": S}))
     except (sp.SympifyError, SyntaxError, TypeError) as exc:
         raise RedInvalida(f"no se entiende la expresión {expresion!r}: {exc}") from exc
 
@@ -321,46 +357,70 @@ def _numero(valor: sp.Expr) -> float:
     return float(sp.N(valor))
 
 
+def _nombre_spice(c: Componente) -> str:
+    """Un corto (R = 0) se resuelve como fuente de 0 V; en ngspice su nombre
+    tiene que empezar con la letra de su tipo."""
+    return c.nombre if c.nombre[0] == c.tipo else f"{c.tipo}{c.nombre}"
+
+
 def netlist_ngspice(circuito: list[Componente], titulo: str = "Verificacion") -> str:
     """El circuito para ngspice en DC, con el op-amp ideal como VCVS de
-    ganancia 1e9 y el no ideal como sus partes. Escribe la tensión de cada
-    nodo en output.txt."""
+    ganancia 1e9 y el no ideal como sus partes. Escribe en output.txt la
+    tensión de cada nodo (`<nodo> <valor>`) y la corriente de cada fuente de
+    tensión (`I:<nombre> <valor>`)."""
     lineas = [f"* {titulo}"]
     nodos: list[str] = []
+    fuentes_v: list[Componente] = []
+    nombres = {c.nombre: _nombre_spice(c) for c in _expandir(circuito)}
     for c in _expandir(circuito):
         for n in c.nodos:
             if n != TIERRA and n not in nodos:
                 nodos.append(n)
+        nombre = nombres[c.nombre]
         if c.tipo in "RLC":
-            lineas.append(f"{c.nombre} {c.nodos[0]} {c.nodos[1]} {_numero(c.valor):.12g}")
+            lineas.append(f"{nombre} {c.nodos[0]} {c.nodos[1]} {_numero(c.valor):.12g}")
         elif c.tipo in "VI":
-            lineas.append(f"{c.nombre} {c.nodos[0]} {c.nodos[1]} DC {_numero(c.valor):.12g}")
+            lineas.append(f"{nombre} {c.nodos[0]} {c.nodos[1]} DC {_numero(c.valor):.12g}")
+            if c.tipo == "V":
+                fuentes_v.append(c)
         elif c.tipo in "EG":
-            lineas.append(f"{c.nombre} {' '.join(c.nodos)} {_numero(c.valor):.12g}")
+            lineas.append(f"{nombre} {' '.join(c.nodos)} {_numero(c.valor):.12g}")
         elif c.tipo in "FH":
-            lineas.append(f"{c.nombre} {c.nodos[0]} {c.nodos[1]} {c.control} {_numero(c.valor):.12g}")
+            lineas.append(f"{nombre} {c.nodos[0]} {c.nodos[1]} {nombres.get(c.control, c.control)} {_numero(c.valor):.12g}")
         elif c.tipo == "X":
             mas, menos, salida = c.nodos
             lineas.append(f"E{c.nombre} {salida} 0 {mas} {menos} {_GANANCIA_IDEAL:g}")
     lineas += [".control", "op"]
-    for k, n in enumerate(nodos):
-        lineas.append(f"let v_{k} = v({n})")
-        lineas.append(f"echo {n} $&v_{k} {'>' if k == 0 else '>>'} output.txt")
+    k = 0
+    for n in nodos:
+        lineas += [f"let m_{k} = v({n})", f"echo {n} $&m_{k} {'>' if k == 0 else '>>'} output.txt"]
+        k += 1
+    for c in fuentes_v:
+        lineas += [f"let m_{k} = i({nombres[c.nombre]})", f"echo I:{c.nombre} $&m_{k} {'>' if k == 0 else '>>'} output.txt"]
+        k += 1
     lineas += [".endc", ".end", ""]
     return "\n".join(lineas)
 
 
-def verificar_con_ngspice(circuito: list[Componente], solucion: SolucionSimbolica) -> dict:
-    """Simula el mismo circuito y compara las tensiones de nodo con las del
-    motor. Solo tiene sentido con valores numéricos."""
-    simbolos = set()
+def simbolos_libres(circuito: list[Componente]) -> set[sp.Symbol]:
+    libres: set[sp.Symbol] = set()
     for c in circuito:
         for valor in [c.valor, *c.params.values()]:
             if valor is not None:
-                simbolos |= sp.sympify(valor).free_symbols
-    if simbolos:
-        nombres = ", ".join(sorted(str(x) for x in simbolos))
-        return {"error": f"hay valores simbólicos ({nombres}): sin números no hay qué simular", "coincide": False, "tensiones": {}, "netlist": None}
+                libres |= sp.sympify(valor).free_symbols
+    return libres
+
+
+def medir_con_ngspice(circuito: list[Componente]) -> tuple[str | None, SolucionSimbolica | None, str | None]:
+    """(netlist, lo que midió ngspice como solución evaluable, error).
+
+    La solución medida trae las tensiones de nodo de ngspice y las corrientes
+    que de ellas se deducen (R, C, I, G, F) o que ngspice reporta (V); con
+    ella `evaluar` calcula cualquier medición con los números simulados."""
+    libres = simbolos_libres(circuito)
+    if libres:
+        nombres = ", ".join(sorted(str(x) for x in libres))
+        return None, None, f"hay valores simbólicos ({nombres}): sin números no hay qué simular"
     texto = netlist_ngspice(circuito)
     directorio = tempfile.mkdtemp(prefix="agents-simbolico-")
     ruta = os.path.join(directorio, "verificacion.cir")
@@ -368,21 +428,63 @@ def verificar_con_ngspice(circuito: list[Componente], solucion: SolucionSimbolic
         f.write(texto)
     salida, error = run_ngspice(ruta)
     if error is not None:
-        return {"error": error, "coincide": False, "tensiones": {}, "netlist": texto}
-    medidas: dict[str, float] = {}
+        return texto, None, error
+    leido: dict[str, float] = {}
     with open(salida) as f:
         for linea in f:
             partes = linea.split()
             if len(partes) >= 2:
                 try:
-                    medidas[partes[0]] = float(partes[1])
+                    leido[partes[0]] = float(partes[1])
                 except ValueError:
                     continue
+    primitivos = _expandir(circuito)
+    tensiones: dict[str, sp.Expr] = {}
+    for c in primitivos:
+        for n in c.nodos:
+            if n != TIERRA and n not in tensiones:
+                medido = leido.get(n, leido.get(n.lower()))
+                if medido is None:
+                    return texto, None, f"ngspice no reportó V({n})"
+                tensiones[n] = sp.Float(medido)
+    v = {**tensiones, TIERRA: sp.Integer(0)}
+    corrientes: dict[str, sp.Expr] = {}
+    for c in primitivos:
+        if c.tipo == "V":
+            medido = leido.get(f"I:{c.nombre}")
+            if medido is not None:
+                corrientes[c.nombre] = sp.Float(medido)
+    for c in primitivos:
+        a, b = c.nodos[0], c.nodos[1]
+        if c.tipo == "R":
+            corrientes[c.nombre] = (v[a] - v[b]) / c.valor
+        elif c.tipo == "C":
+            corrientes[c.nombre] = sp.Integer(0)
+        elif c.tipo == "I":
+            corrientes[c.nombre] = c.valor
+        elif c.tipo == "G":
+            corrientes[c.nombre] = c.valor * (v[c.nodos[2]] - v[c.nodos[3]])
+        elif c.tipo == "F" and c.control in corrientes:
+            corrientes[c.nombre] = c.valor * corrientes[c.control]
+    return texto, SolucionSimbolica("dc", [], tensiones, corrientes, circuito), None
+
+
+def verificar_con_ngspice(circuito: list[Componente], solucion: SolucionSimbolica) -> dict:
+    """Simula el mismo circuito y compara las tensiones de nodo con las del
+    motor. Solo tiene sentido con valores numéricos."""
+    texto, medida, error = medir_con_ngspice(circuito)
+    if error is not None:
+        return {"error": error, "coincide": False, "tensiones": {}, "netlist": texto}
     esperadas = {n: _numero(x.subs(S, 0)) for n, x in solucion.tensiones.items()}
-    comunes = [n for n in esperadas if n in medidas or n.lower() in medidas]
+    comunes = [n for n in esperadas if n in medida.tensiones]
     coincide = bool(comunes) and all(
-        abs(medidas.get(n, medidas.get(n.lower())) - esperadas[n]) <= _TOLERANCIA * max(1.0, abs(esperadas[n]))
-        for n in comunes
+        coinciden(_numero(medida.tensiones[n]), esperadas[n]) for n in comunes
     )
-    tensiones = {n: medidas.get(n, medidas.get(n.lower())) for n in comunes}
+    tensiones = {n: _numero(medida.tensiones[n]) for n in comunes}
     return {"error": None, "coincide": coincide, "tensiones": tensiones, "netlist": texto}
+
+
+def coinciden(medido: float, esperado: float) -> bool:
+    """Relativo (0.1 %) con un piso absoluto de 1 µ: una tierra virtual sale
+    en ngspice como unos nV (el op-amp ideal se simula con ganancia 1e9)."""
+    return abs(medido - esperado) <= max(_TOLERANCIA * abs(esperado), 1e-6)
