@@ -1,6 +1,11 @@
 \section*{Planteamiento del Problema}
 \addcontentsline{toc}{section}{Planteamiento del Problema}
 
+Con el avance tecnológico, se le han encontrado muchas utilidades a los Modelos de Lenguaje de Gran tamaño.
+En este sentido la generación de circuitos analógicos mediante lenguaje natural tiene un percance, por la manera en que funcionan los LLMs, rara vez devuelven una solución satisfactoria puesto que trabajan mediante distribuciones probabilísticas y no por leyes físicas.
+Esta manera de funcionar resulta en defectos en la generación del circuito, sumando a que utilizar un mismo agente/LLM tiene una deficiencia en la memoria, creando ambigüedad y alucinaciones del mismo.
+
+
 A diferencia del diseño digital, que se apoya en abstracciones estandarizadas y flujos de automatización maduros, el diseño de circuitos analógicos descansa en el conocimiento experto, el razonamiento heurístico y un ajuste iterativo guiado por simulación \cite{analogagent}. Ese ciclo ---proponer un circuito, simularlo, revisar los resultados y volver a ajustar--- se repite numerosas veces antes de obtener un diseño que cumpla las metas, y validar un diseño completo puede exigir largos periodos de iteración \cite{pcbschemagen}. Buena parte de ese conocimiento reside en la experiencia de quien diseña y no en un procedimiento que pueda seguirse paso a paso, lo que vuelve el diseño analógico difícil tanto de automatizar como de aprender.
 
 Los Modelos de Lenguaje Grande (LLM) abrieron la posibilidad de describir un circuito en lenguaje natural y recibir una propuesta de diseño de forma automática. Al llevarla a la práctica, sin embargo, aparecen limitaciones documentadas. Estos modelos alucinan componentes, violan restricciones físicas del circuito y producen salidas eléctricamente inconsistentes \cite{circuitlm}, por lo que sus diseños rara vez funcionan en el primer intento, ya que el modelo no comprueba por sí mismo si lo que generó cumple. 

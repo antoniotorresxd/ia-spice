@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+<title>Diseño conceptual: el recorrido del estudiante en el sistema</title>
+<defs><marker id="ah-334155" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#334155"/></marker><marker id="ah-2563EB" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#2563EB"/></marker><marker id="ah-6D28D9" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#6D28D9"/></marker><marker id="ah-16A34A" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#16A34A"/></marker><marker id="ah-D97706" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#D97706"/></marker><filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.08"/></filter></defs>
+<rect width="1920" height="1080" fill="#FFFFFF"/>
+<defs><marker id="ah-DC2626" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#DC2626"/></marker></defs>
+<text x="40.0" y="50.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#6D28D9" text-anchor="start" letter-spacing="1.8">SISTEMA MULTIAGENTE PARA EL DISEÑO DE CIRCUITOS ANALÓGICOS</text>
+<text x="38.0" y="98.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="44" font-weight="800" fill="#0F172A" text-anchor="start">Agente de validación (curador)</text>
+<rect x="40.0" y="132.0" width="480.0" height="920.0" rx="24" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.6"/>
+<circle cx="74" cy="168" r="17" fill="#0F172A"/>
+<text x="74.0" y="174.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="800" fill="#FFFFFF" text-anchor="middle">1</text>
+<text x="102.0" y="175.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="800" fill="#0F172A" text-anchor="start" letter-spacing="1.6">EVALUACIÓN</text>
+<text x="249.4" y="175.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="500" fill="#64748B" text-anchor="start">qué tan cerca quedó</text>
+<rect x="550.0" y="132.0" width="700.0" height="920.0" rx="24" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.6"/>
+<circle cx="584" cy="168" r="17" fill="#0F172A"/>
+<text x="584.0" y="174.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="800" fill="#FFFFFF" text-anchor="middle">2</text>
+<text x="612.0" y="175.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="800" fill="#0F172A" text-anchor="start" letter-spacing="1.6">DECISIÓN</text>
+<text x="724.0" y="175.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="500" fill="#64748B" text-anchor="start">aceptar, ajustar o rechazar</text>
+<rect x="1280.0" y="132.0" width="600.0" height="920.0" rx="24" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.6"/>
+<circle cx="1314" cy="168" r="17" fill="#0F172A"/>
+<text x="1314.0" y="174.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="800" fill="#FFFFFF" text-anchor="middle">3</text>
+<text x="1342.0" y="175.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="800" fill="#0F172A" text-anchor="start" letter-spacing="1.6">AJUSTE</text>
+<text x="1436.2" y="175.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="500" fill="#64748B" text-anchor="start">cómo se corrige</text>
+<rect x="115.0" y="209.0" width="330.0" height="58.0" rx="29.0" fill="#DBEAFE" stroke="#2563EB" stroke-width="2" filter="url(#shadow)"/>
+<g transform="translate(133.0,227.0) scale(0.9167)" fill="none" stroke="#2563EB" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2" /> <path d="M8.5 2h7" /> <path d="M7 16h10" /></g>
+<text x="165.0" y="244.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="800" fill="#1E3A8A" text-anchor="start">Resultados de la síntesis</text>
+<rect x="80.0" y="303.0" width="400.0" height="84.0" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.6" filter="url(#shadow)"/>
+<circle cx="112.0" cy="345" r="17" fill="#F1F5F9"/>
+<g transform="translate(102.0,335.0) scale(0.8333)" fill="none" stroke="#2563EB" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z" /> <path d="m14.5 12.5 2-2" /> <path d="m11.5 9.5 2-2" /> <path d="m8.5 6.5 2-2" /> <path d="m17.5 15.5 2-2" /></g>
+<text x="140.0" y="333.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="600" fill="#0F172A" text-anchor="start">Compara lo medido con la meta de</text>
+<text x="140.0" y="355.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="600" fill="#0F172A" text-anchor="start">cada requisito</text>
+<rect x="80.0" y="427.5" width="400.0" height="89.0" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.6" filter="url(#shadow)"/>
+<circle cx="112.0" cy="472" r="17" fill="#F1F5F9"/>
+<g transform="translate(102.0,462.0) scale(0.8333)" fill="none" stroke="#2563EB" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="5" y2="19" /> <circle cx="6.5" cy="6.5" r="2.5" /> <circle cx="17.5" cy="17.5" r="2.5" /></g>
+<text x="140.0" y="457.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="600" fill="#0F172A" text-anchor="start">Calcula el error de cada requisito</text>
+<text x="140.0" y="483.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">si la simulación falló, se le asigna un error alto</text>
+<rect x="80.0" y="556.5" width="400.0" height="127.0" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.6" filter="url(#shadow)"/>
+<circle cx="112.0" cy="620" r="17" fill="#F1F5F9"/>
+<g transform="translate(102.0,610.0) scale(0.8333)" fill="none" stroke="#6D28D9" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /> <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /> <path d="M7 21h10" /> <path d="M12 3v18" /> <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></g>
+<text x="140.0" y="586.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="600" fill="#0F172A" text-anchor="start">Calcula dos recompensas</text>
+<text x="140.0" y="612.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">R de aceptar ahora y R estimada de una</text>
+<text x="140.0" y="631.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">iteración más (con ρ, la reducción de error</text>
+<text x="140.0" y="650.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">observada)</text>
+<rect x="80.0" y="713.5" width="400.0" height="92.0" rx="14" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="280.0" y="751.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="23" font-weight="700" fill="#0F172A" text-anchor="middle">R = −Σ wᵢ·APEᵢ + β·c − γ·n</text>
+<text x="280.0" y="779.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="500" fill="#475569" text-anchor="middle">error ponderado · convergencia · iteraciones</text>
+<rect x="80.0" y="851.0" width="400.0" height="89.0" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.6" filter="url(#shadow)"/>
+<circle cx="112.0" cy="895.5" r="17" fill="#F1F5F9"/>
+<g transform="translate(102.0,885.5) scale(0.8333)" fill="none" stroke="#2563EB" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path d="M3 3v5h5" /> <path d="M12 7v5l4 2" /></g>
+<text x="140.0" y="881.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="600" fill="#0F172A" text-anchor="start">Registra la iteración en el historial</text>
+<text x="140.0" y="907.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">en todos los casos: aceptar, ajustar o rechazar</text>
+<path d="M280.0,271 L280.0,304" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<path d="M280.0,391.0 L280.0,420.5" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<path d="M280.0,520.5 L280.0,549.5" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<path d="M280.0,809.5 L280.0,844.0" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<line x1="280.0" y1="683.5" x2="280.0" y2="713.5" stroke="#FCD34D" stroke-width="2" stroke-dasharray="4 4"/>
+<path d="M802,225.0 L947.0,300 L802,375.0 L657.0,300 Z" fill="#EFF6FF" stroke="#93C5FD" stroke-width="2" stroke-linejoin="round" filter="url(#shadow)"/>
+<text x="802.0" y="285.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">¿Todos los requisitos</text>
+<text x="802.0" y="305.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">cumplen su</text>
+<text x="802.0" y="325.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">tolerancia?</text>
+<path d="M802,403.0 L947.0,478 L802,553.0 L657.0,478 Z" fill="#EFF6FF" stroke="#93C5FD" stroke-width="2" stroke-linejoin="round" filter="url(#shadow)"/>
+<text x="802.0" y="473.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">¿Quedan</text>
+<text x="802.0" y="493.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">iteraciones?</text>
+<path d="M802,581.0 L947.0,656 L802,731.0 L657.0,656 Z" fill="#EFF6FF" stroke="#93C5FD" stroke-width="2" stroke-linejoin="round" filter="url(#shadow)"/>
+<text x="802.0" y="651.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">¿El circuito actual</text>
+<text x="802.0" y="671.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">es entregable?</text>
+<path d="M802,759.0 L947.0,834 L802,909.0 L657.0,834 Z" fill="#EFF6FF" stroke="#93C5FD" stroke-width="2" stroke-linejoin="round" filter="url(#shadow)"/>
+<text x="802.0" y="819.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">¿Ajustar promete</text>
+<text x="802.0" y="839.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">más recompensa</text>
+<text x="802.0" y="859.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">que aceptar?</text>
+<rect x="1003.0" y="262.0" width="230.0" height="76.0" rx="38.0" fill="#DCFCE7" stroke="#16A34A" stroke-width="2" filter="url(#shadow)"/>
+<g transform="translate(1021.0,289.0) scale(0.9167)" fill="none" stroke="#16A34A" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /> <path d="m9 12 2 2 4-4" /></g>
+<text x="1053.0" y="296.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="800" fill="#166534" text-anchor="start">ACEPTAR</text>
+<text x="1053.0" y="317.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="500" fill="#166534" text-anchor="start">cumple su meta</text>
+<rect x="993.0" y="440.0" width="250.0" height="76.0" rx="38.0" fill="#FEE2E2" stroke="#DC2626" stroke-width="2" filter="url(#shadow)"/>
+<g transform="translate(1011.0,467.0) scale(0.9167)" fill="none" stroke="#DC2626" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /> <path d="m15 9-6 6" /> <path d="m9 9 6 6" /></g>
+<text x="1043.0" y="474.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="800" fill="#991B1B" text-anchor="start">RECHAZAR</text>
+<text x="1043.0" y="495.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="500" fill="#991B1B" text-anchor="start">y reporta la mejor iteración</text>
+<rect x="652.0" y="952.0" width="300.0" height="76.0" rx="38.0" fill="#DCFCE7" stroke="#16A34A" stroke-width="2" filter="url(#shadow)"/>
+<g transform="translate(670.0,979.0) scale(0.9167)" fill="none" stroke="#16A34A" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /> <path d="m9 12 2 2 4-4" /></g>
+<text x="702.0" y="986.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="800" fill="#166534" text-anchor="start">ACEPTAR por recompensa</text>
+<text x="702.0" y="1007.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="500" fill="#166534" text-anchor="start">otra iteración no vale la pena</text>
+<rect x="963.0" y="558.0" width="238.0" height="62.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="977.0" y="583.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="500" fill="#475569" text-anchor="start">Entregable: todo se midió y</text>
+<text x="977.0" y="602.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="500" fill="#475569" text-anchor="start">el error ≤ 1.5 × su tolerancia</text>
+<path d="M484.0,895.5 H535 V300 H650.0" fill="none" stroke="#334155" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<path d="M951.0,300 L996,300" fill="none" stroke="#16A34A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-16A34A)"/>
+<rect x="961.5" y="270.0" width="27.0" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="975.0" y="287.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#16A34A" text-anchor="middle">Sí</text>
+<path d="M802,379.0 L802,396.0" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<rect x="807.4" y="377.0" width="33.3" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="824.0" y="394.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#334155" text-anchor="middle">No</text>
+<path d="M951.0,478 L986,478" fill="none" stroke="#DC2626" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-DC2626)"/>
+<rect x="953.4" y="448.0" width="33.3" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="970.0" y="465.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#DC2626" text-anchor="middle">No</text>
+<path d="M802,557.0 L802,574.0" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<rect x="810.5" y="555.0" width="27.0" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="824.0" y="572.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#334155" text-anchor="middle">Sí</text>
+<path d="M802,735.0 L802,752.0" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<rect x="810.5" y="733.0" width="27.0" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="824.0" y="750.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#334155" text-anchor="middle">Sí</text>
+<path d="M802,913.0 L802,945" fill="none" stroke="#16A34A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-16A34A)"/>
+<rect x="807.4" y="918.5" width="33.3" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="824.0" y="935.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#16A34A" text-anchor="middle">No</text>
+<path d="M951.0,656 H1265" fill="none" stroke="#D97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="970.4" y="626.0" width="33.3" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="987.0" y="643.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#D97706" text-anchor="middle">No</text>
+<path d="M951.0,834 H1265 V238" fill="none" stroke="#D97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="973.5" y="804.0" width="27.0" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="987.0" y="821.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#D97706" text-anchor="middle">Sí</text>
+<circle cx="1265" cy="656" r="5.5" fill="#D97706"/>
+<rect x="1415.0" y="209.0" width="330.0" height="58.0" rx="29.0" fill="#FEF3C7" stroke="#D97706" stroke-width="2" filter="url(#shadow)"/>
+<g transform="translate(1433.0,227.0) scale(0.9167)" fill="none" stroke="#D97706" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></g>
+<text x="1465.0" y="244.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="800" fill="#92400E" text-anchor="start">Por cada bloque que falla</text>
+<path d="M1265,238 H1408.0" fill="none" stroke="#D97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-D97706)"/>
+<rect x="1223.1" y="435.0" width="79.8" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="1263.0" y="452.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#D97706" text-anchor="middle">AJUSTAR</text>
+<path d="M1580.0,308.0 L1710.0,368 L1580.0,428.0 L1450.0,368 Z" fill="#EFF6FF" stroke="#93C5FD" stroke-width="2" stroke-linejoin="round" filter="url(#shadow)"/>
+<text x="1580.0" y="363.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">¿Qué tipo</text>
+<text x="1580.0" y="383.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">de bloque?</text>
+<path d="M1580.0,271 L1580.0,301" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<rect x="1295.0" y="455.0" width="270.0" height="130.0" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.6" filter="url(#shadow)"/>
+<circle cx="1327.0" cy="520" r="17" fill="#F1F5F9"/>
+<g transform="translate(1317.0,510.0) scale(0.8333)" fill="none" stroke="#6D28D9" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8" /> <rect width="16" height="12" x="4" y="8" rx="2" /> <path d="M2 14h2" /> <path d="M20 14h2" /> <path d="M15 13v2" /> <path d="M9 13v2" /></g>
+<text x="1355.0" y="485.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="600" fill="#0F172A" text-anchor="start">El modelo de lenguaje</text>
+<text x="1355.0" y="507.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="600" fill="#0F172A" text-anchor="start">corrige el circuito</text>
+<text x="1355.0" y="533.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">si no cambia, reintenta una</text>
+<text x="1355.0" y="552.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">vez</text>
+<path d="M1446.0,368 H1430 V448.0" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<rect x="1381.8" y="338.0" width="76.3" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="1420.0" y="355.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#334155" text-anchor="middle">Genérico</text>
+<path d="M1430,620.0 L1565.0,685.0 L1430,750.0 L1295.0,685.0 Z" fill="#EFF6FF" stroke="#93C5FD" stroke-width="2" stroke-linejoin="round" filter="url(#shadow)"/>
+<text x="1430.0" y="670.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">¿Logró una</text>
+<text x="1430.0" y="690.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">corrección</text>
+<text x="1430.0" y="710.5" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">distinta?</text>
+<path d="M1430,589.0 L1430,613.0" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<rect x="1296.0" y="797.0" width="268.0" height="76.0" rx="38.0" fill="#FEE2E2" stroke="#DC2626" stroke-width="2" filter="url(#shadow)"/>
+<g transform="translate(1314.0,824.0) scale(0.9167)" fill="none" stroke="#DC2626" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /> <path d="m15 9-6 6" /> <path d="m9 9 6 6" /></g>
+<text x="1346.0" y="831.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="800" fill="#991B1B" text-anchor="start">RECHAZAR</text>
+<text x="1346.0" y="852.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="500" fill="#991B1B" text-anchor="start">no se pudo reparar el circuito</text>
+<path d="M1430,754.0 L1430,790.0" fill="none" stroke="#DC2626" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-DC2626)"/>
+<rect x="1435.4" y="765.0" width="33.3" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="1452.0" y="782.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#DC2626" text-anchor="middle">No</text>
+<rect x="1620.0" y="464.0" width="250.0" height="168.0" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.6" filter="url(#shadow)"/>
+<circle cx="1652.0" cy="548" r="17" fill="#F1F5F9"/>
+<g transform="translate(1642.0,538.0) scale(0.8333)" fill="none" stroke="#2563EB" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" /> <line x1="8" x2="16" y1="6" y2="6" /> <line x1="16" x2="16" y1="14" y2="18" /> <path d="M16 10h.01" /> <path d="M12 10h.01" /> <path d="M8 10h.01" /> <path d="M12 14h.01" /> <path d="M8 14h.01" /> <path d="M12 18h.01" /> <path d="M8 18h.01" /></g>
+<text x="1680.0" y="494.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="600" fill="#0F172A" text-anchor="start">Ajusta con la fórmula</text>
+<text x="1680.0" y="516.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="600" fill="#0F172A" text-anchor="start">del circuito</text>
+<text x="1680.0" y="542.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">proporcional a meta ÷</text>
+<text x="1680.0" y="561.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">medido; si no se pudo</text>
+<text x="1680.0" y="580.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">medir, perturba los</text>
+<text x="1680.0" y="599.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">valores</text>
+<path d="M1714.0,368 H1745 V457.0" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+<rect x="1702.2" y="338.0" width="75.6" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="1740.0" y="355.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#334155" text-anchor="middle">Catálogo</text>
+<rect x="1460.0" y="952.0" width="360.0" height="76.0" rx="38.0" fill="#FEF3C7" stroke="#D97706" stroke-width="2" filter="url(#shadow)"/>
+<g transform="translate(1478.0,979.0) scale(0.9167)" fill="none" stroke="#D97706" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></g>
+<text x="1510.0" y="986.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="800" fill="#92400E" text-anchor="start">Regresa a la síntesis</text>
+<text x="1510.0" y="1007.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="500" fill="#92400E" text-anchor="start">con los bloques ajustados · iteración + 1</text>
+<path d="M1569,685.0 H1640.0 V945" fill="none" stroke="#16A34A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-16A34A)"/>
+<rect x="1581.5" y="655.0" width="27.0" height="24.0" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<text x="1595.0" y="672.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#16A34A" text-anchor="middle">Sí</text>
+<path d="M1745,636.0 V945" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah-334155)"/>
+</svg>
