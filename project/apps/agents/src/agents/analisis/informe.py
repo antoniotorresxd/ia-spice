@@ -43,14 +43,32 @@ def analizar(spec: dict) -> dict:
     terminales = spec.get("terminales") or None
     metodos = METODOS if metodo == "completo" else (metodo,)
 
+    # Una red pasiva de dos terminales no trae nodo 0: el segundo terminal
+    # hace de referencia (ngspice también lo necesita).
+    b_referencia = terminales[1] if terminales and len(terminales) == 2 else None
     try:
-        elementos = leer_red(spec["netlist"])
+        elementos = leer_red(spec["netlist"], referencia=b_referencia)
     except RedInvalida as exc:
         return {"error": str(exc), "informe": f"No se pudo leer la red: {exc}", "resultados": {}}
 
+    # Nombre con que se muestra cada nodo: el terminal que pasó a ser el 0
+    # conserva el suyo en el informe.
+    vista: dict[str, str] = {}
     regimen = f"AC, f = {fmt(frecuencia, 'Hz')} (fasores)" if frecuencia else "DC"
-    red = elementos if frecuencia else preparar_dc(elementos)
     lineas = [f"ANÁLISIS DE LA RED — régimen {regimen}", ""]
+    if (
+        b_referencia
+        and b_referencia.lower() not in ("0", "gnd")
+        and not any(b_referencia in (e.n1, e.n2) for e in elementos)
+    ):
+        vista = {TIERRA: b_referencia}
+        terminales = [terminales[0], TIERRA]
+        lineas += [f"La red no tiene nodo 0: se toma {b_referencia} como referencia (0).", ""]
+
+    def _v(n: str) -> str:
+        return vista.get(n, n)
+
+    red = elementos if frecuencia else preparar_dc(elementos)
     if not frecuencia and any(e.tipo in "LC" for e in elementos):
         lineas += ["En DC los inductores son cortos y los capacitores, abiertos.", ""]
     resultados: dict = {"regimen": "ac" if frecuencia else "dc"}
@@ -102,12 +120,12 @@ def analizar(spec: dict) -> dict:
             reduccion = reducir(elementos, a, b, frecuencia)
         except RedInvalida as exc:
             errores.append(f"reducción: {exc}")
-            lineas += [f"3) REDUCCIÓN ENTRE {a} Y {b}: {exc}", ""]
+            lineas += [f"3) REDUCCIÓN ENTRE {_v(a)} Y {_v(b)}: {exc}", ""]
         else:
-            lineas.append(f"3) REDUCCIÓN ENTRE {a} Y {b} (fuentes independientes anuladas)")
+            lineas.append(f"3) REDUCCIÓN ENTRE {_v(a)} Y {_v(b)} (fuentes independientes anuladas)")
             lineas += [f"  {k + 1}. {paso}" for k, paso in enumerate(reduccion.pasos)]
-            lineas += [f"  Z_eq({a}, {b}) = {fmt(reduccion.equivalente, 'Ω')}", ""]
-            resultados["reduccion"] = {"terminales": [a, b], "equivalente": _numero(reduccion.equivalente)}
+            lineas += [f"  Z_eq({_v(a)}, {_v(b)}) = {fmt(reduccion.equivalente, 'Ω')}", ""]
+            resultados["reduccion"] = {"terminales": [_v(a), _v(b)], "equivalente": _numero(reduccion.equivalente)}
             zeq = (a, b, reduccion.equivalente)
 
     if terminales and "thevenin" in metodos:
@@ -119,8 +137,8 @@ def analizar(spec: dict) -> dict:
             lineas += [f"4) THÉVENIN / NORTON: {exc}", ""]
         else:
             lineas += [
-                f"4) EQUIVALENTES VISTOS DESDE {a}-{b}",
-                f"  V_th = V({a}) - V({b}) en circuito abierto = {fmt(th.vth, 'V')}",
+                f"4) EQUIVALENTES VISTOS DESDE {_v(a)}-{_v(b)}",
+                f"  V_th = V({_v(a)}) - V({_v(b)}) en circuito abierto = {fmt(th.vth, 'V')}",
                 f"  Z_th = {fmt(th.zth, 'Ω')}"
                 + (" (por reducción)" if th.reduccion else " (con fuente de prueba de 1 A)"),
                 f"  I_N = V_th / Z_th = {fmt(th.norton, 'A')}" if th.norton is not None else "  I_N: Z_th = 0, el equivalente es una fuente de tensión ideal",
@@ -129,7 +147,7 @@ def analizar(spec: dict) -> dict:
                 lineas.append(f"  Aviso: la fuente de prueba da Z_th = {fmt(th.zth_por_prueba, 'Ω')}")
             lineas.append("")
             resultados["thevenin"] = {
-                "terminales": [a, b],
+                "terminales": [_v(a), _v(b)],
                 "vth": _numero(th.vth),
                 "zth": _numero(th.zth),
                 "in": _numero(th.norton) if th.norton is not None else None,
@@ -153,7 +171,14 @@ def analizar(spec: dict) -> dict:
         # (iguales a la fuente o a cero) y coincidirían con cualquier análisis.
         sin_corriente = all(abs(_complejo(i)) < 1e-12 for i in referencia.corrientes.values())
         resultados["validacion"]["sin_corriente"] = sin_corriente
-        if sin_corriente:
+        if sin_corriente and not any(e.es_fuente and e.valor != 0 for e in red):
+            # Una red pasiva sin fuentes no tiene corriente por diseño, no
+            # por un error de transcripción.
+            lineas.append(
+                "VERIFICACIÓN DE TENSIONES: la red no tiene fuentes independientes, así que "
+                "no hay tensiones de nodo que verificar."
+            )
+        elif sin_corriente:
             lineas.append(
                 "VERIFICACIÓN DE TENSIONES CON NGSPICE: no concluyente — en la red tal como se "
                 "transcribió no circula corriente (¿un terminal quedó al aire?), así que las "
@@ -176,7 +201,7 @@ def analizar(spec: dict) -> dict:
         netlist_zeq, z_ngspice, error_zeq = impedancia_con_ngspice(red, a, b, frecuencia)
         lineas += [
             "",
-            f"VERIFICACIÓN DE Z_eq CON NGSPICE: fuente de prueba de 1 V entre {a} y {b}, "
+            f"VERIFICACIÓN DE Z_eq CON NGSPICE: fuente de prueba de 1 V entre {_v(a)} y {_v(b)}, "
             "fuentes independientes anuladas, Z = 1 V / I.",
         ]
         if error_zeq or z_ngspice is None:
@@ -188,7 +213,7 @@ def analizar(spec: dict) -> dict:
             coincide_zeq = abs(z_ngspice - esperado) <= _TOLERANCIA_VALIDACION * max(1.0, abs(esperado))
             pruebas.append(coincide_zeq)
             resultados["validacion"]["zeq"] = {
-                "terminales": [a, b],
+                "terminales": [_v(a), _v(b)],
                 "ngspice": _numero(z_ngspice),
                 "analisis": _numero(z_analisis),
                 "coincide": coincide_zeq,

@@ -7,7 +7,7 @@ cualquier otra cosa (un transistor no se resuelve por mallas).
 
 import math
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import sympy as sp
 
@@ -72,12 +72,13 @@ def _nodo(texto: str) -> str:
     return TIERRA if texto.lower() in ("0", "gnd") else texto
 
 
-def leer_red(netlist: str) -> list[Elemento]:
+def leer_red(netlist: str, referencia: str | None = None) -> list[Elemento]:
     """Elementos de la red, en el orden del netlist.
 
     Acepta tanto un netlist completo (título, `.control`, `.end`) como solo
     las líneas de elementos. Las fuentes aceptan `V1 a 0 10`, `V1 a 0 DC 10`
-    o `V1 a 0 AC 10`.
+    o `V1 a 0 AC 10`. Si la red no tiene nodo 0, `referencia` (un nodo de
+    la red) se toma como tal; sin ella es un error.
     """
     elementos: list[Elemento] = []
     dentro_control = False
@@ -123,7 +124,14 @@ def leer_red(netlist: str) -> list[Elemento]:
     if repetidos:
         raise RedInvalida(f"elementos repetidos: {', '.join(sorted(repetidos))}")
     if not any(TIERRA in (e.n1, e.n2) for e in elementos):
-        raise RedInvalida("la red no tiene nodo de referencia (0)")
+        # Una red pasiva de dos terminales no tiene tierra propia: con
+        # `referencia` (el segundo terminal) ese nodo pasa a ser el 0.
+        if referencia is None or not any(referencia in (e.n1, e.n2) for e in elementos):
+            raise RedInvalida("la red no tiene nodo de referencia (0)")
+        elementos = [
+            replace(e, n1=TIERRA if e.n1 == referencia else e.n1, n2=TIERRA if e.n2 == referencia else e.n2)
+            for e in elementos
+        ]
     return elementos
 
 
