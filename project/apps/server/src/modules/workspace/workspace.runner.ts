@@ -202,7 +202,9 @@ function resolveAnalysisOutcome(
   return {
     status: solved ? "completed" : "failed",
     summary,
-    assistantMessage: informe,
+    // El chat renderiza Markdown; el informe es texto con columnas y `*` de
+    // las ecuaciones, así que va en un bloque de texto que lo deja intacto.
+    assistantMessage: solved ? "```text\n" + informe + "\n```" : informe,
     normalizedSpec: previousNormalizedSpec,
     artifacts: toArtifactDrafts(result),
     mode: "analysis",

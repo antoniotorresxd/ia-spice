@@ -34,6 +34,7 @@ import type { ConversationExecution, ExecutionStage } from '../../home/model/hom
 import { useConversationPolling } from '../model/use-conversation-polling'
 import type { TraceResponse, WorkspaceConversationDetail, WorkspaceSnapshot } from '../model/workspace-types'
 import type { WorkspaceService } from '../services/workspace-service'
+import { MarkdownText } from './MarkdownText'
 import { RenameConversationDialog } from './RenameConversationDialog'
 import styles from './ConversationScreen.module.css'
 
@@ -495,7 +496,11 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                   {conversation.messages.map((message) => (
                     <article className={styles.message} data-role={message.role} key={message.id}>
                       <p className={styles.role}>{message.role === 'user' ? 'Tú' : 'Asistente'}</p>
-                      <p>{message.content}</p>
+                      {message.role === 'assistant' ? (
+                        <MarkdownText className={styles.messageText}>{message.content}</MarkdownText>
+                      ) : (
+                        <p>{message.content}</p>
+                      )}
                     </article>
                   ))}
                   {(pending || conversation.executionStatus === 'active') && (

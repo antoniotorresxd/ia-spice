@@ -17,8 +17,18 @@ export function deriveTitle(firstUserText: string): string {
   return truncate(firstUserText, TITLE_MAX);
 }
 
+// Los mensajes del asistente son Markdown con fórmulas: el preview es texto
+// plano, así que se le quitan las marcas para que no aparezcan en la lista.
+function stripMarkdown(value: string): string {
+  return value
+    .replace(/^```.*$/gm, "")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^\s*[-*+]\s+/gm, "- ")
+    .replace(/(\*\*|__|`|\$)/g, "");
+}
+
 export function derivePreview(lastMessageContent: string): string {
-  return truncate(lastMessageContent, PREVIEW_MAX);
+  return truncate(stripMarkdown(lastMessageContent), PREVIEW_MAX);
 }
 
 export const createProjectSchema = z.object({
