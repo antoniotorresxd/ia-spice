@@ -6,6 +6,19 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_va
 from agents.config import get_config
 
 
+def netlist_sin_lineas(netlist: str) -> str | None:
+    """Un netlist con los saltos de línea convertidos en espacios: ngspice
+    toma esa única línea como título y ve un circuito vacío. Devuelve el
+    motivo para rechazarlo, o None si tiene forma de netlist."""
+    lineas = [l.strip() for l in netlist.splitlines() if l.strip()]
+    if len(lineas) < 3 or not any(l.lower().startswith(".control") for l in lineas):
+        return (
+            "el netlist llegó en una sola línea: cada elemento y cada directiva "
+            "(.control, .endc, .end) van en su propia línea"
+        )
+    return None
+
+
 def find_unresolved_placeholders(netlist: str) -> list[str]:
     """Identificadores de plantilla sin una definición .param en el netlist."""
     names = re.findall(r"\{([A-Za-z_][A-Za-z0-9_]*)\}", netlist)
@@ -75,6 +88,9 @@ class GenericParams(BaseModel):
             )
         if ".control" not in self.netlist:
             raise ValueError("el netlist debe traer un bloque .control que ejecute el análisis")
+        sin_lineas = netlist_sin_lineas(self.netlist)
+        if sin_lineas:
+            raise ValueError(sin_lineas)
         unresolved = find_unresolved_placeholders(self.netlist)
         if unresolved:
             raise ValueError(

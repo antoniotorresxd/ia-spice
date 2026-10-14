@@ -207,3 +207,12 @@ def test_un_modelo_que_rechaza_imagenes_falla_con_un_mensaje_claro(monkeypatch):
     # sigue siendo un ExtractionError: quien solo conoce ese tipo lo atrapa igual
     assert isinstance(excinfo.value, ExtractionError)
     assert "image_url is not supported" in str(excinfo.value)
+
+
+def test_la_guia_manda_los_ejercicios_de_libro_a_planteamientos():
+    # Caso real (Franco P1.9): "Design a noninverting amplifier whose gain is
+    # variable over 1 ≤ A ≤ 5 by means of a 100-k pot" se fue a mode='design',
+    # que no sabe de potenciómetros, y falló dos veces.
+    assert "Design a noninverting amplifier" in GUIA_MODO_ANALISIS
+    assert "{k*100k}" in GUIA_MODO_ANALISIS
+    assert "incisos" in GUIA_MODO_ANALISIS

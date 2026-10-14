@@ -143,6 +143,17 @@ def assemble_composed_netlist(blocks: list[dict], connections: list, component_v
     from agents.curador.policy import metric_key
     from agents.escritura.measurements import MEASURE_ALIASES, measurement_commands
 
+    # Cada etapa se vuelve un subcircuito a partir de su plantilla del
+    # catálogo; un bloque genérico no tiene plantilla ni puertos vin/vout que
+    # cablear, y sin esto reventaba con un KeyError('circuit_id') críptico.
+    genericos = [b["id"] for b in blocks if b.get("type") != "catalog"]
+    if genericos:
+        raise ValueError(
+            "la composición en cascada solo admite bloques del catálogo; "
+            f"{', '.join(genericos)} no lo es. Simula esa etapa por separado o "
+            "describe el circuito completo como un solo bloque"
+        )
+
     in_node = {b["id"]: f'{b["id"]}_vin' for b in blocks}
     out_node = {b["id"]: f'{b["id"]}_vout' for b in blocks}
 

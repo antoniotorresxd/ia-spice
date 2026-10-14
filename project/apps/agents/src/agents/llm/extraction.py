@@ -18,6 +18,15 @@ la función de transferencia, o los valores de componentes que cumplen ciertas
 mediciones o requisitos sobre ESA topología ("find Ri, Aoc and Ro", "¿qué R2 hace
 falta para una ganancia de 5?", "specify component values for f0 = 1 kHz"). NO es un
 diseño (mode='design' es para cuando hay que proponer el circuito desde una aplicación).
+Un ejercicio de libro del tipo "Design a <configuración estándar> whose <magnitud> …"
+con piezas dadas (un pot de 100 kΩ, C = 10 nF, un rango de ganancia) TAMBIÉN es este
+modo: la topología es la del enunciado y lo que se busca son sus valores. Ejemplo:
+"Design a noninverting amplifier whose gain is variable over 1 V/V ≤ A ≤ 5 V/V by means
+of a 100-k pot" → netlist `VI i 0 1`, `X1 i n o OPAMP`, `RA o n {k*100k}`,
+`RB n m {(1-k)*100k}`, `R1 m 0 {R1}`; incognitas ['R1']; un escenario con k = 1 y
+'V(o)/V(i)' = 5; una pregunta 'V(o)/V(i)' con k = 0 (debe dar 1).
+Si el enunciado tiene incisos —(a), (b)…— resuelve en este turno el que pidió el
+usuario (o el (a) si no dijo cuál) y menciona en el nombre del escenario cuál es.
 - `netlist`: transcribe la red a SPICE, un elemento por línea, nodo de referencia 0,
   sufijos SPICE (1k, 4.7u, 1meg). No agregues .control ni análisis. Usa los nombres de
   nodo que dio el usuario. Además de R, L, C, V e I acepta fuentes controladas

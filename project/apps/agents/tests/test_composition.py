@@ -137,3 +137,18 @@ def test_cascade_gain_at_freq_measures_total_gain_from_chain_input():
     expected_total = 2 * h_highpass * 4
     assert results["amp"]["metrics"][key] == pytest.approx(expected_total, rel=0.05)
     assert results["hp"]["metrics"]["fc_-3db"] == pytest.approx(1000, rel=0.04)
+
+
+def test_una_cascada_con_un_bloque_generico_falla_con_un_mensaje_claro():
+    # Caso real: amp_b alimentado por un divisor genérico; el ensamblador
+    # buscaba params["circuit_id"] y el usuario veía "Error al simular: 'circuit_id'".
+    import pytest as _pytest
+
+    from agents.escritura.composition import assemble_composed_netlist
+
+    bloques = [
+        {"id": "div", "type": "generic", "params": {"description": "divisor", "netlist": "R1 a b 1k"}, "requirements": []},
+        {"id": "amp", "type": "catalog", "params": {"circuit_id": "opamp_noninverting_amp"}, "requirements": []},
+    ]
+    with _pytest.raises(ValueError, match="solo admite bloques del catálogo.*div"):
+        assemble_composed_netlist(bloques, [("div", "amp")], {})

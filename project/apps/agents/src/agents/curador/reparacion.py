@@ -13,7 +13,7 @@ from pydantic import BaseModel, model_validator
 from agents.llm.factory import build_chat_model
 from agents.llm.prompts import fetch_prompt
 from agents.llm.settings_client import fetch_agent_llm
-from agents.orquestador.schema import find_unresolved_placeholders
+from agents.orquestador.schema import find_unresolved_placeholders, netlist_sin_lineas
 
 # El agente al que corresponde este nodo, para pedir su configuración de LLM.
 AGENT_ID = "curator"
@@ -50,6 +50,9 @@ class NetlistReparado(BaseModel):
             )
         if ".control" not in self.netlist:
             raise ValueError("el netlist debe traer un bloque .control que ejecute el análisis")
+        sin_lineas = netlist_sin_lineas(self.netlist)
+        if sin_lineas:
+            raise ValueError(sin_lineas)
         unresolved = find_unresolved_placeholders(self.netlist)
         if unresolved:
             raise ValueError(

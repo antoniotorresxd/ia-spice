@@ -193,3 +193,17 @@ def test_repair_prompt_enumerates_every_failed_requirement():
     assert "1." in texto and "2." in texto
     for expected in ["v_out", "5.0", "le", "0.02", "6.67", "gain", "4.0", "ge", "0.01", "missing gain"]:
         assert expected in texto
+
+
+# Caso real: el LLM devolvió el netlist reparado con los saltos de línea
+# convertidos en espacios. ngspice toma esa única línea como título, ve un
+# netlist vacío, y el curador repitió eso hasta agotar 10 iteraciones.
+NETLIST_EN_UNA_LINEA = (
+    "* Amp .param k=1 Vin vin 0 DC 1 Rp1 vout vfb 100k X1 vin vfb vout opamp "
+    ".control op wrdata output.txt v(vout) .endc .end"
+)
+
+
+def test_un_netlist_reparado_en_una_sola_linea_se_rechaza():
+    with pytest.raises(ValueError, match="una sola línea"):
+        NetlistReparado(netlist=NETLIST_EN_UNA_LINEA)
