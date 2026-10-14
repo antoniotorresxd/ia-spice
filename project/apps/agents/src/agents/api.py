@@ -380,7 +380,6 @@ def _stream_run(initial_state: dict, config: dict):
             "commercial_values": final_state.get("commercial_values", {}),
             "bom": final_state.get("bom", {}),
             "precision": final_state.get("precision", {}),
-        "precision": final_state.get("precision", {}),
             "history": final_state.get("history", []),
             "iteration": final_state.get("iteration", 0),
         }
