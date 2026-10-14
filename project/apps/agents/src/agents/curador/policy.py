@@ -46,10 +46,16 @@ def evaluate_requirement(requirement: dict, sim_result: dict) -> tuple[str, floa
     return ("ok" if rel_err <= requirement["tolerance"] else "off"), rel_err
 
 
-def _adjust_catalog(values: dict, target: float, actual: float) -> dict:
+def _adjust_catalog(
+    values: dict, target: float, actual: float, circuit_id: str | None = None
+) -> dict:
     """Ajuste paramétrico para circuitos del catálogo."""
     if abs(actual) < 1e-9:
         return perturb(values)
+    from agents.calculo.catalog_solver import AJUSTES
+
+    if circuit_id in AJUSTES:
+        return AJUSTES[circuit_id](values, target, actual)
     ratio = abs(target) / abs(actual)
     new_values = dict(values)
     if "RZ" in new_values:

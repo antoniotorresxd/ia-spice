@@ -658,6 +658,11 @@ def test_catalog_zener_regulator_converges_first_iteration():
 
     assert final["verdict"]["status"] == "accepted"
     assert len(final["history"]) == 1
+    # No se fabrica un zéner de 9.0 V: se simula el 1N4739A (9.1 V), que
+    # sigue dentro del 2 % pedido.
     vout = final["sim_results"]["zener_block"]["metrics"]["vout"]
-    assert vout == pytest.approx(9.0, abs=0.05)
+    assert vout == pytest.approx(9.1, abs=0.05)
+    (zener,) = [p for p in final["bom"]["zener_block"] if p["tipo"] == "zener"]
+    assert zener["pieza"] == "1N4739A"
+    assert "9 V" in zener["nota"]
 

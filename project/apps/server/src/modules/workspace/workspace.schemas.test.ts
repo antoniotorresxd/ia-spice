@@ -122,6 +122,7 @@ const artifactRow = {
   tags: ["divisor", "resistivo"],
   components: { R1: "Resistencia de entrada." },
   measurementExplanation: "Mide el voltaje de salida.",
+  bom: null,
   createdAt: new Date("2026-07-29T12:00:05Z"),
 };
 
@@ -166,6 +167,7 @@ describe("toConversationDetail", () => {
         tags: ["divisor", "resistivo"],
         components: { R1: "Resistencia de entrada." },
         measurementExplanation: "Mide el voltaje de salida.",
+        bom: null,
         simResult: null,
       },
     ]);
@@ -199,6 +201,7 @@ describe("toConversationDetail", () => {
       tags: null,
       components: null,
       measurementExplanation: null,
+      bom: null,
       simResult: null,
     }]);
   });

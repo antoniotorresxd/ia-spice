@@ -3,11 +3,11 @@ import pytest
 from agents.evaluacion.banco import CasoInvalido, cargar_banco, validar_caso
 
 
-def test_el_banco_de_la_tesina_tiene_dieciseis_casos_bien_formados():
+def test_el_banco_de_la_tesina_tiene_veintitres_casos_bien_formados():
     casos = cargar_banco()
 
-    assert len(casos) == 16
-    assert len({c["id"] for c in casos}) == 16, "hay ids repetidos"
+    assert len(casos) == 23
+    assert len({c["id"] for c in casos}) == 23, "hay ids repetidos"
 
 
 def test_el_banco_cubre_los_tipos_curados_vigentes():
@@ -25,7 +25,8 @@ def test_cada_caso_declara_su_descripcion_y_al_menos_un_requisito_de_referencia(
         assert caso["descripcion"].strip(), f"{caso['id']} sin descripción"
         assert caso["referencia"], f"{caso['id']} sin requisitos de referencia"
         for requisito in caso["referencia"]:
-            assert requisito["objetivo"] > 0
+            # El inversor tiene objetivo negativo: lo que no puede ser es cero.
+            assert requisito["objetivo"] != 0
             assert requisito["componentes"], f"{caso['id']}/{requisito['requisito']} sin solución de referencia"
 
 

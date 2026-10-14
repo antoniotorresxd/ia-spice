@@ -99,6 +99,27 @@ export const execution = pgTable(
 // El netlist. Cuelga de la conversación, no de la ejecución: una corrida que
 // termina reemplaza el conjunto entero, así que mientras una corrida está
 // activa siguen viéndose los artefactos de la anterior.
+// Una entrada de la lista de materiales. Las piezas pasivas traen el valor
+// teórico y el comercial; los semiconductores, un número de parte.
+export type BomItem = {
+  nombre: string;
+  tipo: string;
+  cantidad: number;
+  // pasivos (resistencia, capacitor, inductor)
+  unidad?: string;
+  serie?: string;
+  ideal?: number;
+  valor?: number;
+  realizacion?: "simple" | "serie" | "paralelo";
+  partes?: number[];
+  error_pct?: number;
+  // semiconductores y op-amps
+  pieza?: string;
+  referencias?: string[];
+  nota?: string;
+  modelo_real?: boolean;
+};
+
 export const artifact = pgTable(
   "artifact",
   {
@@ -117,6 +138,9 @@ export const artifact = pgTable(
     tags: jsonb("tags").$type<string[]>(),
     components: jsonb("components").$type<Record<string, string>>(),
     measurementExplanation: text("measurement_explanation"),
+    // Lista de materiales del bloque tal como la arma agents (valores
+    // comerciales y semiconductores reales). Null en artefactos anteriores.
+    bom: jsonb("bom").$type<BomItem[]>(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [index("artifact_conversationId_idx").on(table.conversationId)],

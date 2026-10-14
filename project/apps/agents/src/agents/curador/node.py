@@ -1,5 +1,7 @@
 from langchain_core.runnables import RunnableConfig
 
+from agents.calculo.catalog_solver import cotas_inferiores
+from agents.comerciales import ciclo_comercial, config_comerciales, forzar_avance
 from agents.config import get_config
 from agents.curador.policy import (
     ADJUST_RULES,
@@ -99,6 +101,8 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
     record = {
         "iteration": iteration,
         "component_values": dict(state["component_values"]),
+        # Lo que de verdad se simuló en esta iteración (series E).
+        "commercial_values": dict(state.get("commercial_values") or {}),
         "sim_results": dict(state["sim_results"]),
         # Claves JSON por bloque y posiciones por requisito; las tuplas quedan
         # internas para que history siga siendo serializable por la API.
@@ -185,6 +189,8 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
     record["decision"] = "adjust"
     blocks_by_id = {b["id"]: b for b in blocks}
     adjusted = {}
+    precision = state.get("precision") or {}
+    nueva_precision: dict[str, int] = {}
     reparaciones_fallidas: list[str] = []
     for bid, failed_indices in failing.items():
         block = blocks_by_id[bid]
@@ -223,6 +229,17 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
                     )
                 else:
                     adjusted[bid] = {"netlist": nuevo_netlist}
+        elif ciclo_comercial(
+            (state.get("commercial_values") or {}).get(bid),
+            [r.get("commercial_values", {}).get(bid) for r in state["history"]],
+        ) and precision.get(bid, 0) < config_comerciales(cfg)["niveles"]:
+            # El lazo volvió a un circuito ya simulado: la corrección continua
+            # no es el problema (cae entre dos valores comerciales que fallan
+            # por lados opuestos). Se concede el siguiente paso de precisión
+            # —combinar piezas, una serie más fina— y se re-sintetiza con los
+            # mismos valores teóricos, que eran correctos.
+            nueva_precision[bid] = precision.get(bid, 0) + 1
+            adjusted[bid] = values
         else:
             # TODO(slice-b/c): solver multi-requisito; por ahora elegir el peor.
             # Un requisito sin medición tiene prioridad y requiere perturbación.
@@ -236,12 +253,25 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
             requirement = block["requirements"][worst_index]
             status, _ = evaluations[(bid, worst_index)]
             if status == "error":
-                adjusted[bid] = perturb(values)
+                nuevos = perturb(values)
             else:
                 actual = state["sim_results"][bid]["metrics"][metric_key(requirement)]
-                adjusted[bid] = ADJUST_RULES[block["type"]](
-                    values, target=requirement["value"], actual=actual
+                nuevos = ADJUST_RULES[block["type"]](
+                    values,
+                    target=requirement["value"],
+                    actual=actual,
+                    circuit_id=block["params"].get("circuit_id"),
                 )
+            # Un ajuste menor que medio paso de la serie E no cambiaría el
+            # circuito simulado: se fuerza el salto al valor comercial vecino.
+            adjusted[bid] = forzar_avance(
+                nuevos,
+                values,
+                block["params"].get("params"),
+                cfg,
+                cotas_inferiores(block["params"].get("circuit_id", "")),
+                nivel=precision.get(bid, 0),
+            )
 
     if reparaciones_fallidas:
         # Nunca se deja pasar como ajuste silencioso: sin reparación posible
@@ -262,9 +292,12 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
             },
         }
 
+    if nueva_precision:
+        record["precision"] = nueva_precision
     return {
         "history": [record],
         "component_values": adjusted,
+        "precision": nueva_precision,
         "pending_blocks": list(failing.keys()),
         "iteration": iteration + 1,
     }

@@ -140,6 +140,9 @@ def orquestador_node(state: CircuitState, config: RunnableConfig | None = None) 
                 }
             }
 
+        if outcome.mode == "analysis":
+            return {"outcome": outcome.model_dump(mode="json")}
+
         spec = outcome.spec
         configurable = (config or {}).get("configurable", {})
         custom_max_iter = configurable.get("max_iterations")
@@ -184,4 +187,6 @@ def route_after_orquestador(state: CircuitState) -> str:
     outcome = state.get("outcome")
     if outcome and outcome.get("mode") in ("chat", "clarify"):
         return "stop"
+    if outcome and outcome.get("mode") == "analysis":
+        return "analysis"
     return "continue"

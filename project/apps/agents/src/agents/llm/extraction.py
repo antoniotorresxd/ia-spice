@@ -1,5 +1,27 @@
 from agents.llm.prompts import fetch_prompt
-from agents.orquestador.schema import ChatOutcome, ClarifyOutcome, DesignOutcome, OrchestratorResult
+from agents.orquestador.schema import (
+    AnalysisOutcome,
+    ChatOutcome,
+    ClarifyOutcome,
+    DesignOutcome,
+    OrchestratorResult,
+)
+
+
+# Va junto al catálogo y no en el prompt de Langfuse: el modo existe por
+# este código, y su instrucción tiene que viajar con él aunque el prompt
+# publicado sea anterior.
+GUIA_MODO_ANALISIS = """## MODO ANÁLISIS (mode='analysis')
+Si el usuario da un circuito YA ARMADO (con sus valores) y pregunta por tensiones,
+corrientes, la resistencia o impedancia equivalente, o el equivalente de Thévenin/Norton
+—"resuelve por mallas", "por nodos", "reduce la red", "encuentra la corriente en R3"—,
+NO es un diseño: responde con mode='analysis'.
+- `netlist`: transcribe la red a SPICE, un elemento por línea (R, L, C, V, I), nodo de
+  referencia 0, sufijos SPICE (1k, 4.7u). No agregues .control ni análisis.
+- `metodo`: el que pidió ('nodos', 'mallas', 'reduccion', 'thevenin') o 'completo'.
+- `terminales`: los dos nodos para reducción o Thévenin (ej. ['a','0']).
+- `frecuencia_hz`: solo si es un problema de AC con fasores.
+No resuelvas tú las ecuaciones: el sistema las arma, las resuelve y las verifica con ngspice."""
 
 
 class ExtractionError(Exception):
@@ -8,7 +30,7 @@ class ExtractionError(Exception):
 
 def extract_orchestrator_outcome(
     chat_model, request_text: str, circuit_context: str | None = None
-) -> ChatOutcome | ClarifyOutcome | DesignOutcome:
+) -> ChatOutcome | ClarifyOutcome | DesignOutcome | AnalysisOutcome:
     structured_model = chat_model.with_structured_output(OrchestratorResult)
 
     if circuit_context is None:
@@ -24,7 +46,9 @@ def extract_orchestrator_outcome(
 
     system_prompt = fetch_prompt(
         "orquestador-system",
-        retrieved_circuits_catalog=circuit_context or "(catálogo no disponible)",
+        retrieved_circuits_catalog=(circuit_context or "(catálogo no disponible)")
+        + "\n\n"
+        + GUIA_MODO_ANALISIS,
     )
 
     messages = [

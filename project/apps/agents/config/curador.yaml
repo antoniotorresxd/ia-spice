@@ -57,6 +57,36 @@ calculo:
   r_min: 1.0
   perturb_factor: 1.05
 
+# Paso de valores teóricos a valores comerciales (series IEC 60063) antes de
+# simular. Lo que ngspice juzga es el circuito que se puede comprar, no el de
+# 34.4 kΩ. Una config sin esta sección deja el paso deshabilitado.
+comerciales:
+  habilitado: true
+  # E6/E12/E24 (5-20 %), E48 (2 %), E96 (1 %).
+  serie_resistencias: E24
+  serie_capacitores: E12
+  serie_inductores: E12
+  # Si el valor más cercano de la serie se aleja más que el umbral (fracción,
+  # 0.01 = 1 %), se busca un par de piezas en serie o en paralelo.
+  combinar_resistencias: true
+  combinar_capacitores: true
+  # Los inductores casi solo vienen en E12/E6: sin combinar, un f0 exacto
+  # al 1 % suele ser inalcanzable.
+  combinar_inductores: true
+  umbral_combinacion: 0.01
+  # Semiconductores reales: el zéner se lleva al 1N47xxA más cercano y los
+  # BJT se simulan con el modelo del 2N3904/2N3906 (salvo que el usuario dé
+  # su propio beta). Los op-amps solo se listan (TL081/TL082/TL084).
+  modelos_reales: true
+  # Si el lazo del curador vuelve a un circuito ya simulado (oscila entre dos
+  # valores comerciales que fallan por lados opuestos), al bloque se le
+  # concede el siguiente paso de esta lista, acumulado sobre los anteriores.
+  # Es lo que haría quien diseña: primero combinar piezas, después comprar
+  # resistencias al 1 %.
+  escalamiento:
+    - {combinar_resistencias: true, combinar_capacitores: true, combinar_inductores: true}
+    - {serie_resistencias: E96, serie_capacitores: E24}
+
 llm:
   # Fija la temperatura para que la evaluación sea repetible, que es un
   # criterio de aceptación explícito de la tesina.

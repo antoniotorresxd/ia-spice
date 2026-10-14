@@ -134,6 +134,9 @@ def create_run(
         "normalized_spec": None,
         "pending_blocks": None,
         "component_values": {},
+        "commercial_values": {},
+        "bom": {},
+        "precision": {},
         "netlists": {},
         "sim_results": {},
         "documentation": {},
@@ -183,6 +186,9 @@ def create_run(
         "sim_results": final_state["sim_results"],
         "documentation": final_state["documentation"],
         "component_values": final_state["component_values"],
+        "commercial_values": final_state.get("commercial_values", {}),
+        "bom": final_state.get("bom", {}),
+        "precision": final_state.get("precision", {}),
         "history": final_state["history"],
         "iteration": final_state["iteration"],
     }
@@ -252,6 +258,19 @@ def _stream_run(initial_state: dict, config: dict):
                             status="failed",
                             duration_ms=dur,
                             summary=verdict.get("reason", "Solicitud rechazada."),
+                        )
+                    elif outcome and outcome.get("mode") == "analysis":
+                        yield _stage_event(
+                            "interpretation",
+                            status="completed",
+                            duration_ms=dur,
+                            summary="Red transcrita a netlist para analizarla.",
+                        )
+                        stage_start_times["calculation"] = time.perf_counter()
+                        yield _stage_event(
+                            "calculation",
+                            status="active",
+                            summary="Armando y resolviendo las ecuaciones de la red...",
                         )
                     elif outcome and outcome.get("mode") in ("chat", "clarify"):
                         summary = outcome.get("reply") or outcome.get("question") or "Consulta respondida."
@@ -348,6 +367,29 @@ def _stream_run(initial_state: dict, config: dict):
                                 summary="Generando documentación técnica del circuito...",
                             )
 
+                elif node == "analisis":
+                    dur = int(
+                        (time.perf_counter() - stage_start_times.get("calculation", time.perf_counter()))
+                        * 1000
+                    )
+                    analisis = update.get("outcome") or {}
+                    validacion = (analisis.get("resultados") or {}).get("validacion") or {}
+                    yield _stage_event(
+                        "calculation",
+                        status="failed" if analisis.get("error") and not analisis.get("resultados", {}).get("nodos") else "completed",
+                        duration_ms=dur,
+                        summary=analisis.get("error") or "Ecuaciones resueltas.",
+                    )
+                    yield _stage_event(
+                        "simulation",
+                        status="completed" if validacion.get("coincide") else "failed",
+                        summary=(
+                            "ngspice confirma las tensiones de nodo."
+                            if validacion.get("coincide")
+                            else f"Verificación con ngspice: {validacion.get('error') or 'no coincide'}"
+                        ),
+                    )
+
                 elif node == "documentador":
                     dur = int(
                         (time.perf_counter() - stage_start_times.get("result", time.perf_counter()))
@@ -371,6 +413,9 @@ def _stream_run(initial_state: dict, config: dict):
             "sim_results": final_state.get("sim_results", {}),
             "documentation": final_state.get("documentation"),
             "component_values": final_state.get("component_values", {}),
+            "commercial_values": final_state.get("commercial_values", {}),
+            "bom": final_state.get("bom", {}),
+            "precision": final_state.get("precision", {}),
             "history": final_state.get("history", []),
             "iteration": final_state.get("iteration", 0),
         }
@@ -399,6 +444,9 @@ def create_run_stream(body: RunRequest, authorization: str | None = Header(defau
         "normalized_spec": None,
         "pending_blocks": None,
         "component_values": {},
+        "commercial_values": {},
+        "bom": {},
+        "precision": {},
         "netlists": {},
         "sim_results": {},
         "documentation": {},

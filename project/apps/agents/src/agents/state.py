@@ -25,6 +25,17 @@ class CircuitState(TypedDict):
     # Escrito por los workers de 'calculo' (en paralelo) y mutado por 'curador'
     component_values: Annotated[dict, merge_dicts]
 
+    # Escrito por 'escritura', keyed por block_id: lo que de verdad se simula
+    # (component_values aterrizados a series E) y la lista de materiales que
+    # explica cada redondeo. component_values sigue siendo el valor continuo
+    # que ajusta el curador; ver agents/comerciales.
+    commercial_values: Annotated[dict, merge_dicts]
+    bom: Annotated[dict, merge_dicts]
+    # Escrito por 'curador', keyed por block_id: cuántos pasos de
+    # `comerciales.escalamiento` se le concedieron a un bloque cuyo lazo
+    # oscilaba entre valores comerciales. Ausente = 0 (precisión base).
+    precision: Annotated[dict, merge_dicts]
+
     # Escrito por 'sintesis', keyed por block_id; merge para conservar los
     # bloques no re-sintetizados en iteraciones posteriores
     netlists: Annotated[dict, merge_dicts]

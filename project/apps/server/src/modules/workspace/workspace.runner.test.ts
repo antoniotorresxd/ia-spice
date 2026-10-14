@@ -72,8 +72,18 @@ describe("toArtifactDrafts", () => {
         tags: null,
         components: null,
         measurementExplanation: null,
+        bom: null,
       },
     ]);
+  });
+
+  test("la lista de materiales de cada bloque viaja en su artefacto", () => {
+    const bom = [
+      { nombre: "R2", tipo: "resistencia", cantidad: 1, unidad: "ohm", serie: "E24", ideal: 7142.86, valor: 7142.86, realizacion: "paralelo" as const, partes: [7500, 150000], error_pct: 0 },
+      { nombre: "Q1", tipo: "transistor", cantidad: 1, pieza: "2N3904", referencias: ["Q1"], nota: "BJT NPN", modelo_real: true },
+    ];
+    const drafts = toArtifactDrafts({ ...accepted, bom: { "block-1": bom } });
+    expect(drafts[0].bom).toEqual(bom);
   });
 
   test("mergea la documentación por bloque sin cambiar el estado de simulación", () => {
@@ -330,3 +340,50 @@ describe("startRun", () => {
   });
 });
 
+
+describe("resolveRunOutcome en modo análisis", () => {
+  const analysis: AgentsRunResult = {
+    ...accepted,
+    verdict: null,
+    outcome: {
+      mode: "analysis",
+      informe: "ANÁLISIS DE LA RED — régimen DC\n...",
+      error: null,
+      resultados: { validacion: { coincide: true, error: null } },
+    },
+    netlists: { analisis: { path: "/tmp/analisis.cir", text: "* Analisis de red\nR1 a 0 1k\n" } },
+    sim_results: {},
+  };
+
+  test("el informe es el mensaje y el netlist verificado queda como artefacto", () => {
+    const outcome = resolveRunOutcome(analysis, { previo: true });
+
+    expect(outcome.mode).toBe("analysis");
+    expect(outcome.status).toBe("completed");
+    expect(outcome.assistantMessage).toBe("ANÁLISIS DE LA RED — régimen DC\n...");
+    expect(outcome.summary).toContain("ngspice confirma");
+    expect(outcome.artifacts?.map((a) => a.name)).toEqual(["analisis.cir"]);
+    // un análisis no redefine el diseño vigente de la conversación
+    expect(outcome.normalizedSpec).toEqual({ previo: true });
+  });
+
+  test("si ngspice no coincide se completa pero lo dice", () => {
+    const outcome = resolveRunOutcome({
+      ...analysis,
+      outcome: { mode: "analysis", informe: "x", error: null, resultados: { validacion: { coincide: false } } },
+    });
+    expect(outcome.status).toBe("completed");
+    expect(outcome.summary).toContain("no confirmó");
+  });
+
+  test("una red ilegible es un análisis fallido", () => {
+    const outcome = resolveRunOutcome({
+      ...analysis,
+      netlists: {},
+      outcome: { mode: "analysis", informe: "No se pudo leer la red: Q1", error: "Q1: solo se analizan redes de R, L, C", resultados: {} },
+    });
+    expect(outcome.status).toBe("failed");
+    expect(outcome.summary).toContain("solo se analizan");
+    expect(outcome.assistantMessage).toContain("No se pudo leer la red");
+  });
+});

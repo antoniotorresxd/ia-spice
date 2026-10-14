@@ -54,9 +54,52 @@ def test_sintesis_generates_and_simulates_mixed_blocks():
     assert div["converged"] is True
     assert div["metrics"]["v_out"] == pytest.approx(3.3, rel=1e-3)
 
+    # Lo que se simula es el valor comercial, no el teórico: C = 159.15 nF no
+    # existe en E12 (150 nF queda a -5.7 %), así que se arma con dos
+    # capacitores en paralelo y fc vuelve a quedar dentro del 1 %.
     rc = final_state["sim_results"]["rc1"]
     assert rc["sim_error"] is None
-    assert rc["metrics"]["fc"] == pytest.approx(1000.0, rel=0.02)
+    materiales = {m["nombre"]: m for m in final_state["bom"]["rc1"]}
+    assert materiales["R"]["error_pct"] == 0  # 1 kΩ ya es de la serie
+    assert materiales["C"]["realizacion"] == "paralelo"
+    assert sum(materiales["C"]["partes"]) == pytest.approx(materiales["C"]["valor"])
+    assert final_state["commercial_values"]["rc1"]["C"] == materiales["C"]["valor"]
+    assert rc["metrics"]["fc"] == pytest.approx(1000.0, rel=0.01)
+    assert "Valores comerciales" in final_state["netlists"]["rc1"]["text"]
+
+
+def test_sintesis_simula_los_valores_teoricos_si_comerciales_esta_deshabilitado(monkeypatch):
+    import agents.escritura.node as escritura
+
+    monkeypatch.setattr(escritura, "get_config", lambda: {"comerciales": {"habilitado": False}})
+    graph = build_sintesis_graph()
+    state = {
+        "circuit_spec": {},
+        "request_text": None,
+        "normalized_spec": {
+            "blocks": [
+                {
+                    "id": "rc1",
+                    "type": "catalog",
+                    "params": {"circuit_id": "rc_lowpass_passive", "params": {"f_c": 1000.0}},
+                    "goal": {"metric": "fc", "target": 1000.0, "tolerance": 0.05},
+                },
+            ],
+            "max_iterations": 5,
+        },
+        "pending_blocks": ["rc1"],
+        "component_values": {"rc1": {"R": 1000.0, "C": 1.5915494309189535e-07}},
+        "netlists": {},
+        "sim_results": {},
+        "iteration": 0,
+        "history": [],
+        "verdict": None,
+    }
+
+    final_state = graph.invoke(state)
+
+    assert final_state["sim_results"]["rc1"]["metrics"]["fc"] == pytest.approx(1000.0, rel=0.02)
+    assert final_state["bom"]["rc1"] == []
 
 
 def test_sim_results_report_convergence():

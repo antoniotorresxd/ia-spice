@@ -190,6 +190,44 @@ class ClarifyOutcome(BaseModel):
     partial_spec: dict = Field(default_factory=dict)
 
 
+class AnalysisOutcome(BaseModel):
+    """El usuario da un circuito YA ARMADO y pregunta por sus tensiones,
+    corrientes, su resistencia/impedancia equivalente o su equivalente de
+    Thévenin/Norton ("resuelve por mallas", "encuentra la corriente en R3",
+    "reduce la red entre a y b"). No se diseña nada: solo se transcribe la
+    red a netlist y el sistema la resuelve."""
+
+    mode: Literal["analysis"]
+    netlist: str = Field(
+        min_length=1,
+        description=(
+            "La red transcrita a SPICE, un elemento por línea: R, L, C y fuentes "
+            "independientes V/I. Formato `<nombre> <nodo+> <nodo-> <valor>`, con "
+            "sufijos SPICE (1k, 4.7u, 10meg). El nodo de referencia es 0. Para una "
+            "fuente de corriente, la corriente sale por el nodo- (convención SPICE: "
+            "circula de nodo+ a nodo- por dentro de la fuente). Sin .control ni "
+            "análisis: el sistema los agrega."
+        ),
+    )
+    metodo: Literal["nodos", "mallas", "reduccion", "thevenin", "completo"] = Field(
+        default="completo",
+        description=(
+            "El método que pidió el usuario; 'completo' si no pidió uno o pidió varios."
+        ),
+    )
+    terminales: list[str] | None = Field(
+        default=None,
+        description=(
+            "Los dos nodos entre los que se mira la red, para reducción (resistencia "
+            "equivalente) o Thévenin/Norton. Ej. ['a', '0']."
+        ),
+    )
+    frecuencia_hz: float | None = Field(
+        default=None,
+        description="Frecuencia para análisis fasorial en AC; omitir en DC.",
+    )
+
+
 class DesignOutcome(BaseModel):
     """Hay suficiente información: la especificación completa de siempre."""
 
@@ -210,10 +248,11 @@ class OrchestratorResult(BaseModel):
         description=(
             "Analiza el problema con conceptos de ingeniería electrónica (Sedra/Boylestad): "
             "identifica si se resuelve con una topología del catálogo, si se compone en cascada "
-            "por etapas (ej. pasa-banda = pasa-altos + pasa-bajos), o si requiere clarificación."
+            "por etapas (ej. pasa-banda = pasa-altos + pasa-bajos), si requiere clarificación, "
+            "o si es un circuito ya dado que hay que analizar (mallas, nodos, reducción, Thévenin)."
         ),
     )
     outcome: Annotated[
-        ChatOutcome | ClarifyOutcome | DesignOutcome,
+        ChatOutcome | ClarifyOutcome | DesignOutcome | AnalysisOutcome,
         Field(discriminator="mode"),
     ]

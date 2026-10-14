@@ -28,9 +28,29 @@ export type WorkspaceExecution = {
   id: string
   status: WorkspaceExecutionStatus
   summary: string
-  mode?: 'chat' | 'clarify' | 'design'
+  mode?: 'chat' | 'clarify' | 'design' | 'analysis'
   stages?: ExecutionStage[]
   simResults?: Record<string, BlockSimResult> | null
+}
+
+// Una entrada de la lista de materiales que arma agents. Las piezas pasivas
+// traen el valor teórico y el comercial; los semiconductores, un número de
+// parte. La forma es la del servidor (`BomItem` en workspace.model.ts).
+export type BomItem = {
+  nombre: string
+  tipo: string
+  cantidad: number
+  unidad?: string
+  serie?: string
+  ideal?: number
+  valor?: number
+  realizacion?: 'simple' | 'serie' | 'paralelo'
+  partes?: number[]
+  error_pct?: number
+  pieza?: string
+  referencias?: string[]
+  nota?: string
+  modelo_real?: boolean
 }
 
 export type WorkspaceFile = {
@@ -43,6 +63,7 @@ export type WorkspaceFile = {
   tags: string[] | null
   components: Record<string, string> | null
   measurementExplanation: string | null
+  bom?: BomItem[] | null
   simResult?: BlockSimResult | null
 }
 

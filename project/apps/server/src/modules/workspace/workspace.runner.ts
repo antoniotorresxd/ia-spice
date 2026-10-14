@@ -1,6 +1,6 @@
 import env from "@/lib/env";
 
-import type { ArtifactStatus, ExecutionStatus } from "./workspace.model";
+import type { ArtifactStatus, BomItem, ExecutionStatus } from "./workspace.model";
 
 export type AgentsVerdict = {
   status: string;
@@ -11,7 +11,15 @@ export type AgentsVerdict = {
 export type AgentsOutcome =
   | { mode: "chat"; reply: string }
   | { mode: "clarify"; question: string; partial_spec: unknown }
-  | { mode: "design" };
+  | { mode: "design" }
+  | {
+      mode: "analysis";
+      // Informe en texto (nodos, mallas, reducción, Thévenin y la
+      // verificación con ngspice); ausente si el análisis no llegó a correr.
+      informe?: string;
+      error?: string | null;
+      resultados?: { validacion?: { coincide?: boolean; error?: string | null } } & Record<string, unknown>;
+    };
 
 export type SimCurvePoint = { x: number; y: number };
 
@@ -35,6 +43,9 @@ export type AgentsRunResult = {
   netlists: Record<string, { path: string; text: string }>;
   sim_results: Record<string, BlockSimResult>;
   component_values: Record<string, Record<string, number>>;
+  // Ausente en respuestas de versiones de agents anteriores a la lista de
+  // materiales; por eso opcional.
+  bom?: Record<string, BomItem[]>;
   documentation: Record<string, {
     summary: string;
     tags: string[];
@@ -55,6 +66,7 @@ export type ArtifactDraft = {
   tags: string[] | null;
   components: Record<string, string> | null;
   measurementExplanation: string | null;
+  bom: BomItem[] | null;
 };
 
 const LLM_UNAVAILABLE_PREFIX = "llm_settings_unavailable";
@@ -97,6 +109,7 @@ export function toArtifactDrafts(result: AgentsRunResult): ArtifactDraft[] {
       tags: documentation?.tags ?? null,
       components: documentation?.components ?? null,
       measurementExplanation: documentation?.measurement_explanation ?? null,
+      bom: result.bom?.[blockId] ?? null,
     };
   });
 }
@@ -127,7 +140,7 @@ export type RunOutcome = {
   // conversación que ya tenía un diseño vigente); array = reemplazo
   // completo, igual que el camino de diseño de siempre.
   artifacts: ArtifactDraft[] | null;
-  mode: "chat" | "clarify" | "design";
+  mode: "chat" | "clarify" | "design" | "analysis";
 };
 
 export function resolveRunOutcome(result: AgentsRunResult, previousNormalizedSpec: unknown | null = null): RunOutcome {
@@ -153,6 +166,10 @@ export function resolveRunOutcome(result: AgentsRunResult, previousNormalizedSpe
     };
   }
 
+  if (result.outcome?.mode === "analysis") {
+    return resolveAnalysisOutcome(result, result.outcome, previousNormalizedSpec);
+  }
+
   const { status, summary } = mapVerdictToStatus(result.verdict);
   return {
     status,
@@ -161,6 +178,34 @@ export function resolveRunOutcome(result: AgentsRunResult, previousNormalizedSpe
     normalizedSpec: result.normalized_spec,
     artifacts: toArtifactDrafts(result),
     mode: "design",
+  };
+}
+
+const ANALYSIS_UNREADABLE = "No se pudo analizar la red.";
+
+// Un análisis no tiene veredicto de diseño: se completa si la red se pudo
+// resolver, y el resumen dice si ngspice confirmó la respuesta.
+function resolveAnalysisOutcome(
+  result: AgentsRunResult,
+  outcome: Extract<AgentsOutcome, { mode: "analysis" }>,
+  previousNormalizedSpec: unknown | null,
+): RunOutcome {
+  const informe = outcome.informe ?? outcome.error ?? ANALYSIS_UNREADABLE;
+  const validacion = outcome.resultados?.validacion;
+  // Sin `validacion` la red ni siquiera se pudo leer: no hubo análisis.
+  const solved = Boolean(validacion);
+  const summary = !solved
+    ? (outcome.error ?? ANALYSIS_UNREADABLE)
+    : validacion?.coincide
+      ? "Red analizada; ngspice confirma las tensiones de nodo."
+      : "Red analizada, pero ngspice no confirmó el resultado.";
+  return {
+    status: solved ? "completed" : "failed",
+    summary,
+    assistantMessage: informe,
+    normalizedSpec: previousNormalizedSpec,
+    artifacts: toArtifactDrafts(result),
+    mode: "analysis",
   };
 }
 
