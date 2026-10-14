@@ -118,3 +118,10 @@ def test_la_guia_de_analisis_pide_no_agregar_la_fuente_de_prueba():
     # terminal a tierra con el otro al aire, y la red quedó sin corriente.
     assert "NO agregues una fuente de prueba" in GUIA_MODO_ANALISIS
     assert "entre los `terminales`" in GUIA_MODO_ANALISIS
+
+
+def test_la_guia_de_analisis_pide_no_inventar_tierra_ni_reducir():
+    # Caso real: sin nodo 0, el LLM colgó una R7 de tierra para que la red se
+    # leyera y juntó 50 Ω ∥ 200 Ω en una sola de 40 Ω, borrando ese paso.
+    assert "NO inventes una" in GUIA_MODO_ANALISIS
+    assert "NO\n  combines" in GUIA_MODO_ANALISIS

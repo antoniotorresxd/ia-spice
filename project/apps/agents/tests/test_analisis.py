@@ -271,6 +271,46 @@ def test_thevenin_ac_verifica_la_impedancia_compleja():
     assert zeq["coincide"] is True
 
 
+# La misma red tal como debe transcribirla el LLM: pasiva, de dos terminales,
+# sin fuente y sin nodo 0.
+RED_PASIVA_SIN_TIERRA = """R1 nodo_in nA 100
+R2 nA nC 50
+R3 nA nC 200
+R4 nC nB 250
+R5 nA nD 10
+R6 nD nB 30
+R7 nB nodo_out 120
+"""
+
+
+def test_una_red_sin_nodo_0_toma_el_segundo_terminal_como_referencia():
+    r = analizar({"netlist": RED_PASIVA_SIN_TIERRA, "metodo": "reduccion", "terminales": ["nodo_in", "nodo_out"]})
+
+    assert r["error"] is None
+    assert r["resultados"]["reduccion"]["equivalente"] == pytest.approx(REQ_SERIE_PARALELO)
+    assert r["resultados"]["validacion"]["zeq"]["coincide"] is True
+    assert r["resultados"]["validacion"]["coincide"] is True
+    # El paso del paralelo sigue en el desglose y los terminales conservan su nombre.
+    assert "R2 ∥ R3" in r["informe"]
+    assert "REDUCCIÓN ENTRE nodo_in Y nodo_out" in r["informe"]
+    assert "Z_eq(nodo_in, nodo_out)" in r["informe"]
+    assert "se toma nodo_out como referencia (0)" in r["informe"]
+    # ngspice necesita un nodo 0: el terminal de referencia lo es en su netlist.
+    assert "VPRUEBA nodo_in 0 DC 1" in r["netlist_zeq"]
+
+
+def test_sin_nodo_0_ni_terminales_sigue_siendo_un_error():
+    r = analizar({"netlist": RED_PASIVA_SIN_TIERRA, "metodo": "nodos"})
+    assert "nodo de referencia" in r["error"]
+
+
+def test_una_red_sin_fuentes_no_sugiere_un_terminal_al_aire():
+    r = analizar({"netlist": RED_PASIVA_SIN_TIERRA, "metodo": "reduccion", "terminales": ["nodo_in", "nodo_out"]})
+
+    assert "al aire" not in r["informe"]
+    assert "no tiene fuentes independientes" in r["informe"]
+
+
 def test_el_nodo_guarda_el_netlist_de_la_prueba_como_artefacto():
     from agents.analisis.node import analisis_node
 

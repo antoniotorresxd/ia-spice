@@ -28,6 +28,12 @@ NO es un diseño: responde con mode='analysis'.
   entre los `terminales` y mide Req = 1 V / I. Una fuente tuya —p. ej. de un terminal
   a 0 con el otro al aire— deja la red sin corriente y no valida nada. Incluye una
   fuente solo si forma parte del circuito que el usuario describe.
+- Si la red no tiene tierra (una red pasiva entre dos terminales), NO inventes una
+  conexión a 0 ni un elemento extra: el sistema toma el segundo terminal como
+  referencia.
+- Transcribe cada componente tal como lo describe el usuario, uno por línea. NO
+  combines tú resistencias en serie o en paralelo (50 Ω ∥ 200 Ω son dos líneas, no
+  una de 40 Ω): la reducción paso a paso la hace el sistema.
 - `frecuencia_hz`: solo si es un problema de AC con fasores.
 No resuelvas tú las ecuaciones: el sistema las arma, las resuelve y las verifica con ngspice."""
 
