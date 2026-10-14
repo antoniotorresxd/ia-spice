@@ -5,6 +5,9 @@ import tempfile
 
 from langchain_core.runnables import RunnableConfig
 
+from agents.calculo.catalog_solver import cotas_inferiores
+from agents.comerciales import comentarios_materiales, comercializar, insertar_comentarios
+from agents.config import get_config
 from agents.escritura.composition import assemble_composed_netlist
 from agents.escritura.netlist import NETLIST_BUILDERS
 from agents.llm.factory import build_chat_model
@@ -41,35 +44,63 @@ def _write(work_dir_prefix: str, netlist_text: str) -> str:
     return netlist_path
 
 
+def _comercializar_bloque(block: dict, values: dict, cfg: dict) -> tuple[dict, list[dict]]:
+    # Un bloque genérico trae su netlist ya escrito por el LLM: no hay
+    # valores sueltos que redondear sin reescribirlo.
+    if block["type"] != "catalog":
+        return values, []
+    params = block["params"]
+    return comercializar(
+        values, params.get("params"), cfg, cotas_inferiores(params.get("circuit_id", ""))
+    )
+
+
 def escritura_node(state: CircuitState, config: RunnableConfig | None = None) -> dict:
     blocks_list = state["normalized_spec"]["blocks"]
     blocks = {b["id"]: b for b in blocks_list}
     connections = state["normalized_spec"].get("connections") or []
+    cfg = get_config()
 
     if connections:
         # Una sola simulación para todo el diseño compuesto: los requisitos
         # de un bloque se miden sobre el circuito completo, no aislado.
-        component_values = state.get("component_values", {})
-        netlist_text = assemble_composed_netlist(blocks_list, connections, component_values)
+        commercial: dict = {}
+        bom: dict = {}
+        comentarios: list[str] = []
+        for block in blocks_list:
+            values = state.get("component_values", {}).get(block["id"], {})
+            commercial[block["id"]], bom[block["id"]] = _comercializar_bloque(block, values, cfg)
+            comentarios += comentarios_materiales(bom[block["id"]], block["id"])
+        netlist_text = insertar_comentarios(
+            assemble_composed_netlist(blocks_list, connections, commercial), comentarios
+        )
         netlist_path = _write("agents-escritura-composed-", netlist_text)
         return {
             "netlists": {
                 block_id: {"path": netlist_path, "text": netlist_text}
                 for block_id in state["pending_blocks"]
-            }
+            },
+            "commercial_values": commercial,
+            "bom": bom,
         }
 
     netlists = {}
+    commercial = {}
+    bom = {}
     for block_id in state["pending_blocks"]:
         block = blocks[block_id]
         values = state.get("component_values", {}).get(block_id, {})
+        commercial[block_id], bom[block_id] = _comercializar_bloque(block, values, cfg)
 
         builder = NETLIST_BUILDERS.get(block["type"])
         if not builder:
             raise ValueError(f"Tipo de bloque no soportado: {block['type']}")
-        netlist_text = builder(block["params"], values)
+        netlist_text = insertar_comentarios(
+            builder(block["params"], commercial[block_id]),
+            comentarios_materiales(bom[block_id]),
+        )
 
         netlist_path = _write(f"agents-escritura-{block_id}-", netlist_text)
         netlists[block_id] = {"path": netlist_path, "text": netlist_text}
 
-    return {"netlists": netlists}
+    return {"netlists": netlists, "commercial_values": commercial, "bom": bom}

@@ -1,5 +1,7 @@
 from langchain_core.runnables import RunnableConfig
 
+from agents.calculo.catalog_solver import cotas_inferiores
+from agents.comerciales import forzar_avance
 from agents.config import get_config
 from agents.curador.policy import (
     ADJUST_RULES,
@@ -99,6 +101,8 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
     record = {
         "iteration": iteration,
         "component_values": dict(state["component_values"]),
+        # Lo que de verdad se simuló en esta iteración (series E).
+        "commercial_values": dict(state.get("commercial_values") or {}),
         "sim_results": dict(state["sim_results"]),
         # Claves JSON por bloque y posiciones por requisito; las tuplas quedan
         # internas para que history siga siendo serializable por la API.
@@ -236,12 +240,21 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
             requirement = block["requirements"][worst_index]
             status, _ = evaluations[(bid, worst_index)]
             if status == "error":
-                adjusted[bid] = perturb(values)
+                nuevos = perturb(values)
             else:
                 actual = state["sim_results"][bid]["metrics"][metric_key(requirement)]
-                adjusted[bid] = ADJUST_RULES[block["type"]](
+                nuevos = ADJUST_RULES[block["type"]](
                     values, target=requirement["value"], actual=actual
                 )
+            # Un ajuste menor que medio paso de la serie E no cambiaría el
+            # circuito simulado: se fuerza el salto al valor comercial vecino.
+            adjusted[bid] = forzar_avance(
+                nuevos,
+                values,
+                block["params"].get("params"),
+                cfg,
+                cotas_inferiores(block["params"].get("circuit_id", "")),
+            )
 
     if reparaciones_fallidas:
         # Nunca se deja pasar como ajuste silencioso: sin reparación posible

@@ -284,6 +284,21 @@ CATALOG_SOLVERS = {
 }
 
 
+# Componentes cuya ecuación de diseño es una cota inferior y no un valor
+# exacto: al pasarlos a valor comercial se redondean hacia arriba (un C de
+# filtrado más chico que el calculado deja más rizado del pedido).
+COTAS_INFERIORES: dict[str, frozenset[str]] = {
+    "zener_regulated_power_supply": frozenset({"C"}),
+    "linear_zener_regulator": frozenset({"C"}),
+    "bjt_common_emitter_amp": frozenset({"CE"}),
+    "diode_clamper": frozenset({"C"}),
+}
+
+
+def cotas_inferiores(circuit_id: str) -> frozenset[str]:
+    return COTAS_INFERIORES.get(circuit_id, frozenset())
+
+
 def solve_catalog_circuit(circuit_id: str, params: dict[str, Any]) -> dict[str, float]:
     """Resuelve los valores numéricos de componentes para una topología del catálogo."""
     solver = CATALOG_SOLVERS.get(circuit_id)

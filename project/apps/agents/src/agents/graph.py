@@ -31,7 +31,12 @@ def build_graph(checkpointer=None):
 
     def _sintesis_node(state: CircuitState, config: RunnableConfig | None = None) -> dict:
         result = sintesis_graph.invoke(state, config)
-        return {"netlists": result["netlists"], "sim_results": result["sim_results"]}
+        return {
+            "netlists": result["netlists"],
+            "sim_results": result["sim_results"],
+            "commercial_values": result.get("commercial_values", {}),
+            "bom": result.get("bom", {}),
+        }
 
     builder = StateGraph(CircuitState)
     builder.add_node("orquestador", orquestador_node)

@@ -16,6 +16,8 @@ def _estado_inicial(circuit_spec: dict) -> dict:
         "normalized_spec": None,
         "pending_blocks": None,
         "component_values": {},
+        "commercial_values": {},
+        "bom": {},
         "netlists": {},
         "sim_results": {},
         "iteration": 0,

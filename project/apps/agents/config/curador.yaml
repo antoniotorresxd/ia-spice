@@ -57,6 +57,20 @@ calculo:
   r_min: 1.0
   perturb_factor: 1.05
 
+# Paso de valores teóricos a valores comerciales (series IEC 60063) antes de
+# simular. Lo que ngspice juzga es el circuito que se puede comprar, no el de
+# 34.4 kΩ. Una config sin esta sección deja el paso deshabilitado.
+comerciales:
+  habilitado: true
+  # E6/E12/E24 (5-20 %), E48 (2 %), E96 (1 %).
+  serie_resistencias: E24
+  serie_capacitores: E12
+  serie_inductores: E12
+  # Si el valor más cercano de la serie se aleja más que el umbral (fracción,
+  # 0.01 = 1 %), se busca un par de resistencias en serie o en paralelo.
+  combinar_resistencias: true
+  umbral_combinacion: 0.01
+
 llm:
   # Fija la temperatura para que la evaluación sea repetible, que es un
   # criterio de aceptación explícito de la tesina.
