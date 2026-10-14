@@ -35,6 +35,12 @@ describe("deriveTitle y derivePreview", () => {
   test("el preview usa el máximo de preview", () => {
     expect(derivePreview("x".repeat(200)).length).toBe(120);
   });
+
+  test("el preview no arrastra la sintaxis Markdown del mensaje", () => {
+    expect(derivePreview("1. **Rama 1:** $R = 40\\,\\Omega$ y `R1`")).toBe("1. Rama 1: R = 40\\,\\Omega y R1");
+    expect(derivePreview("```text\nANÁLISIS DE LA RED\n```")).toBe("ANÁLISIS DE LA RED");
+    expect(derivePreview("## Resumen\n- uno")).toBe("Resumen - uno");
+  });
 });
 
 describe("createProjectSchema", () => {

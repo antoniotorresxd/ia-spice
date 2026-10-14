@@ -18,6 +18,7 @@ import {
   parseNetlist,
 } from '../model/netlist-diagram'
 import type { CircuitDocumentation } from '../model/workspace-types'
+import { MarkdownText } from './MarkdownText'
 import styles from './NetlistDiagram.module.css'
 
 const LEGEND_ITEMS = [
@@ -825,7 +826,7 @@ export function CircuitExplanation({
         </ul>
       )}
 
-      <p className={styles.explainText}>{explanation}</p>
+      <MarkdownText className={styles.explainText}>{explanation}</MarkdownText>
 
       {(measurementExplanation || netlist.measurements.length > 0) && (
         <div className={styles.measureCallout}>
@@ -833,7 +834,7 @@ export function CircuitExplanation({
             <span className={styles.measurePrefix}>Parámetros de medición</span>
           </div>
           {measurementExplanation && (
-            <p className={styles.measureExplanation}>{measurementExplanation}</p>
+            <MarkdownText className={styles.measureExplanation}>{measurementExplanation}</MarkdownText>
           )}
           {netlist.measurements.length > 0 && (
             <span className={styles.measureContent}>

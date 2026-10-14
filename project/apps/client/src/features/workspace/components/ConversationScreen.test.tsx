@@ -165,6 +165,30 @@ describe('ConversationScreen', () => {
     expect(screen.getByText('Conversación', { selector: 'span' })).toBeVisible()
   })
 
+  it('renderiza el Markdown y las fórmulas del asistente, pero no los del usuario', async () => {
+    const service = createMockWorkspaceService()
+    const detail: WorkspaceConversationDetail = {
+      id: 'conversation-md',
+      projectId: null,
+      title: 'reduce la red',
+      preview: 'Rama 1',
+      updatedAt: '2026-10-14T12:00:00Z',
+      executionStatus: 'completed',
+      messages: [
+        { id: 'm1', role: 'user', content: 'usa **negritas** y $x$', createdAt: '2026-10-14T12:00:00Z' },
+        { id: 'm2', role: 'assistant', content: '1. **Rama 1:** $R = 40\\,\\Omega$', createdAt: '2026-10-14T12:00:01Z' },
+      ],
+      files: [],
+      execution: { id: 'exec-md', status: 'completed', summary: 'listo', mode: 'chat' },
+    }
+    vi.spyOn(service, 'getConversation').mockResolvedValue(detail)
+    const { container } = renderScreen(service, 'conversation-md')
+
+    expect(await screen.findByText('Rama 1:', { selector: 'strong' })).toBeVisible()
+    expect(container.querySelector('[data-role="assistant"] .katex')).not.toBeNull()
+    expect(screen.getByText('usa **negritas** y $x$')).toBeVisible()
+  })
+
   it('permite colapsar y abrir el panel lateral de circuito e inspección', async () => {
     const user = userEvent.setup()
     renderScreen(createMockWorkspaceService())

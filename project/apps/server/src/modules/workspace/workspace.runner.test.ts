@@ -360,7 +360,9 @@ describe("resolveRunOutcome en modo análisis", () => {
 
     expect(outcome.mode).toBe("analysis");
     expect(outcome.status).toBe("completed");
-    expect(outcome.assistantMessage).toBe("ANÁLISIS DE LA RED — régimen DC\n...");
+    // El chat renderiza Markdown: el informe va en un bloque de texto para que
+    // sus sangrías y los `*` de las ecuaciones no se interpreten como formato.
+    expect(outcome.assistantMessage).toBe("```text\nANÁLISIS DE LA RED — régimen DC\n...\n```");
     expect(outcome.summary).toContain("ngspice confirma");
     expect(outcome.artifacts?.map((a) => a.name)).toEqual(["analisis.cir"]);
     // un análisis no redefine el diseño vigente de la conversación
@@ -384,6 +386,6 @@ describe("resolveRunOutcome en modo análisis", () => {
     });
     expect(outcome.status).toBe("failed");
     expect(outcome.summary).toContain("solo se analizan");
-    expect(outcome.assistantMessage).toContain("No se pudo leer la red");
+    expect(outcome.assistantMessage).toBe("No se pudo leer la red: Q1");
   });
 });

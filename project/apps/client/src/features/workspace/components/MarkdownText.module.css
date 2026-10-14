@@ -1,0 +1,149 @@
+/* Tamaño y color los pone quien lo usa (burbuja del chat, panel del
+   circuito); aquí solo la estructura del Markdown. */
+.markdown {
+  min-width: 0;
+}
+
+/* Los saltos los decide el Markdown (remark-breaks), no el espaciado del
+   texto: pre-wrap heredado los duplicaría. */
+.markdown p {
+  margin: 0 0 0.6rem;
+  white-space: normal;
+}
+
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  margin: 0.9rem 0 0.4rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown ul,
+.markdown ol {
+  margin: 0 0 0.6rem;
+  padding-left: 1.3rem;
+}
+
+.markdown li {
+  margin: 0.15rem 0;
+}
+
+.markdown li > p {
+  margin: 0;
+}
+
+.markdown li > ul,
+.markdown li > ol {
+  margin: 0.15rem 0 0.25rem;
+}
+
+.markdown strong {
+  font-weight: 700;
+}
+
+.markdown a {
+  color: var(--color-mint, #45d6c4);
+  text-decoration: underline;
+}
+
+.markdown code {
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.86em;
+}
+
+.markdown pre {
+  margin: 0 0 0.6rem;
+  padding: 0.75rem 0.9rem;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.markdown pre code {
+  padding: 0;
+  background: none;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.markdown blockquote {
+  margin: 0 0 0.6rem;
+  padding-left: 0.8rem;
+  border-left: 3px solid rgba(255, 255, 255, 0.15);
+  opacity: 0.85;
+}
+
+.markdown table {
+  display: block;
+  max-width: 100%;
+  margin: 0 0 0.6rem;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.markdown th,
+.markdown td {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+}
+
+.markdown hr {
+  margin: 0.8rem 0;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Fórmulas: una ecuación larga se desplaza dentro de la burbuja en vez de
+   desbordarla; KaTeX no parte líneas por sí mismo. */
+.markdown :global(.katex) {
+  font-size: 1.05em;
+}
+
+.markdown :global(.katex-display) {
+  margin: 0.4rem 0 0.7rem;
+  padding: 0.2rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+:global(.light) .markdown code {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+:global(.light) .markdown pre {
+  border-color: rgba(15, 23, 42, 0.1);
+  background: #f6f8fa;
+}
+
+:global(.light) .markdown blockquote {
+  border-left-color: rgba(15, 23, 42, 0.2);
+}
+
+:global(.light) .markdown th,
+:global(.light) .markdown td {
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+:global(.light) .markdown hr {
+  border-top-color: rgba(15, 23, 42, 0.12);
+}
