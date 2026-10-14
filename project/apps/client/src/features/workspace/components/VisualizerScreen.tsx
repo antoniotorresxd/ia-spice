@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { parseNetlist } from '../model/netlist-diagram'
+import { structureWalkthrough } from '../model/walkthrough-format'
 import type {
   BlockSimResult,
   BomItem,
@@ -441,7 +442,9 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
                   <h2 className={styles.walkthroughTitle}>Memoria de diseño</h2>
                   <p className={styles.walkthroughSubtitle}>{currentWorkspaceFile?.name ?? 'Circuito'}</p>
                 </header>
-                <MarkdownText className={styles.walkthroughBody}>{activeFileDocumentation.designWalkthrough}</MarkdownText>
+                <MarkdownText className={styles.walkthroughBody}>
+                  {structureWalkthrough(activeFileDocumentation.designWalkthrough)}
+                </MarkdownText>
               </article>
             )}
             {parsedNetlist ? (

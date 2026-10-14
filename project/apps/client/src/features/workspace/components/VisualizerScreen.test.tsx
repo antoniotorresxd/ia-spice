@@ -165,6 +165,59 @@ describe('VisualizerScreen', () => {
     expect(container.querySelector('.katex-display')).not.toBeNull()
   })
 
+  it('da forma de secciones a una memoria guardada con etiquetas sueltas', async () => {
+    const service = createMockWorkspaceService()
+    vi.spyOn(service, 'getFiles').mockResolvedValue([
+      {
+        id: 'file-old',
+        conversationId: 'conv-old',
+        name: 'inst_amp1.cir',
+        language: 'spice',
+        status: 'complete',
+        createdAt: '2026-10-14T12:00:00.000Z',
+        conversationTitle: 'Instrumentación',
+        projectId: null,
+      },
+    ])
+    vi.spyOn(service, 'getConversation').mockResolvedValue({
+      id: 'conv-old',
+      projectId: null,
+      title: 'Instrumentación',
+      preview: 'Instrumentación',
+      updatedAt: '2026-10-14T12:00:00.000Z',
+      executionStatus: 'completed',
+      messages: [],
+      files: [
+        {
+          id: 'file-old',
+          name: 'inst_amp1.cir',
+          language: 'spice',
+          content: '.title Divisor\nV1 in 0 DC 10\nR1 in out 1k\nR2 out 0 1k\n.end',
+          status: 'complete',
+          summary: null,
+          tags: null,
+          components: null,
+          measurementExplanation: null,
+          // Así quedaron guardadas las memorias antes de que agents las estructurara
+          designWalkthrough: 'Requisito: ganancia de 2.\nTopología: tres amplificadores operacionales.',
+        },
+      ],
+      execution: { id: 'exec-old', status: 'completed', summary: 'Completado' },
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/visualizer?conversationId=conv-old&fileId=file-old']}>
+        <VisualizerScreen service={service} />
+      </MemoryRouter>,
+    )
+
+    await userEvent.click(await screen.findByRole('button', { name: /cómo se diseñó/i }))
+
+    expect(await screen.findByRole('heading', { name: '1. Requisito' })).toBeVisible()
+    expect(screen.getByRole('heading', { name: '2. Topología' })).toBeVisible()
+    expect(screen.getByText('ganancia de 2.')).toBeVisible()
+  })
+
   it('allows editing SPICE netlist and correctly draws multi-shunt Zener regulator circuit without collisions', async () => {
     const user = userEvent.setup()
     const service = createMockWorkspaceService()
