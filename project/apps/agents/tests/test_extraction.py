@@ -1,6 +1,6 @@
 import pytest
 
-from agents.llm.extraction import ExtractionError, extract_orchestrator_outcome
+from agents.llm.extraction import GUIA_MODO_ANALISIS, ExtractionError, extract_orchestrator_outcome
 from agents.orquestador.schema import ChatOutcome, ClarifyOutcome, DesignOutcome, CircuitSpec, OrchestratorResult
 
 
@@ -100,7 +100,7 @@ def test_extract_compiles_catalog_into_system_prompt(monkeypatch, context):
     assert extract_orchestrator_outcome(_FakeChatModel(fixed), "hola", context) == fixed.outcome
     assert seen == [(
         "orquestador-system",
-        {"retrieved_circuits_catalog": context or "(catálogo no disponible)"},
+        {"retrieved_circuits_catalog": (context or "(catálogo no disponible)") + "\n\n" + GUIA_MODO_ANALISIS},
     )]
     assert messages_seen == [
         {"role": "system", "content": "System prompt compilado"},

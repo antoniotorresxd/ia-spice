@@ -28,7 +28,7 @@ export type WorkspaceExecution = {
   id: string
   status: WorkspaceExecutionStatus
   summary: string
-  mode?: 'chat' | 'clarify' | 'design'
+  mode?: 'chat' | 'clarify' | 'design' | 'analysis'
   stages?: ExecutionStage[]
   simResults?: Record<string, BlockSimResult> | null
 }

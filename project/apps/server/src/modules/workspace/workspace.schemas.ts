@@ -87,11 +87,12 @@ import type { ExecutionStage } from "./workspace.runner";
 export function deriveExecutionMode(
   latestExecution: ExecutionRow | undefined,
   artifactCount: number,
-): "chat" | "clarify" | "design" {
+): "chat" | "clarify" | "design" | "analysis" {
   if (!latestExecution) return "chat";
   const verdict = latestExecution.verdict as { mode?: string; status?: string } | null;
   if (verdict?.mode === "chat") return "chat";
   if (verdict?.mode === "clarify") return "clarify";
+  if (verdict?.mode === "analysis") return "analysis";
   if (verdict?.status === "accepted" || verdict?.status === "rejected") return "design";
   if (artifactCount > 0 || latestExecution.normalizedSpec !== null) return "design";
   if (latestExecution.status === "active") return "design";
