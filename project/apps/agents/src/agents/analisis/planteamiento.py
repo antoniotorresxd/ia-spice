@@ -596,6 +596,27 @@ def informe_planteamiento(spec: dict, r: dict) -> str:
     return "\n".join(lineas)
 
 
+def _lineas_barrido(b: dict, seccion: int) -> str:
+    """La curva contra el parámetro, en el informe: la expresión del motor y
+    si ngspice la recorre en los puntos que simuló."""
+    simbolo = _tex(sp.Symbol(b["simbolo"]))
+    desde, hasta = b["curve"][0]["x"], b["curve"][-1]["x"]
+    lineas = [
+        "",
+        f"## {seccion}. Barrido de ${simbolo}$",
+        "",
+        f"$${_tex_expresion(b['magnitud'])} = {sp.latex(sp.nsimplify(b['expresion'], rational=True))}$$",
+        "",
+        f"para ${simbolo}$ de {_num(desde)} a {_num(hasta)} (pestaña *Curva de Simulación SPICE*).",
+    ]
+    if b["markers"]:
+        n = len(b["markers"])
+        lineas.append(
+            f"ngspice simuló {n} puntos del barrido y " + ("coinciden con la curva. ✓" if b["coincide"] else "**no** coinciden con la curva. ✗")
+        )
+    return "\n".join(lineas) + "\n"
+
+
 def _fallas(v: dict) -> list[str]:
     """Lo que ngspice no reprodujo, en una línea por caso, para la autocorrección."""
     fallas = []
@@ -635,12 +656,27 @@ def analizar_planteamiento(outcome: dict) -> dict:
     # La primera transferencia numérica se dibuja como Bode en la pestaña de curva.
     curva = next(
         (
-            {"curve": p["transferencia"]["bode"], "metric_name": f"|{p['calcular']}|"}
+            {"curve": p["transferencia"]["bode"], "metric_name": f"|{p['calcular']}|",
+             "analysis_type": "ac", "x_unit": "Hz", "y_unit": "dB", "x_label": "Frecuencia"}
             for p in r["preguntas"]
             if p.get("tipo") == "transferencia" and p["transferencia"]["bode"]
         ),
         None,
     )
+    if curva is None:
+        # Sin Bode, un problema cuyos casos difieren en un símbolo (el cursor
+        # del pot) se grafica contra ese símbolo, con puntos de ngspice encima.
+        from agents.analisis.barrido import barrer
+
+        resueltas = {sp.Symbol(k): sp.nsimplify(v, rational=True) for k, v in r["incognitas"].items() if isinstance(v, float)}
+        barrido = barrer(leer_circuito(spec["netlist"]), spec, resueltas)
+        if barrido:
+            curva = {
+                "curve": barrido["curve"], "markers": barrido["markers"], "metric_name": barrido["magnitud"],
+                "analysis_type": "dc", "x_unit": "", "y_unit": barrido["y_unit"], "x_label": barrido["simbolo"],
+            }
+            secciones = len(re.findall(r"^## \d+\.", informe, re.MULTILINE))
+            informe += _lineas_barrido(barrido, secciones + 1)
     return {
         "error": None,
         "informe": informe,

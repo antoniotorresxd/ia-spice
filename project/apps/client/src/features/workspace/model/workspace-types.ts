@@ -30,6 +30,8 @@ export type BlockSimResult = {
   x_unit?: string | null
   y_unit?: string | null
   x_label?: string | null
+  // puntos de ngspice sobre una curva calculada (barrido de un análisis)
+  markers?: SimCurvePoint[] | null
   metric_name?: string | null
   measured_value?: number | null
   target_value?: number | null

@@ -121,4 +121,18 @@ describe('SimulationChart', () => {
 
     expect(screen.getByText(/ngspice exited with non-zero status/)).toBeInTheDocument()
   })
+
+  it('draws the ngspice points over a parameter sweep and labels the unitless axis plainly', () => {
+    const curve = Array.from({ length: 11 }, (_, i) => ({ x: i / 10, y: -i }))
+    const markers = [0, 0.5, 1].map((x) => ({ x, y: -10 * x }))
+
+    render(
+      <SimulationChart curve={curve} markers={markers} analysisType="dc" xUnit="" xLabel="k" yUnit="V/V" />,
+    )
+
+    expect(screen.getAllByTestId('ngspice-marker')).toHaveLength(3)
+    expect(screen.getByText(/curva del motor · 3 pts ngspice/)).toBeInTheDocument()
+    expect(screen.getByText('Barrido DC · k')).toBeInTheDocument()
+    expect(screen.getByText('0.4')).toBeInTheDocument()
+  })
 })

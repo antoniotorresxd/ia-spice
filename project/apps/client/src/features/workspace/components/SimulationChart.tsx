@@ -14,6 +14,9 @@ export type SimulationChartProps = {
   targetValue?: number | null
   /** Fuente barrida en un análisis `dc` (p. ej. "Vdc"). */
   xLabel?: string | null
+  /** Puntos que simuló ngspice encima de una curva que calculó el motor
+   * (el barrido de un parámetro en modo análisis). */
+  markers?: SimCurvePoint[] | null
   simError?: string | null
   title?: string
   compact?: boolean
@@ -70,6 +73,8 @@ function formatTime(val: number): string {
 function formatX(val: number, kind: AnalysisKind, xUnit?: string | null): string {
   if (kind === 'ac') return formatFrequency(val)
   if (kind === 'tran') return formatTime(val)
+  // un parámetro sin unidad (el cursor k de un pot): 0.5, no "500 m"
+  if (!xUnit) return `${Number(val.toFixed(3))}`
   return formatEngineering(val, xUnit)
 }
 
@@ -87,6 +92,7 @@ export function SimulationChart({
   measuredValue,
   targetValue,
   xLabel,
+  markers,
   simError,
   title = 'Respuesta de Simulación SPICE',
   compact = false,
@@ -103,6 +109,11 @@ export function SimulationChart({
     if (!curve || curve.length === 0) return []
     return curve.filter((p) => !isNaN(p.x) && !isNaN(p.y) && isFinite(p.x) && isFinite(p.y))
   }, [curve])
+
+  const validMarkers = useMemo(
+    () => (markers ?? []).filter((p) => isFinite(p.x) && isFinite(p.y)),
+    [markers],
+  )
 
   const chartGeometry = useMemo(() => {
     if (validPoints.length < 2) return null
@@ -124,7 +135,7 @@ export function SimulationChart({
     let minY = Infinity
     let maxY = -Infinity
 
-    for (const p of validPoints) {
+    for (const p of [...validPoints, ...validMarkers]) {
       if (p.x < minX) minX = p.x
       if (p.x > maxX) maxX = p.x
       if (p.y < minY) minY = p.y
@@ -159,6 +170,7 @@ export function SimulationChart({
 
     // Generate path
     const coords = validPoints.map((p) => ({ x: mapX(p.x), y: mapY(p.y), raw: p }))
+    const markerCoords = validMarkers.map((p) => ({ x: mapX(p.x), y: mapY(p.y) }))
     const pathD = coords.reduce((acc, c, idx) => {
       return idx === 0 ? `M ${c.x.toFixed(1)} ${c.y.toFixed(1)}` : `${acc} L ${c.x.toFixed(1)} ${c.y.toFixed(1)}`
     }, '')
@@ -227,6 +239,7 @@ export function SimulationChart({
       minY,
       maxY,
       coords,
+      markerCoords,
       pathD,
       areaD,
       xTicks,
@@ -235,7 +248,7 @@ export function SimulationChart({
       targetXCoord,
       isLogX,
     }
-  }, [validPoints, isAc, kind, xUnit, yUnit, compact, measuredValue, targetValue])
+  }, [validPoints, validMarkers, isAc, kind, xUnit, yUnit, compact, measuredValue, targetValue])
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!chartGeometry || chartGeometry.coords.length === 0 || !svgRef.current) return
@@ -329,7 +342,9 @@ export function SimulationChart({
           </span>
           <span className={`${styles.chartBadge} ${isAc ? '' : styles.chartBadgeTran}`}>{badge}</span>
           <span style={{ fontSize: '0.68rem', color: '#64748b' }}>
-            {validPoints.length} pts ngspice
+            {validMarkers.length > 0
+              ? `curva del motor · ${validMarkers.length} pts ngspice`
+              : `${validPoints.length} pts ngspice`}
           </span>
         </div>
 
@@ -480,6 +495,18 @@ export function SimulationChart({
 
           {/* Curve Line */}
           <path d={chartGeometry.pathD} className={styles.curveLine} />
+
+          {/* Puntos simulados por ngspice sobre la curva del motor */}
+          {chartGeometry.markerCoords.map((m, idx) => (
+            <circle
+              key={`marker-${idx}`}
+              cx={m.x}
+              cy={m.y}
+              r="4.5"
+              className={styles.ngspiceMarker}
+              data-testid="ngspice-marker"
+            />
+          ))}
 
           {/* Hover Crosshairs and Point */}
           {activeCoord && (

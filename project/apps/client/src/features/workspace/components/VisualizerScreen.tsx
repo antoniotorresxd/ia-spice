@@ -456,6 +456,7 @@ export function VisualizerScreen({ service }: { service: WorkspaceService }) {
             xUnit={activeFileSimResult.x_unit}
             yUnit={activeFileSimResult.y_unit}
             xLabel={activeFileSimResult.x_label}
+            markers={activeFileSimResult.markers}
             simError={activeFileSimResult.sim_error}
             metricName={activeFileSimResult.metric_name}
             measuredValue={activeFileSimResult.measured_value}
