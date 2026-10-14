@@ -164,3 +164,10 @@ def test_el_resumen_de_la_documentacion_no_dice_exito_si_no_documento_nada():
     sin_nada = _resumen_documentacion({"b1": None})
     assert "Sin documentación" in sin_nada
     assert "Documentador" in sin_nada
+
+
+def test_sin_verificacion_no_dice_que_las_tensiones_no_coinciden():
+    from agents.api import _resumen_verificacion
+
+    assert "no coinciden" not in _resumen_verificacion({})
+    assert "No se verificó" in _resumen_verificacion({})

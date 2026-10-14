@@ -240,6 +240,9 @@ ANALYSIS_VERIFICATION_META = {"label": "Verificación", "actor": "ngspice"}
 def _resumen_verificacion(validacion: dict) -> str:
     """Qué confirmó ngspice en un análisis: la Z_eq entre los terminales, las
     tensiones de nodo, o por qué no hubo nada concluyente que confirmar."""
+    if not validacion:
+        # El planteamiento no llegó a resolverse: no hubo nada que comparar.
+        return "No se verificó: el planteamiento no se pudo resolver."
     zeq = validacion.get("zeq") or {}
     if validacion.get("coincide"):
         if zeq.get("coincide"):

@@ -175,3 +175,18 @@ def test_una_red_pasiva_sigue_por_el_analisis_de_siempre():
     resultado = analisis_node({"outcome": outcome})["outcome"]
     assert resultado.get("formato") != "markdown"
     assert "MÉTODO DE NODOS" in resultado["informe"]
+
+
+def test_un_escenario_imposible_dice_cual_y_que_componente_quedo_en_corto():
+    # Caso real (Franco P1.9 mal transcrito): la parte baja del pot quedó en
+    # paralelo con R1; con k = 1 vale 0 Ω y pone la entrada inversora a tierra.
+    r = resolver_planteamiento({
+        "netlist": "X1 vin vminus vout OPAMP\nR1 vminus 0 {R1}\nRP1 vout vminus {k*100k}\nRP2 vminus 0 {(1-k)*100k}\nVS vin 0 1\n",
+        "incognitas": ["R1"],
+        "escenarios": [
+            {"nombre": "Ganancia minima (k=0)", "valores": {"k": 0}, "mediciones": {"V(vout)/V(vin)": 1}},
+            {"nombre": "Ganancia maxima (k=1)", "valores": {"k": 1}, "mediciones": {"V(vout)/V(vin)": 5}},
+        ],
+    })
+    assert "Ganancia maxima (k=1)" in r["error"]
+    assert "RP2" in r["error"] and "corto" in r["error"]

@@ -81,10 +81,29 @@ class _Caso:
     su solución en DC y en s (se calculan una sola vez; un integrador no
     tiene solución DC y no hace falta pedírsela si no se usa)."""
 
-    def __init__(self, circuito: list[Componente], valores: dict):
+    def __init__(self, circuito: list[Componente], valores: dict, nombre: str = ""):
         self.circuito, self.abiertos = _sustituir(circuito, valores)
+        self.nombre = nombre
+        self.cortos = [c.nombre for c in self.circuito if c.tipo == "V" and c.nombre[0] != "V"]
         self._dc = None
         self._s = None
+
+    def _resolver(self, dominio: str):
+        try:
+            return self._abrir(resolver(self.circuito, dominio=dominio))
+        except RedInvalida as exc:
+            # El error del motor es genérico; con qué escenario y qué quedó en
+            # corto o abierto se entiende qué está mal en la transcripción.
+            detalle = []
+            if self.cortos:
+                detalle.append(f"{', '.join(self.cortos)} queda en corto (0 Ω)")
+            if self.abiertos:
+                detalle.append(f"{', '.join(sorted(self.abiertos))} queda abierta")
+            donde = f"en «{self.nombre}»" if self.nombre else "con estos valores"
+            pista = f" ({'; '.join(detalle)})" if detalle else ""
+            raise RedInvalida(
+                f"{donde}{pista} {exc}. Revisa la topología transcrita: así el circuito no tiene solución"
+            ) from exc
 
     def _abrir(self, solucion):
         for nombre in self.abiertos:
@@ -93,12 +112,12 @@ class _Caso:
 
     def dc(self):
         if self._dc is None:
-            self._dc = self._abrir(resolver(self.circuito))
+            self._dc = self._resolver("dc")
         return self._dc
 
     def s(self):
         if self._s is None:
-            self._s = self._abrir(resolver(self.circuito, dominio="s"))
+            self._s = self._resolver("s")
         return self._s
 
     def calcular(self, expresion: str) -> sp.Expr:
@@ -189,13 +208,14 @@ def _resolver_planteamiento(spec: dict) -> dict:
     ecuaciones: list[sp.Eq] = []
     planteados = []
     for k, escenario in enumerate(escenarios):
-        caso = _Caso(circuito, _valores(escenario.get("valores")))
+        nombre = escenario.get("nombre") or f"escenario {k + 1}"
+        caso = _Caso(circuito, _valores(escenario.get("valores")), nombre)
         filas = []
         for expresion, medido in (escenario.get("mediciones") or {}).items():
             ecuacion = sp.Eq(caso.calcular(expresion), _cantidad(medido))
             ecuaciones.append(ecuacion)
             filas.append({"expresion": expresion, "ecuacion": ecuacion, "medido": _a_float(_cantidad(medido))})
-        planteados.append({"nombre": escenario.get("nombre") or f"escenario {k + 1}", "valores": escenario.get("valores") or {}, "ecuaciones": filas})
+        planteados.append({"nombre": nombre, "valores": escenario.get("valores") or {}, "ecuaciones": filas})
 
     resueltas: dict = {}
     if incognitas:
@@ -206,7 +226,7 @@ def _resolver_planteamiento(spec: dict) -> dict:
     # 2. Las preguntas, con las incógnitas ya resueltas.
     respuestas = []
     for k, pregunta in enumerate(preguntas):
-        caso = _Caso(circuito, {**resueltas, **_valores(pregunta.get("valores"))})
+        caso = _Caso(circuito, {**resueltas, **_valores(pregunta.get("valores"))}, pregunta.get("nombre") or f"pregunta {k + 1}")
         respuesta = {
             "nombre": pregunta.get("nombre") or f"pregunta {k + 1}",
             "calcular": pregunta["calcular"],
