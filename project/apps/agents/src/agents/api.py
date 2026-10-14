@@ -136,6 +136,7 @@ def create_run(
         "component_values": {},
         "commercial_values": {},
         "bom": {},
+        "precision": {},
         "netlists": {},
         "sim_results": {},
         "documentation": {},
@@ -187,6 +188,7 @@ def create_run(
         "component_values": final_state["component_values"],
         "commercial_values": final_state.get("commercial_values", {}),
         "bom": final_state.get("bom", {}),
+        "precision": final_state.get("precision", {}),
         "history": final_state["history"],
         "iteration": final_state["iteration"],
     }
@@ -377,6 +379,8 @@ def _stream_run(initial_state: dict, config: dict):
             "component_values": final_state.get("component_values", {}),
             "commercial_values": final_state.get("commercial_values", {}),
             "bom": final_state.get("bom", {}),
+            "precision": final_state.get("precision", {}),
+        "precision": final_state.get("precision", {}),
             "history": final_state.get("history", []),
             "iteration": final_state.get("iteration", 0),
         }
@@ -407,6 +411,7 @@ def create_run_stream(body: RunRequest, authorization: str | None = Header(defau
         "component_values": {},
         "commercial_values": {},
         "bom": {},
+        "precision": {},
         "netlists": {},
         "sim_results": {},
         "documentation": {},

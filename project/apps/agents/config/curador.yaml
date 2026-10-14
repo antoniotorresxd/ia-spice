@@ -74,6 +74,14 @@ comerciales:
   # al 1 % suele ser inalcanzable.
   combinar_inductores: true
   umbral_combinacion: 0.01
+  # Si el lazo del curador vuelve a un circuito ya simulado (oscila entre dos
+  # valores comerciales que fallan por lados opuestos), al bloque se le
+  # concede el siguiente paso de esta lista, acumulado sobre los anteriores.
+  # Es lo que haría quien diseña: primero combinar piezas, después comprar
+  # resistencias al 1 %.
+  escalamiento:
+    - {combinar_resistencias: true, combinar_capacitores: true, combinar_inductores: true}
+    - {serie_resistencias: E96, serie_capacitores: E24}
 
 llm:
   # Fija la temperatura para que la evaluación sea repetible, que es un

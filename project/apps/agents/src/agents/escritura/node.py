@@ -50,7 +50,9 @@ def _write(work_dir_prefix: str, netlist_text: str) -> str:
     return netlist_path
 
 
-def _comercializar_bloque(block: dict, values: dict, cfg: dict) -> tuple[dict, list[dict]]:
+def _comercializar_bloque(
+    block: dict, values: dict, cfg: dict, nivel: int = 0
+) -> tuple[dict, list[dict]]:
     # Un bloque genérico trae su netlist ya escrito por el LLM: no hay
     # valores sueltos que redondear sin reescribirlo.
     if block["type"] != "catalog":
@@ -65,6 +67,7 @@ def _comercializar_bloque(block: dict, values: dict, cfg: dict) -> tuple[dict, l
         cotas_inferiores(circuit_id),
         usados=marcadores(circuit.spiceTemplate) if circuit and circuit.spiceTemplate else None,
         cantidades=cantidades(circuit_id),
+        nivel=nivel,
     )
 
 
@@ -73,6 +76,7 @@ def escritura_node(state: CircuitState, config: RunnableConfig | None = None) ->
     blocks = {b["id"]: b for b in blocks_list}
     connections = state["normalized_spec"].get("connections") or []
     cfg = get_config()
+    precision = state.get("precision") or {}
 
     if connections:
         # Una sola simulación para todo el diseño compuesto: los requisitos
@@ -82,7 +86,9 @@ def escritura_node(state: CircuitState, config: RunnableConfig | None = None) ->
         comentarios: list[str] = []
         for block in blocks_list:
             values = state.get("component_values", {}).get(block["id"], {})
-            commercial[block["id"]], bom[block["id"]] = _comercializar_bloque(block, values, cfg)
+            commercial[block["id"]], bom[block["id"]] = _comercializar_bloque(
+                block, values, cfg, precision.get(block["id"], 0)
+            )
             comentarios += comentarios_materiales(bom[block["id"]], block["id"])
         netlist_text = insertar_comentarios(
             assemble_composed_netlist(blocks_list, connections, commercial), comentarios
@@ -103,7 +109,9 @@ def escritura_node(state: CircuitState, config: RunnableConfig | None = None) ->
     for block_id in state["pending_blocks"]:
         block = blocks[block_id]
         values = state.get("component_values", {}).get(block_id, {})
-        commercial[block_id], bom[block_id] = _comercializar_bloque(block, values, cfg)
+        commercial[block_id], bom[block_id] = _comercializar_bloque(
+            block, values, cfg, precision.get(block_id, 0)
+        )
 
         builder = NETLIST_BUILDERS.get(block["type"])
         if not builder:

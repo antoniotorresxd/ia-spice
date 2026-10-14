@@ -64,8 +64,29 @@ def clasificar(nombre: str) -> tuple[str, str, str] | None:
     return None
 
 
-def config_comerciales(cfg: dict) -> dict:
+_OPCIONES_BOOLEANAS = ("combinar_resistencias", "combinar_capacitores", "combinar_inductores")
+
+
+def _opciones(base: dict, seccion: dict) -> dict:
+    opciones = dict(base)
+    for clave in _OPCIONES_BOOLEANAS:
+        if clave in seccion:
+            opciones[clave] = bool(seccion[clave])
+    if "umbral_combinacion" in seccion:
+        opciones["umbral_combinacion"] = float(seccion["umbral_combinacion"])
+    for clave in _SERIES_POR_DEFECTO:
+        if clave in seccion:
+            opciones[clave] = seccion[clave]
+    return opciones
+
+
+def config_comerciales(cfg: dict, nivel: int = 0) -> dict:
     """La sección `comerciales` de la config, con valores por omisión.
+
+    `nivel` aplica, acumulados, los primeros `nivel` pasos de `escalamiento`:
+    cuánta precisión extra se le concedió a un bloque que no logró cumplir
+    con la precisión base (ver `ciclo_comercial`). `niveles` es cuántos pasos
+    hay en total.
 
     Una config de experimento sin la sección se comporta como antes de que
     existiera este paso (deshabilitado), para no cambiar en silencio los
@@ -73,16 +94,21 @@ def config_comerciales(cfg: dict) -> dict:
     """
     seccion = cfg.get("comerciales")
     if not seccion:
-        return {"habilitado": False}
-    return {
-        **_SERIES_POR_DEFECTO,
-        "habilitado": bool(seccion.get("habilitado", True)),
-        "combinar_resistencias": bool(seccion.get("combinar_resistencias", True)),
-        "combinar_capacitores": bool(seccion.get("combinar_capacitores", True)),
-        "combinar_inductores": bool(seccion.get("combinar_inductores", True)),
-        "umbral_combinacion": float(seccion.get("umbral_combinacion", 0.01)),
-        **{k: seccion[k] for k in _SERIES_POR_DEFECTO if k in seccion},
-    }
+        return {"habilitado": False, "niveles": 0}
+    opciones = _opciones(
+        {
+            **_SERIES_POR_DEFECTO,
+            **{clave: True for clave in _OPCIONES_BOOLEANAS},
+            "umbral_combinacion": 0.01,
+        },
+        seccion,
+    )
+    escalamiento = seccion.get("escalamiento") or []
+    for paso_extra in escalamiento[:nivel]:
+        opciones = _opciones(opciones, paso_extra)
+    opciones["habilitado"] = bool(seccion.get("habilitado", True))
+    opciones["niveles"] = len(escalamiento)
+    return opciones
 
 
 def _es_comprable(nombre: str, valor: Any, dados: set[str]) -> bool:
@@ -109,6 +135,7 @@ def comercializar(
     minimos: frozenset[str] | set[str] = frozenset(),
     usados: set[str] | None = None,
     cantidades: dict[str, int] | None = None,
+    nivel: int = 0,
 ) -> tuple[dict, list[dict]]:
     """Valores listos para simular y la lista de materiales que los explica.
 
@@ -121,7 +148,7 @@ def comercializar(
     valores que el solver devuelve pero el circuito no usa; `cantidades`
     dice cuántas piezas hay de cada valor repetido.
     """
-    opciones = config_comerciales(cfg)
+    opciones = config_comerciales(cfg, nivel)
     if not opciones["habilitado"]:
         return dict(valores), []
 
@@ -175,6 +202,7 @@ def forzar_avance(
     params_usuario: dict | None,
     cfg: dict,
     minimos: frozenset[str] | set[str] = frozenset(),
+    nivel: int = 0,
 ) -> dict:
     """Garantiza que un ajuste del curador cambie lo que se simula.
 
@@ -184,12 +212,12 @@ def forzar_avance(
     desperdicia. Cuando eso pasa, el componente salta al vecino de la serie
     en la dirección que pidió el ajuste.
     """
-    opciones = config_comerciales(cfg)
+    opciones = config_comerciales(cfg, nivel)
     if not opciones["habilitado"]:
         return nuevos
 
-    antes, _ = comercializar(anteriores, params_usuario, cfg, minimos)
-    despues, _ = comercializar(nuevos, params_usuario, cfg, minimos)
+    antes, _ = comercializar(anteriores, params_usuario, cfg, minimos, nivel=nivel)
+    despues, _ = comercializar(nuevos, params_usuario, cfg, minimos, nivel=nivel)
     resultado = dict(nuevos)
     dados = _dados(params_usuario)
     for nombre, nuevo in nuevos.items():
@@ -205,6 +233,23 @@ def forzar_avance(
         direccion = 1 if nuevo > viejo else -1
         resultado[nombre] = paso(antes[nombre], opciones[clave_serie], direccion)
     return resultado
+
+
+def _piezas(valores: dict | None) -> dict:
+    return {k: v for k, v in (valores or {}).items() if clasificar(k) is not None}
+
+
+def ciclo_comercial(actuales: dict | None, anteriores: list[dict | None]) -> bool:
+    """¿Lo que se acaba de simular ya se había simulado antes en este bloque?
+
+    Con valores discretos el lazo del curador puede oscilar: la corrección
+    continua cae a un lado y al otro del objetivo y los dos vecinos de la
+    serie quedan fuera de tolerancia (Rf = 9 k en E12: 8.2 k da -8 %, 10 k
+    da +10 %). Repetir un circuito ya medido no aporta información; es la
+    señal para conceder más precisión en vez de seguir alternando.
+    """
+    piezas = _piezas(actuales)
+    return bool(piezas) and any(piezas == _piezas(previo) for previo in anteriores)
 
 
 def comentarios_materiales(materiales: list[dict], bloque: str | None = None) -> list[str]:

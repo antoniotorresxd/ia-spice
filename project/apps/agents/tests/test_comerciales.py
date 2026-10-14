@@ -328,3 +328,62 @@ def test_la_lista_de_materiales_omite_lo_que_la_plantilla_no_usa():
     )
 
     assert [m["nombre"] for m in materiales] == ["R1"]
+
+
+# --- escalamiento de precisión -----------------------------------------------
+
+
+def test_el_escalamiento_se_acumula_por_nivel():
+    cfg = {
+        "comerciales": {
+            "combinar_resistencias": False,
+            "serie_resistencias": "E12",
+            "escalamiento": [
+                {"combinar_resistencias": True},
+                {"serie_resistencias": "E96"},
+            ],
+        }
+    }
+
+    assert config_comerciales(cfg, 0)["combinar_resistencias"] is False
+    assert config_comerciales(cfg, 1)["combinar_resistencias"] is True
+    assert config_comerciales(cfg, 1)["serie_resistencias"] == "E12"
+    nivel_2 = config_comerciales(cfg, 2)
+    assert (nivel_2["combinar_resistencias"], nivel_2["serie_resistencias"]) == (True, "E96")
+    assert nivel_2["niveles"] == 2
+
+
+def test_ciclo_comercial_compara_solo_las_piezas():
+    from agents.comerciales import ciclo_comercial
+
+    actual = {"Rf": 8_200.0, "Rg": 1_000.0, "v_in": 0.5}
+    assert ciclo_comercial(actual, [{"Rf": 8_200.0, "Rg": 1_000.0, "v_in": 0.7}])
+    assert not ciclo_comercial(actual, [{"Rf": 10_000.0, "Rg": 1_000.0}])
+    assert not ciclo_comercial(actual, [None])
+    assert not ciclo_comercial({"v_in": 0.5}, [{"v_in": 0.5}])  # sin piezas no hay ciclo
+
+
+def test_el_lazo_que_oscila_entre_valores_e12_escala_la_precision(config_con):
+    # Rf = 9 k en E12: 8.2 k da -8 % y 10 k da +10 %, los dos fuera del 5 %.
+    config_con(combinar_resistencias=False, serie_resistencias="E12")
+    spec = {
+        "blocks": [
+            {
+                "id": "amp1",
+                "type": "catalog",
+                "params": {
+                    "circuit_id": "opamp_noninverting_amp",
+                    "params": {"v_in": 0.5, "v_out": 5.0},
+                    "requirements": [{"measure": "v_out", "value": 5.0}],
+                },
+            }
+        ]
+    }
+
+    final = build_graph().invoke(_estado_inicial(spec), {"configurable": {"thread_id": "escala"}})
+
+    assert final["verdict"]["status"] == "accepted"
+    assert final["sim_results"]["amp1"]["metrics"]["v_out"] == pytest.approx(5.0, rel=0.05)
+    assert final["precision"]["amp1"] >= 1
+    rf = next(m for m in final["bom"]["amp1"] if m["nombre"] == "Rf")
+    assert rf["realizacion"] in ("serie", "paralelo")

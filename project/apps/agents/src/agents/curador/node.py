@@ -1,7 +1,7 @@
 from langchain_core.runnables import RunnableConfig
 
 from agents.calculo.catalog_solver import cotas_inferiores
-from agents.comerciales import forzar_avance
+from agents.comerciales import ciclo_comercial, config_comerciales, forzar_avance
 from agents.config import get_config
 from agents.curador.policy import (
     ADJUST_RULES,
@@ -189,6 +189,8 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
     record["decision"] = "adjust"
     blocks_by_id = {b["id"]: b for b in blocks}
     adjusted = {}
+    precision = state.get("precision") or {}
+    nueva_precision: dict[str, int] = {}
     reparaciones_fallidas: list[str] = []
     for bid, failed_indices in failing.items():
         block = blocks_by_id[bid]
@@ -227,6 +229,17 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
                     )
                 else:
                     adjusted[bid] = {"netlist": nuevo_netlist}
+        elif ciclo_comercial(
+            (state.get("commercial_values") or {}).get(bid),
+            [r.get("commercial_values", {}).get(bid) for r in state["history"]],
+        ) and precision.get(bid, 0) < config_comerciales(cfg)["niveles"]:
+            # El lazo volvió a un circuito ya simulado: la corrección continua
+            # no es el problema (cae entre dos valores comerciales que fallan
+            # por lados opuestos). Se concede el siguiente paso de precisión
+            # —combinar piezas, una serie más fina— y se re-sintetiza con los
+            # mismos valores teóricos, que eran correctos.
+            nueva_precision[bid] = precision.get(bid, 0) + 1
+            adjusted[bid] = values
         else:
             # TODO(slice-b/c): solver multi-requisito; por ahora elegir el peor.
             # Un requisito sin medición tiene prioridad y requiere perturbación.
@@ -257,6 +270,7 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
                 block["params"].get("params"),
                 cfg,
                 cotas_inferiores(block["params"].get("circuit_id", "")),
+                nivel=precision.get(bid, 0),
             )
 
     if reparaciones_fallidas:
@@ -278,9 +292,12 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
             },
         }
 
+    if nueva_precision:
+        record["precision"] = nueva_precision
     return {
         "history": [record],
         "component_values": adjusted,
+        "precision": nueva_precision,
         "pending_blocks": list(failing.keys()),
         "iteration": iteration + 1,
     }
