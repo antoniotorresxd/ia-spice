@@ -127,7 +127,8 @@ def repair_netlist(
             f"Requisitos incumplidos:\n{requisitos}\n\n"
             f"Netlist actual:\n{netlist}\n\n"
             f"Las resistencias se compran en la serie {serie}: elige valores de esa serie "
-            "(se redondean a ella antes de simular)."
+            "(se redondean a ella antes de simular). No cambies, quites ni inventes fuentes: las del "
+            "enunciado (alimentaciones incluidas) son datos del problema; corrige los componentes."
             f"{extra}"
         )
         try:
