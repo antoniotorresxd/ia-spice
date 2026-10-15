@@ -134,7 +134,7 @@ class _Caso:
 
 
 def _usa_circuito(expresion: str):
-    return re.search(r"\b[VI]\s*\(", expresion)
+    return re.search(r"\b(?:[VI]|Rin)\s*\(", expresion, re.IGNORECASE)
 
 
 def _valores(d: dict | None) -> dict:
@@ -509,7 +509,9 @@ def spec_desde_outcome(outcome: dict) -> dict:
         "preguntas": [
             {
                 "nombre": p.get("nombre"),
-                "tipo": p.get("tipo") or "valor",
+                # una "transferencia" de algo que no es un cociente (V(o) a
+                # secas) no tiene H(s): se responde como valor
+                "tipo": "transferencia" if p.get("tipo") == "transferencia" and "/" in p["calcular"] else "valor",
                 "valores": _lista_a_dict(p.get("valores"), "simbolo", "valor"),
                 "calcular": p["calcular"],
             }
@@ -550,8 +552,10 @@ def _num(x) -> str:
 
 
 def _tex_expresion(expresion: str) -> str:
-    """`V(o)/V(i)` -> `V_{o}/V_{i}`, `I(RL)` -> `I_{RL}` para LaTeX."""
-    texto = re.sub(r"\bV\(\s*([^,()\s]+)\s*,\s*([^,()\s]+)\s*\)", r"V_{\1\2}", expresion)
+    """`V(o)/V(i)` -> `V_{o}/V_{i}`, `I(RL)` -> `I_{RL}`, `Rin(V2)` ->
+    `R_{in,V2}` para LaTeX."""
+    texto = re.sub(r"\bRin\(\s*([^()\s]+)\s*\)", r"R_{in,\1}", expresion, flags=re.IGNORECASE)
+    texto = re.sub(r"\bV\(\s*([^,()\s]+)\s*,\s*([^,()\s]+)\s*\)", r"V_{\1\2}", texto)
     texto = re.sub(r"\bV\(\s*([^()\s]+)\s*\)", r"V_{\1}", texto)
     texto = re.sub(r"\bI\(\s*([^()\s]+)\s*\)", r"I_{\1}", texto)
     # un guión bajo dentro de un nombre de nodo (nodo_in) es texto, no subíndice

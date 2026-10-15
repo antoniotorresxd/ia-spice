@@ -81,3 +81,37 @@ def test_franco_1_5_offset_con_la_alimentacion_como_entrada():
         {"R1": 10e3, "R2": 200e3, "RF": 100e3}
     )
     assert resultado["resultados"]["validacion"]["coincide"] is True
+
+
+def test_una_resistencia_de_entrada_se_mide_no_se_confunde_con_un_componente():
+    # Franco: "vO = v2 - 3v1 con Ri1 = Ri2 = 100 k". Ri2 es R3 + R4: tomarla
+    # como R3 daba R4 = 33.3k y Ri2 = 133k. El libro: R3 = 75k, R4 = 25k.
+    def caso(v1, v2, salida, rin):
+        fuente = "V1" if v1 else "V2"
+        return {
+            "nombre": f"v1={v1}, v2={v2}",
+            "valores": [{"simbolo": "v1", "valor": str(v1)}, {"simbolo": "v2", "valor": str(v2)}],
+            "mediciones": [{"expresion": "V(o)", "valor": salida}, {"expresion": f"Rin({fuente})", "valor": rin}],
+        }
+
+    resultado = analizar_planteamiento({
+        "netlist": "V1 v1 0 {v1}\nV2 v2 0 {v2}\nR1 v1 n {R1}\nRF n o {RF}\nR3 v2 p {R3}\nR4 p 0 {R4}\nX1 p n o OPAMP\n",
+        "incognitas": ["R1", "RF", "R3", "R4"],
+        "escenarios": [caso(1, 0, "-3", "100k"), caso(0, 1, "1", "100k")],
+    })
+
+    assert resultado["error"] is None
+    assert resultado["resultados"]["planteamiento"]["incognitas"] == pytest.approx(
+        {"R1": 100e3, "RF": 300e3, "R3": 75e3, "R4": 25e3}
+    )
+    # ngspice mide también las resistencias de entrada
+    assert resultado["resultados"]["validacion"]["coincide"] is True
+    assert "R_{in,V2}" in resultado["informe"]
+
+
+def test_una_transferencia_que_no_es_un_cociente_se_responde_como_valor():
+    from agents.analisis.planteamiento import spec_desde_outcome
+
+    spec = spec_desde_outcome({"netlist": "V1 a 0 1\nR1 a 0 1k\n", "preguntas": [
+        {"nombre": "x", "tipo": "transferencia", "calcular": "V(a)", "valores": []}]})
+    assert spec["preguntas"][0]["tipo"] == "valor"

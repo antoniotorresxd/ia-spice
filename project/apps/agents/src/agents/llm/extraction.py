@@ -37,6 +37,13 @@ Con un offset ("vO = -10vI + 2.5 V, assume ±5-V supplies"), la otra entrada es 
 alimentación, una fuente FIJA con su valor: `VI i 0 {vI}`, `VEE e 0 -5`, `R1 i n {R1}`,
 `R2 e n {R2}`, `RF n o {RF}`, `X1 0 n o OPAMP`; escenarios vI = 0 → 'V(o)' = 2.5 y
 vI = 1 → 'V(o)' = -7.5. NUNCA inventes una fuente de referencia que el problema no da.
+Una RESISTENCIA DE ENTRADA pedida ("Ri1 = Ri2 = 100 k") es un requisito, no el valor de un
+componente: mídela con 'Rin(V2)' (la resistencia que ve la fuente V2) en un escenario donde
+esa fuente actúa, y deja como incógnitas TODAS las resistencias. Ej. "vO = v2 - 3v1 con
+Ri1 = Ri2 = 100 k" (amplificador de diferencia): `R1 v1 n {R1}`, `RF n o {RF}`,
+`R3 v2 p {R3}`, `R4 p 0 {R4}`, `X1 p n o OPAMP`; incognitas ['R1','RF','R3','R4'];
+escenario v1 = 1, v2 = 0 con 'V(o)' = -3 y 'Rin(V1)' = 100k; escenario v1 = 0, v2 = 1 con
+'V(o)' = 1 y 'Rin(V2)' = 100k. Ri2 es R3 + R4, no R3: por eso se mide.
 Si el enunciado tiene incisos —(a), (b)…— resuelve en este turno el que pidió el
 usuario (o el (a) si no dijo cuál) y menciona en el nombre del escenario cuál es.
 - `netlist`: transcribe la red a SPICE, un elemento por línea, nodo de referencia 0,

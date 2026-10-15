@@ -336,6 +336,27 @@ _V = re.compile(r"\bV\(\s*([^,()\s]+)\s*(?:,\s*([^,()\s]+)\s*)?\)", re.IGNORECAS
 _I = re.compile(r"\bI\(\s*([A-Za-z][A-Za-z0-9_]*)\s*\)", re.IGNORECASE)
 
 
+_RIN = re.compile(r"\bRin\(\s*([A-Za-z][A-Za-z0-9_]*)\s*\)", re.IGNORECASE)
+
+
+def _expandir_rin(expresion: str, circuito: list[Componente]) -> str:
+    """`Rin(V2)`: la resistencia de entrada que ve la fuente V2, su tensión
+    sobre la corriente que entrega al circuito. La corriente de una fuente
+    va de n+ a n- por dentro, así que la que entrega es -I(V2). Con ella un
+    requisito como "Ri2 = 100k" se mide en vez de confundirse con el valor
+    de una resistencia (la de un divisor de entrada es R3 + R4, no R3)."""
+
+    def sustituir(m: re.Match) -> str:
+        nombre = m.group(1).upper()
+        fuente = next((c for c in circuito if c.nombre == nombre and c.tipo == "V"), None)
+        if fuente is None:
+            raise RedInvalida(f"Rin({m.group(1)}): no es una fuente de tensión del circuito")
+        mas, menos = fuente.nodos[0], fuente.nodos[1]
+        return f"(V({mas},{menos})/(-I({fuente.nombre})))"
+
+    return _RIN.sub(sustituir, expresion)
+
+
 def evaluar(solucion: SolucionSimbolica, expresion: str) -> sp.Expr:
     """`V(o)`, `V(a,b)`, `I(R1)` y aritmética con ellos o con símbolos."""
     locales: dict[str, sp.Expr] = {}
@@ -362,6 +383,7 @@ def evaluar(solucion: SolucionSimbolica, expresion: str) -> sp.Expr:
         locales[clave] = solucion.corrientes[nombre]
         return f"({clave})"
 
+    expresion = _expandir_rin(expresion, solucion.circuito)
     expresion_segura(expresion)
     texto = _I.sub(sustituir_i, _V.sub(sustituir_v, expresion))
     try:
