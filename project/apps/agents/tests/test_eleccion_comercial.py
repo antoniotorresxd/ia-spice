@@ -63,3 +63,21 @@ def test_una_incognita_libre_que_no_es_resistencia_sigue_siendo_falta_de_datos()
     })
 
     assert "faltan datos" in resultado["error"]
+
+
+def test_franco_1_5_offset_con_la_alimentacion_como_entrada():
+    # vO = -10vI + 2.5 V con ±5 V: la otra entrada del sumador es VEE
+    resultado = analizar_planteamiento({
+        "netlist": "VI i 0 {vI}\nVEE e 0 -5\nR1 i n {R1}\nR2 e n {R2}\nRF n o {RF}\nX1 0 n o OPAMP\n",
+        "incognitas": ["R1", "R2", "RF"],
+        "escenarios": [
+            {"nombre": "vI = 0", "valores": [{"simbolo": "vI", "valor": "0"}], "mediciones": [{"expresion": "V(o)", "valor": "2.5"}]},
+            {"nombre": "vI = 1", "valores": [{"simbolo": "vI", "valor": "1"}], "mediciones": [{"expresion": "V(o)", "valor": "-7.5"}]},
+        ],
+    })
+
+    # la solución del libro: entre juegos E24 exactos, los valores más comunes
+    assert resultado["resultados"]["planteamiento"]["incognitas"] == pytest.approx(
+        {"R1": 10e3, "R2": 200e3, "RF": 100e3}
+    )
+    assert resultado["resultados"]["validacion"]["coincide"] is True

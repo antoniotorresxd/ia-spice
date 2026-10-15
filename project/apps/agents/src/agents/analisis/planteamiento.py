@@ -168,12 +168,26 @@ _RANGO_PRACTICO = (1e3, 1e6)
 _CENTRO_PRACTICO = 30e3
 
 
+def _rareza(r: float) -> int:
+    """0 si el valor está en E6, 1 en E12, 2 en E24, 3 si no: entre dos
+    juegos igual de exactos, quien diseña prefiere los valores más comunes
+    (Franco ej. 1.5: 10k, 200k y 100k antes que 7.5k, 150k y 75k)."""
+    from agents.comerciales.series import error_relativo, mas_cercano
+
+    for rareza, serie in enumerate(("E6", "E12", "E24")):
+        if abs(error_relativo(mas_cercano(r, serie), r)) < 1e-9:
+            return rareza
+    return 3
+
+
 def _elegir_de_la_serie(soluciones: list[dict], incognitas: list[sp.Symbol], serie: str) -> tuple[dict, sp.Symbol] | None:
     """Cuando las mediciones dejan libre una incógnita que es una resistencia
     ("vO = -(6v1 + 8v2 + 4v3)" fija R1, R2 y R3 en función de RF), la elige
     quien diseña: el valor de la serie que deja TODAS las resistencias en la
     serie (o lo más cerca), dentro del rango práctico. Franco ej. 1.4:
-    RF = 120k da R1 = 20k, R2 = 15k y R3 = 30k, todas E24."""
+    RF = 120k da R1 = 20k, R2 = 15k y R3 = 30k, todas E24. Entre juegos igual
+    de exactos gana el de valores más comunes y después el más cercano al
+    centro del rango práctico."""
     from agents.comerciales.series import error_relativo, mas_cercano, valores_en_rango
 
     # Solo en un diseño de resistencias: si entre las incógnitas hay una
@@ -199,7 +213,7 @@ def _elegir_de_la_serie(soluciones: list[dict], incognitas: list[sp.Symbol], ser
             fuera = any(not (_RANGO_PRACTICO[0] <= r <= _RANGO_PRACTICO[1]) for r in rs)
             error = max(abs(error_relativo(mas_cercano(r, serie), r)) for r in rs)
             media = math.exp(sum(math.log(r) for r in rs) / len(rs))
-            puntaje = (fuera, round(error, 6), abs(math.log(media / _CENTRO_PRACTICO)))
+            puntaje = (fuera, round(error, 6), sum(_rareza(r) for r in rs), abs(math.log(media / _CENTRO_PRACTICO)))
             if mejor_puntaje is None or puntaje < mejor_puntaje:
                 exactos = {i: e.subs(x, sp.nsimplify(v, rational=True)) for i, e in solucion.items()}
                 exactos[x] = sp.nsimplify(v, rational=True)

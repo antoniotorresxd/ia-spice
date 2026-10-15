@@ -33,6 +33,10 @@ entradas) también es este modo, con un sumador inversor: netlist `V1 v1 0 {v1}`
 entrada con esa entrada en 1 y las demás en 0, midiendo 'V(o)' = -6, -8 y -4. Así se
 verifica cada peso por separado; el sistema elige RF de la serie comercial
 (`serie_resistencias`: «standard 5% resistances» → E24) para que todas caigan en ella.
+Con un offset ("vO = -10vI + 2.5 V, assume ±5-V supplies"), la otra entrada es la
+alimentación, una fuente FIJA con su valor: `VI i 0 {vI}`, `VEE e 0 -5`, `R1 i n {R1}`,
+`R2 e n {R2}`, `RF n o {RF}`, `X1 0 n o OPAMP`; escenarios vI = 0 → 'V(o)' = 2.5 y
+vI = 1 → 'V(o)' = -7.5. NUNCA inventes una fuente de referencia que el problema no da.
 Si el enunciado tiene incisos —(a), (b)…— resuelve en este turno el que pidió el
 usuario (o el (a) si no dijo cuál) y menciona en el nombre del escenario cuál es.
 - `netlist`: transcribe la red a SPICE, un elemento por línea, nodo de referencia 0,
