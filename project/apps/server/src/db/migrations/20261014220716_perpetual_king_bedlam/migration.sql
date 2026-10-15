@@ -1,0 +1,1 @@
+ALTER TABLE "artifact" ADD COLUMN "design_walkthrough" text;
