@@ -44,3 +44,40 @@ def test_otro_error_no_se_reintenta():
     with pytest.raises(Exception, match="invalid api key"):
         invocar_estructurado(modelo, dict, [])
     assert modelo.metodos == [None]
+
+
+ERROR_FORMATO = (
+    "Failed to parse NetlistReparado from completion {...}. Got: 1 validation error for "
+    "NetlistReparado\n  Value error, el netlist llegó en una sola línea: cada elemento y cada "
+    "directiva (.control, .endc, .end) van en su propia línea [type=value_error, input_value=...]"
+)
+
+
+class _ModeloQueSeCorrige:
+    """La primera respuesta no valida; la segunda, con el error a la vista, sí."""
+
+    def __init__(self):
+        self.mensajes = []
+
+    def with_structured_output(self, schema, method=None):
+        modelo = self
+
+        class _Estructurado:
+            def invoke(self, messages):
+                modelo.mensajes.append(list(messages))
+                if len(modelo.mensajes) == 1:
+                    raise Exception(ERROR_FORMATO)
+                return "corregido"
+
+        return _Estructurado()
+
+
+def test_una_respuesta_que_no_valida_se_devuelve_una_vez_con_el_error():
+    modelo = _ModeloQueSeCorrige()
+
+    assert invocar_estructurado(modelo, dict, [{"role": "user", "content": "repara"}]) == "corregido"
+    assert len(modelo.mensajes) == 2
+    correccion = modelo.mensajes[1][-1]["content"]
+    assert "el netlist llegó en una sola línea" in correccion
+    # solo el motivo, no la respuesta entera
+    assert "input_value" not in correccion

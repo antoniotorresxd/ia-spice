@@ -20,7 +20,8 @@ resolverla o encontrar sus valores:
   de salida, Thévenin/Norton, función de transferencia, corrientes de alimentación y
   potencia, o deducir parámetros a partir de mediciones;
 - un ejercicio de libro de diseño sobre una configuración estándar (inversor, no inversor,
-  seguidor, sumador, diferencia, con potenciómetro, offset o red T): "Design a <configuración>
+  seguidor, sumador, diferencia, convertidor corriente-tensión o tensión-corriente, con
+  potenciómetro, offset o red T): "Design a <configuración>
   whose …", "design a circuit such that vO = …". La topología es la estándar y lo que se
   busca son sus valores.
 mode='design' es para proponer un circuito desde una aplicación (fuentes, filtros por
@@ -47,7 +48,9 @@ valores):
 4. Una salida que combina varias entradas: un escenario POR ENTRADA, con esa en 1 y las
    demás en 0. Así ngspice verifica cada peso por separado.
 5. Las fuentes del problema (incluidas las alimentaciones usadas como entrada) van con su
-   valor. NUNCA inventes una fuente que el problema no da.
+   valor. NUNCA inventes una fuente que el problema no da. Un dato que el enunciado no
+   cuantifica (la Rs de una fuente) va como símbolo sin valor: si el resultado no depende de
+   él, el sistema lo verifica igual.
 6. Un potenciómetro de valor R con cursor k es `{k*R}` y `{(1-k)*R}`, con un caso por extremo
    (k = 0 y k = 1). Un barrido ("para a = 10², 10⁴ y 10⁶") es una pregunta por valor.
 7. Función de transferencia, Bode, polos, f0 o Q: una pregunta con `tipo` 'transferencia' y

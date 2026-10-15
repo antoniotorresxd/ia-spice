@@ -530,8 +530,8 @@
     incognitas: {R1: 25k}
     preguntas: {"gain at k = 0": 1}
 
-- id: franco-p1.10
-  fuente: Franco 4.ª ed., problema 1.10 (respuesta calculada a mano)
+- id: franco-p1.12
+  fuente: Franco 4.ª ed., problema 1.12a (respuesta calculada a mano)
   tema: inversor de ganancia variable con potenciómetro
   enunciado: >-
     Design an inverting amplifier whose gain can be varied from -10 V/V to 0 with a
@@ -582,3 +582,38 @@
       - {nombre: vO, valores: [], calcular: V(o)}
   esperado:
     preguntas: {vN: 6, vP: 6, vO: 10}
+
+- id: franco-iv-offset
+  fuente: Franco 4.ª ed., problema del cap. 1 (convertidor corriente-tensión con offset; respuesta calculada a mano)
+  tema: convertidor corriente-tensión (transimpedancia) con desplazamiento de la salida
+  enunciado: >-
+    With an op amp running from +/-10 V regulated supplies, design a circuit that takes a
+    current source iS (with an unspecified parallel resistance Rs) and produces vO going
+    from +5 V to -5 V as iS goes from 0 to +1 mA into the circuit. The output needs an
+    offset.
+  planteamiento:
+    mode: analysis
+    serie_resistencias: E24
+    netlist: |
+      IS 0 n {iS}
+      RS n 0 {Rs}
+      RF n o {RF}
+      VEE e 0 -10
+      R2 e n {R2}
+      X1 0 n o OPAMP vcc=10 vee=-10
+    incognitas: [RF, R2]
+    requisitos:
+      - {texto: "vO = +5 V with iS = 0", tipo: medicion, expresion: "V(o)"}
+      - {texto: "vO = -5 V with iS = 1 mA", tipo: medicion, expresion: "V(o)"}
+      - {texto: "+/-10 V supplies (VEE gives the offset)", tipo: dato, expresion: "VEE"}
+      - {texto: "source with parallel Rs", tipo: dato, expresion: "RS"}
+    escenarios:
+      - nombre: iS = 0
+        valores: [{simbolo: iS, valor: "0"}]
+        mediciones: [{expresion: V(o), valor: "5"}]
+      - nombre: iS = 1 mA
+        valores: [{simbolo: iS, valor: "1m"}]
+        mediciones: [{expresion: V(o), valor: "-5"}]
+  esperado:
+    # la entrada es una tierra virtual: Rs no importa y el resultado no depende de ella
+    incognitas: {RF: 10k, R2: 20k}

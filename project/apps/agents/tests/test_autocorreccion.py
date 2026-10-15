@@ -99,8 +99,9 @@ def test_una_respuesta_en_letras_no_dispara_la_autocorreccion(monkeypatch):
     assert len(llamadas) == 1
     assert final["outcome"]["error"] is None
     assert "corrigió" not in final["outcome"]["informe"]
-    assert "No se verificó con ngspice" in final["outcome"]["informe"]
-    assert final["outcome"]["resultados"]["validacion"]["sin_verificar"] is True
+    # V(vminus) = 0 no depende de Vin ni de k: se simula con valores nominales;
+    # V(vout) = -10·k·Vin queda en letras y el informe lo dice
+    assert "quedan en letras" in final["outcome"]["informe"]
 
 
 def test_un_subckt_opamp_del_llm_se_ignora():

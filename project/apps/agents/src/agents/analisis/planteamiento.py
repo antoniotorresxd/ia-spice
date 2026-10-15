@@ -463,7 +463,32 @@ def _medir_s(caso: _Caso, expresion: str, resueltas: dict):
         return netlist, None, f"no se pudo evaluar {expresion} con lo medido ({exc})", frecuencias_usadas
 
 
+def _nominal(simbolo: sp.Symbol) -> sp.Expr:
+    """Un valor cualquiera para simular un símbolo del que el resultado no
+    depende: 10 k para una resistencia, 1 para lo demás."""
+    return sp.Integer(10_000) if str(simbolo).upper().startswith("R") else sp.Integer(1)
+
+
+def _con_nominales(caso: _Caso, expresion: str) -> _Caso:
+    """Un dato que el enunciado deja sin valor pero que no afecta lo medido
+    (la Rs de una fuente de corriente que ve una tierra virtual) no impide
+    verificar: si la expresión del motor no depende de él, ngspice simula con
+    un valor nominal. Si depende, el caso queda igual y la respuesta se
+    reporta en letras."""
+    libres = simbolos_libres(caso.circuito)
+    if not libres:
+        return caso
+    try:
+        depende = caso.calcular(expresion).free_symbols & libres
+    except (RedInvalida, KeyError, TypeError, ValueError):
+        return caso
+    if depende:
+        return caso
+    return _Caso(caso.circuito, {s: _nominal(s) for s in libres}, caso.nombre)
+
+
 def _medir(caso: _Caso, expresion: str, resueltas: dict):
+    caso = _con_nominales(caso, expresion)
     if tiene_funciones(expresion):
         netlist, simulado, error, _ = _medir_s(caso, expresion, resueltas)
         return netlist, simulado, error
@@ -740,6 +765,12 @@ def informe_planteamiento(spec: dict, r: dict) -> str:
         if not v.get("concluyente", True):
             lineas.append(
                 "No se verificó con ngspice: la respuesta queda en letras. Para simularla, da valores numéricos a los símbolos."
+            )
+        elif v["coincide"] and any(ok is None for *_, ok, _ in filas):
+            en_letras = sum(1 for *_, ok, _ in filas if ok is None)
+            lineas.append(
+                f"ngspice reproduce todo lo que tiene números; {en_letras} respuesta(s) quedan en letras "
+                "y no se pudieron simular."
             )
         else:
             lineas.append(
