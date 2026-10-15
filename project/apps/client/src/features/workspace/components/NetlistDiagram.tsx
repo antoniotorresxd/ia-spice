@@ -383,6 +383,18 @@ function DiodeV({
   )
 }
 
+/** Flecha de una fuente de corriente, de (x1, y1) a (x2, y2), con la punta en el segundo. */
+function CurrentArrow({ x1, y1, x2, y2 }: { x1: number; y1: number; x2: number; y2: number }) {
+  const angle = Math.atan2(y2 - y1, x2 - x1)
+  const head = (da: number) => `${x2 - 6 * Math.cos(angle + da)},${y2 - 6 * Math.sin(angle + da)}`
+  return (
+    <>
+      <line x1={x1} y1={y1} x2={x2} y2={y2} className={styles.symbolStroke} />
+      <polyline points={`${head(0.5)} ${x2},${y2} ${head(-0.5)}`} className={styles.symbolStroke} fill="none" />
+    </>
+  )
+}
+
 function SourceV({
   x,
   y1,
@@ -390,6 +402,7 @@ function SourceV({
   name,
   value,
   isAc,
+  currentUp,
 }: {
   x: number
   y1: number
@@ -397,6 +410,7 @@ function SourceV({
   name: string
   value: string
   isAc: boolean
+  currentUp?: boolean
 }) {
   const my = (y1 + y2) / 2
   const r = 17
@@ -405,7 +419,9 @@ function SourceV({
       <line x1={x} y1={y1} x2={x} y2={my - r} className={styles.wire} />
       <line x1={x} y1={my + r} x2={x} y2={y2} className={styles.wire} />
       <circle cx={x} cy={my} r={r} className={styles.symbolStroke} fill="none" />
-      {isAc ? (
+      {currentUp !== undefined ? (
+        <CurrentArrow x1={x} y1={currentUp ? my + 9 : my - 9} x2={x} y2={currentUp ? my - 9 : my + 9} />
+      ) : isAc ? (
         <path d={`M ${x - 9} ${my} q 4.5 -8 9 0 q 4.5 8 9 0`} className={styles.symbolStroke} fill="none" />
       ) : (
         <>
@@ -431,6 +447,7 @@ function SourceH({
   name,
   value,
   isAc,
+  currentRight,
 }: {
   x1: number
   x2: number
@@ -438,6 +455,7 @@ function SourceH({
   name: string
   value: string
   isAc: boolean
+  currentRight?: boolean
 }) {
   const mx = (x1 + x2) / 2
   const r = 17
@@ -447,7 +465,9 @@ function SourceH({
       <line x1={x1} y1={y} x2={mx - r} y2={y} className={styles.wire} />
       <line x1={mx + r} y1={y} x2={x2} y2={y} className={styles.wire} />
       <circle cx={mx} cy={y} r={r} className={styles.symbolStroke} fill="none" />
-      {isAc ? (
+      {currentRight !== undefined ? (
+        <CurrentArrow x1={currentRight ? mx - 9 : mx + 9} y1={y} x2={currentRight ? mx + 9 : mx - 9} y2={y} />
+      ) : isAc ? (
         <path d={`M ${mx - 9} ${y} q 4.5 -8 9 0 q 4.5 8 9 0`} className={styles.symbolStroke} fill="none" />
       ) : (
         <>
@@ -874,6 +894,7 @@ function Symbol({ symbol }: { symbol: LayoutSymbol }) {
           name={symbol.name}
           value={symbol.value}
           isAc={symbol.isAc}
+          currentUp={symbol.currentUp}
         />
       )
     case 'sourceH':
@@ -885,6 +906,7 @@ function Symbol({ symbol }: { symbol: LayoutSymbol }) {
           name={symbol.name}
           value={symbol.value}
           isAc={symbol.isAc}
+          currentRight={symbol.currentRight}
         />
       )
     case 'depSourceV':

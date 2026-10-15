@@ -818,3 +818,25 @@ describe('alimentaciones ±V (Franco ej. 1.16, fuente variable con pot y seguido
     }
   })
 })
+
+describe('fuentes de corriente', () => {
+  it('se dibujan con flecha hacia donde sale la corriente y su valor en amperes', () => {
+    const diagram = buildDiagram(parseNetlist(['* iv', 'IS 0 n 1m', 'RF n o 10k', 'X1 0 n o OPAMP'].join('\n')))
+    const fuente = diagram.symbols.find((s) => s.type === 'sourceV' && s.name === 'IS')
+    expect(fuente).toMatchObject({ value: '1 mA', currentUp: true })
+  })
+
+  it('una fuente de tensión no lleva flecha', () => {
+    const diagram = buildDiagram(parseNetlist(['* v', 'V1 a 0 5', 'R1 a 0 1k'].join('\n')))
+    const fuente = diagram.symbols.find((s) => s.type === 'sourceV' && s.name === 'V1')
+    expect(fuente).not.toHaveProperty('currentUp')
+  })
+})
+
+it('la realimentación llega al nodo inversor a la derecha de todas sus ramas', () => {
+  const iv = ['* iv', 'IS 0 n 1m', 'RS n 0 10k', 'RF n o 10k', 'VEE e 0 -10', 'R2 e n 20k', 'X1 0 n o OPAMP'].join('\n')
+  const diagram = buildDiagram(parseNetlist(iv))
+  const rf = diagram.symbols.find((s) => s.type === 'resistorH' && s.name === 'RF') as Extract<LayoutSymbol, { type: 'resistorH' }>
+  const ramas = diagram.symbols.filter((s) => s.type === 'resistorV' || s.type === 'sourceV') as { x: number }[]
+  for (const rama of ramas) expect(rama.x).toBeLessThan(rf.x1)
+})

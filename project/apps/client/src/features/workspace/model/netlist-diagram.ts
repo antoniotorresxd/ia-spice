@@ -412,6 +412,25 @@ export function fmtHenries(raw: string): string {
   return `${trimNum(n)} H`
 }
 
+function fmtAmps(n: number): string {
+  if (n === 0) return '0 A'
+  const a = Math.abs(n)
+  if (a >= 1) return `${trimNum(n)} A`
+  if (a >= 1e-3) return `${trimNum(n * 1e3)} mA`
+  return `${trimNum(n * 1e6)} µA`
+}
+
+/** Valor de una fuente de corriente: en amperes, no en volts (`I1 0 n 1m` → "1 mA"). */
+export function fmtCurrentSource(extra: string): string {
+  const upper = extra.toUpperCase()
+  if (upper.includes('AC') || upper.includes('SIN') || upper.includes('PULSE')) {
+    return fmtSource(extra).replace(/(\d) V\b/g, '$1 A')
+  }
+  const n = dcValue(extra)
+  if (!isFinite(n)) return extra
+  return /^\s*dc\b/i.test(extra) ? `${fmtAmps(n)} (DC)` : fmtAmps(n)
+}
+
 export function fmtSource(extra: string): string {
   const upper = extra.toUpperCase()
   if (upper.includes('SIN')) {
@@ -667,8 +686,9 @@ export type LayoutSymbol =
       isZener: boolean
       pointingUp: boolean
     }
-  | { type: 'sourceV'; x: number; y1: number; y2: number; name: string; value: string; isAc: boolean }
-  | { type: 'sourceH'; x1: number; x2: number; y: number; name: string; value: string; isAc: boolean }
+  /** `currentUp` solo en una fuente de corriente: hacia dónde sale la corriente (flecha). */
+  | { type: 'sourceV'; x: number; y1: number; y2: number; name: string; value: string; isAc: boolean; currentUp?: boolean }
+  | { type: 'sourceH'; x1: number; x2: number; y: number; name: string; value: string; isAc: boolean; currentRight?: boolean }
   // Fuente controlada (rombo). `towardTop`/`towardRight`: en una de tensión
   // (E/H) el + queda de ese lado; en una de corriente (G/F) la flecha apunta hacia él.
   | {
@@ -1420,8 +1440,10 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
           y1: shuntY1,
           y2: shuntY2,
           name: e.name,
-          value: fmtSource(e.extra),
+          value: e.kind === 'I' ? fmtCurrentSource(e.extra) : fmtSource(e.extra),
           isAc,
+          // I n+ n-: la corriente circula de n+ a n- por dentro y sale por n-
+          ...(e.kind === 'I' ? { currentUp: e.nodes[1] === n } : {}),
         })
         usedSymbols.add('source')
       } else if (isDependentSource(e)) {
@@ -1577,14 +1599,16 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
         upper.includes('SIN') ||
         upper.includes('SINE') ||
         upper.includes('PULSE')
+      const rightNode = (nodeStartX[a] ?? 0) <= (nodeStartX[b] ?? 0) ? b : a
       symbols.push({
         type: 'sourceH',
         x1,
         x2,
         y: targetY,
         name: e.name,
-        value: fmtSource(e.extra),
+        value: e.kind === 'I' ? fmtCurrentSource(e.extra) : fmtSource(e.extra),
         isAc,
+        ...(e.kind === 'I' ? { currentRight: e.nodes[1] === rightNode } : {}),
       })
       usedSymbols.add('source')
     } else if (isDependentSource(e)) {
@@ -1664,9 +1688,13 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     // Punto de toma en la salida
     const tapX = Math.round((right + outX) / 2)
 
-    // Punto de llegada al pin/nodo de entrada: entre inNodeX y left
-    const inNodeX = nodeStartX[info.targetNode] ?? maxInX
-    const fbLeftX = Math.round((inNodeX + left) / 2)
+    // Punto de llegada al pin/nodo de entrada: entre el final del nodo y left.
+    // Desde el inicio del nodo caía entre sus ramas (fuente, Rs y R2 de un
+    // convertidor I-V) y la realimentación se dibujaba encima de ellas.
+    const inNodeX = nodeEndX[info.targetNode] ?? nodeStartX[info.targetNode] ?? maxInX
+    // Con espacio para la etiqueta de la última rama del nodo (a su derecha),
+    // sin pasar del borde del opamp.
+    const fbLeftX = Math.min(left - 8, Math.max(Math.round((inNodeX + left) / 2), inNodeX + 60))
 
     const fbY = info.isTop
       ? RAIL_Y - 70 - idx * 45
