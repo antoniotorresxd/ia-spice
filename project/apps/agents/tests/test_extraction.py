@@ -213,6 +213,22 @@ def test_la_guia_manda_los_ejercicios_de_libro_a_planteamientos():
     # Caso real (Franco P1.9): "Design a noninverting amplifier whose gain is
     # variable over 1 ≤ A ≤ 5 by means of a 100-k pot" se fue a mode='design',
     # que no sabe de potenciómetros, y falló dos veces.
-    assert "Design a noninverting amplifier" in GUIA_MODO_ANALISIS
-    assert "{k*100k}" in GUIA_MODO_ANALISIS
+    assert "Design a <configuración>" in GUIA_MODO_ANALISIS
+    assert "{(1-k)*R}" in GUIA_MODO_ANALISIS
     assert "incisos" in GUIA_MODO_ANALISIS
+
+
+def test_el_pedido_trae_como_ejemplo_el_problema_parecido_de_la_biblioteca(monkeypatch):
+    # Los ejemplos ya no son párrafos de la guía: se recuperan de la
+    # biblioteca, que está probada contra el libro.
+    vistos = {}
+    monkeypatch.setattr(
+        "agents.llm.extraction.fetch_prompt",
+        lambda name, **kwargs: vistos.update(kwargs) or "System prompt de prueba",
+    )
+    pedido = "Design a noninverting amplifier whose gain is variable over 1 V/V to 5 V/V by means of a 100-k pot."
+    extract_orchestrator_outcome(_FakeChatModel(OrchestratorResult(outcome=ChatOutcome(mode="chat", reply="x"))), pedido, "catálogo")
+
+    contexto = vistos["retrieved_circuits_catalog"]
+    assert "EJEMPLOS RESUELTOS PARECIDOS" in contexto
+    assert "{k*100k}" in contexto and "{(1-k)*100k}" in contexto

@@ -26,6 +26,7 @@ from dataclasses import replace
 
 import sympy as sp
 
+from agents.analisis.cobertura import faltantes, lineas_requisitos
 from agents.analisis.red import RedInvalida, _ingenieria, fmt
 from agents.analisis.simbolico import (
     _PUERTO,
@@ -798,6 +799,12 @@ def analizar_planteamiento(outcome: dict) -> dict:
         spec["preguntas"] = [{"nombre": f"V({n})", "valores": {}, "calcular": f"V({n})"} for n in nodos]
     r = resolver_planteamiento(spec)
     informe = informe_planteamiento(spec, r)
+    # ¿Quedó todo lo del enunciado? Lo que falte vuelve al orquestador.
+    faltan = faltantes(outcome)
+    tabla = lineas_requisitos(outcome, faltan)
+    if tabla:
+        secciones = len(re.findall(r"^## \d+\.", informe, re.MULTILINE))
+        informe += f"\n\n## {secciones + 1}. Requisitos del enunciado\n\n" + "\n".join(tabla) + "\n"
     if r["error"]:
         return {"error": r["error"], "informe": informe, "resultados": {}, "netlist": None, "netlist_zeq": None, "formato": "markdown"}
     valores = {sp.Symbol(k): sp.nsimplify(v, rational=True) for k, v in r["incognitas"].items() if isinstance(v, float)}
@@ -838,6 +845,7 @@ def analizar_planteamiento(outcome: dict) -> dict:
                            "sin_verificar": not r["verificacion"].get("concluyente", True)},
             "planteamiento": {
                 "fallas": _fallas(r["verificacion"]),
+                "faltantes": faltan,
                 "incognitas": r["incognitas"],
                 "preguntas": [{"calcular": p["calcular"], "valor": p["valor"]} for p in r["preguntas"]],
             },

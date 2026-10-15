@@ -1,3 +1,4 @@
+from agents.analisis.biblioteca import como_ejemplo, recuperar
 from agents.llm.prompts import fetch_prompt
 from agents.llm.structured import invocar_estructurado
 from agents.orquestador.schema import (
@@ -13,82 +14,58 @@ from agents.orquestador.schema import (
 # este código, y su instrucción tiene que viajar con él aunque el prompt
 # publicado sea anterior.
 GUIA_MODO_ANALISIS = """## MODO ANÁLISIS (mode='analysis')
-Úsalo cuando el circuito YA ESTÁ DADO (en el texto o en una figura adjunta) y se pide
-resolverlo: tensiones, corrientes, resistencia/impedancia equivalente, Thévenin/Norton,
-la función de transferencia, o los valores de componentes que cumplen ciertas
-mediciones o requisitos sobre ESA topología ("find Ri, Aoc and Ro", "¿qué R2 hace
-falta para una ganancia de 5?", "specify component values for f0 = 1 kHz"). NO es un
-diseño (mode='design' es para cuando hay que proponer el circuito desde una aplicación).
-Un ejercicio de libro del tipo "Design a <configuración estándar> whose <magnitud> …"
-con piezas dadas (un pot de 100 kΩ, C = 10 nF, un rango de ganancia) TAMBIÉN es este
-modo: la topología es la del enunciado y lo que se busca son sus valores. Ejemplo:
-"Design a noninverting amplifier whose gain is variable over 1 V/V ≤ A ≤ 5 V/V by means
-of a 100-k pot" → netlist `VI i 0 1`, `X1 i n o OPAMP`, `RA o n {k*100k}`,
-`RB n m {(1-k)*100k}`, `R1 m 0 {R1}`; incognitas ['R1']; un escenario con k = 1 y
-'V(o)/V(i)' = 5; una pregunta 'V(o)/V(i)' con k = 0 (debe dar 1).
-"Design a circuit such that vO = -2(3v1 + 4v2 + 2v3)" (una salida que es combinación de
-entradas) también es este modo, con un sumador inversor: netlist `V1 v1 0 {v1}`, `V2 …`,
-`R1 v1 n {R1}`, `R2 v2 n {R2}`, `R3 v3 n {R3}`, `RF n o {RF}`, `X1 0 n o OPAMP`; incognitas
-['R1','R2','R3','RF'] (TODAS, también la que se puede elegir libremente); un escenario por
-entrada con esa entrada en 1 y las demás en 0, midiendo 'V(o)' = -6, -8 y -4. Así se
-verifica cada peso por separado; el sistema elige RF de la serie comercial
-(`serie_resistencias`: «standard 5% resistances» → E24) para que todas caigan en ella.
-Con un offset ("vO = -10vI + 2.5 V, assume ±5-V supplies"), la otra entrada es la
-alimentación, una fuente FIJA con su valor: `VI i 0 {vI}`, `VEE e 0 -5`, `R1 i n {R1}`,
-`R2 e n {R2}`, `RF n o {RF}`, `X1 0 n o OPAMP`; escenarios vI = 0 → 'V(o)' = 2.5 y
-vI = 1 → 'V(o)' = -7.5. NUNCA inventes una fuente de referencia que el problema no da.
-Una RESISTENCIA DE ENTRADA pedida ("Ri1 = Ri2 = 100 k") es un requisito, no el valor de un
-componente: mídela con 'Rin(V2)' (la resistencia que ve la fuente V2) en un escenario donde
-esa fuente actúa, y deja como incógnitas TODAS las resistencias. Ej. "vO = v2 - 3v1 con
-Ri1 = Ri2 = 100 k" (amplificador de diferencia): `R1 v1 n {R1}`, `RF n o {RF}`,
-`R3 v2 p {R3}`, `R4 p 0 {R4}`, `X1 p n o OPAMP`; incognitas ['R1','RF','R3','R4'];
-escenario v1 = 1, v2 = 0 con 'V(o)' = -3 y 'Rin(V1)' = 100k; escenario v1 = 0, v2 = 1 con
-'V(o)' = 1 y 'Rin(V2)' = 100k. Ri2 es R3 + R4, no R3: por eso se mide.
-Si el enunciado tiene incisos —(a), (b)…— resuelve en este turno el que pidió el
-usuario (o el (a) si no dijo cuál) y menciona en el nombre del escenario cuál es.
-- `netlist`: transcribe la red a SPICE, un elemento por línea, nodo de referencia 0,
-  sufijos SPICE (1k, 4.7u, 1meg). No agregues .control ni análisis. Usa los nombres de
-  nodo que dio el usuario. Además de R, L, C, V e I acepta fuentes controladas
-  (E/G/F/H, ver el schema) y op-amps `X1 in+ in- out OPAMP` (ideal) o
-  `X1 in+ in- out OPAMP a=1e4 rd=1meg ro=75` (ganancia finita). Un op-amp con
-  "rd = ∞, ro = 0" solo lleva `a=`. NUNCA escribas `.subckt` ni modelos: el sistema ya
-  sabe qué es OPAMP.
-- `metodo`: el que pidió ('nodos', 'mallas', 'reduccion', 'thevenin') o 'completo'.
-- `terminales`: los dos nodos para reducción o Thévenin (ej. ['a','0']); deben ser
-  nodos que aparezcan en `netlist`.
-- Resistencia/impedancia equivalente entre dos terminales: transcribe SOLO los
-  elementos de la red. NO agregues una fuente de prueba aunque el usuario la pida
-  ("aplica 1 V para validar"): el sistema conecta su propia fuente de prueba de 1 V
-  entre los `terminales` y mide Req = 1 V / I. Una fuente tuya —p. ej. de un terminal
-  a 0 con el otro al aire— deja la red sin corriente y no valida nada. Incluye una
-  fuente solo si forma parte del circuito que el usuario describe.
-- Si la red no tiene tierra (una red pasiva entre dos terminales), NO inventes una
-  conexión a 0 ni un elemento extra: el sistema toma el segundo terminal como
-  referencia.
-- NUNCA inventes el valor de un componente que el problema pide encontrar (una
-  incógnita). Escríbelo como símbolo entre llaves en el netlist y declara:
-  · `incognitas`: los símbolos a encontrar (['Ri', 'Ag', 'Ro']);
-  · `escenarios`: cada situación del enunciado con los valores de los demás símbolos
-    y lo medido o exigido en ella (`mediciones`: 'V(i)' = '125m', 'I(RL)' = '230m',
-    'V(o)/V(i)' = '5', 'f0(V(o)/V(i))' = '1k');
-  · `preguntas`: lo que se pide calcular con lo encontrado, con sus valores
-    ('I(RL)' con RL = '0' es la corriente de cortocircuito; RL = 'inf' es un abierto).
-  Ejemplo (amplificador de transconductancia): netlist `VS s 0 {vS}`, `RS s i 100k`,
-  `RI i 0 {Ri}`, `GM 0 o i 0 {Ag}`, `RO o 0 {Ro}`, `RL o 0 {RL}`; un escenario por
-  cada carga medida. Un potenciómetro de 100k con cursor k es `{k*100k}` y
-  `{(1-k)*100k}`, con un escenario por extremo (k = 0 y k = 1). Un barrido ("para
-  a = 10², 10⁴ y 10⁶") es una pregunta por valor.
-- Función de transferencia, Bode, polos, f0 o Q: una pregunta con `tipo`
-  'transferencia' y `calcular` = 'V(salida)/V(entrada)'; la fuente de entrada va con
-  `AC 1`. Si los componentes no tienen valor, déjalos como símbolos: se deriva en letras.
-- Si se elige libremente un valor ("usa C = 10 nF", "R1 = R2"), ponlo en los valores
-  del escenario o repite el mismo símbolo. Si el enunciado no fija una RESISTENCIA que el
-  diseño necesita, declárala como incógnita: el sistema la elige de la serie comercial. Si
-  es otro componente (un C), elige un valor estándar y dilo en el nombre del escenario.
-- Transcribe cada componente tal como lo describe el usuario, uno por línea. NO
-  combines tú resistencias en serie o en paralelo (50 Ω ∥ 200 Ω son dos líneas, no
-  una de 40 Ω): la reducción paso a paso la hace el sistema.
-- `frecuencia_hz`: solo si es un problema de AC con fasores a una sola frecuencia.
+Úsalo cuando la topología está dada o es una configuración estándar de op-amps y se pide
+resolverla o encontrar sus valores:
+- el circuito YA ESTÁ DADO (texto o figura): tensiones, corrientes, resistencia de entrada o
+  de salida, Thévenin/Norton, función de transferencia, corrientes de alimentación y
+  potencia, o deducir parámetros a partir de mediciones;
+- un ejercicio de libro de diseño sobre una configuración estándar (inversor, no inversor,
+  seguidor, sumador, diferencia, con potenciómetro, offset o red T): "Design a <configuración>
+  whose …", "design a circuit such that vO = …". La topología es la estándar y lo que se
+  busca son sus valores.
+mode='design' es para proponer un circuito desde una aplicación (fuentes, filtros por
+especificación, etapas con transistores), no para estos ejercicios.
+
+PRINCIPIOS (los ejemplos resueltos de más abajo muestran la forma; adapta, no copies sus
+valores):
+1. `netlist`: un elemento por línea, nodo de referencia 0, sufijos SPICE (1k, 4.7u, 1meg),
+   los nombres de nodo del usuario, sin .control ni análisis, y NUNCA `.subckt` ni
+   modelos. Acepta R, L, C, V, I, fuentes controladas (E/G/F/H, ver el schema) y op-amps
+   `X1 in+ in- out OPAMP`: ideal sin parámetros; `a= rd= ro=` para el modelo de ganancia
+   finita (rd = ∞, ro = 0 → solo `a=`); `iq= vcc= vee=` cuando se pregunta por corrientes
+   de alimentación, potencia o saturación.
+2. NUNCA inventes el valor de un componente que el problema pide encontrar o deja libre: es
+   una incógnita, va como símbolo entre llaves (`{R1}`) y en `incognitas`. Declara TODAS las
+   resistencias a diseñar, también las que se pueden elegir libremente: el sistema elige de
+   la serie comercial (`serie_resistencias`, E24 si no se dice) la que deja todo en la serie.
+3. Un COMPORTAMIENTO pedido o medido (ganancia, peso de una entrada, resistencia de entrada o
+   de salida, una corriente, la potencia, f0, Q) NUNCA es el valor de un componente: va como
+   medición de un escenario (si es un requisito o un dato medido) o como pregunta (si se pide
+   calcularlo). Expresiones: 'V(o)', 'V(a,b)', 'I(R1)', cocientes 'V(o)/V(i)', 'Rin(V2)'
+   (resistencia que ve la fuente V2), 'Rout(o)' (resistencia de salida en el nodo o),
+   'IO(X1)', 'ICC(X1)', 'IEE(X1)', 'POA(X1)', 'f0(V(o)/V(i))', 'Q(…)', 'db(…, 1k)'.
+4. Una salida que combina varias entradas: un escenario POR ENTRADA, con esa en 1 y las
+   demás en 0. Así ngspice verifica cada peso por separado.
+5. Las fuentes del problema (incluidas las alimentaciones usadas como entrada) van con su
+   valor. NUNCA inventes una fuente que el problema no da.
+6. Un potenciómetro de valor R con cursor k es `{k*R}` y `{(1-k)*R}`, con un caso por extremo
+   (k = 0 y k = 1). Un barrido ("para a = 10², 10⁴ y 10⁶") es una pregunta por valor.
+7. Función de transferencia, Bode, polos, f0 o Q: una pregunta con `tipo` 'transferencia' y
+   `calcular` = 'V(salida)/V(entrada)'; la fuente de entrada va con `AC 1`. Sin valores, los
+   componentes quedan como símbolos y se deriva en letras.
+8. Si el enunciado tiene incisos (a), (b)…, plantea TODOS: cada uno con sus escenarios o
+   preguntas, y su letra en el nombre.
+9. `requisitos`: TODO lo que el enunciado da o pide, uno por renglón, con dónde quedó. El
+   sistema comprueba que cada uno esté donde dices; si falta, te lo devuelve.
+10. Resistencia/impedancia equivalente entre dos terminales de una red pasiva: transcribe SOLO
+   los elementos de la red y pon los dos nodos en `terminales`.
+   NO agregues una fuente de prueba aunque el usuario la pida: el sistema conecta su propia
+   fuente de 1 V entre los `terminales`. Si la red no tiene tierra, NO inventes una conexión a 0 ni un elemento
+   extra: el sistema toma el segundo terminal como referencia.
+11. Transcribe cada componente tal como lo describe el usuario, uno por línea. NO
+  combines tú resistencias en serie o en paralelo: la reducción la hace el sistema.
+12. `metodo`: el que pidió ('nodos', 'mallas', 'reduccion', 'thevenin') o 'completo';
+   `frecuencia_hz` solo para fasores a una sola frecuencia.
 No resuelvas tú las ecuaciones: el sistema las arma, las resuelve y las verifica con ngspice."""
 
 
@@ -101,6 +78,19 @@ TEXTO_CORRECCION = (
     "Devuelve el planteamiento corregido completo. No cambies el problema ni inventes "
     "datos: corrige solo lo que esté mal transcrito."
 )
+
+
+def ejemplos_parecidos(request_text: str) -> str:
+    """Los planteamientos de la biblioteca más parecidos al pedido, como
+    ejemplos. Viven como datos probados contra el libro, no como párrafos en
+    la guía: agregar un problema resuelto no toca el prompt de los demás."""
+    ejemplos = recuperar(request_text)
+    if not ejemplos:
+        return ""
+    return (
+        "\n\n## EJEMPLOS RESUELTOS PARECIDOS (la forma de un buen planteamiento; los "
+        "valores son de otro problema)\n\n" + "\n\n".join(como_ejemplo(e) for e in ejemplos)
+    )
 
 
 class ExtractionError(Exception):
@@ -175,7 +165,8 @@ def extract_orchestrator_outcome(
         "orquestador-system",
         retrieved_circuits_catalog=(circuit_context or "(catálogo no disponible)")
         + "\n\n"
-        + GUIA_MODO_ANALISIS,
+        + GUIA_MODO_ANALISIS
+        + ejemplos_parecidos(request_text),
     )
 
     messages = [

@@ -38,6 +38,8 @@ def test_el_planteamiento_de_referencia_da_la_respuesta_del_libro(entrada):
     respuestas = dict(zip(nombres, (p["valor"] for p in planteamiento["preguntas"])))
     for nombre, valor in (esperado.get("preguntas") or {}).items():
         assert respuestas[nombre] == pytest.approx(_numero(valor), rel=tolerancia, abs=1e-9), nombre
+    # todos sus requisitos quedaron en el planteamiento
+    assert planteamiento["faltantes"] == []
     # y ngspice reproduce todo lo planteado
     assert resultado["resultados"]["validacion"]["coincide"] is True, planteamiento["fallas"]
 

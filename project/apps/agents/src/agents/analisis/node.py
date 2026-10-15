@@ -24,9 +24,15 @@ def _problema_corregible(resultado: dict, motor: bool) -> str | None:
     reproduzca lo calculado."""
     if resultado.get("error"):
         return resultado["error"]
+    planteamiento = (resultado.get("resultados") or {}).get("planteamiento", {})
+    # Lo que el enunciado pide y el planteamiento no incluye: resolverlo
+    # "bien" sería resolver otro problema.
+    faltan = planteamiento.get("faltantes") or []
+    if motor and faltan:
+        return "el planteamiento no incluye todo lo que pide el enunciado: " + "; ".join(faltan)
     # Solo lo que ngspice contradijo: una respuesta en letras no se simula,
     # pero no está mal y no hay nada que corregir.
-    fallas = (resultado.get("resultados") or {}).get("planteamiento", {}).get("fallas") or []
+    fallas = planteamiento.get("fallas") or []
     if motor and fallas:
         return "ngspice no reproduce lo calculado con los valores encontrados: " + "; ".join(fallas)
     return None
