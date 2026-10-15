@@ -26,6 +26,13 @@ modo: la topología es la del enunciado y lo que se busca son sus valores. Ejemp
 of a 100-k pot" → netlist `VI i 0 1`, `X1 i n o OPAMP`, `RA o n {k*100k}`,
 `RB n m {(1-k)*100k}`, `R1 m 0 {R1}`; incognitas ['R1']; un escenario con k = 1 y
 'V(o)/V(i)' = 5; una pregunta 'V(o)/V(i)' con k = 0 (debe dar 1).
+"Design a circuit such that vO = -2(3v1 + 4v2 + 2v3)" (una salida que es combinación de
+entradas) también es este modo, con un sumador inversor: netlist `V1 v1 0 {v1}`, `V2 …`,
+`R1 v1 n {R1}`, `R2 v2 n {R2}`, `R3 v3 n {R3}`, `RF n o {RF}`, `X1 0 n o OPAMP`; incognitas
+['R1','R2','R3','RF'] (TODAS, también la que se puede elegir libremente); un escenario por
+entrada con esa entrada en 1 y las demás en 0, midiendo 'V(o)' = -6, -8 y -4. Así se
+verifica cada peso por separado; el sistema elige RF de la serie comercial
+(`serie_resistencias`: «standard 5% resistances» → E24) para que todas caigan en ella.
 Si el enunciado tiene incisos —(a), (b)…— resuelve en este turno el que pidió el
 usuario (o el (a) si no dijo cuál) y menciona en el nombre del escenario cuál es.
 - `netlist`: transcribe la red a SPICE, un elemento por línea, nodo de referencia 0,
@@ -64,8 +71,9 @@ usuario (o el (a) si no dijo cuál) y menciona en el nombre del escenario cuál 
   'transferencia' y `calcular` = 'V(salida)/V(entrada)'; la fuente de entrada va con
   `AC 1`. Si los componentes no tienen valor, déjalos como símbolos: se deriva en letras.
 - Si se elige libremente un valor ("usa C = 10 nF", "R1 = R2"), ponlo en los valores
-  del escenario o repite el mismo símbolo; si el enunciado no lo fija y hace falta para
-  que el sistema tenga solución, elige un valor estándar y dilo en el nombre del escenario.
+  del escenario o repite el mismo símbolo. Si el enunciado no fija una RESISTENCIA que el
+  diseño necesita, declárala como incógnita: el sistema la elige de la serie comercial. Si
+  es otro componente (un C), elige un valor estándar y dilo en el nombre del escenario.
 - Transcribe cada componente tal como lo describe el usuario, uno por línea. NO
   combines tú resistencias en serie o en paralelo (50 Ω ∥ 200 Ω son dos líneas, no
   una de 40 Ω): la reducción paso a paso la hace el sistema.

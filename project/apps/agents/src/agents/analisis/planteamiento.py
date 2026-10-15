@@ -161,9 +161,57 @@ def _elegir(soluciones: list[dict], incognitas: list[sp.Symbol]) -> dict | None:
     return None
 
 
-def _resolver_incognitas(ecuaciones: list[sp.Eq], incognitas: list[sp.Symbol]) -> tuple[dict, str | None]:
+# Rango práctico de resistencias con op-amps: por debajo cargan la salida,
+# por encima pesan el ruido y las corrientes de polarización. El centro es
+# donde suelen caer las soluciones de libro (Franco: 15k-120k).
+_RANGO_PRACTICO = (1e3, 1e6)
+_CENTRO_PRACTICO = 30e3
+
+
+def _elegir_de_la_serie(soluciones: list[dict], incognitas: list[sp.Symbol], serie: str) -> tuple[dict, sp.Symbol] | None:
+    """Cuando las mediciones dejan libre una incógnita que es una resistencia
+    ("vO = -(6v1 + 8v2 + 4v3)" fija R1, R2 y R3 en función de RF), la elige
+    quien diseña: el valor de la serie que deja TODAS las resistencias en la
+    serie (o lo más cerca), dentro del rango práctico. Franco ej. 1.4:
+    RF = 120k da R1 = 20k, R2 = 15k y R3 = 30k, todas E24."""
+    from agents.comerciales.series import error_relativo, mas_cercano, valores_en_rango
+
+    # Solo en un diseño de resistencias: si entre las incógnitas hay una
+    # ganancia u otro parámetro de un modelo (Aoc, Ag), lo que queda libre
+    # es un dato que falta, no una elección.
+    if not all(str(i).upper().startswith("R") for i in incognitas):
+        return None
+    candidatos = valores_en_rango(serie, *_RANGO_PRACTICO)
+    mejor, mejor_puntaje, libre = None, None, None
+    for solucion in soluciones:
+        faltan = [i for i in incognitas if i not in solucion]
+        libres = {x for v in solucion.values() for x in sp.sympify(v).free_symbols}
+        if len(faltan) != 1 or not libres <= set(faltan) or not str(faltan[0]).upper().startswith("R"):
+            continue
+        x = faltan[0]
+        resistencias = [i for i in incognitas if str(i).upper().startswith("R")]
+        for v in candidatos:
+            valores = {i: sp.N(e.subs(x, v)) for i, e in solucion.items()}
+            valores[x] = sp.Float(v)
+            if not all(valores[i].is_real and valores[i] > 0 for i in incognitas):
+                continue
+            rs = [float(valores[i]) for i in resistencias]
+            fuera = any(not (_RANGO_PRACTICO[0] <= r <= _RANGO_PRACTICO[1]) for r in rs)
+            error = max(abs(error_relativo(mas_cercano(r, serie), r)) for r in rs)
+            media = math.exp(sum(math.log(r) for r in rs) / len(rs))
+            puntaje = (fuera, round(error, 6), abs(math.log(media / _CENTRO_PRACTICO)))
+            if mejor_puntaje is None or puntaje < mejor_puntaje:
+                exactos = {i: e.subs(x, sp.nsimplify(v, rational=True)) for i, e in solucion.items()}
+                exactos[x] = sp.nsimplify(v, rational=True)
+                mejor, mejor_puntaje, libre = exactos, puntaje, x
+    return (mejor, libre) if mejor is not None else None
+
+
+def _resolver_incognitas(
+    ecuaciones: list[sp.Eq], incognitas: list[sp.Symbol], serie: str = "E24"
+) -> tuple[dict, str | None, dict | None]:
     if not ecuaciones:
-        return {}, "faltan datos: no hay mediciones para deducir las incógnitas"
+        return {}, "faltan datos: no hay mediciones para deducir las incógnitas", None
     soluciones = sp.solve(ecuaciones, incognitas, dict=True)
     if not soluciones and len(ecuaciones) > len(incognitas):
         # Mediciones redondeadas pueden dejar el sistema sobredeterminado
@@ -179,15 +227,19 @@ def _resolver_incognitas(ecuaciones: list[sp.Eq], incognitas: list[sp.Symbol]) -
                     mejor, residuo = candidata, r
         soluciones = [mejor] if mejor else []
     if not soluciones:
-        return {}, "las mediciones son incompatibles entre sí: no hay valores que las cumplan todas"
+        return {}, "las mediciones son incompatibles entre sí: no hay valores que las cumplan todas", None
     elegida = _elegir(soluciones, incognitas)
     if elegida is None:
+        comercial = _elegir_de_la_serie(soluciones, incognitas, serie)
+        if comercial is not None:
+            valores, libre = comercial
+            return valores, None, {"simbolo": str(libre), "serie": serie}
         libres = sorted({str(x) for s in soluciones for x in incognitas if x not in s})
-        return {}, f"faltan datos: con estas mediciones quedan libres {', '.join(libres)}"
+        return {}, f"faltan datos: con estas mediciones quedan libres {', '.join(libres)}", None
     libres = sorted({str(x) for v in elegida.values() for x in sp.sympify(v).free_symbols})
     if libres:
-        return {}, f"faltan datos: con estas mediciones quedan libres {', '.join(libres)}"
-    return elegida, None
+        return {}, f"faltan datos: con estas mediciones quedan libres {', '.join(libres)}", None
+    return elegida, None, None
 
 
 def resolver_planteamiento(spec: dict) -> dict:
@@ -218,8 +270,9 @@ def _resolver_planteamiento(spec: dict) -> dict:
         planteados.append({"nombre": nombre, "valores": escenario.get("valores") or {}, "ecuaciones": filas})
 
     resueltas: dict = {}
+    eleccion = None
     if incognitas:
-        resueltas, error = _resolver_incognitas(ecuaciones, incognitas)
+        resueltas, error, eleccion = _resolver_incognitas(ecuaciones, incognitas, spec.get("serie_resistencias") or "E24")
         if error:
             return {"error": error, "incognitas": {}, "escenarios": planteados, "preguntas": [], "verificacion": {"coincide": False, "escenarios": [], "preguntas": []}}
 
@@ -249,6 +302,8 @@ def _resolver_planteamiento(spec: dict) -> dict:
     return {
         "error": None,
         "incognitas": {str(k): _a_float(v) for k, v in resueltas.items()},
+        # la incógnita que dejaron libre las mediciones y se eligió de la serie
+        "eleccion": eleccion,
         "escenarios": planteados,
         "preguntas": respuestas,
         "verificacion": verificacion,
@@ -427,6 +482,7 @@ def spec_desde_outcome(outcome: dict) -> dict:
     -> el planteamiento que entiende `resolver_planteamiento`."""
     return {
         "netlist": outcome["netlist"],
+        "serie_resistencias": outcome.get("serie_resistencias"),
         "incognitas": outcome.get("incognitas") or [],
         "escenarios": [
             {
@@ -541,6 +597,14 @@ def informe_planteamiento(spec: dict, r: dict) -> str:
         lineas += [f"## {seccion}. Resultado", "", "| Incógnita | Valor |", "|---|---|"]
         lineas += [f"| ${_tex(sp.Symbol(k))}$ | {_num(v)} |" for k, v in r["incognitas"].items()]
         lineas.append("")
+        if r.get("eleccion"):
+            e = r["eleccion"]
+            lineas += [
+                f"Las mediciones fijan las razones pero dejan libre ${_tex(sp.Symbol(e['simbolo']))}$: se eligió "
+                f"el valor de la serie {e['serie']} que deja todas las resistencias en esa serie (o lo más "
+                "cerca), en el rango práctico de 1 kΩ a 1 MΩ.",
+                "",
+            ]
         seccion += 1
 
     if r["preguntas"]:

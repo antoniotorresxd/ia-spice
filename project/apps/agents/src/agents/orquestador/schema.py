@@ -328,6 +328,14 @@ class AnalysisOutcome(BaseModel):
             "El método que pidió el usuario; 'completo' si no pidió uno o pidió varios."
         ),
     )
+    serie_resistencias: Literal["E6", "E12", "E24", "E48", "E96"] | None = Field(
+        default=None,
+        description=(
+            "Serie comercial que pide el enunciado según la tolerancia de las piezas (20% → E6, "
+            "10% → E12, 5% → E24, 2% → E48, 1% → E96). Omitir si no lo dice: se usa E24. Si las "
+            "mediciones dejan libre una resistencia incógnita, el sistema la elige de esta serie."
+        ),
+    )
     terminales: list[str] | None = Field(
         default=None,
         description=(
