@@ -10,6 +10,10 @@ curso de op-amps:
   ideal (nulator-norator: V(in+) = V(in-), corriente de salida libre); con
   `a` es la VCVS interna de ganancia a, con `rd` entre las entradas y `ro`
   en serie con la salida, como el modelo del Franco (Fig. 1.5);
+- la alimentación del op-amp como parámetros (`iq=0.5m vcc=15 vee=-15`): no
+  cambia el circuito, pero da `IO(X1)` (corriente que entrega la salida),
+  `ICC(X1)`, `IEE(X1)` (lo que sale de cada riel) y `POA(X1)` (la potencia
+  disipada dentro), como en la sección de potencia del Franco;
 - valores numéricos o simbólicos (`{Ri}`), para resolver en letras;
 - dominio s (`sL`, `1/sC`) además de DC.
 
@@ -177,6 +181,10 @@ def leer_circuito(netlist: str) -> list[Componente]:
     return componentes
 
 
+# a, rd, ro: el modelo de ganancia finita; iq, vcc, vee: la alimentación.
+_PARAMETROS_OPAMP = ("a", "rd", "ro", "iq", "vcc", "vee")
+
+
 def _leer_linea(tokens: list[str], linea: str) -> Componente:
     nombre = tokens[0].upper()
     tipo = nombre[0]
@@ -227,8 +235,10 @@ def _leer_linea(tokens: list[str], linea: str) -> Componente:
                 raise RedInvalida(f"{nombre}: parámetro {par!r} sin '='")
             clave, valor = par.split("=", 1)
             clave = clave.lower()
-            if clave not in ("a", "rd", "ro"):
-                raise RedInvalida(f"{nombre}: parámetro desconocido {clave!r} (se aceptan a, rd, ro)")
+            if clave not in _PARAMETROS_OPAMP:
+                raise RedInvalida(
+                    f"{nombre}: parámetro desconocido {clave!r} (se aceptan {', '.join(_PARAMETROS_OPAMP)})"
+                )
             params[clave] = _valor(valor)
         return Componente(nombre, "X", nodos, params=params)
     except IndexError:
@@ -336,25 +346,101 @@ _V = re.compile(r"\bV\(\s*([^,()\s]+)\s*(?:,\s*([^,()\s]+)\s*)?\)", re.IGNORECAS
 _I = re.compile(r"\bI\(\s*([A-Za-z][A-Za-z0-9_]*)\s*\)", re.IGNORECASE)
 
 
-_RIN = re.compile(r"\bRin\(\s*([A-Za-z][A-Za-z0-9_]*)\s*\)", re.IGNORECASE)
+_ALIMENTACION = re.compile(r"\b(IO|ICC|IEE|POA)\(\s*([A-Za-z][A-Za-z0-9_]*)\s*\)", re.IGNORECASE)
 
 
-def _expandir_rin(expresion: str, circuito: list[Componente]) -> str:
-    """`Rin(V2)`: la resistencia de entrada que ve la fuente V2, su tensión
-    sobre la corriente que entrega al circuito. La corriente de una fuente
-    va de n+ a n- por dentro, así que la que entrega es -I(V2). Con ella un
-    requisito como "Ri2 = 100k" se mide en vez de confundirse con el valor
-    de una resistencia (la de un divisor de entrada es R3 + R4, no R3)."""
+def corriente_de_salida(solucion: "SolucionSimbolica", nombre: str) -> sp.Expr:
+    """La corriente que entrega la salida del op-amp `nombre` al circuito,
+    por KCL en su nodo de salida: la suma de lo que sale de ese nodo por los
+    demás elementos. Sirve igual para la solución del motor y para la que
+    midió ngspice (que no reporta la corriente de una VCVS)."""
+    opamp = next((c for c in solucion.circuito if c.nombre == nombre and c.tipo == "X"), None)
+    if opamp is None:
+        raise RedInvalida(f"{nombre}: no es un op-amp del circuito")
+    salida = opamp.nodos[2]
+    propias = {nombre, f"R{nombre}_RO", f"E{nombre}_A", f"R{nombre}_RD"}
+    total = sp.Integer(0)
+    for c in _expandir(solucion.circuito):
+        if c.nombre in propias or salida not in c.nodos[:2] or c.tipo == "X":
+            continue
+        if c.nombre not in solucion.corrientes:
+            raise RedInvalida(f"IO({nombre}): no se conoce la corriente de {c.nombre}")
+        i = solucion.corrientes[c.nombre]
+        if c.nodos[0] == salida:
+            total += i
+        if c.nodos[1] == salida:
+            total -= i
+    # otro op-amp ideal que también maneje ese nodo lo haría indeterminado
+    if any(c.tipo == "X" and c.nombre != nombre and c.nodos[2] == salida for c in solucion.circuito):
+        raise RedInvalida(f"IO({nombre}): dos op-amps manejan el nodo {salida}")
+    return sp.simplify(total)
 
-    def sustituir(m: re.Match) -> str:
-        nombre = m.group(1).upper()
-        fuente = next((c for c in circuito if c.nombre == nombre and c.tipo == "V"), None)
-        if fuente is None:
-            raise RedInvalida(f"Rin({m.group(1)}): no es una fuente de tensión del circuito")
-        mas, menos = fuente.nodos[0], fuente.nodos[1]
-        return f"(V({mas},{menos})/(-I({fuente.nombre})))"
 
-    return _RIN.sub(sustituir, expresion)
+def _alimentacion(solucion: "SolucionSimbolica", funcion: str, nombre: str) -> sp.Expr:
+    """IO, ICC, IEE y POA del op-amp, con la convención del Franco: la
+    salida toma de VCC lo que entrega y devuelve a VEE lo que absorbe; ICC
+    e IEE son lo que sale de cada riel (positivas), y la potencia interna es
+    (VCC − VEE)·IQ más la de la etapa de salida."""
+    opamp = next((c for c in solucion.circuito if c.nombre == nombre.upper() and c.tipo == "X"), None)
+    if opamp is None:
+        raise RedInvalida(f"{funcion}({nombre}): no es un op-amp del circuito")
+    io = corriente_de_salida(solucion, opamp.nombre)
+    if funcion == "IO":
+        return io
+    iq = opamp.params.get("iq", sp.Integer(0))
+    entrega, absorbe = sp.Max(io, 0), sp.Max(-io, 0)
+    if funcion == "ICC":
+        return iq + entrega
+    if funcion == "IEE":
+        return iq + absorbe
+    faltan = [p for p in ("vcc", "vee") if p not in opamp.params]
+    if faltan:
+        raise RedInvalida(f"POA({nombre}): falta {', '.join(faltan)}= en el op-amp (la alimentación)")
+    vcc, vee = opamp.params["vcc"], opamp.params["vee"]
+    vo = solucion.tensiones.get(opamp.nodos[2], sp.Integer(0))
+    return sp.simplify((vcc - vee) * iq + (vcc - vo) * entrega + (vo - vee) * absorbe)
+
+
+_PUERTO = re.compile(r"\b(Rin|Rout)\(\s*([A-Za-z0-9_]+)\s*\)", re.IGNORECASE)
+
+
+def circuito_de_puerto(circuito: list[Componente], funcion: str, objetivo: str) -> list[Componente]:
+    """El circuito para medir una resistencia de puerto, como la define el
+    libro: las fuentes independientes en cero (V en corto, I abierta) y una
+    fuente de prueba.
+
+    - `Rin(V2)`: la fuente V2 vale 1 V y las demás 0; Rin = 1 V / la
+      corriente que entrega V2. Así "Ri2 = 100k" es una medición y no se
+      confunde con el valor de una resistencia (la de un divisor de entrada
+      es R3 + R4, no R3).
+    - `Rout(o)`: se inyecta 1 A en el nodo o; Rout = V(o).
+    """
+    funcion = funcion.lower()
+    nombre = objetivo.upper()
+    if funcion == "rin" and not any(c.nombre == nombre and c.tipo == "V" for c in circuito):
+        raise RedInvalida(f"Rin({objetivo}): no es una fuente de tensión del circuito")
+    if funcion == "rout" and not any(_nodo(objetivo) in c.nodos for c in circuito):
+        raise RedInvalida(f"Rout({objetivo}): no es un nodo del circuito")
+    nuevo = []
+    for c in circuito:
+        if c.tipo == "I":
+            continue
+        if c.tipo == "V":
+            prueba = funcion == "rin" and c.nombre == nombre
+            nuevo.append(Componente(c.nombre, "V", c.nodos, sp.Integer(1 if prueba else 0)))
+            continue
+        nuevo.append(c)
+    if funcion == "rout":
+        nuevo.append(Componente("IPRUEBA_RO", "I", (TIERRA, _nodo(objetivo)), sp.Integer(1)))
+    return nuevo
+
+
+def valor_de_puerto(solucion: "SolucionSimbolica", funcion: str, objetivo: str) -> sp.Expr:
+    """Rin o Rout leídos de la solución de `circuito_de_puerto`."""
+    if funcion.lower() == "rin":
+        return sp.simplify(1 / (-solucion.corrientes[objetivo.upper()]))
+    nodo = _nodo(objetivo)
+    return sp.Integer(0) if nodo == TIERRA else solucion.tensiones[nodo]
 
 
 def evaluar(solucion: SolucionSimbolica, expresion: str) -> sp.Expr:
@@ -383,8 +469,16 @@ def evaluar(solucion: SolucionSimbolica, expresion: str) -> sp.Expr:
         locales[clave] = solucion.corrientes[nombre]
         return f"({clave})"
 
-    expresion = _expandir_rin(expresion, solucion.circuito)
-    expresion_segura(expresion)
+    def sustituir_alimentacion(m: re.Match) -> str:
+        clave = f"__a{len(locales)}"
+        locales[clave] = _alimentacion(solucion, m.group(1).upper(), m.group(2))
+        return f"({clave})"
+
+    # Las funciones de alimentación se reemplazan antes de validar: el
+    # marcador que dejan empieza con "__", que la validación rechaza en el
+    # texto del LLM; por eso se valida el texto original sin ellas.
+    expresion_segura(_ALIMENTACION.sub("0", expresion))
+    expresion = _ALIMENTACION.sub(sustituir_alimentacion, expresion)
     texto = _I.sub(sustituir_i, _V.sub(sustituir_v, expresion))
     try:
         return sp.simplify(a_sympy(texto, {**locales, "s": S}))

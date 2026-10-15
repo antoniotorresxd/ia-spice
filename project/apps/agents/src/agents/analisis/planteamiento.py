@@ -28,6 +28,9 @@ import sympy as sp
 
 from agents.analisis.red import RedInvalida, _ingenieria, fmt
 from agents.analisis.simbolico import (
+    _PUERTO,
+    circuito_de_puerto,
+    valor_de_puerto,
     S,
     Componente,
     _valor,
@@ -122,7 +125,11 @@ class _Caso:
 
     def calcular(self, expresion: str) -> sp.Expr:
         """Una expresión del motor; si trae f0(…), Q(…), db(…, f)… esos
-        términos se evalúan en el dominio s."""
+        términos se evalúan en el dominio s, y Rin(…)/Rout(…) en su propio
+        circuito de puerto."""
+        expresion, puertos = _sustituir_puertos(self.circuito, expresion, lambda c: resolver(c, dominio="dc"))
+        if puertos:
+            return self.calcular(expresion).subs(puertos)
         if not tiene_funciones(expresion):
             return evaluar(self.dc(), expresion) if _usa_circuito(expresion) else a_sympy(expresion_segura(expresion))
         texto, valores, _ = expandir_funciones(expresion, lambda a: evaluar(self.s(), a), _cantidad)
@@ -133,8 +140,23 @@ class _Caso:
         return sp.simplify(evaluar(self.s(), expresion))
 
 
+def _sustituir_puertos(circuito, expresion: str, resolver_circuito) -> tuple[str, dict]:
+    """Cada Rin(…)/Rout(…) se resuelve en su circuito de puerto con
+    `resolver_circuito` (el motor o ngspice) y queda en la expresión como un
+    símbolo PUERTO<k>, con su valor en el diccionario."""
+    valores: dict = {}
+
+    def sustituir(m: re.Match) -> str:
+        simbolo = sp.Symbol(f"PUERTO{len(valores)}")
+        solucion = resolver_circuito(circuito_de_puerto(circuito, m.group(1), m.group(2)))
+        valores[simbolo] = valor_de_puerto(solucion, m.group(1), m.group(2))
+        return str(simbolo)
+
+    return _PUERTO.sub(sustituir, expresion), valores
+
+
 def _usa_circuito(expresion: str):
-    return re.search(r"\b(?:[VI]|Rin)\s*\(", expresion, re.IGNORECASE)
+    return re.search(r"\b(?:[VI]|Rin|Rout|IO|ICC|IEE|POA|PUERTO\d+)\s*\(|\bPUERTO\d+\b", expresion, re.IGNORECASE)
 
 
 def _valores(d: dict | None) -> dict:
@@ -315,6 +337,7 @@ def _resolver_planteamiento(spec: dict) -> dict:
     verificacion = _verificar(circuito, resueltas, escenarios, preguntas, respuestas)
     return {
         "error": None,
+        "avisos": _avisos_saturacion(circuito, resueltas, escenarios + preguntas),
         "incognitas": {str(k): _a_float(v) for k, v in resueltas.items()},
         # la incógnita que dejaron libre las mediciones y se eligió de la serie
         "eleccion": eleccion,
@@ -324,17 +347,56 @@ def _resolver_planteamiento(spec: dict) -> dict:
     }
 
 
+def _avisos_saturacion(circuito, resueltas: dict, casos: list[dict]) -> list[str]:
+    """Un op-amp con su alimentación declarada (vcc=, vee=) cuya salida cae
+    fuera de los rieles está saturado: el resultado lineal (el del modelo
+    ideal y el de ngspice, que tampoco satura) no describe el circuito real."""
+    alimentados = [c for c in circuito if c.tipo == "X" and "vcc" in c.params and "vee" in c.params]
+    avisos = []
+    for k, caso_spec in enumerate(casos):
+        if not alimentados:
+            break
+        nombre = caso_spec.get("nombre") or f"caso {k + 1}"
+        try:
+            caso = _Caso(circuito, {**resueltas, **_valores(caso_spec.get("valores"))}, nombre)
+            tensiones = caso.dc().tensiones
+        except RedInvalida:
+            continue
+        for x in alimentados:
+            vo = tensiones.get(x.nodos[2])
+            if vo is None or vo.free_symbols:
+                continue
+            vo, vcc, vee = float(sp.N(vo)), float(sp.N(x.params["vcc"])), float(sp.N(x.params["vee"]))
+            if not vee < vo < vcc:
+                avisos.append(
+                    f"en «{nombre}» la salida de {x.nombre} daría {vo:.4g} V, fuera de la alimentación "
+                    f"({vee:g} V a {vcc:g} V): el op-amp satura y el resultado lineal no vale"
+                )
+    return avisos
+
+
 # --- verificación con ngspice ----------------------------------------------------------
 
 
+def _medir_puerto(circuito):
+    _, medida, error = medir_con_ngspice(circuito)
+    if error:
+        raise RedInvalida(error)
+    return medida
+
+
 def _medir_dc(caso: _Caso, expresion: str):
+    try:
+        expresion, puertos = _sustituir_puertos(caso.circuito, expresion, _medir_puerto)
+    except RedInvalida as exc:
+        return None, None, f"no se puede medir con ngspice ({exc})"
     texto, medida, error = medir_con_ngspice(caso.circuito)
     if error:
         return texto, None, error
     try:
         for nombre in caso.abiertos:
             medida.corrientes.setdefault(nombre, sp.Integer(0))
-        return texto, float(sp.N(evaluar(medida, expresion))), None
+        return texto, float(sp.N(evaluar(medida, expresion).subs(puertos))), None
     except (RedInvalida, KeyError, TypeError) as exc:
         return texto, None, f"no se puede medir {expresion} con ngspice ({exc})"
 
@@ -555,6 +617,10 @@ def _tex_expresion(expresion: str) -> str:
     """`V(o)/V(i)` -> `V_{o}/V_{i}`, `I(RL)` -> `I_{RL}`, `Rin(V2)` ->
     `R_{in,V2}` para LaTeX."""
     texto = re.sub(r"\bRin\(\s*([^()\s]+)\s*\)", r"R_{in,\1}", expresion, flags=re.IGNORECASE)
+    texto = re.sub(r"\bRout\(\s*([^()\s]+)\s*\)", r"R_{out,\1}", texto, flags=re.IGNORECASE)
+    # IO(X1) -> i_{O}, ICC(X1) -> i_{CC}, POA(X1) -> p_{OA}, con el op-amp entre corchetes
+    texto = re.sub(r"\b(IO|ICC|IEE)\(\s*([^()\s]+)\s*\)", lambda m: f"i_{{{m.group(1)[1:]}}}[{m.group(2)}]", texto, flags=re.IGNORECASE)
+    texto = re.sub(r"\bPOA\(\s*([^()\s]+)\s*\)", r"p_{OA}[\1]", texto, flags=re.IGNORECASE)
     texto = re.sub(r"\bV\(\s*([^,()\s]+)\s*,\s*([^,()\s]+)\s*\)", r"V_{\1\2}", texto)
     texto = re.sub(r"\bV\(\s*([^()\s]+)\s*\)", r"V_{\1}", texto)
     texto = re.sub(r"\bI\(\s*([^()\s]+)\s*\)", r"I_{\1}", texto)
@@ -637,6 +703,9 @@ def informe_planteamiento(spec: dict, r: dict) -> str:
                 f"- ${_tex_expresion(p['calcular'])}$" + (f" con {condiciones}" if condiciones else "") + f" = **{_num(p['valor'])}**"
             )
         lineas.append("")
+
+    for aviso in r.get("avisos") or []:
+        lineas += [f"> ⚠ {aviso[0].upper()}{aviso[1:]}.", ""]
 
     v = r["verificacion"]
     lineas += [f"## {seccion}. Verificación con ngspice", ""]

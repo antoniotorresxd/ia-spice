@@ -254,6 +254,32 @@ class Escenario(BaseModel):
     mediciones: list[Medicion] = Field(default_factory=list)
 
 
+class Requisito(BaseModel):
+    """Un dato o requisito del enunciado y cómo quedó en el planteamiento.
+
+    Sirve para comprobar, sin LLM, que nada del enunciado se perdió en la
+    transcripción: cada medición y cada pregunta declarada tiene que aparecer
+    en los escenarios o en las preguntas."""
+
+    texto: str = Field(description="Lo que dice el enunciado, breve: 'Ri2 = 100 k', 'iEE', 'standard 5% resistors'.")
+    tipo: Literal["dato", "medicion", "pregunta", "eleccion"] = Field(
+        description=(
+            "'dato': un valor que el enunciado da de un componente o fuente (va en el netlist). "
+            "'medicion': algo que el circuito debe cumplir o que se midió (una ganancia, una "
+            "resistencia de entrada o salida, una corriente, f0): va como medición de un escenario. "
+            "'pregunta': algo que se pide calcular: va en preguntas. 'eleccion': una condición "
+            "de diseño sin ecuación (la serie comercial)."
+        )
+    )
+    expresion: str = Field(
+        default="",
+        description=(
+            "Dónde quedó: para 'dato', el nombre del elemento o símbolo ('R1', 'X1', 'vS'); para "
+            "'medicion' y 'pregunta', la expresión exacta usada ('V(o)/V(i)', 'Rin(V2)', 'IEE(X1)')."
+        ),
+    )
+
+
 class Pregunta(BaseModel):
     """Algo que el problema pide calcular, en las condiciones que indique."""
 
@@ -298,6 +324,15 @@ class AnalysisOutcome(BaseModel):
             "valor que no se conoce o que cambia entre escenarios va como símbolo "
             "entre llaves: `RI i 0 {Ri}`, `RL o 0 {RL}`. NUNCA pongas un número "
             "inventado a una incógnita. Sin .control ni análisis: el sistema los agrega."
+        ),
+    )
+    requisitos: list[Requisito] | None = Field(
+        default=None,
+        description=(
+            "TODO lo que el enunciado da o pide, uno por renglón, con dónde quedó en el "
+            "planteamiento. Un comportamiento pedido (ganancia, resistencia de entrada o de "
+            "salida, corriente, potencia, f0) es 'medicion' o 'pregunta', NUNCA el valor de un "
+            "componente. Con incisos (a), (b)…, los requisitos de TODOS."
         ),
     )
     incognitas: list[str] | None = Field(

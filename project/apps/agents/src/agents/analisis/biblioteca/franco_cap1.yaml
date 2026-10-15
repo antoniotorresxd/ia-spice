@@ -1,0 +1,584 @@
+# Planteamientos de referencia: Franco, "Design with Operational Amplifiers
+# and Analog Integrated Circuits", 4.ª ed., capítulo 1.
+#
+# Cada entrada tiene tres usos:
+#  1. prueba offline (tests/test_biblioteca.py): el planteamiento, resuelto por
+#     el motor y verificado con ngspice, debe dar `esperado` (la respuesta del
+#     libro, o la calculada a mano para un problema sin respuesta publicada);
+#  2. ejemplo para el LLM: los más parecidos a un pedido nuevo se le muestran
+#     como "así se plantea" (analisis/biblioteca.py);
+#  3. banco de evaluación contra el LLM real (python -m agents.evaluacion.franco).
+#
+# Los enunciados están redactados con palabras propias (en inglés, como los
+# pegan los usuarios), no copiados del libro. `planteamiento` usa la forma del
+# schema AnalysisOutcome; `esperado` compara incógnitas por nombre y
+# preguntas por su `nombre`, con tolerancia relativa `tolerancia` (por omisión
+# 0.5 %: el libro redondea a 3 o 4 cifras).
+
+- id: franco-ej1.1
+  fuente: Franco 4.ª ed., ejemplo 1.1
+  tema: amplificador de tensión, carga en la entrada y en la salida
+  enunciado: >-
+    A voltage amplifier has an input resistance of 100 kOhm, an open-circuit gain of
+    100 V/V and an output resistance of 1 Ohm. (a) It is driven by a source with a
+    25 kOhm internal resistance and feeds a 3 Ohm load; find the overall
+    source-to-load gain. (b) Repeat for a 50 kOhm source and a 4 Ohm load.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VS s 0 {vS}
+      RS s i {Rs}
+      RI i 0 100k
+      EA x 0 i 0 100
+      RO x o 1
+      RL o 0 {RL}
+    requisitos:
+      - {texto: "Ri = 100k, Aoc = 100 V/V, Ro = 1", tipo: dato, expresion: "RI"}
+      - {texto: "overall gain with Rs = 25k, RL = 3", tipo: pregunta, expresion: "V(o)/V(s)"}
+      - {texto: "overall gain with Rs = 50k, RL = 4", tipo: pregunta, expresion: "V(o)/V(s)"}
+    preguntas:
+      - nombre: "(a) Rs = 25k, RL = 3"
+        valores: [{simbolo: vS, valor: "1"}, {simbolo: Rs, valor: "25k"}, {simbolo: RL, valor: "3"}]
+        calcular: V(o)/V(s)
+      - nombre: "(b) Rs = 50k, RL = 4"
+        valores: [{simbolo: vS, valor: "1"}, {simbolo: Rs, valor: "50k"}, {simbolo: RL, valor: "4"}]
+        calcular: V(o)/V(s)
+  esperado:
+    preguntas: {"(a) Rs = 25k, RL = 3": 60, "(b) Rs = 50k, RL = 4": 53.33}
+
+- id: franco-ej1.2
+  fuente: Franco 4.ª ed., ejemplo 1.2
+  tema: no inversor con ganancia de lazo abierto finita
+  enunciado: >-
+    A noninverting amplifier uses R1 = 2 kOhm (to ground) and R2 = 18 kOhm (feedback)
+    with vI = 1 V. Find vO when the op amp gain is a = 100 V/V, 10^4 V/V and 10^6 V/V.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VI i 0 1
+      R1 n 0 2k
+      R2 n o 18k
+      X1 i n o OPAMP a={a}
+    requisitos:
+      - {texto: "vO for a = 1e2, 1e4, 1e6", tipo: pregunta, expresion: "V(o)"}
+    preguntas:
+      - {nombre: "a = 1e2", valores: [{simbolo: a, valor: "100"}], calcular: V(o)}
+      - {nombre: "a = 1e4", valores: [{simbolo: a, valor: "1e4"}], calcular: V(o)}
+      - {nombre: "a = 1e6", valores: [{simbolo: a, valor: "1e6"}], calcular: V(o)}
+  esperado:
+    preguntas: {"a = 1e2": 9.091, "a = 1e4": 9.990, "a = 1e6": 9.9999}
+
+- id: franco-ej1.3
+  fuente: Franco 4.ª ed., ejemplo 1.3
+  tema: inversor con el modelo del 741, ganancia y resistencias de lazo cerrado
+  enunciado: >-
+    An inverting amplifier with R1 = 1 kOhm and R2 = 100 kOhm uses a 741 modeled with
+    rd = 2 MOhm, a = 200 V/mV and ro = 75 Ohm. Find the closed-loop gain, input
+    resistance and output resistance. Repeat with a lowered to 1 kV/V.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VI i 0 1
+      R1 i n 1k
+      R2 n o 100k
+      X1 0 n o OPAMP a={a} rd=2meg ro=75
+    requisitos:
+      - {texto: "741: rd = 2M, a = 200 V/mV, ro = 75", tipo: dato, expresion: "X1"}
+      - {texto: "closed-loop gain", tipo: pregunta, expresion: "V(o)/V(i)"}
+      - {texto: "input resistance", tipo: pregunta, expresion: "Rin(VI)"}
+      - {texto: "output resistance", tipo: pregunta, expresion: "Rout(o)"}
+    preguntas:
+      - {nombre: "A (a = 200k)", valores: [{simbolo: a, valor: "200k"}], calcular: V(o)/V(i)}
+      - {nombre: "Ri (a = 200k)", valores: [{simbolo: a, valor: "200k"}], calcular: Rin(VI)}
+      - {nombre: "Ro (a = 200k)", valores: [{simbolo: a, valor: "200k"}], calcular: Rout(o)}
+      - {nombre: "A (a = 1k)", valores: [{simbolo: a, valor: "1k"}], calcular: V(o)/V(i)}
+      - {nombre: "Ri (a = 1k)", valores: [{simbolo: a, valor: "1k"}], calcular: Rin(VI)}
+      - {nombre: "Ro (a = 1k)", valores: [{simbolo: a, valor: "1k"}], calcular: Rout(o)}
+  esperado:
+    preguntas:
+      "A (a = 200k)": -99.95
+      "Ri (a = 200k)": 1001
+      "Ro (a = 200k)": 0.03787
+      "A (a = 1k)": -90.82
+      "Ri (a = 1k)": 1100
+      "Ro (a = 1k)": 6.883
+
+- id: franco-fig1.14
+  fuente: Franco 4.ª ed., sección 1.4 (fig. 1.14)
+  tema: cortocircuito virtual en un circuito que no es una configuración estándar
+  enunciado: >-
+    A 6 V source has its negative terminal at node v1, which goes to ground through
+    10 kOhm; its positive terminal connects through 30 kOhm to node v2, and v2 connects
+    through 20 kOhm to node v3. An op amp has its inverting input at v2, its
+    noninverting input at v1 and its output at v3. Find v1, v2, v3 and the current
+    through the 20 kOhm resistor.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      V6 a v1 6
+      R30 a v2 30k
+      R20 v2 v3 20k
+      R10 v1 0 10k
+      X1 v1 v2 v3 OPAMP
+    requisitos:
+      - {texto: "v1, v2, v3", tipo: pregunta, expresion: "V(v3)"}
+      - {texto: "current through 20k", tipo: pregunta, expresion: "I(R20)"}
+    preguntas:
+      - {nombre: v1, valores: [], calcular: V(v1)}
+      - {nombre: v2, valores: [], calcular: V(v2)}
+      - {nombre: v3, valores: [], calcular: V(v3)}
+      - {nombre: i, valores: [], calcular: I(R20)}
+  esperado:
+    preguntas: {v1: -2, v2: -2, v3: -6, i: 0.2m}
+
+- id: franco-ej1.4
+  fuente: Franco 4.ª ed., ejemplo 1.4
+  tema: diseño de un sumador inversor con resistencias comerciales
+  enunciado: >-
+    With standard 5% resistors, design an op amp circuit whose output is
+    vO = -2(3 v1 + 4 v2 + 2 v3).
+  planteamiento:
+    mode: analysis
+    serie_resistencias: E24
+    netlist: |
+      V1 v1 0 {v1}
+      V2 v2 0 {v2}
+      V3 v3 0 {v3}
+      R1 v1 n {R1}
+      R2 v2 n {R2}
+      R3 v3 n {R3}
+      RF n o {RF}
+      X1 0 n o OPAMP
+    incognitas: [R1, R2, R3, RF]
+    requisitos:
+      - {texto: "weight of v1 is -6", tipo: medicion, expresion: "V(o)"}
+      - {texto: "weight of v2 is -8", tipo: medicion, expresion: "V(o)"}
+      - {texto: "weight of v3 is -4", tipo: medicion, expresion: "V(o)"}
+      - {texto: "standard 5% resistors", tipo: eleccion, expresion: "E24"}
+    escenarios:
+      - nombre: only v1
+        valores: [{simbolo: v1, valor: "1"}, {simbolo: v2, valor: "0"}, {simbolo: v3, valor: "0"}]
+        mediciones: [{expresion: V(o), valor: "-6"}]
+      - nombre: only v2
+        valores: [{simbolo: v1, valor: "0"}, {simbolo: v2, valor: "1"}, {simbolo: v3, valor: "0"}]
+        mediciones: [{expresion: V(o), valor: "-8"}]
+      - nombre: only v3
+        valores: [{simbolo: v1, valor: "0"}, {simbolo: v2, valor: "0"}, {simbolo: v3, valor: "1"}]
+        mediciones: [{expresion: V(o), valor: "-4"}]
+  esperado:
+    incognitas: {R1: 20k, R2: 15k, R3: 30k, RF: 120k}
+
+- id: franco-ej1.5
+  fuente: Franco 4.ª ed., ejemplo 1.5
+  tema: amplificador con offset usando la alimentación como segunda entrada
+  enunciado: >-
+    Function generators often need to amplify and shift a voltage. Using a summing
+    amplifier whose second input is one of the +/-5 V supplies, and standard 5%
+    resistors, design a circuit with vO = -10 vI + 2.5 V.
+  planteamiento:
+    mode: analysis
+    serie_resistencias: E24
+    netlist: |
+      VI i 0 {vI}
+      VEE e 0 -5
+      R1 i n {R1}
+      R2 e n {R2}
+      RF n o {RF}
+      X1 0 n o OPAMP
+    incognitas: [R1, R2, RF]
+    requisitos:
+      - {texto: "gain -10 from vI", tipo: medicion, expresion: "V(o)"}
+      - {texto: "offset +2.5 V", tipo: medicion, expresion: "V(o)"}
+      - {texto: "+/-5 V supplies (VEE as the second input)", tipo: dato, expresion: "VEE"}
+      - {texto: "standard 5% resistors", tipo: eleccion, expresion: "E24"}
+    escenarios:
+      - nombre: vI = 0
+        valores: [{simbolo: vI, valor: "0"}]
+        mediciones: [{expresion: V(o), valor: "2.5"}]
+      - nombre: vI = 1
+        valores: [{simbolo: vI, valor: "1"}]
+        mediciones: [{expresion: V(o), valor: "-7.5"}]
+  esperado:
+    incognitas: {R1: 10k, R2: 200k, RF: 100k}
+
+- id: franco-ej1.6
+  fuente: Franco 4.ª ed., ejemplo 1.6
+  tema: diseño de un amplificador de diferencia con resistencias de entrada dadas
+  enunciado: >-
+    Design an op amp circuit with vO = v2 - 3 v1 whose input resistances seen by
+    v1 and by v2 are both 100 kOhm.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      V1 v1 0 {v1}
+      V2 v2 0 {v2}
+      R1 v1 n {R1}
+      RF n o {RF}
+      R3 v2 p {R3}
+      R4 p 0 {R4}
+      X1 p n o OPAMP
+    incognitas: [R1, RF, R3, R4]
+    requisitos:
+      - {texto: "gain -3 from v1", tipo: medicion, expresion: "V(o)"}
+      - {texto: "gain +1 from v2", tipo: medicion, expresion: "V(o)"}
+      - {texto: "Ri1 = 100k", tipo: medicion, expresion: "Rin(V1)"}
+      - {texto: "Ri2 = 100k", tipo: medicion, expresion: "Rin(V2)"}
+    escenarios:
+      - nombre: only v1
+        valores: [{simbolo: v1, valor: "1"}, {simbolo: v2, valor: "0"}]
+        mediciones: [{expresion: V(o), valor: "-3"}, {expresion: Rin(V1), valor: "100k"}]
+      - nombre: only v2
+        valores: [{simbolo: v1, valor: "0"}, {simbolo: v2, valor: "1"}]
+        mediciones: [{expresion: V(o), valor: "1"}, {expresion: Rin(V2), valor: "100k"}]
+  esperado:
+    incognitas: {R1: 100k, RF: 300k, R3: 75k, R4: 25k}
+
+- id: franco-nic
+  fuente: Franco 4.ª ed., sección 1.4 (convertidor de resistencia negativa)
+  tema: resistencia equivalente que ve una fuente de prueba
+  enunciado: >-
+    A test source v drives the noninverting input of an op amp. A 10 kOhm resistor R
+    connects that input to the op amp output, R1 = 10 kOhm goes from the inverting
+    input to ground and R2 = 20 kOhm from the inverting input to the output. Find the
+    resistance seen by the test source.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      V v 0 1
+      R v o 10k
+      R1 n 0 10k
+      R2 n o 20k
+      X1 v n o OPAMP
+    requisitos:
+      - {texto: "resistance seen by v", tipo: pregunta, expresion: "Rin(V)"}
+    preguntas:
+      - {nombre: Req, valores: [], calcular: Rin(V)}
+  esperado:
+    preguntas: {Req: -5k}
+
+- id: franco-ej1.11
+  fuente: Franco 4.ª ed., ejemplos 1.9 y 1.11
+  tema: amplificador de corriente (realimentación paralelo-serie) con a finita
+  enunciado: >-
+    In a current amplifier, a current source iI feeds the inverting input node of an
+    op amp whose noninverting input is grounded. R2 = 20 kOhm goes from that node to
+    node x, R1 = 10 kOhm from x to ground, and the load RL connects the op amp output
+    to x. With a = 100 V/V, find the current gain iO/iI (iO through RL toward x) for
+    RL = 10 kOhm and for RL = 0.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      II 0 n 1m
+      R2 n x 20k
+      R1 x 0 10k
+      RL o x {RL}
+      X1 0 n o OPAMP a=100
+    requisitos:
+      - {texto: "a = 100 V/V", tipo: dato, expresion: "X1"}
+      - {texto: "current gain with RL = 10k", tipo: pregunta, expresion: "I(RL)/I(II)"}
+      - {texto: "current gain with RL = 0", tipo: pregunta, expresion: "I(RL)/I(II)"}
+    preguntas:
+      - {nombre: "Ai, RL = 10k", valores: [{simbolo: RL, valor: "10k"}], calcular: I(RL)/I(II)}
+      - {nombre: "Ai, RL = 0", valores: [{simbolo: RL, valor: "0"}], calcular: I(RL)/I(II)}
+  esperado:
+    preguntas: {"Ai, RL = 10k": -2.9510, "Ai, RL = 0": -2.9802}
+
+- id: franco-ej1.10
+  fuente: Franco 4.ª ed., ejemplo 1.10
+  tema: no inversor y seguidor con el 741, resistencias de lazo cerrado
+  enunciado: >-
+    A 741 (rd = 2 MOhm, a = 200 V/mV, ro = 75 Ohm) is wired as a noninverting amplifier
+    with R1 = 1 kOhm and R2 = 999 kOhm. Find Ri, Av and Ro. Then repeat as a voltage
+    follower (R1 open, R2 shorted) for Av and Ro.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VI i 0 1
+      R1 n 0 {R1}
+      R2 n o {R2}
+      X1 i n o OPAMP a=200k rd=2meg ro=75
+    requisitos:
+      - {texto: "741 parameters", tipo: dato, expresion: "X1"}
+      - {texto: "Ri, Av, Ro of the noninverting amplifier", tipo: pregunta, expresion: "Rin(VI)"}
+      - {texto: "Av, Ro of the follower", tipo: pregunta, expresion: "V(o)/V(i)"}
+    preguntas:
+      - {nombre: "Ri", valores: [{simbolo: R1, valor: "1k"}, {simbolo: R2, valor: "999k"}], calcular: Rin(VI)}
+      - {nombre: "Av", valores: [{simbolo: R1, valor: "1k"}, {simbolo: R2, valor: "999k"}], calcular: V(o)/V(i)}
+      - {nombre: "Ro", valores: [{simbolo: R1, valor: "1k"}, {simbolo: R2, valor: "999k"}], calcular: Rout(o)}
+      - {nombre: "Av follower", valores: [{simbolo: R1, valor: "inf"}, {simbolo: R2, valor: "0"}], calcular: V(o)/V(i)}
+      - {nombre: "Ro follower", valores: [{simbolo: R1, valor: "inf"}, {simbolo: R2, valor: "0"}], calcular: Rout(o)}
+  esperado:
+    tolerancia: 0.01
+    preguntas: {"Ri": 402meg, "Av": 995, "Ro": 0.373, "Av follower": 0.999995, "Ro follower": 0.375m}
+
+- id: franco-ej1.12
+  fuente: Franco 4.ª ed., ejemplo 1.12
+  tema: no inversor con fuente y carga no ideales y un op-amp mediocre
+  enunciado: >-
+    A noninverting amplifier with R1 = 1 kOhm and R2 = 9 kOhm is driven by a source
+    with Rs = 15 kOhm and loaded by RL = 3 kOhm. The op amp has a = 1000 V/V,
+    rd = 10 kOhm and ro = 1 kOhm. Find the source-to-load gain vL/vS.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VS s 0 1
+      RS s p 15k
+      R1 n 0 1k
+      R2 n l 9k
+      RL l 0 3k
+      X1 p n l OPAMP a=1000 rd=10k ro=1k
+    requisitos:
+      - {texto: "op amp a = 1000, rd = 10k, ro = 1k", tipo: dato, expresion: "X1"}
+      - {texto: "vL/vS", tipo: pregunta, expresion: "V(l)/V(s)"}
+    preguntas:
+      - {nombre: "vL/vS", valores: [], calcular: V(l)/V(s)}
+  esperado:
+    preguntas: {"vL/vS": 9.642}
+
+- id: franco-ej1.14
+  fuente: Franco 4.ª ed., ejemplo 1.14
+  tema: inversor con red T en la realimentación
+  enunciado: >-
+    An inverting amplifier uses a T network in its feedback: R1 = 1 MOhm from the input
+    to the inverting input, R2 = 1 MOhm from there to the T node, R3 = 100 kOhm from the
+    T node to the output and R4 = 1 kOhm from the T node to ground. With a = 10^5 V/V,
+    rd = 1 MOhm and ro = 100 Ohm, find the gain and the input and output resistances.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VI i 0 1
+      R1 i n 1meg
+      R2 n x 1meg
+      R3 x o 100k
+      R4 x 0 1k
+      X1 0 n o OPAMP a=1e5 rd=1meg ro=100
+    requisitos:
+      - {texto: "op amp parameters", tipo: dato, expresion: "X1"}
+      - {texto: "gain", tipo: pregunta, expresion: "V(o)/V(i)"}
+      - {texto: "Ri", tipo: pregunta, expresion: "Rin(VI)"}
+      - {texto: "Ro", tipo: pregunta, expresion: "Rout(o)"}
+    preguntas:
+      - {nombre: A, valores: [], calcular: V(o)/V(i)}
+      - {nombre: Ri, valores: [], calcular: Rin(VI)}
+      - {nombre: Ro, valores: [], calcular: Rout(o)}
+  esperado:
+    tolerancia: 0.005
+    preguntas: {A: -100.8, Ri: 1.001meg, Ro: 0.302}
+
+- id: franco-ej1.15
+  fuente: Franco 4.ª ed., ejemplo 1.15
+  tema: corrientes de alimentación y potencia disipada en el op-amp
+  enunciado: >-
+    An inverting amplifier with R1 = 10 kOhm and R2 = 20 kOhm has vI = 3 V and drives a
+    2 kOhm load. With +/-15 V supplies and a quiescent current of 0.5 mA, find iCC, iEE
+    and iO, and the power dissipated inside the op amp.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VI i 0 3
+      R1 i n 10k
+      R2 n o 20k
+      RL o 0 2k
+      X1 0 n o OPAMP iq=0.5m vcc=15 vee=-15
+    requisitos:
+      - {texto: "+/-15 V supplies, IQ = 0.5 mA", tipo: dato, expresion: "X1"}
+      - {texto: "iCC", tipo: pregunta, expresion: "ICC(X1)"}
+      - {texto: "iEE", tipo: pregunta, expresion: "IEE(X1)"}
+      - {texto: "iO", tipo: pregunta, expresion: "IO(X1)"}
+      - {texto: "power inside the op amp", tipo: pregunta, expresion: "POA(X1)"}
+    preguntas:
+      - {nombre: vO, valores: [], calcular: V(o)}
+      - {nombre: iO, valores: [], calcular: IO(X1)}
+      - {nombre: iCC, valores: [], calcular: ICC(X1)}
+      - {nombre: iEE, valores: [], calcular: IEE(X1)}
+      - {nombre: pOA, valores: [], calcular: POA(X1)}
+  esperado:
+    # iO negativa: la salida absorbe 3.3 mA (el libro da la magnitud)
+    preguntas: {vO: -6, iO: -3.3m, iCC: 0.5m, iEE: 3.8m, pOA: 44.7m}
+
+- id: franco-ej1.16
+  fuente: Franco 4.ª ed., ejemplo 1.16
+  tema: fuente variable con potenciómetro y seguidor
+  enunciado: >-
+    A variable source covering -10 V to +10 V uses a 100 kOhm potentiometer with a
+    25 kOhm resistor from each end to the +15 V and -15 V supplies, and a 741 voltage
+    follower (rd = 2 MOhm, a = 200 V/mV, ro = 75 Ohm) buffering the wiper. Find the
+    output at both ends of the wiper travel, and the output resistance (how much the
+    output moves when a load draws current).
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VCC p 0 15
+      VEE m 0 -15
+      RA p a 25k
+      RPA a w {(1-k)*100k}
+      RPB w b {k*100k}
+      RB b m 25k
+      X1 w s s OPAMP a=200k rd=2meg ro=75
+    requisitos:
+      - {texto: "pot 100k with 25k to each supply", tipo: dato, expresion: "RPA"}
+      - {texto: "output range", tipo: pregunta, expresion: "V(s)"}
+      - {texto: "output resistance", tipo: pregunta, expresion: "Rout(s)"}
+    preguntas:
+      - {nombre: "vS, wiper at top", valores: [{simbolo: k, valor: "1"}], calcular: V(s)}
+      - {nombre: "vS, wiper at bottom", valores: [{simbolo: k, valor: "0"}], calcular: V(s)}
+      - {nombre: "Ro", valores: [{simbolo: k, valor: "1"}], calcular: Rout(s)}
+  esperado:
+    # el libro aproxima Ro = ro/(1 + a) = 0.375 mΩ; el circuito exacto da 0.379 mΩ
+    tolerancia: 0.015
+    preguntas: {"vS, wiper at top": 10, "vS, wiper at bottom": -10, "Ro": 0.375m}
+
+- id: franco-p1.1
+  fuente: Franco 4.ª ed., problema 1.1 (respuesta calculada a mano)
+  tema: deducir los parámetros de un amplificador de tensión a partir de mediciones
+  enunciado: >-
+    A 200 mV source with unknown internal resistance drives a voltage amplifier. With a
+    10 Ohm load the input reads 150 mV and the output 10 V; with no load the output
+    reads 12 V; with no load and a 30 kOhm resistor across the input, the output reads
+    9.6 V. Find the source resistance and the amplifier's Ri, Aoc and Ro.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VS s 0 0.2
+      RS s i {Rs}
+      RI i 0 {Ri}
+      RP i 0 {Rp}
+      EA x 0 i 0 {Aoc}
+      RO x o {Ro}
+      RL o 0 {RL}
+    incognitas: [Rs, Ri, Aoc, Ro]
+    requisitos:
+      - {texto: "with 10 Ohm load: vI = 150 mV, vO = 10 V", tipo: medicion, expresion: "V(o)"}
+      - {texto: "no load: vO = 12 V", tipo: medicion, expresion: "V(o)"}
+      - {texto: "no load, 30k across the input: vO = 9.6 V", tipo: medicion, expresion: "V(o)"}
+    escenarios:
+      - nombre: "RL = 10"
+        valores: [{simbolo: RL, valor: "10"}, {simbolo: Rp, valor: "inf"}]
+        mediciones: [{expresion: V(i), valor: "150m"}, {expresion: V(o), valor: "10"}]
+      - nombre: "no load"
+        valores: [{simbolo: RL, valor: "inf"}, {simbolo: Rp, valor: "inf"}]
+        mediciones: [{expresion: V(o), valor: "12"}]
+      - nombre: "no load, 30k at the input"
+        valores: [{simbolo: RL, valor: "inf"}, {simbolo: Rp, valor: "30k"}]
+        mediciones: [{expresion: V(o), valor: "9.6"}]
+  esperado:
+    incognitas: {Rs: 10k, Ri: 30k, Aoc: 80, Ro: 2}
+
+- id: franco-p1.4
+  fuente: Franco 4.ª ed., problema 1.4 (respuesta calculada a mano)
+  tema: deducir los parámetros de un amplificador de transconductancia
+  enunciado: >-
+    A transconductance amplifier is driven by vS = 150 mV through a 100 kOhm source
+    resistance. With a 40 Ohm load the input reads 125 mV and the load current is
+    230 mA; with a 60 Ohm load the input still reads 125 mV and the current is 220 mA.
+    Find Ri, Ag and Ro, and the short-circuit output current for vS = 100 mV.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VS s 0 {vS}
+      RS s i 100k
+      RI i 0 {Ri}
+      GM 0 o i 0 {Ag}
+      RO o 0 {Ro}
+      RL o 0 {RL}
+    incognitas: [Ri, Ag, Ro]
+    requisitos:
+      - {texto: "RL = 40: vI = 125 mV, iL = 230 mA", tipo: medicion, expresion: "I(RL)"}
+      - {texto: "RL = 60: vI = 125 mV, iL = 220 mA", tipo: medicion, expresion: "I(RL)"}
+      - {texto: "short-circuit current with vS = 100 mV", tipo: pregunta, expresion: "I(RL)"}
+    escenarios:
+      - nombre: "RL = 40"
+        valores: [{simbolo: vS, valor: "150m"}, {simbolo: RL, valor: "40"}]
+        mediciones: [{expresion: V(i), valor: "125m"}, {expresion: I(RL), valor: "230m"}]
+      - nombre: "RL = 60"
+        valores: [{simbolo: vS, valor: "150m"}, {simbolo: RL, valor: "60"}]
+        mediciones: [{expresion: V(i), valor: "125m"}, {expresion: I(RL), valor: "220m"}]
+    preguntas:
+      - nombre: "short-circuit current"
+        valores: [{simbolo: vS, valor: "100m"}, {simbolo: RL, valor: "0"}]
+        calcular: I(RL)
+  esperado:
+    incognitas: {Ri: 500k, Ag: 2.024, Ro: 400}
+    preguntas: {"short-circuit current": 168.67m}
+
+- id: franco-p1.9
+  fuente: Franco 4.ª ed., problema 1.9 (respuesta calculada a mano)
+  tema: no inversor de ganancia variable con potenciómetro
+  enunciado: >-
+    Design a noninverting amplifier whose gain can be varied from 1 V/V to 5 V/V with a
+    100 kOhm potentiometer.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VI i 0 1
+      X1 i n o OPAMP
+      RA o n {k*100k}
+      RB n m {(1-k)*100k}
+      R1 m 0 {R1}
+    incognitas: [R1]
+    requisitos:
+      - {texto: "maximum gain 5 V/V", tipo: medicion, expresion: "V(o)/V(i)"}
+      - {texto: "minimum gain 1 V/V", tipo: pregunta, expresion: "V(o)/V(i)"}
+      - {texto: "100k pot", tipo: dato, expresion: "RA"}
+    escenarios:
+      - nombre: "wiper for maximum gain (k = 1)"
+        valores: [{simbolo: k, valor: "1"}]
+        mediciones: [{expresion: V(o)/V(i), valor: "5"}]
+    preguntas:
+      - {nombre: "gain at k = 0", valores: [{simbolo: k, valor: "0"}], calcular: V(o)/V(i)}
+  esperado:
+    incognitas: {R1: 25k}
+    preguntas: {"gain at k = 0": 1}
+
+- id: franco-p1.10
+  fuente: Franco 4.ª ed., problema 1.10 (respuesta calculada a mano)
+  tema: inversor de ganancia variable con potenciómetro
+  enunciado: >-
+    Design an inverting amplifier whose gain can be varied from -10 V/V to 0 with a
+    100 kOhm potentiometer.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      VI i 0 1
+      R1 i n {R1}
+      RP n o {k*100k}
+      X1 0 n o OPAMP
+    incognitas: [R1]
+    requisitos:
+      - {texto: "gain -10 at one end", tipo: medicion, expresion: "V(o)/V(i)"}
+      - {texto: "gain 0 at the other end", tipo: pregunta, expresion: "V(o)/V(i)"}
+      - {texto: "100k pot", tipo: dato, expresion: "RP"}
+    escenarios:
+      - nombre: "pot at 100k (k = 1)"
+        valores: [{simbolo: k, valor: "1"}]
+        mediciones: [{expresion: V(o)/V(i), valor: "-10"}]
+    preguntas:
+      - {nombre: "gain at k = 0", valores: [{simbolo: k, valor: "0"}], calcular: V(o)/V(i)}
+  esperado:
+    incognitas: {R1: 10k}
+    preguntas: {"gain at k = 0": 0}
+
+- id: franco-p1.15
+  fuente: Franco 4.ª ed., problema 1.15 (respuesta calculada a mano)
+  tema: tensiones de nodo con un op-amp y una fuente flotante
+  enunciado: >-
+    An op amp has R1 = 10 kOhm from its inverting input to ground and a 4 V source from
+    the inverting input (negative terminal) to the output (positive terminal). Its
+    noninverting input goes to ground through 30 kOhm and to the output through
+    20 kOhm. Find vN, vP and vO.
+  planteamiento:
+    mode: analysis
+    netlist: |
+      R1 n 0 10k
+      V4 o n 4
+      X1 p n o OPAMP
+      R3 p 0 30k
+      R2 p o 20k
+    requisitos:
+      - {texto: "vN, vP, vO", tipo: pregunta, expresion: "V(o)"}
+    preguntas:
+      - {nombre: vN, valores: [], calcular: V(n)}
+      - {nombre: vP, valores: [], calcular: V(p)}
+      - {nombre: vO, valores: [], calcular: V(o)}
+  esperado:
+    preguntas: {vN: 6, vP: 6, vO: 10}
