@@ -1,4 +1,5 @@
 from agents.llm.prompts import fetch_prompt
+from agents.llm.structured import invocar_estructurado
 from agents.orquestador.schema import (
     AnalysisOutcome,
     ChatOutcome,
@@ -140,8 +141,6 @@ def extract_orchestrator_outcome(
     images: list[dict] | None = None,
     correccion: dict | None = None,
 ) -> ChatOutcome | ClarifyOutcome | DesignOutcome | AnalysisOutcome:
-    structured_model = chat_model.with_structured_output(OrchestratorResult)
-
     if circuit_context is None:
         try:
             from agents.knowledge.circuit_client import (
@@ -172,22 +171,11 @@ def extract_orchestrator_outcome(
             {"role": "user", "content": TEXTO_CORRECCION.format(error=correccion["error"])},
         ]
     try:
-        result = structured_model.invoke(messages)
+        result = invocar_estructurado(chat_model, OrchestratorResult, messages)
     except Exception as exc:  # noqa: BLE001 - cualquier fallo del LLM se tipa
-        if "structured outputs not support" in str(exc).lower() or "json_schema" in str(exc).lower():
-            try:
-                fallback_model = chat_model.with_structured_output(
-                    OrchestratorResult, method="function_calling"
-                )
-                result = fallback_model.invoke(messages)
-            except Exception as fallback_exc:
-                if images:
-                    raise _image_error(fallback_exc) from fallback_exc
-                raise ExtractionError(f"LLM extraction failed: {fallback_exc}") from fallback_exc
-        elif images:
+        if images:
             raise _image_error(exc) from exc
-        else:
-            raise ExtractionError(f"LLM extraction failed: {exc}") from exc
+        raise ExtractionError(f"LLM extraction failed: {exc}") from exc
 
     if not isinstance(result, OrchestratorResult):
         raise ExtractionError(f"LLM returned unexpected type: {type(result)}")

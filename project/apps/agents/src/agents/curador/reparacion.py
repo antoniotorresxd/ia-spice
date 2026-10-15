@@ -13,6 +13,7 @@ from pydantic import BaseModel, model_validator
 from agents.llm.factory import build_chat_model
 from agents.llm.prompts import fetch_prompt
 from agents.llm.settings_client import fetch_agent_llm
+from agents.llm.structured import invocar_estructurado
 from agents.orquestador.schema import find_unresolved_placeholders, netlist_sin_lineas
 
 # El agente al que corresponde este nodo, para pedir su configuración de LLM.
@@ -126,13 +127,14 @@ def repair_netlist(
             f"Netlist actual:\n{netlist}"
             f"{extra}"
         )
-        structured_model = chat_model.with_structured_output(NetlistReparado)
         try:
-            result = structured_model.invoke(
+            result = invocar_estructurado(
+                chat_model,
+                NetlistReparado,
                 [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_content},
-                ]
+                ],
             )
         except Exception as exc:  # noqa: BLE001 - cualquier fallo del LLM se tipa
             raise ReparacionError(f"LLM repair failed: {exc}") from exc

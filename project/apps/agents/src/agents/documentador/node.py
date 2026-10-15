@@ -13,6 +13,7 @@ from agents.documentador.schema import CircuitDocumentation
 from agents.llm.factory import build_chat_model
 from agents.llm.prompts import fetch_prompt
 from agents.llm.settings_client import LlmSettingsError, fetch_agent_llm
+from agents.llm.structured import invocar_estructurado
 from agents.state import CircuitState
 
 # El agente al que corresponde este nodo, para pedir su configuración de LLM.
@@ -179,11 +180,13 @@ def documentador_node(state: CircuitState, config: RunnableConfig | None = None)
                 + (f"{datos}\n\n" if datos else "")
                 + f"Netlist final:\n{netlist}"
             )
-            result = chat_model.with_structured_output(CircuitDocumentation).invoke(
+            result = invocar_estructurado(
+                chat_model,
+                CircuitDocumentation,
                 [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_content},
-                ]
+                ],
             )
             if not isinstance(result, CircuitDocumentation):
                 raise TypeError(f"LLM returned unexpected type: {type(result)}")

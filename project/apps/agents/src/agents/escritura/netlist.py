@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import BaseModel, model_validator
 
 from agents.knowledge.circuit_client import CircuitKnowledgeItem, fetch_circuit_detail
+from agents.llm.structured import es_rechazo_de_schema, invocar_estructurado
 from agents.orquestador.schema import find_unresolved_placeholders
 
 
@@ -133,7 +134,6 @@ def generate_writer_netlist(
     computed_values: dict[str, Any] | None = None,
 ) -> str:
     """Invoca al LLM asignado al rol de escritor (writer) para redactar el netlist SPICE."""
-    structured_model = chat_model.with_structured_output(WriterNetlist)
     computed_str = (
         f"Valores de componentes ya calculados:\n{json.dumps(computed_values, indent=2)}\n\n"
         if computed_values
@@ -162,18 +162,11 @@ def generate_writer_netlist(
         {"role": "user", "content": user_prompt},
     ]
     try:
-        result = structured_model.invoke(messages)
+        result = invocar_estructurado(chat_model, WriterNetlist, messages)
     except Exception as exc:
-        if "structured outputs not support" in str(exc).lower() or "json_schema" in str(exc).lower():
-            try:
-                fallback_model = chat_model.with_structured_output(
-                    WriterNetlist, method="function_calling"
-                )
-                result = fallback_model.invoke(messages)
-            except Exception as fallback_exc:
-                raise ValueError(f"Fallo en generación de netlist con LLM: {fallback_exc}") from fallback_exc
-        else:
-            raise
+        if es_rechazo_de_schema(exc):
+            raise ValueError(f"Fallo en generación de netlist con LLM: {exc}") from exc
+        raise
 
     if isinstance(result, WriterNetlist):
         return _ensure_title_line(result.netlist, circuit.name)
