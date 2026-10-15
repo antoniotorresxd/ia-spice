@@ -146,6 +146,17 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
   const [scrolledDown, setScrolledDown] = useState(false)
   const [awayFromLatest, setAwayFromLatest] = useState(false)
 
+  // Auto-ajuste de altura del compositor conforme el usuario escribe
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    const minH = isEditMode ? 72 : 28
+    const maxH = 180
+    const scrollH = el.scrollHeight
+    el.style.height = `${Math.min(Math.max(scrollH, minH), maxH)}px`
+  }, [text, isEditMode])
+
 
   const insertFormat = (prefix: string, suffix: string = '') => {
     const textarea = textareaRef.current
@@ -664,33 +675,47 @@ export function ConversationScreen({ service }: { service: WorkspaceService }) {
                 onChange={(event) => setText(event.target.value)}
                 onKeyDown={handleKeyDown}
                 onPaste={images.onPaste}
-                placeholder={isEditMode ? "Escribe o edita el mensaje (Ctrl+Enter para enviar)…" : "Describe el siguiente ajuste (Enter para enviar)…"}
+                placeholder={isEditMode ? "Escribe o edita el mensaje con formato…" : "Describe el siguiente ajuste para el circuito…"}
                 value={text}
               />
 
               <div className={styles.composerFooter}>
-                <span className={styles.composerHint}>
-                  {isEditMode ? 'Enter = salto de línea · Ctrl+Enter = enviar' : 'Enter = enviar · Shift+Enter = salto de línea'}
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                  <button
-                    type="button"
-                    className={`${styles.formatToggleBtn} ${isEditMode ? styles.formatToggleBtnActive : ''}`}
-                    onClick={() => setIsEditMode((prev) => !prev)}
-                    title={isEditMode ? "Modo compacto (Enter para enviar)" : "Modo edición enriquecida (tipo Teams)"}
-                    aria-label="Alternar modo edición"
-                    aria-pressed={isEditMode}
-                  >
-                    <Pencil size={15} />
-                  </button>
+                <div className={styles.composerLeftActions}>
                   <AttachImageButton
                     disabled={pending}
                     full={images.attachments.length >= MAX_IMAGES}
                     onFiles={(files) => void images.addFiles(files)}
                   />
+                  <button
+                    type="button"
+                    className={`${styles.formatToggleBtn} ${isEditMode ? styles.formatToggleBtnActive : ''}`}
+                    onClick={() => setIsEditMode((prev) => !prev)}
+                    title={isEditMode ? "Ocultar herramientas de formato" : "Herramientas de formato (Markdown)"}
+                    aria-label="Alternar modo edición"
+                    aria-pressed={isEditMode}
+                  >
+                    <Pencil size={15} />
+                  </button>
+                </div>
+
+                <div className={styles.composerRightActions}>
+                  <span
+                    className={styles.composerHint}
+                    title={isEditMode ? "Ctrl + Enter para enviar · Enter para nueva línea" : "Enter para enviar · Shift + Enter para nueva línea"}
+                  >
+                    {isEditMode ? (
+                      <>
+                        <kbd className={styles.kbd}>Ctrl</kbd>+<kbd className={styles.kbd}>↵</kbd> enviar
+                      </>
+                    ) : (
+                      <>
+                        <kbd className={styles.kbd}>↵</kbd> enviar
+                      </>
+                    )}
+                  </span>
                   <button disabled={pending} type="submit" aria-label={pending ? 'Continuando…' : 'Continuar conversación'}>
                     <span className={styles.sendLabel}>{pending ? 'Continuando…' : 'Continuar conversación'}</span>
-                    <Send aria-hidden="true" size={18} />
+                    <Send aria-hidden="true" size={17} />
                   </button>
                 </div>
               </div>
