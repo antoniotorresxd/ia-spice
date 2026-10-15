@@ -132,6 +132,23 @@ Estado por fase del diseño de la iteración
 
 ### Detalle de lo que queda
 
+**Banco del Franco contra tu LLM (2026-10-14).** La biblioteca
+`project/apps/agents/src/agents/analisis/biblioteca/franco_cap1.yaml` tiene 20
+problemas del cap. 1 con su planteamiento de referencia; las pruebas offline ya
+garantizan que el motor da la respuesta del libro en todos. Lo que falta medir es
+si **tu LLM** llega a esos planteamientos desde el enunciado. Cada caso cuesta 1–2
+llamadas, así que conviene correr pocos a la vez (desde `project/apps/agents`, con
+server y agents locales arriba y tu `user_id`):
+
+```
+uv run --env-file .env python -m agents.evaluacion.franco --usuario <user_id> --ids franco-ej1.4,franco-ej1.5,franco-ej1.6
+```
+
+Imprime la tabla y la guarda en `project/apps/agents/evaluacion/resultados/`. Para
+un problema que falla, lo útil es la columna de qué valor del libro faltó y si
+hubo corrección. Para agregar problemas (cap. 2 en adelante) se agrega una
+entrada al YAML: enunciado con palabras propias, planteamiento y respuesta.
+
 **Idea en pausa — recomendar contenido de internet (2026-10-14).** Que el
 documentador sugiera material para profundizar en cada circuito. Descartado
 pedirle URLs al LLM (las inventa). Opciones evaluadas: API de Wikipedia
