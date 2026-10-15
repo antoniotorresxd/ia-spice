@@ -75,7 +75,14 @@ class GenericParams(BaseModel):
 
     description: str = Field(min_length=1)
     requirements: list[Requirement] = Field(min_length=1)
-    netlist: str = Field(min_length=1)
+    netlist: str = Field(
+        min_length=1,
+        description=(
+            "Netlist SPICE completo. Elige resistencias de la serie comercial (E24 salvo que "
+            "el enunciado pida otra, ver `serie_resistencias`): p. ej. para ganancias 6, 8 y 4 "
+            "con un Rf común, Rf = 120k con 20k, 15k y 30k, no 600k (no existe en E24)."
+        ),
+    )
 
     @model_validator(mode="after")
     def _el_netlist_mide_algo(self):
@@ -165,7 +172,20 @@ class CircuitSpec(BaseModel):
     tolerance: float = Field(
         default_factory=lambda: get_config()["curador"]["tolerance"],
         gt=0,
-        description="Tolerancia del diseño (ej. 0.05 para 5%). Omitir si no se especificó.",
+        description=(
+            "Cuánto puede desviarse la medición del objetivo (ej. 0.05 para 5%). Omitir si no "
+            "se especificó. NO es la tolerancia de las piezas: «resistencias al 5%» va en "
+            "`serie_resistencias`."
+        ),
+    )
+    serie_resistencias: Literal["E6", "E12", "E24", "E48", "E96"] | None = Field(
+        default=None,
+        description=(
+            "Serie comercial de resistencias que exige el enunciado, según la tolerancia de las "
+            "piezas que pide: 20% → E6, 10% → E12, 5% → E24, 2% → E48, 1% → E96 "
+            "(«using standard 5% resistances» → E24). Omitir si no lo dice: se usa E24. "
+            "Elige los valores del netlist en esa serie."
+        ),
     )
 
     @field_validator("max_iterations")

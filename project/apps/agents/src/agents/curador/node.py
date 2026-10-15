@@ -1,7 +1,7 @@
 from langchain_core.runnables import RunnableConfig
 
 from agents.calculo.catalog_solver import cotas_inferiores
-from agents.comerciales import ciclo_comercial, config_comerciales, forzar_avance
+from agents.comerciales import ciclo_comercial, con_serie_pedida, config_comerciales, forzar_avance
 from agents.config import get_config
 from agents.curador.policy import (
     ADJUST_RULES,
@@ -49,6 +49,7 @@ def reparar_netlist_del_bloque(
         description=params["description"],
         requirements_fallidos=requirements_fallidos,
         netlist=values["netlist"],
+        serie=block.get("serie_resistencias") or "E24",
     )
 
 
@@ -232,7 +233,7 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
         elif ciclo_comercial(
             (state.get("commercial_values") or {}).get(bid),
             [r.get("commercial_values", {}).get(bid) for r in state["history"]],
-        ) and precision.get(bid, 0) < config_comerciales(cfg)["niveles"]:
+        ) and precision.get(bid, 0) < config_comerciales(con_serie_pedida(cfg, block.get("serie_resistencias")))["niveles"]:
             # El lazo volvió a un circuito ya simulado: la corrección continua
             # no es el problema (cae entre dos valores comerciales que fallan
             # por lados opuestos). Se concede el siguiente paso de precisión
@@ -268,7 +269,7 @@ def curador_node(state: CircuitState, config: RunnableConfig | None = None) -> d
                 nuevos,
                 values,
                 block["params"].get("params"),
-                cfg,
+                con_serie_pedida(cfg, block.get("serie_resistencias")),
                 cotas_inferiores(block["params"].get("circuit_id", "")),
                 nivel=precision.get(bid, 0),
             )

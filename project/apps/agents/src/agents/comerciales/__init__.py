@@ -41,6 +41,30 @@ _SERIES_POR_DEFECTO = {
 }
 
 
+def con_serie_pedida(cfg: dict, serie: str | None) -> dict:
+    """La config con la serie de resistencias que pidió el enunciado.
+
+    Pedida explícitamente, la serie es un requisito y no una precisión que
+    se pueda subir: el escalamiento del curador conserva sus otros pasos
+    (combinar piezas) pero ya no cambia de serie de resistencias.
+    """
+    seccion = cfg.get("comerciales")
+    if not serie or not seccion:
+        return cfg
+    escalamiento = [
+        {k: v for k, v in paso.items() if k != "serie_resistencias"}
+        for paso in seccion.get("escalamiento") or []
+    ]
+    return {
+        **cfg,
+        "comerciales": {
+            **seccion,
+            "serie_resistencias": serie,
+            "escalamiento": [paso for paso in escalamiento if paso],
+        },
+    }
+
+
 def marcadores(plantilla: str) -> set[str]:
     """Nombres (normalizados) de los `{marcadores}` de una plantilla SPICE."""
     return {_normalizar(n) for n in re.findall(r"\{([A-Za-z_][A-Za-z0-9_]*)\}", plantilla)}

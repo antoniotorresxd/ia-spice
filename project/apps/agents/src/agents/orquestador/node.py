@@ -92,6 +92,8 @@ def _normalize(spec: CircuitSpec) -> dict:
                 "type": block.type,
                 "params": params,
                 "requirements": requirements,
+                # La serie que pidió el enunciado (None: la de la config, E24).
+                "serie_resistencias": spec.serie_resistencias,
                 # TODO(slice-b/c): retirar esta proyección cuando shell,
                 # escritura, documentador y evaluacion consuman requirements.
                 # Mantiene el camino de un requisito sin modificar esos módulos.

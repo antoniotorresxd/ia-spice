@@ -11,8 +11,10 @@ from agents.comerciales import (
     config_comerciales,
     comercializar,
     insertar_comentarios,
+    con_serie_pedida,
     marcadores,
 )
+from agents.comerciales.generico import comercializar_generico
 from agents.comerciales.piezas import (
     aterrizar_zener,
     comentarios_piezas,
@@ -60,8 +62,12 @@ def _write(work_dir_prefix: str, netlist_text: str) -> str:
 def _comercializar_bloque(
     block: dict, values: dict, cfg: dict, nivel: int = 0
 ) -> tuple[dict, list[dict]]:
-    # Un bloque genérico trae su netlist ya escrito por el LLM: no hay
-    # valores sueltos que redondear sin reescribirlo.
+    cfg = con_serie_pedida(cfg, block.get("serie_resistencias"))
+    # Un bloque genérico trae su netlist ya escrito por el LLM: sus R/C/L
+    # se leen de ahí y se reescriben con los valores comerciales.
+    if block["type"] == "generic":
+        netlist, materiales = comercializar_generico(values.get("netlist", ""), cfg, nivel)
+        return {**values, "netlist": netlist}, materiales
     if block["type"] != "catalog":
         return values, []
     params = block["params"]

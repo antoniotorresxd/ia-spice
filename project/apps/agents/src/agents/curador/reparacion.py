@@ -98,6 +98,7 @@ def repair_netlist(
     description: str,
     requirements_fallidos: list[dict],
     netlist: str,
+    serie: str = "E24",
 ) -> str:
     """Le pide al modelo un netlist corregido, dado lo que se midió (o el
     error de simulación) contra la meta declarada.
@@ -124,7 +125,9 @@ def repair_netlist(
         user_content = (
             f"Circuito: {description}\n"
             f"Requisitos incumplidos:\n{requisitos}\n\n"
-            f"Netlist actual:\n{netlist}"
+            f"Netlist actual:\n{netlist}\n\n"
+            f"Las resistencias se compran en la serie {serie}: elige valores de esa serie "
+            "(se redondean a ella antes de simular)."
             f"{extra}"
         )
         try:
