@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import {
   NetlistParseError,
@@ -12,6 +12,8 @@ import {
   fmtSource,
   measurementText,
   parseNetlist,
+  RAIL_Y,
+  type LayoutSymbol,
 } from './netlist-diagram'
 
 const RC_LOWPASS = [
@@ -763,4 +765,56 @@ it('las fuentes controladas no dibujan horizontales a través de nodos ajenos', 
     const xs = Object.values(buildDiagram(parseNetlist(netlist)).nodeXs)
     expect(new Set(xs).size).toBe(xs.length)
   }
+})
+
+describe('alimentaciones ±V (Franco ej. 1.16, fuente variable con pot y seguidor)', () => {
+  const POT = [
+    '* fuente variable',
+    'VCC p 0 15',
+    'VEE m 0 -15',
+    'RA p a 25k',
+    'RPA a w 0',
+    'RPB w b 100k',
+    'RB b m 25k',
+    'X1 w s s OPAMP a=200k rd=2meg ro=75',
+  ].join('\n')
+  const diagram = buildDiagram(parseNetlist(POT))
+  const vertical = (name: string) =>
+    diagram.symbols.find((s) => s.type === 'resistorV' && s.name === name) as Extract<LayoutSymbol, { type: 'resistorV' }>
+
+  it('la rama a VEE baja a un borne de −15 V y no sube al raíl de +15 V', () => {
+    const rb = vertical('RB')
+    expect(rb.y2).toBeGreaterThan(rb.y1)
+    expect(rb.y1).toBe(RAIL_Y)
+    const borne = diagram.symbols.find((s) => s.type === 'supplyTerm')
+    expect(borne).toMatchObject({ x: rb.x, label: 'VEE (−15 V)' })
+    // y no es tierra
+    expect(diagram.groundDrops).not.toContain(rb.x)
+  })
+
+  it('el raíl superior se rotula con la fuente, no con el nodo', () => {
+    expect(diagram.topRailSpan?.label).toBe('VCC (+15 V)')
+    expect(diagram.topRailSpan?.drops).toEqual([vertical('RA').x])
+  })
+
+  it('la pata de RPA no sale de la mitad de RA: se corre y un tramo la une al nodo a', () => {
+    const rpa = diagram.symbols.find((s) => s.type === 'resistorH' && s.name === 'RPA') as Extract<LayoutSymbol, { type: 'resistorH' }>
+    const ra = vertical('RA')
+    if (rpa.y < RAIL_Y) {
+      expect(rpa.x1).not.toBe(ra.x)
+      expect(diagram.symbols).toContainEqual(expect.objectContaining({ type: 'wireH', x1: ra.x, x2: rpa.x1, y: RAIL_Y }))
+    }
+  })
+
+  it('ninguna resistencia horizontal pasa sobre una rama vertical ajena', () => {
+    const verticales = diagram.symbols.filter((s) => s.type === 'resistorV') as Extract<LayoutSymbol, { type: 'resistorV' }>[]
+    const horizontales = diagram.symbols.filter((s) => s.type === 'resistorH') as Extract<LayoutSymbol, { type: 'resistorH' }>[]
+    for (const h of horizontales) {
+      for (const v of verticales) {
+        const entre = v.x > h.x1 + 1 && v.x < h.x2 - 1
+        const enSuTramo = h.y > Math.min(v.y1, v.y2) && h.y < Math.max(v.y1, v.y2)
+        expect(entre && enSuTramo, `${h.name} cruza ${v.name}`).toBe(false)
+      }
+    }
+  })
 })

@@ -67,5 +67,8 @@ it('muestra los parámetros del opamp en su etiqueta', () => {
   const netlist = ['VI i 0 0.1', 'R1 i n 10k', 'R2 n o 100k', 'X1 0 n o OPAMP a=100 rd=1meg ro=100'].join('\n')
   const { container } = render(<NetlistDiagram netlistText={netlist} showExplanation={false} />)
   const texts = [...container.querySelectorAll('svg text')].map((t) => t.textContent)
-  expect(texts).toContain('X1 · opamp a=100 rd=1meg ro=100')
+  // nombre y tipo en un renglón, parámetros en otro (en uno solo la etiqueta
+  // se extendía sobre las pistas de entrada)
+  expect(texts).toContain('X1 · opamp')
+  expect(texts).toContain('a=100 rd=1meg ro=100')
 })

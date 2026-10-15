@@ -628,6 +628,10 @@ export const OPAMP_INP_Y = 186
 export const OPAMP_INN_Y = 214
 export const EMI_Y = 275
 export const GROUND_Y = 390
+/** Borne de una alimentación negativa: sobre la tierra, para no tocar su raíl. */
+export const NEG_TERM_Y = 340
+/** Corrimiento de la pata de un elemento fuera del raíl cuando su nodo ya tiene una rama vertical. */
+export const LEG_SHIFT = 28
 export const BRANCH_SPACING = 120
 export const SERIES_SPACING = 155
 export const MARGIN_X = 70
@@ -707,6 +711,8 @@ export type LayoutSymbol =
   | { type: 'wireV'; x: number; y1: number; y2: number }
   | { type: 'wireHopH'; x1: number; x2: number; y: number; hopX: number }
   | { type: 'nodeDot'; x: number; y: number }
+  /** Extremo de una rama que va a una alimentación negativa (VEE): un borne con su tensión, sin raíl. */
+  | { type: 'supplyTerm'; x: number; y: number; label: string }
 
 export type NodeBus = {
   node: string
@@ -746,12 +752,20 @@ export type Diagram = {
   height: number
 }
 
+/** Valor DC de una fuente (`15`, `DC -15`, `-15V`). */
+function dcValue(extra: string): number {
+  return parseSpiceValue(extra.replace(/^\s*dc\s+/i, '').split(/\s+/)[0] ?? '')
+}
+
 function findSupplyRails(elements: NetlistElement[]): {
   rails: Set<string>
   railSources: Record<string, NetlistElement>
+  /** Raíles negativos (VEE, VSS o una fuente de valor < 0): se dibujan abajo. */
+  negativeRails: Set<string>
 } {
   const rails = new Set<string>()
   const railSources: Record<string, NetlistElement> = {}
+  const negativeRails = new Set<string>()
   for (const e of elements) {
     if (e.kind === 'V') {
       const [pos, neg] = e.nodes
@@ -773,11 +787,14 @@ function findSupplyRails(elements: NetlistElement[]): {
         if (isDcNamed || hasOtherSignal) {
           rails.add(pos)
           railSources[pos] = e
+          if (/^(VEE|VSS|V-)/i.test(upperName) || /^(VEE|VSS)/i.test(upperPos) || dcValue(e.extra) < 0) {
+            negativeRails.add(pos)
+          }
         }
       }
     }
   }
-  return { rails, railSources }
+  return { rails, railSources, negativeRails }
 }
 
 export type DiodeBridge = {
@@ -1110,7 +1127,11 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
   }
 
   const depth = computeDepths(parsed.elements)
-  const { rails: supplyRails, railSources } = findSupplyRails(parsed.elements)
+  const { rails: supplyRails, railSources, negativeRails } = findSupplyRails(parsed.elements)
+  // Rama de un nodo a una alimentación negativa: baja (como un shunt a tierra)
+  // y termina en un borne con su tensión. Antes subía al raíl superior y
+  // dibujaba RB conectada a +15 V en vez de a −15 V.
+  const toNegativeRail = new Map<NetlistElement, NetlistElement>()
 
   // Separar componentes:
   // 1. Shunts a tierra (nodo -> 0)
@@ -1176,6 +1197,16 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
     // La propia fuente Vcc a tierra define el raíl
     if (supplyRails.has(a) && b === GROUND) {
       continue
+    }
+
+    const negRail = negativeRails.has(a) ? a : negativeRails.has(b) ? b : null
+    if (negRail) {
+      const other = negRail === a ? b : a
+      if (other !== GROUND && !supplyRails.has(other)) {
+        ;(nodeShunts[other] ??= []).push(e)
+        toNegativeRail.set(e, railSources[negRail])
+        continue
+      }
     }
 
     // Drop desde el raíl superior de alimentación VCC
@@ -1306,6 +1337,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
   const symbols: LayoutSymbol[] = []
   const usedSymbols: Diagram['usedSymbols'] = new Set()
   const groundDrops: number[] = []
+  const negativeDrops: number[] = []
 
   const emitterNodes = new Set<string>()
   for (const e of parsed.elements) {
@@ -1332,16 +1364,25 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
 
     shunts.forEach((e, idx) => {
       const x = branches[idx] ?? nodeStartX[n]
-      groundDrops.push(x)
+      const negSource = toNegativeRail.get(e)
+      // a una alimentación negativa la rama termina en su borne, más arriba que
+      // la tierra para no tocar el raíl de tierra
+      const shuntY2 = negSource ? NEG_TERM_Y : GROUND_Y
+      if (negSource) {
+        negativeDrops.push(x)
+        symbols.push({ type: 'supplyTerm', x, y: NEG_TERM_Y, label: `${negSource.name} (${fmtSource(negSource.extra).replace(/^-/, '−')})` })
+      } else {
+        groundDrops.push(x)
+      }
 
       if (e.kind === 'R') {
-        symbols.push({ type: 'resistorV', x, y1: shuntY1, y2: GROUND_Y, name: e.name, value: fmtOhms(e.extra) })
+        symbols.push({ type: 'resistorV', x, y1: shuntY1, y2: shuntY2, name: e.name, value: fmtOhms(e.extra) })
         usedSymbols.add('resistor')
       } else if (e.kind === 'C') {
-        symbols.push({ type: 'capacitorV', x, y1: shuntY1, y2: GROUND_Y, name: e.name, value: fmtFarads(e.extra) })
+        symbols.push({ type: 'capacitorV', x, y1: shuntY1, y2: shuntY2, name: e.name, value: fmtFarads(e.extra) })
         usedSymbols.add('capacitor')
       } else if (e.kind === 'L') {
-        symbols.push({ type: 'inductorV', x, y1: shuntY1, y2: GROUND_Y, name: e.name, value: fmtHenries(e.extra) })
+        symbols.push({ type: 'inductorV', x, y1: shuntY1, y2: shuntY2, name: e.name, value: fmtHenries(e.extra) })
         usedSymbols.add('inductor')
       } else if (e.kind === 'D') {
         const isLed = e.extra.toUpperCase().includes('LED') || e.name.toUpperCase().startsWith('DLED')
@@ -1357,7 +1398,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
           type: 'diodeV',
           x,
           y1: shuntY1,
-          y2: GROUND_Y,
+          y2: shuntY2,
           name: e.name,
           value: valStr,
           isLed,
@@ -1377,7 +1418,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
           type: 'sourceV',
           x,
           y1: shuntY1,
-          y2: GROUND_Y,
+          y2: shuntY2,
           name: e.name,
           value: fmtSource(e.extra),
           isAc,
@@ -1388,7 +1429,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
           type: 'depSourceV',
           x,
           y1: shuntY1,
-          y2: GROUND_Y,
+          y2: shuntY2,
           name: e.name,
           value: dependencyText(e),
           isCurrent: isCurrentControlledOutput(e),
@@ -1431,13 +1472,30 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
       (n) => !e.nodes.includes(n) && busY(n) === y && nodeEndX[n] > x1 && nodeStartX[n] < x2,
     )
 
+  // Ramas verticales ya ubicadas: las que suben al raíl superior ocupan las
+  // pistas de arriba y las que bajan (tierra, VEE) las de abajo, con su
+  // etiqueta a la derecha. Una pista horizontal que pase por una de un nodo
+  // ajeno se dibujaba encima de ella (RPA sobre RB en un pot entre ±15 V).
+  const topDropNodes = sortedNodes.filter((n) => (topShunts[n] ?? []).length > 0)
+  const bottomDropXs = (n: string) => ((nodeShunts[n] ?? []).length ? (nodeBranches[n] ?? []) : [])
+  const crossesVertical = (e: NetlistElement, x1: number, x2: number, y: number) => {
+    const hits = (x: number) => x + 55 > x1 && x - 6 < x2
+    if (y < RAIL_Y) {
+      return topDropNodes.some((n) => !e.nodes.includes(n) && hits(nodeStartX[n] ?? MARGIN_X))
+    }
+    if (y > RAIL_Y) {
+      return sortedNodes.some((n) => !e.nodes.includes(n) && bottomDropXs(n).some(hits))
+    }
+    return false
+  }
+
   for (const e of seriesElements) {
     const [a, b] = e.nodes
     const xa = (nodeStartX[a] ?? MARGIN_X) < (nodeStartX[b] ?? MARGIN_X) ? (nodeEndX[a] ?? MARGIN_X) : (nodeStartX[a] ?? MARGIN_X)
     const xb = (nodeStartX[b] ?? MARGIN_X) < (nodeStartX[a] ?? MARGIN_X) ? (nodeEndX[b] ?? MARGIN_X) : (nodeStartX[b] ?? MARGIN_X)
 
-    const x1 = Math.min(xa, xb)
-    const x2 = Math.max(xa, xb)
+    let x1 = Math.min(xa, xb)
+    let x2 = Math.max(xa, xb)
 
     // Encontrar una pista Y libre si dos elementos horizontales se cruzan
     let targetY = RAIL_Y
@@ -1456,6 +1514,7 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
         crossesInpRoute(x1, x2, track) ||
         crossesOpamp(x1, x2, track) ||
         crossesForeignNode(e, x1, x2, track) ||
+        crossesVertical(e, x1, x2, track) ||
         placedHorizontal.some((p) => p.y === track && !(x2 <= p.x1 + 10 || x1 >= p.x2 - 10))
       if (!collides) {
         targetY = track
@@ -1467,6 +1526,23 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
       targetY = RAIL_Y - (placedHorizontal.length + 1) * 35
     }
     placedHorizontal.push({ x1, x2, y: targetY })
+    // En una pista fuera del raíl, la pata que baja (o sube) a un nodo que ya
+    // tiene una rama vertical en esa dirección se montaría sobre ella: parecería
+    // salir de la mitad de esa resistencia (RPA desde el centro de RA). La pata
+    // se corre hacia adentro y un tramo sobre el raíl la une al nodo.
+    const legClash = (node: string, x: number) =>
+      targetY < RAIL_Y
+        ? topDropNodes.includes(node) && nodeStartX[node] === x
+        : targetY > RAIL_Y && bottomDropXs(node).includes(x)
+    const [nodeAtX1, nodeAtX2] = xa <= xb ? [a, b] : [b, a]
+    if (legClash(nodeAtX1, x1)) {
+      symbols.push({ type: 'wireH', x1, x2: x1 + LEG_SHIFT, y: RAIL_Y, name: '', value: '' })
+      x1 += LEG_SHIFT
+    }
+    if (legClash(nodeAtX2, x2)) {
+      symbols.push({ type: 'wireH', x1: x2 - LEG_SHIFT, x2, y: RAIL_Y, name: '', value: '' })
+      x2 -= LEG_SHIFT
+    }
     // En pistas bajo el raíl la etiqueta va abajo: arriba choca con las
     // etiquetas de nodo, que van bajo el cable.
     const labelBelow = targetY > RAIL_Y
@@ -1702,10 +1778,12 @@ export function buildDiagram(parsed: ParsedNetlist): Diagram {
   if (topRailDrops.length > 0) {
     const minTopX = Math.min(...topRailDrops)
     const maxTopX = Math.max(...topRailDrops)
-    const railName = Array.from(supplyRails)[0] ?? 'VCC'
+    const railName = Array.from(supplyRails).find((r) => !negativeRails.has(r)) ?? 'VCC'
     const railSrc = railSources[railName]
     const railVolt = railSrc ? fmtSource(railSrc.extra) : ''
-    const label = railVolt ? `${railName.toUpperCase()} (+${railVolt})` : railName.toUpperCase()
+    // El nombre de la fuente (VCC), no el del nodo (p): es lo que se lee en un libro.
+    const shown = (railSrc?.name ?? railName).toUpperCase()
+    const label = railVolt ? `${shown} (+${railVolt})` : shown
 
     topRailSpan = {
       xStart: minTopX,

@@ -697,10 +697,26 @@ function Opamp({
       {/* Salida: tramo horizontal desde la punta del triángulo hacia outX */}
       <line x1={right} y1={RAIL_Y} x2={outX} y2={RAIL_Y} className={styles.wire} />
 
-      {/* Etiqueta identificadora del componente */}
-      <text x={cx} y={top - 20} textAnchor="middle" className={styles.lblSub}>
-        {name} · {value}
-      </text>
+      {/* Etiqueta identificadora del componente. Los parámetros (a=200k rd=2meg
+          ro=75) van en un segundo renglón: en uno solo la etiqueta se extendía
+          sobre las pistas que llegan a la entrada. */}
+      {(() => {
+        const [tipo, ...parametros] = value.split(' ')
+        return parametros.length ? (
+          <>
+            <text x={cx} y={top - 32} textAnchor="middle" className={styles.lblSub}>
+              {name} · {tipo}
+            </text>
+            <text x={cx} y={top - 20} textAnchor="middle" className={styles.lblSub}>
+              {parametros.join(' ')}
+            </text>
+          </>
+        ) : (
+          <text x={cx} y={top - 20} textAnchor="middle" className={styles.lblSub}>
+            {name} · {value}
+          </text>
+        )
+      })()}
     </g>
   )
 }
@@ -940,6 +956,17 @@ function Symbol({ symbol }: { symbol: LayoutSymbol }) {
       return <WireHopH x1={symbol.x1} x2={symbol.x2} y={symbol.y} hopX={symbol.hopX} />
     case 'nodeDot':
       return <circle cx={symbol.x} cy={symbol.y} r={3.2} className={styles.nodeDot} />
+    case 'supplyTerm':
+      // Borne de alimentación (notación concisa del Franco, fig. 1.45): la rama
+      // termina en un punto con la tensión, sin raíl que cruce el dibujo.
+      return (
+        <g>
+          <circle cx={symbol.x} cy={symbol.y} r={3.6} className={styles.nodeDot} />
+          <text x={symbol.x} y={symbol.y + 18} textAnchor="middle" className={styles.lblNode} fontWeight="bold">
+            {symbol.label}
+          </text>
+        </g>
+      )
   }
 }
 
