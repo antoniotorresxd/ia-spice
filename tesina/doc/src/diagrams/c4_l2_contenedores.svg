@@ -15,9 +15,9 @@
 <text x="607.1" y="145.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#1D4ED8" text-anchor="start">se levanta con Docker Compose</text>
 <rect x="40.0" y="168.0" width="260.0" height="236.0" rx="18" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.8" filter="url(#shadow)"/>
 <circle cx="170.0" cy="224" r="34" fill="#DBEAFE"/>
-<g transform="translate(148.0,202.0) scale(1.8333)" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" /> <path d="M22 10v6" /> <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" /></g>
+<g transform="translate(148.0,202.0) scale(1.8333)" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5" /> <path d="M20 21a8 8 0 0 0-16 0" /></g>
 <text x="170.0" y="290.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#64748B" text-anchor="middle" letter-spacing="1.4">PERSONA</text>
-<text x="170.0" y="320.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="middle">Estudiante</text>
+<text x="170.0" y="320.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="middle">Usuario</text>
 <text x="170.0" y="350.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="middle">Diseña circuitos</text>
 <text x="170.0" y="372.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="middle">conversando con el sistema</text>
 <rect x="40.0" y="470.0" width="260.0" height="404.0" rx="18" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.8" stroke-dasharray="8 6"/>
@@ -150,8 +150,8 @@
 <g transform="translate(1580.0,232.0) scale(1.3333)" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></g>
 <text x="1638.0" y="240.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#64748B" text-anchor="start" letter-spacing="1.4">SISTEMA EXTERNO</text>
 <text x="1638.0" y="270.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="start">Proveedor de IA</text>
-<text x="1572.0" y="308.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="400" fill="#475569" text-anchor="start">En la nube o local; el estudiante</text>
-<text x="1572.0" y="331.1" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="400" fill="#475569" text-anchor="start">elige cuál usa cada agente.</text>
+<text x="1572.0" y="308.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="400" fill="#475569" text-anchor="start">En la nube o local; el usuario elige</text>
+<text x="1572.0" y="331.1" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17.5" font-weight="400" fill="#475569" text-anchor="start">cuál usa cada agente.</text>
 <rect x="1572.0" y="352.2" width="116.0" height="32.0" rx="16" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.2"/>
 <svg x="1582.0" y="358.7" width="19" height="19" viewBox="0 0 24 24" fill="#191919" fill-rule="evenodd"><path d="M13.827 3.52h3.603L24 20h-3.603l-6.57-16.48zm-7.258 0h3.767L16.906 20h-3.674l-1.343-3.461H5.017l-1.344 3.46H0L6.57 3.522zm4.132 9.959L8.453 7.687 6.205 13.48H10.7z"></path></svg>
 <text x="1608.0" y="373.2" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#334155" text-anchor="start">Anthropic</text>

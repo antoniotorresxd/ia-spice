@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
-<title>Diseño conceptual: el recorrido del estudiante en el sistema</title>
+<title>Diseño conceptual: el recorrido del usuario en el sistema</title>
 <defs><marker id="ah-334155" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#334155"/></marker><marker id="ah-2563EB" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#2563EB"/></marker><marker id="ah-6D28D9" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#6D28D9"/></marker><marker id="ah-16A34A" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#16A34A"/></marker><marker id="ah-D97706" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1.5 L11,6 L1,10.5 Z" fill="#D97706"/></marker><filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.08"/></filter></defs>
 
 <rect width="1920" height="1080" fill="#FFFFFF"/>
@@ -9,7 +9,7 @@
 <line x1="40" y1="122" x2="1880" y2="122" stroke="#E2E8F0" stroke-width="2"/>
 <text x="260.0" y="178.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#64748B" text-anchor="middle" letter-spacing="1.5">FASE 1</text>
 <text x="260.0" y="238.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="50" font-weight="800" fill="#0F172A" text-anchor="middle">DESCRIBIR</text>
-<text x="260.0" y="772.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="700" fill="#0F172A" text-anchor="middle">El estudiante pide su circuito</text>
+<text x="260.0" y="772.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="700" fill="#0F172A" text-anchor="middle">El usuario pide su circuito</text>
 <text x="260.0" y="803.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="700" fill="#0F172A" text-anchor="middle">con sus propias palabras</text>
 <text x="260.0" y="850.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="500" fill="#475569" text-anchor="middle">Interfaz web conversacional</text>
 <text x="726.7" y="178.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#64748B" text-anchor="middle" letter-spacing="1.5">FASE 2</text>
@@ -32,7 +32,6 @@
 <path d="M1348.9259375000001,221 L1493.1584375,221" stroke="#2563EB" stroke-width="9" stroke-linecap="round" marker-end="url(#ah-head)"/>
 <circle cx="168.0" cy="570" r="78" fill="#DBEAFE"/>
 <g transform="translate(118.0,526.0) scale(4.1667)" fill="none" stroke="#2563EB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5" /> <path d="M20 21a8 8 0 0 0-16 0" /></g>
-<g transform="translate(132.0,458.0) scale(3.0000)" fill="none" stroke="#1E3A8A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" /> <path d="M22 10v6" /> <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" /></g>
 <path d="M238.0,330 H422.0 Q440.0,330 440.0,348 V444 Q440.0,462 422.0,462 H290.0 L242.0,502 L260.0,462 H238.0 Q220.0,462 220.0,444 V348 Q220.0,330 238.0,330 Z" fill="#FFFFFF" stroke="#2563EB" stroke-width="3.5" stroke-linejoin="round" filter="url(#shadow)"/>
 <text x="330.0" y="370.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="600" fill="#0F172A" text-anchor="middle">“Quiero un filtro</text>
 <text x="330.0" y="398.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="600" fill="#0F172A" text-anchor="middle">pasa-bajas</text>
