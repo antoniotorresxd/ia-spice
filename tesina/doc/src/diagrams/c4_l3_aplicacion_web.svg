@@ -178,9 +178,9 @@
 <text x="758.0" y="1014.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="500" fill="#64748B" text-anchor="start">App.tsx inyecta la versión HTTP; las pruebas inyectan una simulada</text>
 <rect x="1600.0" y="152.0" width="280.0" height="172.0" rx="18" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.6" filter="url(#shadow)"/>
 <circle cx="1642" cy="194" r="24" fill="#DBEAFE"/>
-<g transform="translate(1629.0,181.0) scale(1.0833)" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" /> <path d="M22 10v6" /> <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" /></g>
+<g transform="translate(1629.0,181.0) scale(1.0833)" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5" /> <path d="M20 21a8 8 0 0 0-16 0" /></g>
 <text x="1678.0" y="199.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="800" fill="#64748B" text-anchor="start" letter-spacing="1.2">PERSONA</text>
-<text x="1620.0" y="248.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="800" fill="#0F172A" text-anchor="start">Estudiante</text>
+<text x="1620.0" y="248.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="800" fill="#0F172A" text-anchor="start">Usuario</text>
 <text x="1620.0" y="276.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" fill="#475569" text-anchor="start">Diseña circuitos desde su</text>
 <text x="1620.0" y="296.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" fill="#475569" text-anchor="start">navegador</text>
 <rect x="1600.0" y="514.0" width="280.0" height="172.0" rx="18" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.6" stroke-dasharray="7 6"/>
