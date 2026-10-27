@@ -20,23 +20,6 @@
 <text x="170.0" y="320.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700" fill="#0F172A" text-anchor="middle">Usuario</text>
 <text x="170.0" y="350.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="middle">Diseña circuitos</text>
 <text x="170.0" y="372.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" fill="#475569" text-anchor="middle">conversando con el sistema</text>
-<rect x="40.0" y="470.0" width="260.0" height="404.0" rx="18" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.8" stroke-dasharray="8 6"/>
-<circle cx="84" cy="514" r="23" fill="#FEF3C7"/>
-<g transform="translate(71.0,501.0) scale(1.0833)" fill="none" stroke="#B45309" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></g>
-<text x="120.0" y="508.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#B45309" text-anchor="start" letter-spacing="1.4">SEGURIDAD</text>
-<text x="120.0" y="534.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="700" fill="#0F172A" text-anchor="start">Llaves y tokens</text>
-<text x="60.0" y="572.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">Las llaves de IA se guardan</text>
-<text x="60.0" y="594.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">cifradas. Solo el servidor</text>
-<text x="60.0" y="616.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">las descifra y se las da a los</text>
-<text x="60.0" y="638.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">agentes por la API interna.</text>
-<text x="60.0" y="672.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">Servidor y agentes usan un</text>
-<text x="60.0" y="694.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">token distinto en cada</text>
-<text x="60.0" y="716.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">sentido.</text>
-<text x="60.0" y="750.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">El código PySpice y los</text>
-<text x="60.0" y="772.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">netlists que genera la IA se</text>
-<text x="60.0" y="794.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">ejecutan aislados dentro del</text>
-<text x="60.0" y="816.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">contenedor Docker de</text>
-<text x="60.0" y="838.0" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="400" fill="#475569" text-anchor="start">agentes.</text>
 <rect x="370.0" y="178.0" width="490.0" height="235.3" rx="18" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.8" filter="url(#shadow)"/>
 <circle cx="418" cy="226" r="27" fill="#CCFBF1"/>
 <g transform="translate(402.0,210.0) scale(1.3333)" fill="none" stroke="#0D9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /> <path d="M10 4v4" /> <path d="M2 8h20" /> <path d="M6 4v4" /></g>
