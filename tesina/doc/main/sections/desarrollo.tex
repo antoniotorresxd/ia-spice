@@ -1,69 +1,173 @@
-% Capítulo 5: Desarrollo del proyecto
-\section{Desarrollo}
+% Capítulo 3 — Parte 2: Desarrollo del proyecto (desarrollo.tex)
+\section{Desarrollo del sistema}
 \label{sec:des-intro}
 
-Anteriormente se expuso el diseño del sistema: su arquitectura en el modelo C4, su descomposición funcional y de casos de uso, su comportamiento dinámico, y los marcos de calidad (sección~\ref{sec:prop-calidad}) y de seguridad (sección~\ref{sec:prop-seguridad}) que orientan la construcción. Este capítulo presenta la materialización de ese diseño en un prototipo funcional: el código fuente que lo implementa y su organización en el repositorio, las pantallas del prototipo en operación, y el análisis de seguridad de la implementación, que contrasta los controles previstos en el diseño con los efectivamente construidos.
+Con base en el diseño anterior, se construyó el prototipo funcional del sistema, cuyo código fuente se encuentra publicado en el repositorio de GitHub \url{https://github.com/antoniotorresxd/ia-spice}. A continuación se describe el modelo de base de datos, el funcionamiento del catálogo de circuitos y de los valores definidos, y las pantallas que integran la aplicación web.
 
-Podemos observar un resumen de como se comporta el sistema en su totalidad.
+\subsection{Modelo entidad-relación de la base de datos}
+\label{subsec:des-erd}
 
+La base de datos en PostgreSQL se diseñó para guardar las cuentas de usuario, la configuración de los modelos de inteligencia artificial y el historial de circuitos diseñados. La tabla central corresponde al usuario, la cual se relaciona con sus sesiones activas, sus cuentas de acceso y sus conexiones registradas hacia proveedores de IA; de estas conexiones dependen las asignaciones que indican qué modelo utiliza cada agente del sistema.
+
+Para organizar el trabajo, cada usuario puede crear varios proyectos y agrupar dentro de ellos sus conversaciones. A su vez, cada conversación concentra tres tablas principales: los mensajes intercambiados en el chat entre el usuario y el asistente, el registro de cada corrida ejecutada (donde se guardan las mediciones de las simulaciones y las decisiones del Curador) y los archivos o artefactos finales del circuito (que almacenan el código SPICE, la lista de materiales y la explicación del diseño). Adicionalmente, se cuenta con una tabla para el catálogo de circuitos base del sistema y un espacio donde el grafo de agentes guarda sus puntos de control. La relación completa entre estas entidades se muestra en la figura~\ref{fig:erd-base-datos}.
+
+% =======================================================================
+% NOTA PARA EL AUTOR — DIAGRAMA POR HACER #5: DIAGRAMA ENTIDAD-RELACIÓN (ERD en SVG)
+% Ruta sugerida: ../src/diagrams/erd_base_datos.svg
+% =======================================================================
 \begin{figure}[H]
     \centering
-    \makebox[\textwidth][c]{%
-        \hspace*{-0.5cm}\includegraphics[width=1.3\textwidth, keepaspectratio]{../src/diagrams/c4_l2_contenedores.png}%
+    \IfFileExists{../src/diagrams/erd_base_datos.png}{%
+        \includegraphics[width=1.0\textwidth, keepaspectratio]{../src/diagrams/erd_base_datos.png}%
+    }{%
+        \fbox{\parbox{0.92\textwidth}{\footnotesize\textbf{Diagrama por agregar (SVG):} \texttt{../src/diagrams/erd\_base\_datos.svg}\\[4pt]
+        Diagrama Entidad-Relación (ERD): Usuario relacionado (1:N) con Sesiones, Cuentas, Conexiones de IA, Asignaciones de Modelo por Agente, Proyectos y Conversaciones; Conversación relacionada (1:N) con Mensajes, Ejecuciones y Artefactos; más la tabla de Catálogo de Circuitos.}}%
     }
-    \caption{Diagrama de contenedores.}
-    \label{fig:diagrama-contenedores}
-
+    \caption{Diagrama Entidad-Relación (ERD) de la base de datos en PostgreSQL.}
+    \label{fig:erd-base-datos}
 \end{figure}
 
+\subsection{Catálogo de circuitos, ajuste a valores definidos y modo de análisis}
+\label{subsec:des-topologias}
 
+Para el diseño de circuitos, el sistema combina el uso de un catálogo base con el diseño de bloques abiertos. El catálogo reúne diecisiete circuitos analógicos clásicos divididos en cinco familias (divisores y fuentes, filtros pasivos y redes RLC, circuitos con diodos, etapas con transistores BJT y configuraciones con amplificadores operacionales), los cuales cuentan con sus ecuaciones de diseño listas para calcular los componentes de manera directa. Cuando el usuario solicita un circuito que no forma parte del catálogo, el sistema lo trabaja como un bloque genérico en el que el modelo de lenguaje propone el circuito SPICE y lo envía al mismo ciclo de simulación en \texttt{ngspice} y revisión del Curador. Asimismo, cuando un diseño requiere conectar varias etapas en cascada —por ejemplo, un filtro seguido de un amplificador—, cada etapa se encapsula como un subcircuito y se enlaza la salida de una con la entrada de la siguiente dentro de un mismo archivo SPICE para simular el circuito completo. En la tabla~\ref{tab:catalogo-topologias} se muestran los diecisiete circuitos del catálogo.
 
-\section{Código fuente del proyecto}
-\label{sec:des-codigo}
+\begin{table}[H]
+\centering
+\caption{Catálogo de los 17 circuitos analógicos definidos en el sistema.}
+\label{tab:catalogo-topologias}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+\textbf{Categoría} & \textbf{Circuito} & \textbf{Función principal y simulación SPICE} \\
+\midrule
+Divisores y fuentes & Divisor resistivo de tensión & Reducción de voltaje en corriente directa (\texttt{.op}). \\
+ & Fuente regulada con zéner & Rectificación, filtrado y regulación de voltaje (\texttt{.tran}). \\[4pt]
+Filtros pasivos y RLC & Filtro pasabajos RC pasivo & Filtro de primer orden con frecuencia de corte (\texttt{.ac}). \\
+ & Filtro pasabanda RLC serie & Selección de una banda de frecuencia en serie (\texttt{.ac}). \\
+ & Circuito tanque RLC paralelo & Red resonante en paralelo (\texttt{.ac}). \\[4pt]
+Redes con diodos & Recortador simple con diodo & Recorte de voltaje a un nivel definido (\texttt{.tran}). \\
+ & Recortador de doble nivel & Recorte de voltaje en ambos semiciclos (\texttt{.tran}). \\
+ & Sujetador de nivel (\textit{clamper}) & Desplazamiento del nivel de corriente directa (\texttt{.tran}). \\[4pt]
+Transistores BJT & Polarización por divisor & Ajuste del punto de operación en corriente directa (\texttt{.op}). \\
+ & Amplificador en emisor común & Amplificación de voltaje con transistor BJT (\texttt{.ac}/\texttt{.op}). \\[4pt]
+Amplificadores & Amplificador no inversor & Amplificación de voltaje manteniendo la fase. \\
+operacionales & Amplificador inversor & Amplificación de voltaje invirtiendo la fase. \\
+ & Amplificador diferencial & Amplificación de la diferencia entre dos entradas. \\
+ & Amplificador de instrumentación & Amplificación diferencial con tres operacionales. \\
+ & Filtro pasaaltos activo & Filtro activo de primer orden con ganancia (\texttt{.ac}). \\
+ & Integrador con operacional & Integración de señal con red de estabilidad (\texttt{.ac}). \\
+ & Filtro Sallen-Key pasabajos & Filtro activo pasabajos de segundo orden (\texttt{.ac}). \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
-El código fuente completo del sistema se encuentra publicado en un repositorio de GitHub, lo que permite su revisión, su reproducción y el seguimiento de su historial de desarrollo:
+Dado que las fórmulas de diseño entregan valores teóricos exactos que no siempre existen como piezas reales, antes de simular cada propuesta el sistema aproxima las resistencias, capacitores e inductores hacia los valores definidos más cercanos de las series estándar (E12, E24 y E96), o bien combina dos piezas en serie o en paralelo cuando se requiere mayor cercanía a la meta. Del mismo modo, asigna modelos SPICE definidos para los diodos, transistores BJT y amplificadores operacionales, integrando todos los elementos en la lista de materiales del circuito.
 
-\begin{center}
-\url{https://github.com/antoniotorresxd/ia-spice}
-\end{center}
-
-El repositorio se organiza como un monorepositorio con tres aplicaciones independientes bajo el directorio \texttt{project/apps/}, en correspondencia directa con los contenedores del nivel 2 del modelo C4 (sección~\ref{subsec:prop-c4-nivel2}):
-
-\begin{itemize}
-    \item \texttt{client/} — el subsistema cliente: una aplicación web construida con React y TypeScript sobre Vite, que concentra la autenticación, los espacios de trabajo y la interfaz desde la que el usuario envía sus solicitudes en lenguaje natural.
-    \item \texttt{server/} — la API del sistema: un servicio construido con el framework Hono sobre el runtime Bun, con Better Auth para la autenticación, Drizzle ORM sobre PostgreSQL (Neon) para la persistencia, y validación de esquemas con Zod. Expone, además de las rutas de autenticación, el catálogo de configuraciones de LLM que consume el subsistema de agentes.
-    \item \texttt{agents/} — el ecosistema de agentes: un proyecto en Python 3.12 que implementa, sobre LangGraph, el grafo de orquestación descrito en el capítulo anterior —orquestador, cálculo (Master-Worker), síntesis (escritura y shell) y curador— con PySpice para la generación de netlists y el motor ngspice para la simulación.
-\end{itemize}
-
-Cada aplicación gestiona sus propias dependencias con su gestor correspondiente (\texttt{npm}, \texttt{bun} y \texttt{uv}, respectivamente) y cuenta con su propia suite de pruebas automatizadas, cuyos resultados se documentan en el capítulo de pruebas. El historial de \textit{commits} del repositorio registra la evolución incremental del desarrollo, con mensajes bajo la convención \textit{conventional commits} que distinguen funcionalidades, correcciones, pruebas y documentación.
+Por otra parte, cuando el usuario pide analizar un circuito que ya tiene valores dados en lugar de diseñar uno nuevo, el módulo de análisis plantea y resuelve las ecuaciones del circuito (por nodos, mallas, reducciones serie y paralelo o equivalente de Thévenin y Norton) para obtener los voltajes, corrientes o ganancias buscadas, comprobando el resultado contra la simulación en \texttt{ngspice} antes de entregar la explicación paso a paso.
 
 \section{Pantallas del prototipo funcional}
 \label{sec:des-pantallas}
 
-Las siguientes capturas muestran el prototipo funcional en operación y evidencian que el subsistema cliente materializa los casos de uso de acceso y de solicitud de generación descritos en la sección~\ref{subsec:prop-casos-uso}.
+La aplicación web se divide en cinco vistas principales que guían al usuario desde el acceso a su cuenta hasta la consulta y descarga de los circuitos diseñados.
 
-La pantalla de inicio de sesión (figura~\ref{fig:pantalla-login}) es la puerta de entrada al sistema. En su panel derecho ofrece el formulario de autenticación por correo y contraseña —delegada en Better Auth, conforme al diseño de seguridad— junto con las opciones de registro de cuenta nueva. El panel izquierdo comunica la propuesta del sistema y presenta la \textit{ruta de solución}: el diagrama de estados del pipeline de generación (entrada, orquestador, cálculo, síntesis, curador y los estados terminales de aceptación y rechazo), de modo que el usuario conoce, desde el acceso, el proceso de validación iterativa que seguirá su solicitud.
+\subsection{Pantalla de inicio de sesión y ruta de solución}
+\label{subsec:des-pantalla-auth}
+
+La pantalla de inicio de sesión permite entrar al sistema o registrar una cuenta nueva en el panel derecho, con soporte para tema claro y oscuro. En su panel izquierdo muestra de forma visual la ruta de solución por la que pasa cada solicitud (desde el Orquestador y el Cálculo hasta la Síntesis y el Curador), como se observa en la figura~\ref{fig:pantalla-login}.
 
 \begin{figure}[H]
     \centering
-    \makebox[\textwidth][c]{%
-        \includegraphics[width=1\textwidth, keepaspectratio]{../src/pantallas/Diseño Web Inicio 1.jpeg}%
+    \IfFileExists{../src/pantallas/pantalla_login.png}{%
+        \includegraphics[width=0.95\textwidth, keepaspectratio]{../src/pantallas/pantalla_login.png}%
+    }{%
+        \fbox{\parbox{0.92\textwidth}{\centering\vspace{1.2em}\footnotesize\texttt{Ruta de captura por agregar: ../src/pantallas/pantalla\_login.png}\vspace{1.2em}}}%
     }
-    \caption{Pantalla de inicio de sesión del prototipo, con la ruta de solución del pipeline de generación.}
+    \caption{Pantalla de inicio de sesión con el diagrama de la ruta de solución.}
     \label{fig:pantalla-login}
 \end{figure}
 
-Tras autenticarse, el usuario accede a su espacio de trabajo personal (figura~\ref{fig:pantalla-workspace}). La pantalla de inicio concentra el caso de uso central del sistema: el campo de solicitud en lenguaje natural (``Describe qué quieres diseñar''), desde el cual se envía la descripción del circuito que desencadena el flujo de generación. La pantalla ofrece además un resumen operativo del consumo del periodo —tokens utilizados, costo estimado, tasa de solicitudes exitosas y tiempo procesado—, la actividad reciente con el estado de cada solicitud (completada, en proceso o que requiere atención), los proyectos que agrupan las conversaciones del usuario, y los archivos producidos por las generaciones (netlists \texttt{.cir}, resultados \texttt{.csv} y esquemáticos \texttt{.svg}). El asistente conversacional, visible en la esquina inferior, acompaña la interpretación de resultados y el ajuste de restricciones.
+\subsection{Configuración de proveedores de IA y modelos por agente}
+\label{subsec:des-pantalla-modelos}
+
+En la vista de modelos y proveedores, el usuario registra sus llaves de acceso para servicios en la nube o servidores locales, comprueba que la conexión funcione y elige qué modelo de inteligencia artificial utilizará cada agente del sistema (Orquestador, Cálculo, Escritura, Curador y Documentador), como se muestra en la figura~\ref{fig:pantalla-modelos}.
 
 \begin{figure}[H]
     \centering
-    \makebox[\textwidth][c]{%
-        \includegraphics[width=1\textwidth, keepaspectratio]{../src/pantallas/Diseño Web Interfaz inicial.jpeg}%
+    \IfFileExists{../src/pantallas/pantalla_modelos.png}{%
+        \includegraphics[width=0.95\textwidth, keepaspectratio]{../src/pantallas/pantalla_modelos.png}%
+    }{%
+        \fbox{\parbox{0.92\textwidth}{\centering\vspace{1.2em}\footnotesize\texttt{Ruta de captura por agregar: ../src/pantallas/pantalla\_modelos.png}\vspace{1.2em}}}%
     }
-    \caption{Espacio de trabajo autenticado: solicitud en lenguaje natural, resumen operativo, actividad reciente y archivos generados.}
+    \caption{Pantalla de configuración de proveedores de IA y asignación de modelos por agente.}
+    \label{fig:pantalla-modelos}
+\end{figure}
+
+\subsection{Espacio de trabajo, nueva solicitud y avance en vivo}
+\label{subsec:des-pantalla-workspace}
+
+El espacio de trabajo principal reúne en una barra lateral los proyectos y las conversaciones del usuario, permitiendo organizarlas por carpeta y abrir un tutorial rápido sobre el uso de la interfaz, como se aprecia en la figura~\ref{fig:pantalla-workspace}. Desde ahí se accede a la pantalla de nueva solicitud para escribir en lenguaje natural el circuito que se desea diseñar o partir de un ejemplo rápido, según se muestra en la figura~\ref{fig:pantalla-creacion}.
+
+\begin{figure}[H]
+    \centering
+    \IfFileExists{../src/pantallas/pantalla_workspace.png}{%
+        \includegraphics[width=0.95\textwidth, keepaspectratio]{../src/pantallas/pantalla_workspace.png}%
+    }{%
+        \fbox{\parbox{0.92\textwidth}{\centering\vspace{1.2em}\footnotesize\texttt{Ruta de captura por agregar: ../src/pantallas/pantalla\_workspace.png}\vspace{1.2em}}}%
+    }
+    \caption{Espacio de trabajo principal con proyectos, conversaciones y actividad reciente.}
     \label{fig:pantalla-workspace}
 \end{figure}
 
-Posteriormente se diseñó un pequeño tutorial que le indica al usuario como interactuar con el sistema, que funcion cumple cada módulo y que información se espera de cada uno. El tutorial se encuentra disponible en la sección de ayuda del sistema (figura~\ref{fig:pantalla-tutorial}).
+\begin{figure}[H]
+    \centering
+    \IfFileExists{../src/pantallas/pantalla_nueva_solicitud.png}{%
+        \includegraphics[width=0.95\textwidth, keepaspectratio]{../src/pantallas/pantalla_nueva_solicitud.png}%
+    }{%
+        \fbox{\parbox{0.92\textwidth}{\centering\vspace{1.2em}\footnotesize\texttt{Ruta de captura por agregar: ../src/pantallas/pantalla\_nueva\_solicitud.png}\vspace{1.2em}}}%
+    }
+    \caption{Pantalla de creación de nueva solicitud en lenguaje natural.}
+    \label{fig:pantalla-creacion}
+\end{figure}
 
+Durante la ejecución de una corrida dentro de la conversación, un panel lateral muestra en vivo qué etapa está trabajando (interpretación, cálculo, simulación, curación o documentación), cuántos intentos de ajuste ha realizado el Curador y el acceso a la traza en Langfuse, como se presenta en la figura~\ref{fig:flujo-orquestador}.
 
+\begin{figure}[H]
+    \centering
+    \IfFileExists{../src/pantallas/pantalla_flujo_ejecucion.png}{%
+        \includegraphics[width=0.95\textwidth, keepaspectratio]{../src/pantallas/pantalla_flujo_ejecucion.png}%
+    }{%
+        \fbox{\parbox{0.92\textwidth}{\centering\vspace{1.2em}\footnotesize\texttt{Ruta de captura por agregar: ../src/pantallas/pantalla\_flujo\_ejecucion.png}\vspace{1.2em}}}%
+    }
+    \caption{Panel de seguimiento en vivo de las etapas de ejecución y de los ajustes del Curador.}
+    \label{fig:flujo-orquestador}
+\end{figure}
+
+\subsection{Archivos generados y Visualizador de circuitos}
+\label{subsec:des-pantalla-visualizador}
+
+Los circuitos generados en las conversaciones pueden consultarse y filtrarse por proyecto en la vista de archivos y artefactos mostrada en la figura~\ref{fig:pantalla-archivos}.
+
+\begin{figure}[H]
+    \centering
+    \IfFileExists{../src/pantallas/pantalla_archivos.png}{%
+        \includegraphics[width=0.95\textwidth, keepaspectratio]{../src/pantallas/pantalla_archivos.png}%
+    }{%
+        \fbox{\parbox{0.92\textwidth}{\centering\vspace{1.2em}\footnotesize\texttt{Ruta de captura por agregar: ../src/pantallas/pantalla\_archivos.png}\vspace{1.2em}}}%
+    }
+    \caption{Vista del repositorio de archivos y circuitos SPICE generados.}
+    \label{fig:pantalla-archivos}
+\end{figure}
+
+Al seleccionar cualquiera de los circuitos se abre el visualizador del sistema. Esta vista integra en cinco pestañas toda la información del circuito validado: el diagrama esquemático dibujado automáticamente a partir del netlist; el código SPICE listo para copiarse o descargarse; la lista de materiales que compara el valor calculado con el valor definido; la gráfica interactiva con las curvas obtenidas de \texttt{ngspice}; y la explicación paso a paso de cómo se diseñó el circuito, como se ilustra en la figura~\ref{fig:pantalla-visualizador}.
+
+\begin{figure}[H]
+    \centering
+    \IfFileExists{../src/pantallas/pantalla_visualizador.png}{%
+        \includegraphics[width=0.95\textwidth, keepaspectratio]{../src/pantallas/pantalla_visualizador.png}%
+    }{%
+        \fbox{\parbox{0.92\textwidth}{\centering\vspace{1.2em}\footnotesize\texttt{Ruta de captura por agregar: ../src/pantallas/pantalla\_visualizador.png}\vspace{1.2em}}}%
+    }
+    \caption{Visualizador de circuitos con diagrama esquemático, código SPICE, lista de materiales, gráfica de simulación y explicación del diseño.}
+    \label{fig:pantalla-visualizador}
+\end{figure}

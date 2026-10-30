@@ -23,17 +23,23 @@
 \contentsline {section}{\numberline {2.1}Diseño Conceptual}{12}{section.2.1}%
 \contentsline {section}{\numberline {2.2}Descomposición funcional y casos de uso}{13}{section.2.2}%
 \contentsline {subsection}{\numberline {2.2.1}Vista funcional}{13}{subsection.2.2.1}%
-\contentsline {subsection}{\numberline {2.2.2}Modelo de casos de uso}{14}{subsection.2.2.2}%
-\contentsline {section}{\numberline {2.3}Arquitectura del sistema (modelo C4)}{15}{section.2.3}%
-\contentsline {subsection}{\numberline {2.3.1}Nivel 1 — Contexto}{15}{subsection.2.3.1}%
-\contentsline {subsection}{\numberline {2.3.2}Nivel 2 — Contenedores}{16}{subsection.2.3.2}%
-\contentsline {subsection}{\numberline {2.3.3}Nivel 3 — Componentes}{17}{subsection.2.3.3}%
-\contentsline {section}{\numberline {2.4}Comportamiento dinámico: flujo de generación}{18}{section.2.4}%
-\contentsline {section}{\numberline {2.5}Síntesis del diseño}{21}{section.2.5}%
-\contentsline {section}{\numberline {2.6}Desarrollo}{21}{section.2.6}%
-\contentsline {section}{\numberline {2.7}Código fuente del proyecto}{22}{section.2.7}%
-\contentsline {section}{\numberline {2.8}Pantallas del prototipo funcional}{23}{section.2.8}%
+\contentsline {subsection}{\numberline {2.2.2}Casos de uso}{14}{subsection.2.2.2}%
+\contentsline {section}{\numberline {2.3}Arquitectura del sistema (modelo C4)}{14}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}Nivel 1 — Contexto}{14}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}Nivel 2 — Contenedores}{15}{subsection.2.3.2}%
+\contentsline {subsection}{\numberline {2.3.3}Nivel 3 — Componentes del servicio de agentes}{16}{subsection.2.3.3}%
+\contentsline {section}{\numberline {2.4}Comportamiento dinámico: flujo de generación y validación}{18}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}Máquina de estados y secuencia de comunicación}{18}{subsection.2.4.1}%
+\contentsline {subsection}{\numberline {2.4.2}Lazo de validación del agente Curador}{19}{subsection.2.4.2}%
+\contentsline {section}{\numberline {2.5}Desarrollo del sistema}{21}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}Modelo entidad-relación de la base de datos}{21}{subsection.2.5.1}%
+\contentsline {subsection}{\numberline {2.5.2}Catálogo de circuitos, ajuste a valores definidos y modo de análisis}{21}{subsection.2.5.2}%
+\contentsline {section}{\numberline {2.6}Pantallas del prototipo funcional}{23}{section.2.6}%
+\contentsline {subsection}{\numberline {2.6.1}Pantalla de inicio de sesión y ruta de solución}{23}{subsection.2.6.1}%
+\contentsline {subsection}{\numberline {2.6.2}Configuración de proveedores de IA y modelos por agente}{23}{subsection.2.6.2}%
+\contentsline {subsection}{\numberline {2.6.3}Espacio de trabajo, nueva solicitud y avance en vivo}{24}{subsection.2.6.3}%
+\contentsline {subsection}{\numberline {2.6.4}Archivos generados y Visualizador de circuitos}{24}{subsection.2.6.4}%
 \contentsline {chapter}{\numberline {3}Pruebas y Análisis de Resultados}{26}{chapter.3}%
 \contentsline {chapter}{\numberline {4}Conclusiones y Trabajo Futuro}{27}{chapter.4}%
-\contentsline {chapter}{Referencias}{28}{chapter*.16}%
-\contentsline {chapter}{\numberline {A}Diagramas de casos de uso}{30}{appendix.A}%
+\contentsline {chapter}{Referencias}{28}{chapter*.24}%
+\contentsline {chapter}{\numberline {A}Diagramas de casos de uso}{30}{appendix.Alph1}%

@@ -1,19 +1,23 @@
 \babel@toc {spanish}{}\relax 
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {2.1}{\ignorespaces Diseño conceptual del sistema.}}{13}{figure.caption.6}%
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Diseño conceptual del sistema en cuatro fases: describir, diseñar, verificar y entregar.}}{13}{figure.caption.6}%
 \contentsline {figure}{\numberline {2.2}{\ignorespaces Diagrama funcional del sistema.}}{14}{figure.caption.7}%
-\contentsline {figure}{\numberline {2.3}{\ignorespaces Diagrama de casos de uso: flujo de simulación y validación.}}{15}{figure.caption.8}%
-\contentsline {figure}{\numberline {2.4}{\ignorespaces C4 Nivel 1: Diagrama de contexto.}}{16}{figure.caption.9}%
-\contentsline {figure}{\numberline {2.5}{\ignorespaces C4 Nivel 2: Diagrama de contenedores.}}{17}{figure.caption.10}%
-\contentsline {figure}{\numberline {2.6}{\ignorespaces C4 Nivel 3: Diagrama de componentes.}}{18}{figure.caption.11}%
-\contentsline {figure}{\numberline {2.7}{\ignorespaces Diagrama de secuencia del flujo de generación.}}{20}{figure.caption.12}%
-\contentsline {figure}{\numberline {2.8}{\ignorespaces Diagrama de contenedores.}}{22}{figure.caption.13}%
-\contentsline {figure}{\numberline {2.9}{\ignorespaces Pantalla de inicio de sesión del prototipo, con la ruta de solución del pipeline de generación.}}{24}{figure.caption.14}%
-\contentsline {figure}{\numberline {2.10}{\ignorespaces Espacio de trabajo autenticado: solicitud en lenguaje natural, resumen operativo, actividad reciente y archivos generados.}}{25}{figure.caption.15}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces C4 Nivel 1: Diagrama de contexto del sistema.}}{15}{figure.caption.8}%
+\contentsline {figure}{\numberline {2.4}{\ignorespaces C4 Nivel 2: Diagrama de contenedores del sistema.}}{16}{figure.caption.9}%
+\contentsline {figure}{\numberline {2.5}{\ignorespaces Subgrafo de Cálculo: despacho Maestro-Trabajador en paralelo y ciclo de vida de cada trabajador.}}{17}{figure.caption.10}%
+\contentsline {figure}{\numberline {2.6}{\ignorespaces C4 Nivel 3: Componentes del servicio de agentes.}}{17}{figure.caption.11}%
+\contentsline {figure}{\numberline {2.7}{\ignorespaces Máquina de estados finita y función de transición para el control de flujo entre agentes.}}{19}{figure.caption.12}%
+\contentsline {figure}{\numberline {2.8}{\ignorespaces Diagrama de secuencia del flujo principal de generación y validación.}}{19}{figure.caption.13}%
+\contentsline {figure}{\numberline {2.9}{\ignorespaces Flujo de evaluación, decisión y ajuste del agente Curador.}}{20}{figure.caption.14}%
+\contentsline {figure}{\numberline {2.10}{\ignorespaces Diagrama Entidad-Relación (ERD) de la base de datos en PostgreSQL.}}{21}{figure.caption.15}%
+\contentsline {figure}{\numberline {2.11}{\ignorespaces Pantalla de inicio de sesión con el diagrama de la ruta de solución.}}{23}{figure.caption.17}%
+\contentsline {figure}{\numberline {2.12}{\ignorespaces Pantalla de configuración de proveedores de IA y asignación de modelos por agente.}}{23}{figure.caption.18}%
+\contentsline {figure}{\numberline {2.13}{\ignorespaces Espacio de trabajo principal con proyectos, conversaciones y actividad reciente.}}{24}{figure.caption.19}%
+\contentsline {figure}{\numberline {2.14}{\ignorespaces Pantalla de creación de nueva solicitud en lenguaje natural.}}{24}{figure.caption.20}%
+\contentsline {figure}{\numberline {2.15}{\ignorespaces Panel de seguimiento en vivo de las etapas de ejecución y de los ajustes del Curador.}}{24}{figure.caption.21}%
+\contentsline {figure}{\numberline {2.16}{\ignorespaces Vista del repositorio de archivos y circuitos SPICE generados.}}{24}{figure.caption.22}%
+\contentsline {figure}{\numberline {2.17}{\ignorespaces Visualizador de circuitos con diagrama esquemático, código SPICE, lista de materiales, gráfica de simulación y explicación del diseño.}}{25}{figure.caption.23}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {A.1}{\ignorespaces Diagrama de casos de uso: acceso y gestión de sesiones.}}{30}{figure.caption.17}%
-\contentsline {figure}{\numberline {A.2}{\ignorespaces Diagrama de casos de uso: generación de circuito.}}{31}{figure.caption.18}%
-\contentsline {figure}{\numberline {A.3}{\ignorespaces Diagrama de casos de uso: decisión del agente curador.}}{31}{figure.caption.19}%
