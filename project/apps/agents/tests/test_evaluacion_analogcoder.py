@@ -97,3 +97,28 @@ def test_sin_key_se_detiene_con_un_mensaje_claro(monkeypatch):
 
     with pytest.raises(SystemExit, match="OPENROUTER_API_KEY"):
         ac._config_llm("openrouter", "google/gemini-x")
+
+
+def test_acotar_fija_el_maximo_de_tokens_para_openrouter(monkeypatch):
+    from agents.llm.factory import build_chat_model
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-prueba")
+    llm = ac._acotar(build_chat_model(ac._config_llm("openrouter", "google/gemini-x")))
+
+    assert llm.max_tokens == ac.MAX_TOKENS
+    assert llm.extra_body["max_tokens"] == ac.MAX_TOKENS
+    assert llm.max_retries == 2
+
+
+def test_forzar_modelo_tambien_acota_los_agentes(monkeypatch):
+    import agents.orquestador.node as orq
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-prueba")
+    cfg = ac._config_llm("openrouter", "google/gemini-x")
+    monkeypatch.setattr(orq, "fetch_agent_llm", orq.fetch_agent_llm)
+    monkeypatch.setattr(orq, "build_chat_model", orq.build_chat_model)
+
+    ac._forzar_modelo(cfg)
+
+    llm = orq.build_chat_model(orq.fetch_agent_llm("x", "u"))
+    assert llm.model_name == "google/gemini-x" and llm.max_tokens == ac.MAX_TOKENS

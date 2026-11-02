@@ -273,15 +273,28 @@ def _config_llm(proveedor: str, modelo: str):
     return AgentLlmConfig(provider=proveedor, model=modelo, api_key=clave, base_url=None)
 
 
-def _acotar(llm, timeout: int = 240, reintentos: int = 2):
-    """Tiempo límite por llamada y pocos reintentos: sin esto, un límite de
-    solicitudes hace que la librería reintente en silencio por minutos."""
-    for nombre, valor in (("timeout", timeout), ("request_timeout", timeout), ("max_retries", reintentos)):
+MAX_TOKENS = 16384
+
+
+def _acotar(llm, timeout: int = 240, reintentos: int = 2, max_tokens: int = MAX_TOKENS):
+    """Tiempo límite por llamada, pocos reintentos y un máximo de tokens de
+    salida fijo. Sin máximo, el cliente pide el del modelo (hasta 65 536) y
+    OpenRouter aparta saldo para todo eso en cada llamada; además, fijarlo
+    hace el experimento reproducible. Se reporta como parámetro."""
+    for nombre, valor in (("timeout", timeout), ("request_timeout", timeout), ("max_retries", reintentos),
+                          ("max_tokens", max_tokens), ("max_output_tokens", max_tokens)):
         if hasattr(llm, nombre):
             try:
                 setattr(llm, nombre, valor)
             except Exception:  # noqa: BLE001 - algunos clientes no permiten cambiarlo
                 pass
+    # langchain-openai lo manda como max_completion_tokens; para APIs
+    # compatibles (OpenRouter) se manda también max_tokens.
+    if hasattr(llm, "extra_body"):
+        try:
+            llm.extra_body = {**(llm.extra_body or {}), "max_tokens": max_tokens}
+        except Exception:  # noqa: BLE001
+            pass
     return llm
 
 
@@ -312,6 +325,9 @@ def _forzar_modelo(cfg) -> None:
             continue
         if hasattr(m, "fetch_agent_llm"):
             m.fetch_agent_llm = lambda *a, **k: cfg
+        if hasattr(m, "build_chat_model"):
+            original = m.build_chat_model
+            m.build_chat_model = lambda config, _o=original: _acotar(_o(config))
 
 
 def generar_sistema(tarea: dict, graph, usuario: str, corrida: int) -> tuple[str, str]:
