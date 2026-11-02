@@ -122,3 +122,18 @@ def test_forzar_modelo_tambien_acota_los_agentes(monkeypatch):
 
     llm = orq.build_chat_model(orq.fetch_agent_llm("x", "u"))
     assert llm.model_name == "google/gemini-x" and llm.max_tokens == ac.MAX_TOKENS
+
+
+def test_un_sumador_referido_a_tierra_pasa_aunque_las_entradas_tengan_otro_valor_dc():
+    """Regresión: el sesgo debe ser la tierra virtual del op-amp (0 V aquí),
+    no el valor DC de la fuente de entrada (0.5 V)."""
+    codigo = (
+        "from PySpice.Spice.Netlist import Circuit\nfrom PySpice.Unit import *\n"
+        "circuit = Circuit('sumador')\n"
+        "circuit.V('in1', 'Vin1', circuit.gnd, 0.5)\ncircuit.V('in2', 'Vin2', circuit.gnd, 0.5)\n"
+        "circuit.R('1', 'Vin1', 'Vsum', 10@u_kΩ)\ncircuit.R('2', 'Vin2', 'Vsum', 10@u_kΩ)\n"
+        "circuit.R('f', 'Vout', 'Vsum', 10@u_kΩ)\n"
+        "circuit.VCVS('Aop', 'Vout', circuit.gnd, circuit.gnd, 'Vsum', 1e6)\n"
+        "simulator = circuit.simulator()\n")
+
+    assert ac.calificar(codigo, TAREAS[20])["escalon"] == "pasa"

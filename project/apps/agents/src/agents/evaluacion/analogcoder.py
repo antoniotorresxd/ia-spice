@@ -82,6 +82,27 @@ def _valor_dc(e):
 _sesgo = _valor_dc(_elegida) if _elegida is not None else 0.0
 """
 
+# En las topologías inversoras (sumador, integrador, diferenciador) la
+# referencia del op-amp es el voltaje de su tierra virtual: el nodo de suma
+# que une un elemento conectado a la entrada con uno conectado a la salida.
+# Se mide en el punto de operación del circuito tal como lo entregó el
+# modelo; así un op-amp referido a tierra da 0 V aunque la fuente de entrada
+# tenga otro valor DC. Si no se encuentra o no simula, queda la regla anterior.
+PRELUDIO_TIERRA_VIRTUAL = """
+try:
+    _pins = [(e, _nodos(e)) for e in circuit.elements]
+    _ent_n = {n for _, ns in _pins for n in ns if n.startswith('vin')}
+    _a_ent = {n for _, ns in _pins if _ent_n & set(ns) for n in ns}
+    _a_sal = {n for _, ns in _pins if 'vout' in ns for n in ns}
+    _suma = sorted(n for n in (_a_ent & _a_sal) if n not in _ent_n and n not in ('vout', '0', 'gnd'))
+    if _suma:
+        _op = circuit.simulator().operating_point()
+        _sesgo = float(_op[_suma[0]][0])
+except Exception:
+    pass
+"""
+TIERRA_VIRTUAL = {"Adder", "Integrator", "Differentiator"}
+
 # Nodos y prefijos de componentes que cada verificador busca por nombre.
 INTERFAZ = {
     "Oscillator": {"nodos": ["vout"], "componentes": []},
@@ -205,7 +226,7 @@ def armar_script(codigo: str, tarea: dict) -> str:
     preludio = ""
     if tarea["tipo"] != "Oscillator":
         verificador = verificador.replace("[BIAS_VOLTAGE]", "_sesgo")
-        preludio = PRELUDIO_SESGO
+        preludio = PRELUDIO_SESGO + (PRELUDIO_TIERRA_VIRTUAL if tarea["tipo"] in TIERRA_VIRTUAL else "")
     cuerpo = codigo.rstrip()
     if "simulator = circuit.simulator()" not in cuerpo:
         cuerpo += "\nsimulator = circuit.simulator()"
