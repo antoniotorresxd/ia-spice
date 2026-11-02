@@ -20,6 +20,10 @@
         --usuario <user_id> --corridas 5
     #    (o forzando un modelo: --proveedor google --modelo ... con su API key en el entorno)
 
+    # Con OpenRouter (una sola key para Google, OpenAI y Anthropic):
+    OPENROUTER_API_KEY=... uv run python -m agents.evaluacion.analogcoder solo \\
+        --proveedor openrouter --modelo google/<modelo>
+
 Calificación: al código PySpice del circuito se le agrega el script de
 verificación original de su tipo, como hace `gpt_run.py` de AnalogCoder, y se
 ejecuta; pasa si termina con código 0. Los verificadores no se modifican. El
@@ -250,13 +254,22 @@ def calificar(codigo: str, tarea: dict, *, timeout: int = 300) -> dict:
 
 # --------------------------------------------------------------------- generadores
 
+OPENROUTER_URL = "https://openrouter.ai/api/v1"
+
+
 def _config_llm(proveedor: str, modelo: str):
+    """Configuración del modelo para la evaluación. `openrouter` usa la API
+    compatible con OpenAI de OpenRouter (una key para los tres proveedores);
+    el modelo va con su prefijo, p. ej. google/..., openai/..., anthropic/..."""
     from agents.llm.settings_client import AgentLlmConfig
 
-    variable = {"google": "GOOGLE_API_KEY", "openai": "OPENAI_API_KEY", "anthropic": "ANTHROPIC_API_KEY"}[proveedor]
+    variable = {"google": "GOOGLE_API_KEY", "openai": "OPENAI_API_KEY", "anthropic": "ANTHROPIC_API_KEY",
+                "openrouter": "OPENROUTER_API_KEY"}[proveedor]
     clave = os.environ.get(variable)
     if not clave:
         raise SystemExit(f"falta {variable} en el entorno")
+    if proveedor == "openrouter":
+        return AgentLlmConfig(provider="openai_compatible", model=modelo, api_key=clave, base_url=OPENROUTER_URL)
     return AgentLlmConfig(provider=proveedor, model=modelo, api_key=clave, base_url=None)
 
 
@@ -405,7 +418,7 @@ def main() -> None:
         s.add_argument("--etiqueta", default=None)
         if nombre != "respuestas":
             s.add_argument("--corridas", type=int, default=5)
-            s.add_argument("--proveedor", choices=["google", "openai", "anthropic"], default=None)
+            s.add_argument("--proveedor", choices=["google", "openai", "anthropic", "openrouter"], default=None)
             s.add_argument("--modelo", default=None)
         if nombre == "sistema":
             s.add_argument("--usuario", default="evaluacion")

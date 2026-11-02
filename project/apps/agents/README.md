@@ -87,4 +87,4 @@ uv run python -m agents.evaluacion.analogcoder respuestas --carpeta respuestas/c
 uv run --env-file .env python -m agents.evaluacion.analogcoder sistema --usuario <user-id>
 ```
 
-`respuestas` grades answers pasted by hand from a chat UI, one file per run named `<task>_<run>.txt`. `sistema` runs the full graph from the task statement; it needs the server (LLM assignment) and Langfuse (prompts) from `.env`, or `--proveedor/--modelo` plus that provider's API key to force a model for every agent.
+`respuestas` grades answers pasted by hand from a chat UI, one file per run named `<task>_<run>.txt`. With OpenRouter, one key covers all providers: `OPENROUTER_API_KEY=... --proveedor openrouter --modelo google/<model>` (or `openai/...`, `anthropic/...`). `sistema` runs the full graph from the task statement; it needs the server (LLM assignment) and Langfuse (prompts) from `.env`, or `--proveedor/--modelo` plus that provider's API key to force a model for every agent.

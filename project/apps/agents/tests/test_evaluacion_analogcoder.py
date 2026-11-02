@@ -82,3 +82,18 @@ def test_los_errores_de_api_no_cuentan_como_intentos():
              {"tarea": 18, "escalon": "pasa", "paso": True}]
 
     assert "| 18 | Integrator | 1/1 |" in ac.resumir(filas, "x")
+
+
+def test_openrouter_usa_la_api_compatible_con_openai(monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-prueba")
+
+    cfg = ac._config_llm("openrouter", "google/gemini-x")
+
+    assert (cfg.provider, cfg.model, cfg.base_url) == ("openai_compatible", "google/gemini-x", ac.OPENROUTER_URL)
+
+
+def test_sin_key_se_detiene_con_un_mensaje_claro(monkeypatch):
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+
+    with pytest.raises(SystemExit, match="OPENROUTER_API_KEY"):
+        ac._config_llm("openrouter", "google/gemini-x")
