@@ -229,7 +229,7 @@ def _falta_interfaz(codigo: str, tarea: dict, timeout: int) -> str | None:
     return ", ".join(faltan) or None
 
 
-def calificar(codigo: str, tarea: dict, *, timeout: int = 300) -> dict:
+def calificar(codigo: str, tarea: dict, *, timeout: int = 120) -> dict:
     """Califica un circuito en PySpice con el verificador original."""
     if not codigo.strip():
         return {"escalon": "sin_codigo", "paso": False, "detalle": ""}
@@ -271,6 +271,18 @@ def _config_llm(proveedor: str, modelo: str):
     if proveedor == "openrouter":
         return AgentLlmConfig(provider="openai_compatible", model=modelo, api_key=clave, base_url=OPENROUTER_URL)
     return AgentLlmConfig(provider=proveedor, model=modelo, api_key=clave, base_url=None)
+
+
+def _acotar(llm, timeout: int = 240, reintentos: int = 2):
+    """Tiempo límite por llamada y pocos reintentos: sin esto, un límite de
+    solicitudes hace que la librería reintente en silencio por minutos."""
+    for nombre, valor in (("timeout", timeout), ("request_timeout", timeout), ("max_retries", reintentos)):
+        if hasattr(llm, nombre):
+            try:
+                setattr(llm, nombre, valor)
+            except Exception:  # noqa: BLE001 - algunos clientes no permiten cambiarlo
+                pass
+    return llm
 
 
 def _texto(respuesta) -> str:
@@ -380,7 +392,10 @@ def _correr(tareas, corridas, etiqueta, generar) -> list[dict]:
         for k in range(1, corridas + 1):
             inicio = time.perf_counter()
             try:
+                print(f"tarea {t['tarea_original']} corrida {k}: generando...", flush=True)
                 respuesta, codigo = generar(t, k)
+                print(f"tarea {t['tarea_original']} corrida {k}: calificando "
+                      f"({time.perf_counter() - inicio:.0f} s en generar)...", flush=True)
                 r = calificar(codigo, t)
             except Exception as exc:
                 # Un error de la API (modelo inexistente, key inválida, cuota)
@@ -401,7 +416,8 @@ def _correr(tareas, corridas, etiqueta, generar) -> list[dict]:
             filas.append({"condicion": etiqueta, "tarea": t["tarea_original"], "tipo": t["tipo"], "corrida": k,
                           "segundos": round(time.perf_counter() - inicio, 1), "respuesta": respuesta,
                           "codigo": codigo, **r})
-            print(f"tarea {t['tarea_original']} corrida {k}: {r['escalon']}", flush=True)
+            print(f"tarea {t['tarea_original']} corrida {k}: {r['escalon']} "
+                  f"({time.perf_counter() - inicio:.0f} s)", flush=True)
     return filas
 
 
@@ -446,7 +462,7 @@ def main() -> None:
             raise SystemExit("solo requiere --proveedor y --modelo")
         from agents.llm.factory import build_chat_model
 
-        llm = build_chat_model(_config_llm(a.proveedor, a.modelo))
+        llm = _acotar(build_chat_model(_config_llm(a.proveedor, a.modelo)))
         etiqueta = a.etiqueta or f"{a.modelo} solo (API, un intento)"
         guardar(_correr(tareas, a.corridas, etiqueta, lambda t, k: generar_solo(t, llm)), etiqueta, salida)
     elif a.cmd == "sistema":
