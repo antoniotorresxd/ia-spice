@@ -29,6 +29,7 @@ componentes: respetar los nombres del enunciado es parte de la tarea.
 
 Cada corrida se clasifica en escalones, como los errores de ejecución y de
 simulación que distingue AnalogCoder:
+    error_api    la llamada al modelo falló (id de modelo, key, cuota): no cuenta como intento
     sin_codigo   la respuesta no trae código / el sistema no entregó netlist
     no_ejecuta   el código o el netlist no construyen un circuito
     no_simula    ngspice no resuelve el punto de operación
@@ -322,7 +323,7 @@ def resumir(filas: list[dict], etiqueta: str) -> str:
               "|---|---|---|---|---|---|---|---|"]
     resueltas, p1s = 0, []
     for t in cargar_tareas():
-        de = [f for f in filas if f["tarea"] == t["tarea_original"]]
+        de = [f for f in filas if f["tarea"] == t["tarea_original"] and f["escalon"] != "error_api"]
         if not de:
             continue
         n, c = len(de), sum(bool(f["paso"]) for f in de)
@@ -367,9 +368,23 @@ def _correr(tareas, corridas, etiqueta, generar) -> list[dict]:
             inicio = time.perf_counter()
             try:
                 respuesta, codigo = generar(t, k)
-            except Exception as exc:  # una corrida fallida no tumba el experimento
+                r = calificar(codigo, t)
+            except Exception as exc:
+                # Un error de la API (modelo inexistente, key inválida, cuota)
+                # no es un fallo del modelo: se registra aparte y, si ocurre en
+                # las dos primeras corridas, se detiene todo para no gastar
+                # el experimento completo en errores.
                 respuesta, codigo = f"error al generar: {type(exc).__name__}: {exc}", ""
-            r = calificar(codigo, t)
+                r = {"escalon": "error_api", "paso": False, "detalle": respuesta[:600]}
+                print(f"tarea {t['tarea_original']} corrida {k}: error_api -> {respuesta[:300]}", flush=True)
+                filas.append({"condicion": etiqueta, "tarea": t["tarea_original"], "tipo": t["tipo"], "corrida": k,
+                              "segundos": round(time.perf_counter() - inicio, 1), "respuesta": respuesta,
+                              "codigo": codigo, **r})
+                if len(filas) <= 2 and all(f["escalon"] == "error_api" for f in filas):
+                    if len(filas) == 2:
+                        raise SystemExit("La API falló en las dos primeras corridas; revisa el id del modelo "
+                                         "(--modelo) y la API key. Último error:\n" + respuesta)
+                continue
             filas.append({"condicion": etiqueta, "tarea": t["tarea_original"], "tipo": t["tipo"], "corrida": k,
                           "segundos": round(time.perf_counter() - inicio, 1), "respuesta": respuesta,
                           "codigo": codigo, **r})

@@ -67,3 +67,18 @@ def test_un_circuito_equivocado_no_pasa():
     p21 = (ac.DIR / TAREAS[21]["referencia"]).read_text(encoding="utf-8")
 
     assert ac.calificar(p21, TAREAS[20])["paso"] is False
+
+
+def test_un_error_de_api_se_registra_aparte_y_detiene_el_experimento():
+    def falla(t, k):
+        raise RuntimeError("404 models/flash-3.8 is not found")
+
+    with pytest.raises(SystemExit, match="id del modelo"):
+        ac._correr([TAREAS[18]], 5, "prueba", falla)
+
+
+def test_los_errores_de_api_no_cuentan_como_intentos():
+    filas = [{"tarea": 18, "escalon": "error_api", "paso": False},
+             {"tarea": 18, "escalon": "pasa", "paso": True}]
+
+    assert "| 18 | Integrator | 1/1 |" in ac.resumir(filas, "x")
