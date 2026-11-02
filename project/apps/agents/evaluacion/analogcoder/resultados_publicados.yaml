@@ -1,0 +1,15 @@
+# Resultados publicados para las tareas 16-22. Fuente: Lai et al., "AnalogCoder:
+# Analog circuit design via training-free code generation", AAAI 2025,
+# arXiv:2405.14918v2, Tabla 3. Pass@k en %, con n = 15 corridas por tarea
+# para GPT-4o (sección "Metrics" del paper). AnalogCoder = GPT-4o + biblioteca
+# de subcircuitos + flujo de retroalimentación. La fila 22-24 del paper se
+# reporta agrupada; para la tarea 22 se toma ese valor.
+fuente: "Lai et al., AAAI 2025, arXiv:2405.14918v2, Tabla 3"
+tareas:
+  16: {gpt4o: {pass1: 0.0, pass5: 0.0}, analogcoder: {pass1: 6.7, pass5: 33.3}}
+  17: {gpt4o: {pass1: 0.0, pass5: 0.0}, analogcoder: {pass1: 0.0, pass5: 0.0}}
+  18: {gpt4o: {pass1: 0.0, pass5: 0.0}, analogcoder: {pass1: 100.0, pass5: 100.0}}
+  19: {gpt4o: {pass1: 0.0, pass5: 0.0}, analogcoder: {pass1: 60.0, pass5: 99.8}}
+  20: {gpt4o: {pass1: 0.0, pass5: 0.0}, analogcoder: {pass1: 100.0, pass5: 100.0}}
+  21: {gpt4o: {pass1: 0.0, pass5: 0.0}, analogcoder: {pass1: 20.0, pass5: 73.6}}
+  22: {gpt4o: {pass1: 0.0, pass5: 0.0}, analogcoder: {pass1: 0.0, pass5: 0.0}}
