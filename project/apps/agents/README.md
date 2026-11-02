@@ -72,3 +72,19 @@ It goes through the structured path (no LLM, deterministic) and writes to `evalu
 - `matriz.xlsx` — the test matrix with results filled in; derived columns and summary tables are Excel formulas so every figure can be audited back to its row. Conditions that need an LLM (baseline, natural language, Franco) are left as sheets to fill by hand.
 
 `python -m agents.evaluacion` (single run, markdown/LaTeX table) still works as before.
+
+### Comparison against the AnalogCoder benchmark (tasks 16–22)
+
+`evaluacion/analogcoder/` holds the board-level subset (op-amps and passives) of the public AnalogCoder benchmark (MIT): original task statements, prompt template, checkers and reference designs, unmodified. Grading appends the original checker to the circuit's PySpice code, as AnalogCoder's `gpt_run.py` does, and reports Pass@1/Pass@5 per task next to the published results (`resultados_publicados.yaml`).
+
+It needs the ngspice **shared library** for PySpice (`sudo apt install libngspice0-dev`), besides the `ngspice` binary.
+
+```bash
+uv run python -m agents.evaluacion.analogcoder referencias                 # grader check: all 7 must pass
+uv run python -m agents.evaluacion.analogcoder prompts --salida prompts/   # exact prompts, to paste in chat UIs
+GOOGLE_API_KEY=... uv run python -m agents.evaluacion.analogcoder solo --proveedor google --modelo <model-id>
+uv run python -m agents.evaluacion.analogcoder respuestas --carpeta respuestas/chatgpt --etiqueta "ChatGPT (web)"
+uv run --env-file .env python -m agents.evaluacion.analogcoder sistema --usuario <user-id>
+```
+
+`respuestas` grades answers pasted by hand from a chat UI, one file per run named `<task>_<run>.txt`. `sistema` runs the full graph from the task statement; it needs the server (LLM assignment) and Langfuse (prompts) from `.env`, or `--proveedor/--modelo` plus that provider's API key to force a model for every agent.
