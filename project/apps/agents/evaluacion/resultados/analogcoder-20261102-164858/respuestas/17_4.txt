@@ -1,0 +1,56 @@
+## Task 1: Design Plan
+
+The Wien bridge oscillator is built from an op-amp, a frequency-selective RC bridge, and an amplitude-setting gain network.
+
+**Operating principle**
+- The series R1–C1 arm and the parallel R2‖C2 arm form a lead-lag network between Vout and the non-inverting input node Vp.
+- At the frequency f₀ = 1/(2πRC), the network gives zero phase shift and a feedback factor of 1/3. Positive feedback at this frequency sustains oscillation.
+- The non-inverting amplifier formed by Rf and Rg must have gain 1 + Rf/Rg slightly above 3. This ensures startup and avoids a decaying oscillation.
+
+**Components**
+- **Op-amp (ideal, modeled as a VCVS)**: E-source "op", gain 1e6. Output = Vout, non-inverting input = Vp, inverting input = "-" (the required input node). Its output is referenced to ground.
+- **R1 = 10 kΩ**: series resistor between Vout and node Nser.
+- **C1 = 16 nF**: series capacitor between Nser and Vp.
+- **R2 = 10 kΩ**: parallel resistor from Vp to ground.
+- **C2= 16 nF**: parallel capacitor from Vp to ground.
+- **Rf = 2.2 kΩ**: feedback resistor from Vout to the inverting node "-".
+- **Rg = 1 kΩ**: gain-setting resistor from the inverting node "-" to ground.
+
+With these values, the gain is 1 + 2.2k/1k = 3.2, which is slightly above the required 3. The oscillation frequency is f₀ = 1/(2π·10 kΩ·16 nF) ≈ 995 Hz (about 1 kHz).
+
+**Node connectivity**
+- Vout: op output, Rf top, R1 left terminal.
+- Nser: R1 right terminal, C1 top terminal.
+- Vp: C1 bottom terminal, R2 top, C2 top, op non-inverting input.
+- "-": op inverting input, Rf bottom, Rg top.
+- Ground: R2 bottom, C2 bottom, Rg bottom, op reference.
+
+No DC sources are required, since the oscillator is self-biased around ground. Amplitude limiting (for example, anti-parallel diodes across Rf) is omitted here, so the amplitude is set by the op-amp model in a real simulation.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Wien Bridge Oscillator')
+
+# Ideal op-amp modeled as a voltage-controlled voltage source
+# Output: Vout (referenced to ground), non-inverting input: Vp, inverting input: '-'
+circuit.VCVS('op', 'Vout', circuit.gnd, 'Vp', '-', 1e6)
+
+# Wien bridge frequency-selective network
+# Series RC arm: Vout -> R1 -> Nser -> C1 -> Vp
+circuit.R('1', 'Vout', 'Nser', 10e3)     # R1 = 10 kOhm
+circuit.C('1', 'Nser', 'Vp', 16e-9)      # C1 = 16 nF
+
+# Parallel RC arm: Vp -> (R2 || C2) -> ground
+circuit.R('2', 'Vp', circuit.gnd, 10e3)  # R2 = 10 kOhm
+circuit.C('2', 'Vp', circuit.gnd, 16e-9) # C2 = 16 nF
+
+# Gain-setting network (non-inverting amplifier, gain = 1 + Rf/Rg = 3.2)
+circuit.R('f', 'Vout', '-', 2.2e3)       # Rf = 2.2 kOhm
+circuit.R('g', '-', circuit.gnd, 1e3)    # Rg = 1 kOhm
+
+simulator = circuit.simulator()
+```

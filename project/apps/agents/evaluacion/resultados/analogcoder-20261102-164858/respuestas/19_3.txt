@@ -1,0 +1,79 @@
+## Task 1: Design Plan
+
+The differentiator is built from an inverting op-amp with a capacitor C1 at the input and a feedback resistor Rf. The op-amp is a two-stage Miller-compensated CMOS op-amp, built at the transistor level from the NMOS and PMOS devices in the example.
+
+**Differentiator network**
+- **C1** connects Vin to the inverting input node Vn.
+- **Rf** connects the op-amp output Vout to the inverting node Vn.
+- The non-inverting input Vref is held at 2.5 V (mid-supply) so the NMOS input pair operates with a valid common-mode level. Vin is also biased at 2.5 V, so the DC operating point is Vout = 2.5 V with no DC current through Rf or C1.
+- Ideal op-amp behavior gives Vout = −Rf·C1·dVin/dt.
+
+**Op-amp (two-stage Miller OTA)**
+
+| Device | Type | Drain | Gate | Source | Bulk | W / L |
+|---|---|---|---|---|---|---|
+| M1 | NMOS | Dm | Vn (inverting input) | Ntail | GND | 20 µ / 1 µ |
+| M2 | NMOS | Vo1 | Vref (non-inverting input) | Ntail | GND | 20 µ / 1 µ |
+| M3 | PMOS | Dm | Dm (diode-connected) | Vdd | Vdd | 10 µ / 1 µ |
+| M4 | PMOS | Vo1 | Dm (mirror) | Vdd | Vdd | 10 µ / 1 µ |
+| M5 | NMOS | Ntail | Vbias | GND | GND | 10 µ / 1 µ |
+| M6 | PMOS | Vout | Vo1 | Vdd | Vdd | 40 µ / 1 µ |
+| M7 | NMOS | Vout | Vbias | GND | GND | 20 µ / 1 µ |
+
+- **Stage 1 (differential pair):** M1 and M2 with active PMOS mirror load M3/M4 and tail current source M5. The tail current is about 125 µA, so each branch carries about 62.5 µA.
+- **Stage 2 (common-source):** M6 with current-source load M7. The stage current is about 250 µA.
+- **Compensation:** Cc = 2 pF between Vo1 and Vout (Miller compensation).
+- **Bias:** Vbias = 1.0 V sets M5 and M7 gate voltages.
+- **Supply:** Vdd = 5.0 V.
+
+**Node summary**
+- Vdd: supply (5 V)
+- Vin: differentiator input (2.5 V DC)
+- Vref: non-inverting op-amp input (2.5 V)
+- Vn: inverting node (feedback junction)
+- Vbias: bias for the tail and output current sources (1.0 V)
+- Dm: diode-connected node of M1/M3/M4
+- Vo1: first-stage output
+- Ntail: tail node of the differential pair
+- Vout: op-amp and differentiator output
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Differentiator')
+
+# MOSFET models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power supply and bias / input sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0@u_V)        # 5 V supply
+circuit.V('bias', 'Vbias', circuit.gnd, 1.0@u_V)    # tail / output current-source bias
+circuit.V('ref', 'Vref', circuit.gnd, 2.5@u_V)      # non-inverting input reference (mid-supply)
+circuit.V('in', 'Vin', circuit.gnd, 2.5@u_V)        # DC operating point of differentiator input
+
+# First stage: NMOS differential pair with PMOS current-mirror load and NMOS tail
+# parameters: name, drain, gate, source, bulk, model, w, l
+circuit.MOSFET('1', 'Dm', 'Vn', 'Ntail', circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('2', 'Vo1', 'Vref', 'Ntail', circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('3', 'Dm', 'Dm', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)
+circuit.MOSFET('4', 'Vo1', 'Dm', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)
+circuit.MOSFET('5', 'Ntail', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)
+
+# Second stage: PMOS common-source with NMOS current-source load
+circuit.MOSFET('6', 'Vout', 'Vo1', 'Vdd', 'Vdd', model='pmos_model', w=40e-6, l=1e-6)
+circuit.MOSFET('7', 'Vout', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+
+# Miller compensation capacitor between first-stage output and op-amp output
+circuit.C('c', 'Vo1', 'Vout', 2@u_pF)
+
+# Differentiator feedback network
+circuit.C('1', 'Vin', 'Vn', 1@u_nF)      # input capacitor C1
+circuit.R('f', 'Vout', 'Vn', 100@u_kOhm) # feedback resistor Rf
+
+# Analysis Part
+simulator = circuit.simulator()
+```

@@ -1,0 +1,46 @@
+### Task 1
+
+#### Components and connections
+
+This is a single-supply, inverting op-amp differentiator. The non-inverting input is biased at a mid-supply reference so the output can sit near 2.5 V when powered from 5 V.
+
+- **Vdd**: 5 V supply; its negative terminal is grounded.
+- **RREF1 and RREF2**: 100 kΩ each, forming a divider from Vdd to ground. Their junction is **Vref = 2.5 V**.
+- **C1**: 10 nF, connected between input node **Vin** and the op-amp inverting input node **Vminus**.
+- **Rf**: 100 kΩ, connected from **Vout** back to **Vminus**.
+- **Op-amp**: non-inverting input connected to **Vref**, inverting input connected to **Vminus**, and output connected to **Vout**. The code represents it as a finite-gain voltage-controlled voltage source.
+- **Vin source**: DC-biased to 2.5 V for the operating-point setup. The input signal is understood to vary around this bias.
+
+Ideally, the output is:
+
+\[
+V_{out} \approx V_{ref} - R_f C_1 \frac{d(V_{in}-V_{ref})}{dt}
+\]
+
+With these component values, \(R_f C_1 = 1\text{ ms}\). The VCVS is an idealized op-amp model: it does not enforce output swing limits, despite the 5 V supply rails shown in the circuit.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Op-Amp Differentiator')
+
+# Single 5 V supply and mid-supply reference
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.R('ref1', 'Vdd', 'Vref', 100e3)
+circuit.R('ref2', 'Vref', circuit.gnd, 100e3)
+
+# DC operating-point bias for the input; the signal varies around Vref
+circuit.V('in', 'Vin', circuit.gnd, 2.5)
+
+# Inverting differentiator network
+circuit.C('1', 'Vin', 'Vminus', 10e-9)
+circuit.R('f', 'Vout', 'Vminus', 100e3)
+
+# Idealized op-amp represented by a finite-gain VCVS:
+# output+, output-, control+, control-, voltage gain
+circuit.VCVS('opamp', 'Vout', circuit.gnd, 'Vref', 'Vminus', 1e6)
+
+simulator = circuit.simulator()
+```

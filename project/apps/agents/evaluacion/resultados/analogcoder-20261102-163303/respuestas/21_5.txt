@@ -1,0 +1,51 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier**: Op-amp (ideal/standard behavioral model using independent sources or subcircuits, constructed here using fundamental differential amplifier or equivalent functional blocks; alternatively, a standard op-amp macro). For simplicity in PySpice without a proprietary macro, an op-amp can be modeled using a voltage-controlled voltage source (VCVS) or by building an op-amp using transistors. However, using a behavioral VCVS or a standard op-amp subcircuit block is standard for a subtractor. Let's build a standard operational amplifier subtractor configuration using an ideal Op-Amp (or equivalent VCVS) with four matched resistors.
+- **Resistors**: R1, R2, R3, R4 (all equal, e.g., $10\text{ k}\Omega$, to achieve a gain of 1 for a subtractor: $V_{out} = V_{in2} - V_{in1}$).
+- **Power Supply**: Vdd for positive supply (5.0V), Vee for negative supply (or connected to ground for single supply, but standard subtractor uses bipolar or referenced supplies; let's use Vdd and Ground with appropriate biasing, or standard differential op-amp configuration).
+- **Input Signal Sources**: Vin1, Vin2.
+
+#### Op-Amp Subtractor Configuration (Difference Amplifier)
+1. **Resistor Network**:
+   - **R1** connected between **Vin1** and the inverting input of the op-amp ($V_n$).
+   - **R2** connected between the inverting input ($V_n$) and the output **Vout** (feedback resistor).
+   - **R3** connected between **Vin2** and the non-inverting input of the op-amp ($V_p$).
+   - **R4** connected between the non-inverting input ($V_p$) and ground.
+   
+2. **Op-Amp Connections**:
+   - Non-inverting input ($V_p$) connected between R3 and R4.
+   - Inverting input ($V_n$) connected between R1 and R2.
+   - Output connected to **Vout**.
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Subtractor')
+
+# Power Supplies for the input signals and Vdd
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V power supply
+circuit.V('in1', 'Vin1', circuit.gnd, 1.0) # Vin1 = 1V
+circuit.V('in2', 'Vin2', circuit.gnd, 3.0) # Vin2 = 3V (Expected Vout = 3V - 1V = 2V)
+
+# Resistors for the Subtractor (Difference Amplifier)
+# For Vout = Vin2 - Vin1, R1 = R2 = R3 = R4 = 10k ohms
+resistance_value = 10@u_kΩ
+circuit.R('1', 'Vin1', 'Vn', resistance_value)
+circuit.R('2', 'Vn', 'Vout', resistance_value)
+circuit.R('3', 'Vin2', 'Vp', resistance_value)
+circuit.R('4', 'Vp', circuit.gnd, resistance_value)
+
+# Behavioral Op-Amp Model using VCVS (Voltage-Controlled Voltage Source)
+# E_name positive_output negative_output positive_input negative_input gain
+# High gain (e.g., 100k) approximates an ideal operational amplifier
+circuit.BehavioralV('opamp', 'Vout', circuit.gnd, 'Vp', 'Vn', 100000.0)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

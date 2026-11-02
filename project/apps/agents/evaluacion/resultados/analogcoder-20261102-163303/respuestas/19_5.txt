@@ -1,0 +1,57 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier**: An ideal or behavioral Opamp (implemented using voltage-controlled sources or subcircuits, or modeled using standard equivalent components; here we use a subcircuit-based Opamp or standard behavioral model available in PySpice, or build one using differential pairs). Since we are using standard PySpice building blocks, we can construct the operational amplifier using transistors or use a VCVS/Opamp model. Let's use a standard ideal operational amplifier macro/subcircuit or construct it using a differential amplifier to ensure complete compatibility. Alternatively, we can use standard dependent sources to model the opamp. Let's design a standard Opamp using a differential input stage.
+- **Resistors**: Resistor $R_f$ (feedback resistor).
+- **Capacitors**: Capacitor $C_1$ (input capacitor connected to Vin).
+- **Power Supply**: Vdd for DC supply (+5V) and Vee (ground or -5V, here we use single supply 5V with a mid-supply reference or standard dual supply, let's use Vdd = 5V with a virtual ground / common-mode bias at 2.5V, or standard dual supply +5V and -5V). Let's use dual supplies: `Vdd` (+5V) and `Vss` (-5V), and a common-mode ground.
+- **Input Signal Source**: Vin.
+
+#### Opamp Differentiator Topology
+1. **Operational Amplifier Setup**:
+   - Inverting input node: connected between capacitor $C_1$ and resistor $R_f$.
+   - Non-inverting input node: connected to the DC bias / ground reference (2.5V for single supply or 0V for dual supply). Let's use 0V (ground) with dual supplies (+5V and -5V) for simplicity and standard differentiator behavior.
+   - Output node: **Vout**, connected to the other terminal of $R_f$.
+
+2. **Differentiator Components**:
+   - **$C_1$**: Connected between **Vin** and the inverting input of the opamp.
+   - **$R_f$**: Connected between the inverting input of the opamp and **Vout**.
+
+3. **Opamp Internal Construction (using a simple differential stage and gain stage for PySpice completeness)**:
+   - To make it a fully self-contained transistor/component level or behavioral opamp circuit:
+     - Input stage: Differential pair with NMOS transistors.
+     - Second stage: Common-source amplifier providing high gain.
+     - Output stage: Source follower.
+   - Alternatively, use a behavioral VCVS model for the opamp to ensure robust functionality as a differentiator. Let's use a high-gain differential amplifier to build the opamp, or a behavioral E-element (VCVS). Using a behavioral voltage source with high gain ($A = 10^5$) is the standard way to model an ideal operational amplifier in SPICE.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Differentiator')
+
+# Power Supplies for the opamp
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)   # +5V power supply
+circuit.V('ss', 'Vss', circuit.gnd, -5.0)  # -5V power supply
+
+# Input Signal Source (DC operating point analysis input)
+circuit.V('in', 'Vin', circuit.gnd, 1.0)   # 1V DC input signal source
+
+# Differentiator Passive Components
+# Capacitor C1 connected between Vin and the inverting input (node 'V_inv')
+circuit.C('1', 'Vin', 'V_inv', 1@u_uF)
+
+# Feedback Resistor Rf connected between inverting input ('V_inv') and Vout
+circuit.R('f', 'V_inv', 'Vout', 100@u_kΩ)
+
+# Non-inverting input connected to ground (0V)
+# We model the operational amplifier using a Voltage-Controlled Voltage Source (VCVS)
+# Syntax: E(name, positive_output, negative_output, positive_input, negative_input, gain)
+# Positive input: gnd (0V), Negative input: V_inv, Output: Vout, Gain: 100000
+circuit.E('opamp', 'Vout', circuit.gnd, circuit.gnd, 'V_inv', 100000)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

@@ -1,0 +1,83 @@
+## Task 1: Design Plan
+
+The required transfer function is Vout = -(Vin1 + Vin2). A single-supply op-amp output cannot go negative, so the summing amplifier needs a negative rail. I use a **Vss = -5 V** supply in addition to Vdd = 5 V, with ground as the common reference.
+
+### Architecture
+- **Op-amp core:** a 5-transistor OTA (NMOS differential pair, PMOS current-mirror load, NMOS tail current source). The non-inverting input is tied to ground.
+- **Summing network:** R1 = R2 = Rf = 10 kΩ, in an inverting configuration. With an ideal op-amp, the virtual ground at the inverting node gives Vout = -Rf(Vin1/R1 + Vin2/R2) = -(Vin1 + Vin2).
+
+### Devices and Connectivity
+
+**Op-amp (transistor level)**
+
+| Device | Type | Drain | Gate | Source | Bulk | W / L |
+|---|---|---|---|---|---|---|
+| M1 | NMOS (diff pair, non-inv.) | d1 | GND | tail | tail | 20 µm / 1 µm |
+| M2 | NMOS (diff pair, inv.) | Vout | Vinv | tail | tail | 20 µm / 1 µm |
+| M3 | PMOS (mirror, diode-connected) | d1 | d1 | Vdd | Vdd | 20 µm / 1 µm |
+| M4 | PMOS (mirror output) | Vout | d1 | Vdd | Vdd | 20 µm / 1 µm |
+| M5 | NMOS (tail current source) | tail | Vbias | Vss | Vss | 40 µm / 1 µm |
+
+- Tail current ≈ 180 µA, set by Vbias = -4.2 V (Vgs ≈ 0.8 V, Vov ≈ 0.3 V).
+- Each diff-pair branch carries about 90 µA at balance.
+
+**Feedback and input network**
+
+| Element | Connection | Value |
+|---|---|---|
+| R1 | Vin1 ↔ Vinv | 10 kΩ |
+| R2 | Vin2 ↔ Vinv | 10 kΩ |
+| Rf | Vout ↔ Vinv | 10 kΩ |
+
+**Sources**
+- Vdd = +5 V (node Vdd to GND)
+- Vss = -5 V (node Vss to GND)
+- Vbias = -4.2 V (node Vbias to GND)
+- Vin1 = 0.2 V, Vin2 = 0.1 V (DC only; no AC sources)
+
+**Expected result:** Vout ≈ -(0.2 + 0.1) = -0.3 V. The output sits in the valid range, and M2 remains in saturation at this output level.
+
+### Node Summary
+- **Input nodes:** Vin1, Vin2
+- **Output node:** Vout
+- **Internal nodes:** Vinv (inverting input / virtual ground), d1 (mirror diode node), tail (diff-pair common source), Vbias, Vdd, Vss, GND
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Adder')
+
+# Device models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power supplies (Vdd = 5 V, Vss = -5 V for negative output swing)
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ss', 'Vss', circuit.gnd, -5.0)
+
+# Bias voltage for tail current source (Vss + Vth + Vov = -5 + 0.5 + 0.3 = -4.2 V)
+circuit.V('bias', 'Vbias', circuit.gnd, -4.2)
+
+# Input signals (DC only)
+circuit.V('in1', 'Vin1', circuit.gnd, 0.2)
+circuit.V('in2', 'Vin2', circuit.gnd, 0.1)
+
+# Op-amp core: 5-transistor OTA
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+circuit.MOSFET('1', 'd1', circuit.gnd, 'tail', 'tail', model='nmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('2', 'Vout', 'Vinv', 'tail', 'tail', model='nmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('3', 'd1', 'd1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('4', 'Vout', 'd1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('5', 'tail', 'Vbias', 'Vss', 'Vss', model='nmos_model', w=40e-6, l=1e-6)
+
+# Summing (inverting) network: Vout = -(Vin1 + Vin2)
+circuit.R('1', 'Vin1', 'Vinv', 10@u_kΩ)
+circuit.R('2', 'Vin2', 'Vinv', 10@u_kΩ)
+circuit.R('f', 'Vout', 'Vinv', 10@u_kΩ)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

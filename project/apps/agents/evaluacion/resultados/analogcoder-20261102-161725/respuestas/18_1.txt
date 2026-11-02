@@ -1,0 +1,70 @@
+## Task 1: Design Plan
+
+The circuit is an inverting Miller-type integrator built around a 5-transistor OTA (differential pair with a PMOS current-mirror load and an NMOS tail current source). The integrator network is R1 from Vin to the inverting input, with Cf in feedback from Vout to the inverting input. A large resistor Rf is placed in parallel with Cf to define the DC operating point. Without Rf, the open-loop OTA would saturate at DC.
+
+**Operating-point and sizing rationale (Vdd = 5 V, NMOS Vth = 0.5 V, PMOS Vth = -0.5 V, kp_n = 100 µA/V², kp_p = 50 µA/V²):**
+- Tail bias: Vbias = Vth + 0.5 V = 1.0 V. With W/L = 10 this gives I_tail ≈ 0.5·100µ·10·0.5² = 125 µA.
+- Input pair (M1, M2): each carries 62.5 µA with W/L = 20, so Vov ≈ 0.25 V. Common Vcm = 2.5 V gives a source node near 1.75 V, so the tail stays in saturation.
+- Load (M3, M4): PMOS with W/L = 10 carries 62.5 µA, so Vov = 0.5 V and the diode-connected node sits near 4.0 V.
+- Integrator: R1 = 10 kΩ, Cf = 10 pF, giving an ideal integrator with gain −1/(R1·Cf) ≈ −10⁷ rad/s (unity-gain frequency ≈ 1.6 MHz). Rf = 10 MΩ is only for DC biasing and is much larger than R1 at signal frequencies.
+
+**Devices and connectivity:**
+
+| Device | Type | Drain | Gate | Source | Bulk | W / L |
+|---|---|---|---|---|---|---|
+| M1 | NMOS (input, non-inverting) | Vd1 | Vcm | Ntail | GND | 20 µ / 1 µ |
+| M2 | NMOS (input, inverting) | Vout | Vminus | Ntail | GND | 20 µ / 1 µ |
+| M3 | PMOS (diode-connected load) | Vd1 | Vd1 | Vdd | Vdd | 10 µ / 1 µ |
+| M4 | PMOS (mirror output) | Vout | Vd1 | Vdd | Vdd | 10 µ / 1 µ |
+| M5 | NMOS (tail current source) | Ntail | Vbias | GND | GND | 10 µ / 1 µ |
+
+**Passive and source elements:**
+- R1: Vin ↔ Vminus, 10 kΩ (input integration resistor)
+- Cf: Vminus ↔ Vout, 10 pF (feedback integration capacitor)
+- Rf: Vminus ↔ Vout, 10 MΩ (DC feedback, defines operating point)
+- Vdd: 5 V supply from Vdd to GND
+- Vcm: 2.5 V DC reference on the non-inverting input (M1 gate)
+- Vbias: 1.0 V DC on the tail gate (M5 gate)
+- Vin: 2.5 V DC input source (operating point only, no AC)
+
+**Signal and feedback check:** M1 is the non-inverting input and M2 is the inverting input. A rise in Vminus lowers Vout, so Cf closes negative feedback around M2. With Vin driving R1 into Vminus, a positive Vin pushes current out through Cf, so Vout decreases. This gives the inverting integrator response Vout = −(1/(R1·Cf))∫Vin dt.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Integrator')
+
+# Device models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power supply and bias sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)      # 5 V supply
+circuit.V('cm', 'Vcm', circuit.gnd, 2.5)      # Non-inverting reference (mid-supply)
+circuit.V('bias', 'Vbias', circuit.gnd, 1.0)  # Tail bias: Vth + 0.5 V = 1.0 V
+circuit.V('in', 'Vin', circuit.gnd, 2.5)      # Integrator input (DC operating point only)
+
+# Op-amp: 5-transistor OTA
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+# M1: non-inverting input device (gate = Vcm)
+circuit.MOSFET('1', 'Vd1', 'Vcm', 'Ntail', circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+# M2: inverting input device (gate = Vminus, output drain = Vout)
+circuit.MOSFET('2', 'Vout', 'Vminus', 'Ntail', circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+# M3: diode-connected PMOS load on the M1 branch
+circuit.MOSFET('3', 'Vd1', 'Vd1', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)
+# M4: PMOS mirror output device
+circuit.MOSFET('4', 'Vout', 'Vd1', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)
+# M5: NMOS tail current source
+circuit.MOSFET('5', 'Ntail', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)
+
+# Integrator network around the op-amp
+circuit.R('1', 'Vin', 'Vminus', 10e3)     # R1 = 10 kOhm input resistor
+circuit.C('f', 'Vminus', 'Vout', 10e-12)  # Cf = 10 pF feedback capacitor
+circuit.R('f', 'Vminus', 'Vout', 10e6)    # Rf = 10 MOhm DC feedback (sets operating point)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

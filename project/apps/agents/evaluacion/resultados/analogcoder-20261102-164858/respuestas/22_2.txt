@@ -1,0 +1,77 @@
+## Task 1: Design Plan
+
+### Overview
+The circuit is a non-inverting Schmitt trigger built from a transistor-level op-amp (a 5-transistor OTA with single-ended output) and a positive-feedback resistive network. The input Vin drives the op-amp's non-inverting node through R1. The output Vout feeds back to the same node through Rf, which creates positive feedback and hysteresis. The inverting input is held at a mid-supply reference Vref = 2.5 V, set by a resistor divider.
+
+**Target thresholds (with Vdd = 5 V):** V_TH,rising ≈ 3.5 V and V_TH,falling ≈ 1.5 V, giving a hysteresis window of about 2 V.
+
+**Feedback derivation:** With Vp = (Vin/R1 + Vout/Rf)/(1/R1 + 1/Rf), the switching condition is Vp = Vref. Choosing R1 = 100 kΩ and Rf = 240 kΩ gives Vp = 0.706·Vin + 0.294·Vout. Solving for the thresholds with Vout ≈ 0.1 V (low) and ≈ 4.9 V (high) yields the targets above.
+
+### Components
+| Device | Type | Function |
+|---|---|---|
+| M1 | NMOS, W = 10 µm, L = 1 µm | Op-amp input transistor, gate = Vp |
+| M2 | NMOS, W = 10 µm, L = 1 µm | Op-amp input transistor, gate = Vref |
+| M3 | PMOS, W = 20 µm, L = 1 µm | Diode-connected active load (current mirror reference) |
+| M4 | PMOS, W = 20 µm, L = 1 µm | Mirror output device, drain = Vout |
+| M5 | NMOS, W = 10 µm, L = 1 µm | Tail current source, gate = Vbias |
+| R1 | 100 kΩ | Input resistor, Vin to Vp |
+| Rf | 240 kΩ | Positive feedback resistor, Vout to Vp |
+| Rd1, Rd2 | 100 kΩ each | Divider generating Vref = 2.5 V |
+| Vdd | 5 V DC | Supply |
+| Vbias | 1.2 V DC | Tail bias voltage |
+| Vin | 0 V DC (initial operating point) | Input signal node |
+
+### Node Connectivity
+- **Vdd**: source of M3 and M4, bulk of M3 and M4, top of Rd1.
+- **Vref**: Rd1/Rd2 midpoint, gate of M2.
+- **Vp**: R1 terminal, Rf terminal, gate of M1.
+- **Vin**: R1 terminal.
+- **Vout**: drain of M4, drain of M2, Rf terminal.
+- **N1** (internal mirror node): drain of M1, drain and gate of M3, gate of M4.
+- **Tail**: sources of M1 and M2, drain of M5.
+- **gnd**: source of M5, bulk of M1, M2, M5, bottom of Rd2.
+
+### Operation
+- **Vin < V_TH,falling (~1.5 V):** Vp < Vref, so M2 conducts more and Vout is low (≈0.2 V).
+- **Vin > V_TH,rising (~3.5 V):** Vp > Vref, so M1 conducts more, the mirror pulls Vout high (≈4.5 V), and positive feedback through Rf holds that state.
+- **Between the thresholds:** the state depends on the direction of the input transition, which provides the hysteresis.
+
+---
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Non-Inverting Schmitt Trigger with Positive Feedback')
+
+# Define the MOSFET models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power supply and bias sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0@u_V)        # 5 V supply
+circuit.V('bias', 'Vbias', circuit.gnd, 1.2@u_V)    # Tail current bias voltage
+circuit.V('in', 'Vin', circuit.gnd, 0.0@u_V)        # Input node (DC operating point)
+
+# Reference voltage divider (Vref = 2.5 V)
+circuit.R('d1', 'Vdd', 'Vref', 100@u_kΩ)
+circuit.R('d2', 'Vref', circuit.gnd, 100@u_kΩ)
+
+# Op-amp (5-transistor OTA with single-ended output)
+# MOSFET parameters: name, drain, gate, source, bulk, model, w, l
+circuit.MOSFET('1', 'N1', 'Vp', 'Tail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)   # M1: input (non-inverting)
+circuit.MOSFET('2', 'Vout', 'Vref', 'Tail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6) # M2: input (inverting)
+circuit.MOSFET('3', 'N1', 'N1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)          # M3: diode-connected load
+circuit.MOSFET('4', 'Vout', 'N1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)        # M4: mirror output
+circuit.MOSFET('5', 'Tail', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)  # M5: tail source
+
+# Positive feedback network
+circuit.R('1', 'Vin', 'Vp', 100@u_kΩ)    # R1: input resistor
+circuit.R('f', 'Vout', 'Vp', 240@u_kΩ)   # Rf: positive feedback resistor
+
+# Analysis Part
+simulator = circuit.simulator()
+```

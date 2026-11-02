@@ -1,0 +1,54 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier (Op-Amp)**: A single ideal/behavioral or transistor-level op-amp configured in an inverting summing amplifier topology. For PySpice simulation, we can use a voltage-controlled voltage source (VCVS) or behavioral source to model the op-amp, or build a standard differential-pair-based op-amp. Here, we implement a classic inverting summing amplifier using an op-amp with resistive feedback.
+- **Resistors**: 
+  - **R1**: Input resistor for Vin1 ($R_1 = 10\text{ k}\Omega$).
+  - **R2**: Input resistor for Vin2 ($R_2 = 10\text{ k}\Omega$).
+  - **Rf**: Feedback resistor ($R_f = 10\text{ k}\Omega$).
+  - **R3**: Bias balancing resistor for the non-inverting terminal ($R_3 = R_1 \parallel R_2 \parallel R_f = 3.33\text{ k}\Omega$).
+- **Power Supply**: Vdd = 5.0 V (and -Vdd = -5.0 V for dual-supply op-amp operation).
+- **Input Signal Sources**: Vin1, Vin2 (DC voltage sources representing the input signals).
+
+#### Op-Amp Inverting Adder Configuration
+1. **Inverting Summing Amplifier Setup**:
+   - The non-inverting terminal (+) of the op-amp is connected to ground through resistor **R3**.
+   - The inverting terminal (-) of the op-amp is connected to the feedback resistor **Rf** and input resistors **R1** and **R2** (a virtual ground node).
+   - **Vin1** is connected through **R1** to the inverting terminal.
+   - **Vin2** is connected through **R2** to the inverting terminal.
+   - **Rf** is connected between the inverting terminal and the output node **Vout**.
+   - With $R_1 = R_2 = R_f$, the output voltage follows the ideal summing relation: $V_{out} = -(\frac{R_f}{R_1} V_{in1} + \frac{R_f}{R_2} V_{in2}) = -(V_{in1} + V_{in2})$.
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Adder')
+
+# Power Supplies
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)       # Positive supply
+circuit.V('ss', circuit.gnd, 'Vss', 5.0)       # Negative supply (Vss node is -5V relative to gnd)
+
+# Input Signals (DC bias values for operating point analysis)
+circuit.V('in1', 'Vin1', circuit.gnd, 1.0)     # Vin1 = 1.0V
+circuit.V('in2', 'Vin2', circuit.gnd, 2.0)     # Vin2 = 2.0V
+
+# Resistors for Inverting Adder Topology
+# Vout = -(Rf/R1)*Vin1 - (Rf/R2)*Vin2. Choosing R1 = R2 = Rf = 10k gives Vout = -(Vin1 + Vin2)
+circuit.R('1', 'Vin1', 'V_inv', 10@u_kΩ)
+circuit.R('2', 'Vin2', 'V_inv', 10@u_kΩ)
+circuit.R('f', 'V_inv', 'Vout', 10@u_kΩ)
+circuit.R('3', 'V_noninv', circuit.gnd, 3.33@u_kΩ)
+
+# Ideal Op-Amp behavioral model implementation using VCVS (E-element)
+# Gain is set very high (e.g., 1e5) to simulate an ideal operational amplifier
+# E_name positive_output negative_output positive_input negative_input gain
+circuit.BehavioralSource('opamp', 'Vout', circuit.gnd, 'V_noninv', 'V_inv', expression='100000 * (V(V_noninv) - V(V_inv))')
+
+# Analysis Part
+simulator = circuit.simulator()
+```

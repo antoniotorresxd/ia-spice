@@ -1,0 +1,206 @@
+condicion,tarea,tipo,corrida,escalon,paso,segundos,detalle
+"anthropic/claude-haiku-5.5 solo (API, un intento)",16,Oscillator,1,no_funciona,False,46.8,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpf7l30vuz/caso.py"", line 62, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",16,Oscillator,2,no_funciona,False,36.6,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpa8zvoj4m/caso.py"", line 59, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",16,Oscillator,3,no_funciona,False,28.9,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpxnt4o6fk/caso.py"", line 59, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",16,Oscillator,4,no_funciona,False,22.3,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp7mf7x3hy/caso.py"", line 57, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",16,Oscillator,5,no_ejecuta,False,30.2,"kages/PySpice/Spice/__init__.py"", line 56, in function
+    return element_class(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 691, in __init__
+    super().__init__(netlist, name, *args, **kwargs)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 526, in __init__
+    raise ValueError('Unknown argument {}={}'.format(key, value))
+ValueError: Unknown argument gain=-50
+"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",17,Oscillator,1,no_funciona,False,20.8,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpavrp82l4/caso.py"", line 60, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",17,Oscillator,2,no_funciona,False,17.3,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpzt30u7ma/caso.py"", line 59, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",17,Oscillator,3,no_funciona,False,20.0,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp5qog4ar9/caso.py"", line 58, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",17,Oscillator,4,no_funciona,False,18.9,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpq9jw1371/caso.py"", line 54, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",17,Oscillator,5,no_funciona,False,15.4,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpswtoco14/caso.py"", line 53, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",18,Integrator,1,no_funciona,False,43.0,"The op-amp integrator does not have a linear response.
+
+Unsupported Ngspice version 44
+/tmp/tmps3n2utdy/caso.py:113: RankWarning: Polyfit may be poorly conditioned
+  slope, intercept = np.polyfit(time[start:end], vout[start:end], 1)
+/tmp/tmps3n2utdy/caso.py:116: SmallSampleWarning: One or more sample arguments is too small; all returned values will be NaN. See documentation for sample size requirements.
+  _, _, r_value, p_value, std_err = linregress(time[start:end], vout[start:end])"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",18,Integrator,2,no_funciona,False,31.2,"Unsupported Ngspice version 44
+Traceback (most recent call last):
+  File ""/tmp/tmpldcth262/caso.py"", line 130, in <module>
+    circuit.element(x_name).detach()
+                    ^^^^^^
+NameError: name 'x_name' is not defined. Did you mean: 'r_name'?"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",18,Integrator,3,no_funciona,False,24.7,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 1.3321253029583822 V/s
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",18,Integrator,4,no_funciona,False,30.1,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 9.743421919576987 V/s
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",18,Integrator,5,no_funciona,False,35.2,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 1.6852481199651919 V/s
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",19,Differentiator,1,no_funciona,False,31.6,"No peaks or troughs found in output voltage. Please check the netlist.
+Unsupported Ngspice version 44
+/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/numpy/_core/fromnumeric.py:3862: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",19,Differentiator,2,no_funciona,False,36.3,"The circuit does not function correctly as a differentiator.
+Output voltage peak value is wrong. Mean peak voltage: 2.92151116593918 V | Mean trough voltage: 2.0913605063420864 V
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",19,Differentiator,3,no_funciona,False,40.8,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",19,Differentiator,4,no_funciona,False,35.0,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",19,Differentiator,5,no_funciona,False,26.5,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",20,Adder,1,no_funciona,False,16.3,"The circuit does not function correctly as an adder.
+Expected Vout: 0.8750 V, Vin1 = 1.0000 V, Vin2 = 1.1250 V | Actual Vout: -2.1250 V
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",20,Adder,2,no_funciona,False,32.1,"The circuit does not function correctly as an adder.
+Expected Vout: 0.8750 V, Vin1 = 1.0000 V, Vin2 = 1.1250 V | Actual Vout: -2.1250 V
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",20,Adder,3,no_funciona,False,49.8,"The circuit does not function correctly as an adder.
+Expected Vout: 0.8750 V, Vin1 = 1.0000 V, Vin2 = 1.1250 V | Actual Vout: -2.1250 V
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",20,Adder,4,no_funciona,False,36.8,"The circuit does not function correctly as an adder.
+Expected Vout: -4.3250 V, Vin1 = -4.2000 V, Vin2 = -4.0750 V | Actual Vout: -1.4045 V
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",20,Adder,5,no_funciona,False,56.5,"The circuit does not function correctly as an adder.
+Expected Vout: 3.9250 V, Vin1 = 4.0500 V, Vin2 = 4.1750 V | Actual Vout: -4.8384 V
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",21,Subtractor,1,no_funciona,False,31.2,"The circuit does not function correctly as a subtractor.
+Expected Vout: 2.25 V, Vin1 = -0.45 V, Vin2 = 1.80 V | Actual Vout: -0.08 V
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",21,Subtractor,2,no_funciona,False,35.2,"The circuit does not function correctly as a subtractor.
+Expected Vout: 2.25 V, Vin1 = 6.15 V, Vin2 = 8.40 V | Actual Vout: 5.46 V
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",21,Subtractor,3,pasa,True,34.8,
+"anthropic/claude-haiku-5.5 solo (API, un intento)",21,Subtractor,4,no_funciona,False,31.1,"The circuit does not function correctly as a subtractor.
+Expected Vout: 2.25 V, Vin1 = -0.55 V, Vin2 = 1.70 V | Actual Vout: 0.21 V
+
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",21,Subtractor,5,pasa,True,14.6,
+"anthropic/claude-haiku-5.5 solo (API, un intento)",22,Schmitt,1,pasa,True,41.3,
+"anthropic/claude-haiku-5.5 solo (API, un intento)",22,Schmitt,2,pasa,True,45.5,
+"anthropic/claude-haiku-5.5 solo (API, un intento)",22,Schmitt,3,pasa,True,56.1,
+"anthropic/claude-haiku-5.5 solo (API, un intento)",22,Schmitt,4,no_funciona,False,39.1,"The circuit does not function correctly. Trigger points are too close.
+Trigger points: 2.50000V and 2.50000V are not sufficiently different. Please use the positive feedback which the Rf should connect to the non-inverting input of the op-amp.
+Unsupported Ngspice version 44"
+"anthropic/claude-haiku-5.5 solo (API, un intento)",22,Schmitt,5,pasa,True,56.9,

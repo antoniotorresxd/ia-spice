@@ -1,0 +1,68 @@
+## Task 1: Design Plan
+
+The adder is an inverting summing amplifier. Its output is the negative sum of the two inputs, so the op-amp's negative input acts as a virtual ground that collects the currents from both input resistors and the feedback resistor.
+
+**Op-amp (A1)**
+- Modeled as a high-gain voltage-controlled voltage source (VCVS) with gain A = 10⁶.
+- Non-inverting input (Vp) tied to ground through a 0 V source.
+- Inverting input (Vm) is the summing node.
+- Output drives node **Vout** directly.
+- This is an ideal op-amp model, so it does not need a supply. A transistor-level op-amp could replace it later, but that would also need an offset-safe bias point so that the output can reach the required negative voltages.
+
+**Input resistors**
+- **R1** (10 kΩ): between **Vin1** and the summing node Vm.
+- **R2** (10 kΩ): between **Vin2** and the summing node Vm.
+
+**Feedback resistor**
+- **Rf** (10 kΩ): between the output **Vout** and the summing node Vm.
+
+**Transfer function**
+
+With the virtual ground (V(Vm) ≈ 0):
+
+Vout = −(Rf/R1)·Vin1 − (Rf/R2)·Vin2
+
+With R1 = R2 = Rf, this gives **Vout = −(Vin1 + Vin2)**.
+
+**Test inputs (DC operating point)**
+- Vin1 = 1.0 V, Vin2 = 0.5 V
+- Expected Vout = −1.5 V
+
+**Node summary**
+| Node | Connections |
+|---|---|
+| Vin1 | V source (1.0 V) → R1 |
+| Vin2 | V source (0.5 V) → R2 |
+| Vm | R1, R2, Rf, VCVS inverting input |
+| Vp | VCVS non-inverting input, 0 V to ground |
+| Vout | VCVS output, Rf |
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Inverting Adder')
+
+# Input sources (DC only)
+circuit.V('in1', 'Vin1', circuit.gnd, 1.0)   # Vin1 = 1.0 V
+circuit.V('in2', 'Vin2', circuit.gnd, 0.5)   # Vin2 = 0.5 V
+
+# Non-inverting input of the op-amp tied to ground (0 V)
+circuit.V('p', 'Vp', circuit.gnd, 0.0)
+
+# Ideal high-gain op-amp: V(Vout) = A * (V(Vp) - V(Vm)), A = 1e6
+# VCVS(name, out_p, out_n, in_p, in_n, gain)
+circuit.VCVS('op', 'Vout', circuit.gnd, 'Vp', 'Vm', 1e6)
+
+# Input resistors
+circuit.R('1', 'Vin1', 'Vm', 10@u_kΩ)
+circuit.R('2', 'Vin2', 'Vm', 10@u_kΩ)
+
+# Feedback resistor
+circuit.R('f', 'Vout', 'Vm', 10@u_kΩ)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

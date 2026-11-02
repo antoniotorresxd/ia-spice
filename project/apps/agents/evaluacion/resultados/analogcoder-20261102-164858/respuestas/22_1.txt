@@ -1,0 +1,66 @@
+## Task 1: Design Plan
+
+The circuit is a non-inverting Schmitt trigger built from a 5-transistor OTA (used as the op-amp) with a positive-feedback resistive network. Vin drives the non-inverting input through R1, the output feeds back to the same node through R2, and the inverting input is held at a reference voltage Vref = 2.5 V. Because the feedback is positive, the circuit has two switching thresholds.
+
+**Op-amp (5T OTA)**
+- **M1** (NMOS, W = 10 µm, L = 1 µm): gate = Vp (non-inverting input), drain = nA (diode-connected mirror node), source = Ntail, bulk = Ntail.
+- **M2** (NMOS, W = 10 µm, L = 1 µm): gate = Vref (inverting input), drain = Vout, source = Ntail, bulk = Ntail.
+- **M3** (PMOS, W = 20 µm, L = 1 µm): diode-connected active load, source = Vdd, gate = drain = nA, bulk = Vdd.
+- **M4** (PMOS, W = 20 µm, L = 1 µm): mirror load, source = Vdd, gate = nA, drain = Vout, bulk = Vdd.
+- **M5** (NMOS, W = 20 µm, L = 1 µm): tail current source, drain = Ntail, gate = Vbias, source = ground, bulk = ground. With Vbias = 1.0 V (Vov ≈ 0.5 V), the tail current is about 250 µA.
+
+**Positive-feedback network**
+- **R1** = 10 kΩ between Vin and Vp (input resistor).
+- **R2** = 40 kΩ between Vout and Vp (positive feedback resistor).
+
+**Bias and supply sources**
+- **Vdd** = 5.0 V.
+- **Vbias** = 1.0 V (tail-current gate bias).
+- **Vref** = 2.5 V (inverting-input reference, mid-supply).
+- **Vin** = 0 V DC (input source, to be swept for hysteresis analysis).
+
+**Operation and thresholds**
+
+Node Vp is the resistive sum of Vin (through R1) and Vout (through R2). The op-amp switches when Vp = Vref:
+
+Vp = (Vin·R2 + Vout·R1) / (R1 + R2)
+
+- With Vout high (≈5 V), the upper threshold is Vin ≈ 1.875 V (the output falls when Vin drops below this).
+- With Vout low (≈0 V), the lower threshold is Vin ≈ 3.125 V (the output rises when Vin exceeds this).
+
+The hysteresis window is about 1.25 V, centred on Vref = 2.5 V. The output is in phase with the input (non-inverting).
+
+**Node list:** Vdd, Vin, Vout, Vp, Vref, Vbias, nA, Ntail, ground.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Non-inverting Schmitt Trigger')
+
+# Device models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power supply and bias sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)      # 5 V supply
+circuit.V('in', 'Vin', circuit.gnd, 0.0)      # Input signal source (DC operating point)
+circuit.V('bias', 'Vbias', circuit.gnd, 1.0)  # Tail-current bias (V_th + 0.5 V)
+circuit.V('ref', 'Vref', circuit.gnd, 2.5)    # Reference at mid-supply on inverting input
+
+# Op-amp: 5-transistor OTA
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+circuit.MOSFET('1', 'nA', 'Vp', 'Ntail', 'Ntail', model='nmos_model', w=10e-6, l=1e-6)   # M1 (non-inverting input)
+circuit.MOSFET('2', 'Vout', 'Vref', 'Ntail', 'Ntail', model='nmos_model', w=10e-6, l=1e-6) # M2 (inverting input)
+circuit.MOSFET('3', 'nA', 'nA', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)        # M3 (diode-connected load)
+circuit.MOSFET('4', 'Vout', 'nA', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)      # M4 (mirror load)
+circuit.MOSFET('5', 'Ntail', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)  # M5 (tail current)
+
+# Positive-feedback Schmitt network
+circuit.R('1', 'Vin', 'Vp', 10e3)   # R1 = 10 kOhm input resistor
+circuit.R('2', 'Vout', 'Vp', 40e3)  # R2 = 40 kOhm positive feedback resistor
+
+simulator = circuit.simulator()
+```

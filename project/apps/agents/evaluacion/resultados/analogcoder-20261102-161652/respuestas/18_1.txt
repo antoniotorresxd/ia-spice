@@ -1,0 +1,39 @@
+### Task 1 — Design Plan
+
+Use the standard **inverting op-amp integrator** topology:
+
+- **R1 = 10 kΩ** connects **Vin** to the inverting input node **Vsum**.
+- **Cf = 10 µF** connects **Vout** back to **Vsum**.
+- The op-amp’s non-inverting input connects to **Vref = 2.5 V**. This midpoint reference allows the circuit to operate from a single **5 V** supply.
+- The op-amp output is **Vout**. The feedback capacitor causes the output to integrate input deviations from the reference:
+  \[
+  Vout - Vref = -\frac{1}{R1\,Cf}\int (Vin - Vref)\,dt
+  \]
+- The code uses a high-gain voltage-controlled voltage source as an **idealized op-amp model**. It does not model output swing limits or other nonidealities. The DC input source is set to 2.5 V so the operating point is centered at the reference; signal variations should be applied around that level.
+
+### Task 2 — PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Opamp Integrator')
+
+# 5 V single supply and 2.5 V reference
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ref', 'Vref', circuit.gnd, 2.5)
+
+# DC operating-point value for Vin; signal variations are centered around Vref
+circuit.V('in', 'Vin', circuit.gnd, 2.5)
+
+# Inverting integrator: R1 from Vin to the summing node,
+# and Cf from the output back to the summing node
+circuit.R('1', 'Vin', 'Vsum', 10e3)
+circuit.C('f', 'Vout', 'Vsum', 10e-6)
+
+# Idealized high-gain op-amp:
+# output nodes: Vout and ground
+# differential input nodes: Vref (non-inverting) and Vsum (inverting)
+circuit.VCVS('opamp', 'Vout', circuit.gnd, 'Vref', 'Vsum', 1e5)
+
+simulator = circuit.simulator()
+```

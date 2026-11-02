@@ -1,0 +1,98 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier (Op-Amp)**: Modelled using a subcircuit or behavioral voltage source (or standard components to build a non-inverting amplifier). Here, we will use ideal voltage-controlled voltage sources or a standard op-amp macromodel structure represented via controlled sources/resistors, or a simplified op-amp block for PySpice simulation.
+- **Resistors**: 
+  - $R_1, R_2$ forming the non-inverting gain network of the op-amp to set the gain to $A_v = 1 + \frac{R_2}{R_1} = 3$ (to sustain oscillation, the loop gain must be equal to 1, meaning the amplifier gain must be at least 3).
+  - $R_3, C_1$ and $R_4, C_2$ forming the frequency-selective Wien bridge feedback network.
+- **Capacitors**: $C_1, C_2$ in the Wien bridge network.
+- **Power Supply**: $V_{cc+}, V_{cc-}$ for the op-amp (or single-supply with appropriate biasing, here a dual supply $\pm 15\text{V}$ is standard for oscillators).
+- **Output Node**: `Vout`.
+
+#### Circuit Topology and Interconnectivity
+1. **Op-Amp Stage**:
+   - An operational amplifier is used with its non-inverting input connected to the Wien bridge feedback network and its inverting input connected to the resistive divider ($R_1$ and $R_2$) for gain control.
+   - Let the non-inverting terminal be `V_pos`, inverting terminal be `V_neg`, and output be `Vout`.
+2. **Gain Setting Network**:
+   - Resistor $R_1$ is connected between `V_neg` and ground.
+   - Resistor $R_2$ is connected between `Vout` and `V_neg`. This sets the amplifier gain $A = 1 + R_2/R_1 = 3$.
+3. **Wien Bridge Feedback Network**:
+   - A series $R_3-C_1$ branch is connected between `Vout` and an intermediate node `V_bridge`.
+   - A parallel $R_4-C_2$ branch is connected between node `V_bridge` and ground.
+   - Node `V_bridge` is connected back to the non-inverting input `V_pos` of the op-amp.
+   - To start oscillation, a small initial condition or transient disturbance is injected at `Vout`.
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Wien Bridge Oscillator')
+
+# Power supplies for the Op-Amp
+circuit.V('cc_pos', 'Vcc', circuit.gnd, 15@u_V)
+circuit.V('cc_neg', 'Vee', circuit.gnd, -15@u_V)
+
+# Wien Bridge Network Components
+# Let R3 = R4 = R and C1 = C2 = C for oscillation frequency f = 1 / (2 * pi * R * C)
+# Choosing R = 10kOhm, C = 10nF -> f approx 1.59 kHz
+circuit.R('3', 'Vout', 'V_bridge', 10@u_kΩ)
+circuit.C('1', 'V_bridge', circuit.gnd, 10@u_nF)
+
+circuit.R('4', 'V_bridge', 'V_pos', 10@u_kΩ)
+circuit.C('2', 'V_pos', circuit.gnd, 10@u_nF)
+
+# Op-Amp Non-Inverting Input connected to V_pos, Inverting to V_neg, Output to Vout
+# Behavioral / Simplified Op-Amp using a Voltage-Controlled Voltage Source (VCVS)
+# Gain of Op-Amp is very high, but feedback network sets closed-loop gain.
+# E-element: E1 output negative_output positive_input negative_input gain
+# Here we model a simple differential amplifier with high gain (e.g., 1e5)
+circuit.SinusoidalVoltageSource('init', 'V_start', circuit.gnd, amplitude=1e-3@u_V, frequency=1.59@u_k_Hz)
+# We add a tiny initial AC/transient kick via a source or capacitor initial condition, 
+# or rely on the amplifier's input offset/noise. In SPICE, setting an initial condition 
+# on C1 or C2 is standard to kick-start oscillators.
+circuit.get_capacitor('1').initial_voltage = 1.0
+
+# Gain Network resistors: A = 1 + R2/R1 = 3 -> R2 = 2 * R1
+circuit.R('1', 'V_neg', circuit.gnd, 10@u_kΩ)
+circuit.R('2', 'Vout', 'V_neg', 20@u_kΩ)
+
+# Ideal/Behavioral Op-Amp implementation with controlled source
+# Output depends on (V_pos - V_neg) * A_ol
+# We use a subcircuit-like behavioral expression in PySpice or a VCVS with high gain:
+# V(Vout_internal) = 1e5 * (V(V_pos) - V(V_neg))
+circuit.V('opamp_out', 'Vout_raw', circuit.gnd, 0) # dummy source for current measurement if needed
+# Using a polynomial source or behavioral source isn't directly a primitive without expression parser, 
+# so we use PySpice's Nonlinear Voltage Source or standard linear VCVS (E element):
+circuit.expr.Parameter(A_ol=1e5)
+circuit.X('opamp', 'opamp_model', 'V_pos', 'V_neg', 'Vout', 'Vcc', 'Vee')
+
+# Defining a subcircuit for a simple 741-like or ideal differential stage op-amp
+from PySpice.Spice.Netlist import SubCircuit
+class OpAmpSubCircuit(SubCircuit):
+    name = 'opamp_model'
+    nodes = ('plus', 'minus', 'out', 'vcc', 'vee')
+    def __init__(self):
+        super().__init__()
+        # Input differential resistance
+        self.R('in', 'plus', 'minus', 2*u_MΩ)
+        # Gain stage: output is controlled by (plus - minus)
+        # E.g., E_amp out 0 plus minus 100000
+        self.VCVS('amp', 'out_internal', self.gnd, 'plus', 'minus', 100000)
+        # Output stage resistance
+        self.R('out', 'out_internal', 'out', 75)
+        # Power supply limits (simple clipping via diodes or ideal rails can be added, 
+        # but linear model is sufficient for startup)
+
+circuit.subcircuit(OpAmpSubCircuit())
+
+# Connect the op-amp instance
+circuit.X('1', 'opamp_model', 'V_pos', 'V_neg', 'Vout', 'Vcc', 'Vee')
+
+# Analysis Part
+simulator = circuit.simulator(temperature=25, nominal_temperature=25)
+simulator.transient(step_time=1@u_us, end_time=5@u_ms, use_initial_conditions=True)
+simulator = circuit.simulator()

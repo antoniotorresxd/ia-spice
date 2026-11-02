@@ -1,0 +1,100 @@
+### Task 1 — Design Plan
+
+Use a two-stage CMOS op amp with a four-resistor subtractor network. The resistor ratios are matched so that, for an ideal op amp,
+
+\[
+V_{\text{out}}=V_{\text{in2}}-V_{\text{in1}}.
+\]
+
+For the single 5 V supply, the example operating point uses \(V_{\text{in1}}=2.0\text{ V}\) and \(V_{\text{in2}}=3.0\text{ V}\), giving a target output of \(1.0\text{ V}\). A single-supply circuit cannot produce negative output voltages, so the subtractor is intended for input differences that keep the output within its available range.
+
+#### Subtractor resistor network
+- **R1** connects `Vin1` to `Vminus`.
+- **R2** connects `Vout` to `Vminus`.
+- **R3** connects `Vin2` to `Vplus`.
+- **R4** connects `Vplus` to ground.
+- All four resistors are equal (100 kΩ). Thus, `Vplus` is half of `Vin2`, and feedback makes `Vminus` approximately equal to `Vplus`, yielding `Vout = Vin2 - Vin1`.
+
+#### CMOS op amp
+- **P1 and P2** form the PMOS differential input pair. Their common source node is `PT`.
+  - P1 gate: `Vminus`; P1 drain: `NREF`.
+  - P2 gate: `Vplus`; P2 drain: `N1`.
+- **P5** is the PMOS tail-current source from `Vdd` to `PT`, biased by `VBP`.
+- **M3 and M4** form an NMOS current-mirror load. M3 is diode-connected at `NREF`; M4 sinks current from `N1`.
+- **M6** is the second-stage NMOS common-source transistor. Its gate is `N1`, and its drain is `Vout`.
+- **P7** is the PMOS current-source load for the second stage, connected between `Vdd` and `Vout` and biased by `VBP`.
+- `VBP` is set to 4.0 V. With the specified PMOS threshold model, this provides a nominal current-source bias.
+- Large bleed resistors at `N1` and `Vout` give the Level-1 MOS model finite DC paths. A compensation capacitor is included between `N1` and `Vout`.
+- Each MOSFET bulk is tied to its source.
+
+The matched-resistor equation is ideal; finite op-amp gain and transistor mismatch cause practical error.
+
+### Task 2 — PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('CMOS Op-Amp Subtractor')
+
+# MOSFET models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Supplies, input operating-point values, and PMOS bias
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('in1', 'Vin1', circuit.gnd, 2.0)
+circuit.V('in2', 'Vin2', circuit.gnd, 3.0)
+circuit.V('bp', 'VBP', circuit.gnd, 4.0)
+
+# Matched subtractor resistors: Vout = Vin2 - Vin1
+circuit.R('1', 'Vin1', 'Vminus', 100e3)
+circuit.R('2', 'Vout', 'Vminus', 100e3)
+circuit.R('3', 'Vin2', 'Vplus', 100e3)
+circuit.R('4', 'Vplus', circuit.gnd, 100e3)
+
+# First stage: PMOS differential pair
+# Bulk terminals are tied to the corresponding source nodes.
+circuit.MOSFET(
+    'P1', 'NREF', 'Vminus', 'PT', 'PT',
+    model='pmos_model', w=40e-6, l=2e-6
+)
+circuit.MOSFET(
+    'P2', 'N1', 'Vplus', 'PT', 'PT',
+    model='pmos_model', w=40e-6, l=2e-6
+)
+
+# PMOS tail-current source
+circuit.MOSFET(
+    'P5', 'PT', 'VBP', 'Vdd', 'Vdd',
+    model='pmos_model', w=20e-6, l=2e-6
+)
+
+# NMOS current-mirror active load
+circuit.MOSFET(
+    'M3', 'NREF', 'NREF', circuit.gnd, circuit.gnd,
+    model='nmos_model', w=20e-6, l=2e-6
+)
+circuit.MOSFET(
+    'M4', 'N1', 'NREF', circuit.gnd, circuit.gnd,
+    model='nmos_model', w=20e-6, l=2e-6
+)
+
+# Second stage: NMOS common-source amplifier with PMOS current-source load
+circuit.MOSFET(
+    'M6', 'Vout', 'N1', circuit.gnd, circuit.gnd,
+    model='nmos_model', w=20e-6, l=2e-6
+)
+circuit.MOSFET(
+    'P7', 'Vout', 'VBP', 'Vdd', 'Vdd',
+    model='pmos_model', w=10e-6, l=2e-6
+)
+
+# DC paths for the simplified Level-1 MOS model
+circuit.R('bleed_n1', 'N1', circuit.gnd, 10e6)
+circuit.R('bleed_out', 'Vout', 'Vdd', 10e6)
+
+# Miller compensation capacitor
+circuit.C('comp', 'N1', 'Vout', 10e-12)
+
+simulator = circuit.simulator()
+```

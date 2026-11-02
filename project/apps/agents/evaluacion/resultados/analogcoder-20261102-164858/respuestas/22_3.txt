@@ -1,0 +1,82 @@
+## Task 1: Design Plan
+
+The circuit is a non-inverting Schmitt trigger built from a two-stage CMOS op-amp with a positive-feedback resistor network. Vin drives the non-inverting input of the op-amp, Vout feeds back to the same input through Rf, and a fixed reference (Vref = 2.5 V) drives the inverting input. Because the feedback and input both act on the same (+) node, the feedback is positive and creates hysteresis.
+
+### Op-amp (transistor-level, 5-transistor OTA + common-source output stage)
+
+**Stage 1: NMOS differential pair with PMOS current-mirror load**
+- **M1** (NMOS, W = 20 µm, L = 1 µm): drain at **D1**, gate at **Vref** (inverting input), source at **Ntail**, bulk at GND.
+- **M2** (NMOS, W = 20 µm, L = 1 µm): drain at **D2** (stage-1 output), gate at **Vp** (non-inverting input), source at **Ntail**, bulk at GND.
+- **M3** (PMOS, W = 10 µm, L = 1 µm): diode-connected load. Source at Vdd, gate and drain at **D1**, bulk at Vdd.
+- **M4** (PMOS, W = 10 µm, L = 1 µm): mirror load. Source at Vdd, gate at **D1**, drain at **D2**, bulk at Vdd.
+- **M5** (NMOS, W = 20 µm, L = 1 µm): tail current source. Drain at **Ntail**, gate at **Vbias**, source at GND, bulk at GND. Tail current is about 0.5 mA.
+
+**Stage 2: common-source output stage**
+- **M6** (PMOS, W = 40 µm, L = 1 µm): gate at **D2**, source at Vdd, drain at **Vout**, bulk at Vdd.
+- **M7** (NMOS, W = 20 µm, L = 1 µm): current-source load. Drain at **Vout**, gate at **Vbias**, source at GND, bulk at GND.
+
+The output stage inverts D2, so Vout is non-inverting with respect to Vp. Vp high gives D2 low, which gives Vout high.
+
+### Feedback and reference network
+- **Ra = 10 kΩ**: between **Vin** and **Vp**.
+- **Rf = 47 kΩ**: between **Vout** and **Vp** (positive feedback).
+- **R1 = 10 kΩ**: between **Vdd** and **Vref**.
+- **R2 = 10 kΩ**: between **Vref** and GND. This sets Vref = 2.5 V.
+
+### Bias and supply
+- **Vdd = 5 V** supply.
+- **Vbias = 1.2 V** DC source. It sets the tail current (M5) and the output-stage current (M7).
+- **Vin** is a DC source (0 V for the operating-point check).
+
+### Threshold analysis
+With no ground resistor on Vp, Vp is a weighted average of Vin and Vout:
+Vp = (Rf·Vin + Ra·Vout) / (Ra + Rf) = 0.825·Vin + 0.175·Vout
+
+The op-amp trips when Vp = Vref = 2.5 V.
+- Rising edge (Vout ≈ 0.2 V low): Vth+ ≈ (2.5 − 0.035)/0.825 ≈ 3.0 V
+- Falling edge (Vout ≈ 4.8 V high): Vth− ≈ (2.5 − 0.84)/0.825 ≈ 2.0 V
+
+The hysteresis window is about 1 V, centered on 2.5 V.
+
+---
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Non-inverting Schmitt Trigger')
+
+# Device models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power supply and sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)      # 5 V supply
+circuit.V('in', 'Vin', circuit.gnd, 0.0)      # Input voltage (DC operating point)
+circuit.V('bias', 'Vbias', circuit.gnd, 1.2)  # Bias for tail and output current sources
+
+# Reference divider: Vref = 2.5 V
+circuit.R('1', 'Vdd', 'Vref', 10e3)
+circuit.R('2', 'Vref', circuit.gnd, 10e3)
+
+# Positive feedback / input network
+circuit.R('a', 'Vin', 'Vp', 10e3)   # Input resistor
+circuit.R('f', 'Vout', 'Vp', 47e3)  # Positive feedback resistor
+
+# Op-amp stage 1: NMOS differential pair with PMOS current-mirror load
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+circuit.MOSFET('1', 'D1', 'Vref', 'Ntail', circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('2', 'D2', 'Vp', 'Ntail', circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('3', 'D1', 'D1', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)
+circuit.MOSFET('4', 'D2', 'D1', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)
+circuit.MOSFET('5', 'Ntail', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+
+# Op-amp stage 2: common-source output with NMOS current-source load
+circuit.MOSFET('6', 'Vout', 'D2', 'Vdd', 'Vdd', model='pmos_model', w=40e-6, l=1e-6)
+circuit.MOSFET('7', 'Vout', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

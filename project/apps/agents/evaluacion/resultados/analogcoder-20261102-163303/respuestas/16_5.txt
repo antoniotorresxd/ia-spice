@@ -1,0 +1,62 @@
+### Task 1
+
+#### Components Needed
+- **NMOS Transistors**: M1 (used as the active amplifier stage)
+- **Resistors**: R_L (drain load resistor), R1, R2, R3 (feedback network resistors)
+- **Capacitors**: C1, C2, C3 (feedback network capacitors)
+- **Power Supply**: Vdd = 5.0 V for DC supply
+- **Input/Bias Sources**: Vbias (gate bias voltage for M1)
+
+#### Stage 1: Common-Source Amplifier
+1. **Transistor Setup**:
+   - **M1** (NMOS) as the amplifying device.
+   - Gate of **M1** is connected to the biasing voltage source **Vbias**.
+   - Source of **M1** is connected to the ground.
+   - Drain of **M1** is connected to **Vout** and serves as the output node of the amplifier, connected to **Vdd** via the drain load resistor **R_L**.
+
+#### RC Phase-Shift Feedback Network
+1. **Feedback Network Setup**:
+   - The output of the amplifier at **Vout** is fed back to the gate of **M1** through a three-stage RC ladder network to provide the necessary $180^\circ$ phase shift at the oscillation frequency.
+   - **Resistor R_L** connects **Vdd** to the drain (**Vout**).
+   - First stage: **C1** connects **Vout** to node **n1**, and **R1** connects node **n1** to ground.
+   - Second stage: **C2** connects node **n1** to node **n2**, and **R2** connects node **n2** to ground.
+   - Third stage: **C3** connects node **n2** to the gate of **M1** (**Vin_gate**), and **R3** connects the gate of **M1** to ground (which also sets the DC bias for the gate).
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('RC Phase-Shift Oscillator')
+
+# Define the MOSFET models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+
+# Power Supplies and Biasing
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V power supply
+circuit.V('bias', 'Vbias', circuit.gnd, 1.2) # DC bias voltage for the gate (V_th + excess = 0.5 + 0.7 = 1.2V)
+
+# Common-Source Amplifier Stage
+# parameters: name, drain, gate, source, bulk, model, w, l
+circuit.MOSFET('1', 'Vout', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=100e-6, l=1e-6)
+circuit.R('L', 'Vout', 'Vdd', 2.2@u_kΩ) # Drain load resistor
+
+# RC Phase-Shift Feedback Network (3 cascaded RC sections)
+# Section 1
+circuit.C('1', 'Vout', 'n1', 100@u_nF)
+circuit.R('1', 'n1', circuit.gnd, 1@u_kΩ)
+
+# Section 2
+circuit.C('2', 'n1', 'n2', 100@u_nF)
+circuit.R('2', 'n2', circuit.gnd, 1@u_kΩ)
+
+# Section 3 (Feedback back to the amplifier input/gate node, replacing Vbias with the feedback path or AC coupling)
+circuit.C('3', 'n2', 'Vbias', 100@u_nF)
+circuit.R('3', 'Vbias', circuit.gnd, 1@u_kΩ)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

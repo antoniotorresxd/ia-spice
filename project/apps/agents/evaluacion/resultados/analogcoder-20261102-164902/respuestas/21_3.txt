@@ -1,0 +1,46 @@
+### Task 1 — Design Plan
+
+Use a unity-gain difference amplifier with four matched resistors and an op-amp core. The op-amp is represented by a high-gain voltage-controlled voltage source, a common idealized circuit macromodel.
+
+**Connections**
+- **R1** connects `Vin1` to the inverting input node `Vminus`.
+- **R2** connects `Vout` back to `Vminus` as the feedback resistor.
+- **R3** connects `Vin2` to the non-inverting input node `Vplus`.
+- **R4** connects `Vplus` to ground.
+- **A1** drives `Vout` from the difference between `Vplus` and `Vminus`.
+
+Choose all four resistors equal. Then `Vplus = Vin2/2`; with negative feedback, `Vminus ≈ Vplus`, and the inverting-node resistor relationship gives:
+
+\[
+Vout = 2Vplus - Vin1 = Vin2 - Vin1
+\]
+
+Resistor matching is important for accurate subtraction. The example uses 10 kΩ resistors and a finite op-amp gain of \(10^6\), so the result is very close to the ideal equation. The code includes ±5 V rails to allow either output polarity; the idealized op-amp macromodel itself does not model rail limits. The input sources are DC operating-point examples.
+
+### Task 2 — PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Subtractor')
+
+# Supply rails for a bipolar-output implementation
+circuit.V('dd', 'Vdd', circuit.gnd, 5@u_V)
+circuit.V('ss', 'Vss', circuit.gnd, -5@u_V)
+
+# DC input examples
+circuit.V('in1', 'Vin1', circuit.gnd, 2.5@u_V)
+circuit.V('in2', 'Vin2', circuit.gnd, 3.0@u_V)
+
+# Matched resistor network
+circuit.R('1', 'Vin1', 'Vminus', 10@u_kΩ)
+circuit.R('2', 'Vout', 'Vminus', 10@u_kΩ)
+circuit.R('3', 'Vin2', 'Vplus', 10@u_kΩ)
+circuit.R('4', 'Vplus', circuit.gnd, 10@u_kΩ)
+
+# High-gain op-amp macromodel: output = gain * (Vplus - Vminus)
+circuit.VCVS('A1', 'Vout', circuit.gnd, 'Vplus', 'Vminus', voltage_gain=1e6)
+
+simulator = circuit.simulator()
+```

@@ -1,0 +1,55 @@
+## Task 1: Design Plan
+
+The Wien bridge oscillator is a positive-feedback network with a frequency-selective RC bridge and a negative-feedback amplitude-control network. Because the requirements specify only an inverting node named "-" and an output "Vout", the op-amp is modeled as an ideal high-gain voltage-controlled voltage source (VCVS, gain 10^5). This keeps the design focused on the bridge and gain-setting network.
+
+**Components**
+- **Op-amp (ideal, VCVS E1)**: non-inverting input = Vp, inverting input = "-", output = Vout, gain = 1e5.
+- **Frequency-selective network (Wien bridge)**:
+  - R1 = 10 kΩ, in series from Vout to node Nmid.
+  - C1 = 10 nF, in series from Nmid to node Vp.
+  - R2 = 10 kΩ, in parallel from Vp to ground.
+  - C2 = 10 nF, in parallel from Vp to ground.
+- **Amplitude-control network (gain-setting)**:
+  - R3 = 22 kΩ, feedback resistor from Vout to "-".
+  - R4 = 10 kΩ, from "-" to ground.
+
+**Design equations**
+- Oscillation frequency: f₀ = 1 / (2π·R·C) = 1 / (2π · 10 kΩ · 10 nF) ≈ 1.59 kHz.
+- Required gain for oscillation: A_cl = 1 + R3/R4 = 3. The design uses R3/R4 = 2.2, giving A_cl = 3.2. This slightly exceeds 3 so that oscillations start and grow. The amplitude is then limited by nonlinearity in a real circuit, which the ideal VCVS does not model.
+
+**Node connectivity**
+- Vout → R1 → Nmid → C1 → Vp (positive-feedback path).
+- Vp → R2 ∥ C2 → ground.
+- Vout → R3 → "-" (negative-feedback path).
+- "-" → R4 → ground.
+- E1 output: Vout (referenced to ground). E1 inputs: Vp (+) and "-" (−).
+
+## Task 2: Python Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Wien Bridge Oscillator')
+
+# Ideal op-amp modeled as a high-gain VCVS
+# parameters: name, out+, out-, in+, in-, gain
+circuit.VCVS('1', 'Vout', circuit.gnd, 'Vp', '-', 1e5)
+
+# Wien bridge frequency-selective network (f0 ~ 1.59 kHz)
+circuit.R('1', 'Vout', 'Nmid', 10@u_kΩ)   # series R1
+circuit.C('1', 'Nmid', 'Vp', 10@u_nF)     # series C1
+circuit.R('2', 'Vp', circuit.gnd, 10@u_kΩ)  # parallel R2
+circuit.C('2', 'Vp', circuit.gnd, 10@u_nF)  # parallel C2
+
+# Amplitude-control (negative feedback) network, gain = 1 + R3/R4 = 3.2
+circuit.R('3', 'Vout', '-', 22@u_kΩ)      # feedback R3
+circuit.R('4', '-', circuit.gnd, 10@u_kΩ)   # ground leg R4
+
+# Analysis Part
+simulator = circuit.simulator()
+```
+
+**Notes on use:**
+- The DC operating point is trivially zero. Oscillation is observed with a transient analysis (for example, `simulator.transient(step_time=10@u_us, end_time=5@u_ms)`), which is not included here per the instructions.
+- The gain ratio R3/R4 = 2.2 must stay above 2 for startup. Increasing it beyond 2 raises the oscillation amplitude until clipping or a nonlinear limiter stabilizes it.

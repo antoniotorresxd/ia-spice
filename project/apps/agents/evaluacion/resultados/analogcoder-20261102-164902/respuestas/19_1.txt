@@ -1,0 +1,48 @@
+### Task 1
+
+#### Components
+- **C1 = 10 nF**: differentiating input capacitor, connected from **Vin** to the op-amp inverting input node **Nsum**.
+- **Rf = 100 kΩ**: feedback resistor, connected from **Vout** to **Nsum**.
+- **Op-amp**: represented by a high-gain voltage-controlled voltage source (VCVS). Its non-inverting input connects to **Vref**, and its inverting input connects to **Nsum**.
+- **Vdd = 5 V**: supply source.
+- **Rref_top = Rref_bottom = 100 kΩ**: divider generating **Vref = 2.5 V** for single-supply biasing.
+- **Vin source**: set to 2.5 V DC for the operating point. The input signal can be applied around this bias in a transient simulation.
+
+#### Interconnections and operation
+1. Connect **C1** between **Vin** and **Nsum**.
+2. Connect **Rf** between **Vout** and **Nsum**.
+3. Connect the op-amp non-inverting input to **Vref** and its inverting input to **Nsum**.
+4. Connect the divider’s top resistor from **Vdd** to **Vref**, and its bottom resistor from **Vref** to ground.
+5. The ideal differentiator relationship is approximately:
+   \[
+   Vout - Vref = -Rf \cdot C1 \cdot \frac{d(Vin - Vref)}{dt}
+   \]
+   Thus the output is biased near 2.5 V, allowing positive and negative signal excursions on a single 5 V supply.
+
+The VCVS is an idealized, high-gain op-amp model; it does not model output swing limits or other non-ideal effects.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Opamp Differentiator')
+
+# 5 V single supply and midpoint reference
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.R('ref_top', 'Vdd', 'Vref', 100e3)
+circuit.R('ref_bottom', 'Vref', circuit.gnd, 100e3)
+
+# DC operating-point bias for the input
+circuit.V('in', 'Vin', circuit.gnd, 2.5)
+
+# Differentiator input and feedback components
+circuit.C('1', 'Vin', 'Nsum', 10e-9)
+circuit.R('f', 'Vout', 'Nsum', 100e3)
+
+# High-gain ideal op-amp:
+# Vout = A * (Vref - Nsum)
+circuit.VCVS('Aop', 'Vout', circuit.gnd, 'Vref', 'Nsum', 1e5)
+
+simulator = circuit.simulator()
+```

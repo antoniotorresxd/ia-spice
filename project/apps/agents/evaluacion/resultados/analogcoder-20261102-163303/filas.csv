@@ -1,0 +1,341 @@
+condicion,tarea,tipo,corrida,escalon,paso,segundos,detalle
+"google/gemini-3.5-flash-lite solo (API, un intento)",16,Oscillator,1,no_funciona,False,5.0,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp1yh5057c/caso.py"", line 65, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"google/gemini-3.5-flash-lite solo (API, un intento)",16,Oscillator,2,no_funciona,False,4.3,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpntn3hw5j/caso.py"", line 61, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"google/gemini-3.5-flash-lite solo (API, un intento)",16,Oscillator,3,no_funciona,False,4.5,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpwd3f4ijs/caso.py"", line 60, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"google/gemini-3.5-flash-lite solo (API, un intento)",16,Oscillator,4,no_funciona,False,4.7,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp_kcdkdhs/caso.py"", line 67, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"google/gemini-3.5-flash-lite solo (API, un intento)",16,Oscillator,5,no_funciona,False,4.2,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp2428hfub/caso.py"", line 61, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"google/gemini-3.5-flash-lite solo (API, un intento)",17,Oscillator,1,sin_codigo,False,11.2,
+"google/gemini-3.5-flash-lite solo (API, un intento)",17,Oscillator,2,no_ejecuta,False,4.0,"tribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: element_table
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp6qkyvvtg/caso.py"", line 22, in <module>
+    circuit.element_table['E1'] = 'E_amp Vout 0 Vplus Vminus 100000.0'
+    ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: element_table. Did you mean: 'element_names'?
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",17,Oscillator,3,no_ejecuta,False,5.6,"pps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 691, in __init__
+    super().__init__(netlist, name, *args, **kwargs)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 529, in __init__
+    netlist._add_element(self)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 965, in _add_element
+    raise NameError(""Element name {} is already defined"".format(element.name))
+NameError: Element name R1 is already defined
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",17,Oscillator,4,no_ejecuta,False,7.2,"pps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 691, in __init__
+    super().__init__(netlist, name, *args, **kwargs)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 529, in __init__
+    netlist._add_element(self)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 965, in _add_element
+    raise NameError(""Element name {} is already defined"".format(element.name))
+NameError: Element name R1 is already defined
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",17,Oscillator,5,no_funciona,False,4.8,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpf9l2zu73/caso.py"", line 62, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"google/gemini-3.5-flash-lite solo (API, un intento)",18,Integrator,1,no_simula,False,3.5,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",18,Integrator,2,no_ejecuta,False,3.4," ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/__init__.py"", line 56, in function
+    return element_class(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/HighLevelElement.py"", line 589, in __init__
+    SinusoidalMixin.__init__(self, *args, **kwargs)
+TypeError: SinusoidalMixin.__init__() got an unexpected keyword argument 'dc'
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",18,Integrator,3,no_ejecuta,False,3.0,"Traceback (most recent call last):
+  File ""/tmp/tmptl0_zkfa/caso.py"", line 14, in <module>
+    circuit.subcircuit('ideal_opamp', 'plus', 'minus', 'out')
+TypeError: Netlist.subcircuit() takes 2 positional arguments but 5 were given
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",18,Integrator,4,no_ejecuta,False,3.6,"pice/Spice/Netlist.py"", line 909, in __getitem__
+    raise IndexError(attribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: Sin
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp_v74pu1r/caso.py"", line 18, in <module>
+    circuit.Sin('opamp_output', 'Vout', circuit.gnd, 100000)
+    ^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: Sin
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",18,Integrator,5,no_funciona,False,11.1,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 4.319205116225439 V/s
+
+Unsupported Ngspice version 44"
+"google/gemini-3.5-flash-lite solo (API, un intento)",19,Differentiator,1,no_funciona,False,9.3,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Unsupported Ngspice version 44"
+"google/gemini-3.5-flash-lite solo (API, un intento)",19,Differentiator,2,no_funciona,False,10.6,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Unsupported Ngspice version 44"
+"google/gemini-3.5-flash-lite solo (API, un intento)",19,Differentiator,3,no_ejecuta,False,2.6,"tem__
+    raise IndexError(attribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: Vcvs
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpl9x832pu/caso.py"", line 15, in <module>
+    circuit.Vcvs('opamp', 'Vout', circuit.gnd, 'gnd', 'InvertingNode', 100e3)
+    ^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: Vcvs. Did you mean: 'VCVS'?
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",19,Differentiator,4,no_ejecuta,False,3.5,"py"", line 909, in __getitem__
+    raise IndexError(attribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: controller
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpvf82qcug/caso.py"", line 15, in <module>
+    circuit.controller.match_node('Vinv_pos', circuit.gnd)
+    ^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: controller
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",19,Differentiator,5,no_ejecuta,False,4.9,"ice/Netlist.py"", line 909, in __getitem__
+    raise IndexError(attribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: E
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpvj0x1yun/caso.py"", line 18, in <module>
+    circuit.E('opamp', 'Vout', circuit.gnd, circuit.gnd, 'V_inv', 100000)
+    ^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: E
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",20,Adder,1,no_ejecuta,False,4.0,"ib/python3.12/site-packages/PySpice/Spice/__init__.py"", line 56, in function
+    return element_class(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 691, in __init__
+    super().__init__(netlist, name, *args, **kwargs)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 511, in __init__
+    raise NameError(""Number of args mismatch"")
+NameError: Number of args mismatch
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",20,Adder,2,no_ejecuta,False,4.0,"tem__
+    raise IndexError(attribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: Vcr
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpxclco5r9/caso.py"", line 20, in <module>
+    circuit.Vcr('opamp', 'Vout_internal', circuit.gnd, 'Vplus', 'Vminus', 100000)
+    ^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: Vcr. Did you mean: 'VCS'?
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",20,Adder,3,no_ejecuta,False,4.1,"Traceback (most recent call last):
+  File ""/tmp/tmp8w_fj1c4/caso.py"", line 24, in <module>
+    @circuit.subcircuit('opamp', 'plus', 'minus', 'vdd', 'vss', 'out')
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Netlist.subcircuit() takes 2 positional arguments but 7 were given
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",20,Adder,4,no_ejecuta,False,4.2,"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/__init__.py"", line 56, in function
+    return element_class(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/HighLevelElement.py"", line 589, in __init__
+    SinusoidalMixin.__init__(self, *args, **kwargs)
+TypeError: SinusoidalMixin.__init__() got an unexpected keyword argument 'dc'
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",20,Adder,5,no_ejecuta,False,3.3,"Spice/__init__.py"", line 56, in function
+    return element_class(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 691, in __init__
+    super().__init__(netlist, name, *args, **kwargs)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 526, in __init__
+    raise ValueError('Unknown argument {}={}'.format(key, value))
+ValueError: Unknown argument value=1e5 * (0 - {Vx})
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",21,Subtractor,1,no_ejecuta,False,4.1,"Traceback (most recent call last):
+  File ""/tmp/tmpnub7pgpf/caso.py"", line 20, in <module>
+    circuit.subcircuit('opamp_model', ['plus', 'minus', 'out', 'vcc', 'vee'])
+TypeError: Netlist.subcircuit() takes 2 positional arguments but 3 were given
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",21,Subtractor,2,no_ejecuta,False,3.5,"ndexError(attribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: element_factory
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpbnsl4cmp/caso.py"", line 18, in <module>
+    circuit.element_factory.E('OpAmp', 'Vout', circuit.gnd, 'V_non', 'V_inv', 100e3)
+    ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: element_factory
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",21,Subtractor,3,no_ejecuta,False,3.8,"Traceback (most recent call last):
+  File ""/tmp/tmp82asi4_l/caso.py"", line 24, in <module>
+    circuit.subcircuit('opamp', ['in_neg', 'in_pos', 'out', 'vcc', 'vee'])
+TypeError: Netlist.subcircuit() takes 2 positional arguments but 3 were given
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",21,Subtractor,4,no_ejecuta,False,3.2,"tribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: element_netlist
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmppqqocds6/caso.py"", line 21, in <module>
+    circuit.element_netlist += ""E1 Vout 0 N_noninv N_inv 100000""
+    ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: element_netlist. Did you mean: 'element_names'?
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",21,Subtractor,5,no_ejecuta,False,3.7,"getitem__
+    raise IndexError(attribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: BehavioralV
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpdxjm1s3p/caso.py"", line 18, in <module>
+    circuit.BehavioralV('opamp', 'Vout', circuit.gnd, 'Vp', 'Vn', 100000.0)
+    ^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: BehavioralV
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",22,Schmitt,1,no_ejecuta,False,4.3,"raise IndexError(attribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: Sin
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpah7i_535/caso.py"", line 17, in <module>
+    circuit.Sin('opamp_diff', 'V_diff', circuit.gnd, amplitude=1) # Dummy line or direct behavioral source below:
+    ^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: Sin
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",22,Schmitt,2,no_ejecuta,False,4.6,"  return element_class(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 691, in __init__
+    super().__init__(netlist, name, *args, **kwargs)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 526, in __init__
+    raise ValueError('Unknown argument {}={}'.format(key, value))
+ValueError: Unknown argument expression=min(5.0, max(0.0, 2.5 + 100000 * (V(Vplus) - V(Vin))))
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",22,Schmitt,3,no_ejecuta,False,4.0,"t.py"", line 909, in __getitem__
+    raise IndexError(attribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: E
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp3sphaum8/caso.py"", line 17, in <module>
+    circuit.E('opamp', 'Vout_internal', circuit.gnd, 'V_plus', circuit.gnd, 100000)
+    ^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: E
+"
+"google/gemini-3.5-flash-lite solo (API, un intento)",22,Schmitt,4,no_funciona,False,7.3,"The circuit does not function correctly. The output voltage does not cross the Vdd/2.
+Unsupported Ngspice version 44"
+"google/gemini-3.5-flash-lite solo (API, un intento)",22,Schmitt,5,no_ejecuta,False,4.0,"Traceback (most recent call last):
+  File ""/tmp/tmp89ain2el/caso.py"", line 21, in <module>
+    circuit.subcircuit('opamp_ideal', ['plus', 'minus', 'out', 'vdd', 'vss'])
+TypeError: Netlist.subcircuit() takes 2 positional arguments but 3 were given
+"

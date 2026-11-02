@@ -1,0 +1,51 @@
+### Task 1 — Design Plan
+
+Use a non-inverting amplifier with a Wien bridge for positive feedback. At the oscillation frequency, the bridge has approximately zero phase shift and attenuates the output by 3. The amplifier’s small-signal gain is set slightly above 3 so oscillations can build; antiparallel diodes across the feedback resistor reduce the gain as the output grows and help stabilize its amplitude.
+
+- **Amplifier:** A finite-gain voltage-controlled voltage source (VCVS) models the non-inverting amplifier. Its non-inverting input is `Vplus`, its inverting input is `Vminus`, and its internal output is `Aout`.
+- **Wien bridge:**  
+  - `R1` and `C1` are in series from `Vout` to `Vplus`.  
+  - `R2` and `C2` are in parallel from `Vplus` to `Vref`.  
+  - With all four components equal, the nominal oscillation frequency is \(f_0=1/(2\pi RC)\). For 10 kΩ and 10 nF, this is approximately 1.59 kHz.
+- **Negative feedback:** `Rg` connects `Vminus` to `Vref`; `Rf` connects `Vout` to `Vminus`. With `Rf = 21 kΩ` and `Rg = 10 kΩ`, the small-signal gain is 3.1.
+- **Amplitude stabilization:** Two antiparallel diodes across `Rf` conduct as the output grows, reducing the effective feedback resistance and amplifier gain.
+- **Bias and supply:** A 5 V supply and equal divider resistors generate `Vref = 2.5 V`. The oscillator output is centered around this reference.
+- **Output:** `Vout`.
+
+The VCVS is an amplifier-level abstraction; it does not enforce supply-rail limits. The 5 V supply establishes the circuit’s reference voltage.
+
+### Task 2 — PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Wien Bridge Oscillator')
+
+# 5 V supply and midpoint reference
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.R('ref_top', 'Vdd', 'Vref', 10e3)
+circuit.R('ref_bottom', 'Vref', circuit.gnd, 10e3)
+
+# Wien bridge: series RC from output to Vplus,
+# and parallel RC from Vplus to the reference
+circuit.R('wien_series', 'Vout', 'Wien_RC', 10e3)
+circuit.C('wien_series', 'Wien_RC', 'Vplus', 10e-9)
+circuit.R('wien_shunt', 'Vplus', 'Vref', 10e3)
+circuit.C('wien_shunt', 'Vplus', 'Vref', 10e-9)
+
+# Negative-feedback network; nominal small-signal gain = 1 + 21k/10k = 3.1
+circuit.R('gain', 'Vout', 'Vminus', 21e3)
+circuit.R('ground_gain', 'Vminus', 'Vref', 10e3)
+
+# Antiparallel diodes provide nonlinear amplitude stabilization
+circuit.model('Dlim', 'D', IS=1e-14, N=1)
+circuit.D('limit_forward', 'Vout', 'Vminus', model='Dlim')
+circuit.D('limit_reverse', 'Vminus', 'Vout', model='Dlim')
+
+# Finite-gain amplifier model.
+# The series offset source centers the output at Vref.
+circuit.VCVS('amp', 'Aout', circuit.gnd, 'Vplus', 'Vminus', 1e5)
+circuit.V('output_offset', 'Vout', 'Aout', 2.5)
+
+simulator = circuit.simulator()
+```

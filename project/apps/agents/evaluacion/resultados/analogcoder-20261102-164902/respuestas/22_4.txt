@@ -1,0 +1,48 @@
+### Task 1
+
+#### Components and connections
+
+- **Power supply:** `Vdd` = 5 V, with ground as the 0 V reference.
+- **Input source:** A DC source connected to `Vin`. It is set to 2.0 V in the code to establish a stable low-output operating point; change this value to test the switching thresholds.
+- **Reference divider:** Two 10 kΩ resistors from `Vdd` to ground, with their midpoint connected to the op-amp inverting input `Vm`. This sets `Vm` to 2.5 V.
+- **Positive-feedback network:**
+  - `Rin` = 10 kΩ from `Vin` to the non-inverting input `Vp`.
+  - `Rfb` = 100 kΩ from `Vout` to `Vp`.
+- **Op-amp model:** A high-gain voltage-controlled voltage source senses `Vp − Vm`. A series output resistor and diode clamps model a supply-limited output. The clamp diodes may allow a small excursion beyond the supply rails, as real diode clamps are not ideal.
+- **Output:** `Vout` is the op-amp output after the series resistor and clamp network.
+
+The feedback makes the switching threshold depend on the current output state. For ideal output levels of 0 V and 5 V, the nominal rising and falling thresholds are approximately 2.75 V and 2.25 V, respectively. The actual thresholds depend slightly on the clamp-diode output levels.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Non-inverting Schmitt Trigger')
+
+# Supply and DC input. Vin is set below the lower threshold to select
+# the low-output state for the operating point.
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('in', 'Vin', circuit.gnd, 2.0)
+
+# 2.5 V reference for the inverting input
+circuit.R('ref_top', 'Vdd', 'Vm', 10e3)
+circuit.R('ref_bottom', 'Vm', circuit.gnd, 10e3)
+
+# Non-inverting input and positive-feedback network
+circuit.R('in', 'Vin', 'Vp', 10e3)
+circuit.R('feedback', 'Vout', 'Vp', 100e3)
+
+# High-gain op-amp model: output = gain * (Vp - Vm)
+circuit.VCVS('opamp', 'Aout', circuit.gnd, 'Vp', 'Vm', 1e5)
+
+# Series output resistance
+circuit.R('out', 'Aout', 'Vout', 1e3)
+
+# Diode clamps for a practical, supply-limited output
+circuit.model('DCLAMP', 'D', IS=1e-14, N=1)
+circuit.D('high', 'Vout', 'Vdd', model='DCLAMP')
+circuit.D('low', circuit.gnd, 'Vout', model='DCLAMP')
+
+simulator = circuit.simulator()
+```

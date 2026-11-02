@@ -1,0 +1,5 @@
+condicion,tarea,tipo,corrida,escalon,paso,segundos,detalle
+"google/gemini-3.8-flash solo (API, un intento)",18,Integrator,1,no_funciona,False,24.9,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 33.33209640914302 V/s
+
+Unsupported Ngspice version 44"

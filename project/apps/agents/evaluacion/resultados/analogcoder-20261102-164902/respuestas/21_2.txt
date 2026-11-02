@@ -1,0 +1,43 @@
+### Task 1: Design plan
+
+Use a four-resistor difference amplifier with an idealized, high-gain operational amplifier. The resistor ratios are matched so that the output is \(V_{\text{out}}=V_{\text{in2}}-V_{\text{in1}}\).
+
+**Components**
+- One voltage-controlled voltage source, `A1`, used as the op-amp model
+- Four 10 kΩ resistors
+- DC input sources for `Vin1` and `Vin2`
+
+**Connections**
+1. Connect `Vin1` to the inverting input node `Vminus` through `R1`.
+2. Connect `Vout` back to `Vminus` through feedback resistor `R2`.
+3. Connect `Vin2` to the non-inverting input node `Vplus` through `R3`.
+4. Connect `Vplus` to ground through `R4`.
+5. Configure `A1` with its positive control input at `Vplus`, negative control input at `Vminus`, and output at `Vout`.
+
+All four resistors are equal, so the divider gives \(V_{\text{plus}}=V_{\text{in2}}/2\). With high op-amp gain, \(V_{\text{minus}}\approx V_{\text{plus}}\); the inverting network then yields \(V_{\text{out}}\approx V_{\text{in2}}-V_{\text{in1}}\).
+
+The op-amp is represented by a high-gain behavioral model, so it does not model supply rails or transistor-level behavior. The example DC inputs are chosen to produce a 1 V output.
+
+### Task 2: PySpice code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Op-Amp Subtractor')
+
+# DC test inputs: Vout should be approximately 2 V - 1 V = 1 V.
+circuit.V('in1', 'Vin1', circuit.gnd, 1.0)
+circuit.V('in2', 'Vin2', circuit.gnd, 2.0)
+
+# Matched resistor network: R2/R1 = R4/R3 = 1.
+circuit.R('1', 'Vin1', 'Vminus', 10e3)
+circuit.R('2', 'Vout', 'Vminus', 10e3)
+circuit.R('3', 'Vin2', 'Vplus', 10e3)
+circuit.R('4', 'Vplus', circuit.gnd, 10e3)
+
+# High-gain idealized op-amp model:
+# output, reference node, positive input, negative input, open-loop gain
+circuit.VCVS('A1', 'Vout', circuit.gnd, 'Vplus', 'Vminus', 1e5)
+
+simulator = circuit.simulator()
+```

@@ -1,0 +1,44 @@
+### Task 1 — Design Plan
+
+This is an **inverting op-amp differentiator**. The op-amp is represented by a high-gain voltage-controlled voltage source (VCVS), a common ideal op-amp macromodel for describing the circuit-level topology.
+
+- **Supply:** `Vdd` is a 5 V supply.
+- **Reference network:** Two equal 100 kΩ resistors form `Vref` at 2.5 V. This biases the circuit for single-supply operation.
+- **Input:** `Vin` is centered at 2.5 V. Capacitor `C1` (10 nF) connects `Vin` to the inverting summing node `Vsum`.
+- **Feedback:** Resistor `Rf` (100 kΩ) connects `Vout` back to `Vsum`.
+- **Op-amp:** Its non-inverting input connects to `Vref`; its inverting input connects to `Vsum`; its output is `Vout`.
+
+For small signals around the 2.5 V reference, the ideal differentiator relation is:
+
+\[
+V_{\text{out}}-V_{\text{ref}}
+\approx -R_f C_1 \frac{d(V_{\text{in}}-V_{\text{ref}})}{dt}
+\]
+
+The VCVS model is not rail-limited, so practical signals should be kept within the op-amp’s output range.
+
+### Task 2 — PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Op-Amp Differentiator')
+
+# 5 V single supply
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+
+# DC input and midpoint reference
+circuit.V('in', 'Vin', circuit.gnd, 2.5)
+circuit.R('ref_top', 'Vdd', 'Vref', 100e3)
+circuit.R('ref_bottom', 'Vref', circuit.gnd, 100e3)
+
+# Inverting differentiator network
+circuit.C('1', 'Vin', 'Vsum', 10e-9)
+circuit.R('f', 'Vout', 'Vsum', 100e3)
+
+# High-gain op-amp macromodel:
+# output = gain * (non-inverting input - inverting input)
+circuit.VCVS('A1', 'Vout', circuit.gnd, 'Vref', 'Vsum', 1e5)
+
+simulator = circuit.simulator()
+```

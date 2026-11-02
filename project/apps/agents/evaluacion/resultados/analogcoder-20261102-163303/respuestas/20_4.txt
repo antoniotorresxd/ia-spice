@@ -1,0 +1,67 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier (Op-Amp)**: A single ideal/behavioral or transistor-level op-amp configured in an inverting summing amplifier configuration. For a SPICE netlist representation, a subcircuit or behavioral voltage source representing an op-amp can be used, or we can build it using ideal components/controlled sources. Alternatively, using a standard ideal op-amp model in PySpice.
+- **Resistors**: 
+  - **R1**: Input resistor for `Vin1`
+  - **R2**: Input resistor for `Vin2`
+  - **Rf**: Feedback resistor connected between `Vout` and the inverting input of the op-amp
+  - **R3**: Resistor connected from the non-inverting input of the op-amp to ground for bias current compensation (set equal to the parallel combination of R1, R2, and Rf, or simply chosen equal to Rf for unity gain summing where $R_1 = R_2 = R_f$).
+- **Power Supply**: `Vdd` (5.0 V) and `Vss` (-5.0 V) for the op-amp supply.
+- **Input Signal Sources**: `Vin1`, `Vin2` (DC voltage sources representing the input voltages).
+
+#### Circuit Configuration: Inverting Summing Amplifier
+1. **Op-Amp Setup**:
+   - **Non-inverting input (+)**: Connected to ground through a matching resistor `R3`.
+   - **Inverting input (-)**: Virtual ground node (`V_inv`), where `Vin1`, `Vin2`, and the feedback loop meet.
+   
+2. **Resistor Connections**:
+   - **R1** connects node `Vin1` to the inverting input (`V_inv`).
+   - **R2** connects node `Vin2` to the inverting input (`V_inv`).
+   - **Rf** connects the inverting input (`V_inv`) to the output node `Vout`.
+   - **R3** connects the non-inverting input to ground.
+
+3. **Design Equations**:
+   - To achieve $V_{out} = -(Vin1 + Vin2)$, we choose equal values for all resistors: $R_1 = R_2 = R_f = 10\text{ k}\Omega$.
+   - Then $V_{out} = -R_f \left(\frac{Vin1}{R_1} + \frac{Vin2}{R_2}\right) = -(Vin1 + Vin2)$.
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Adder')
+
+# Power Supplies for the op-amp
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V positive power supply
+circuit.V('ss', 'Vss', circuit.gnd, -5.0) # -5V negative power supply
+
+# Input Signal Sources
+circuit.V('in1', 'Vin1', circuit.gnd, 1.0) # 1V DC input 1
+circuit.V('in2', 'Vin2', circuit.gnd, 2.0) # 2V DC input 2
+
+# Resistors for Inverting Summing Amplifier
+# R1 for Vin1, R2 for Vin2, Rf for feedback
+circuit.R('1', 'Vin1', 'V_inv', 10@u_kΩ)
+circuit.R('2', 'Vin2', 'V_inv', 10@u_kΩ)
+circuit.R('f', 'V_inv', 'Vout', 10@u_kΩ)
+circuit.R('3', 'V_noninv', circuit.gnd, 10@u_kΩ)
+
+# Behavioral Op-Amp implementation using a Voltage-Controlled Voltage Source (VCSS / E-element)
+# Syntax: E(name, positive_output, negative_output, positive_input, negative_input, gain)
+# Gain is set high (e.g., 100k) to emulate an ideal operational amplifier.
+circuit.SinusoidalVoltageSource('opamp_behavioral', 'Vout', circuit.gnd, dc=0) # Placeholder for structural completeness
+# Using standard PySpice non-linear/behavioral or simple VCVS for op-amp:
+# Node connections: Non-inverting input ('V_noninv'), Inverting input ('V_inv'), Output ('Vout')
+circuit.element('E1').plus = 'Vout'
+circuit.element('E1').minus = circuit.gnd
+circuit.element('E1').input_plus = 'V_noninv'
+circuit.element('E1').input_minus = 'V_inv'
+circuit.element('E1').gain = 1e5
+
+# Analysis Part
+simulator = circuit.simulator()
+```

@@ -1,0 +1,63 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier**: An ideal or behavioral op-amp modeled using a voltage-controlled voltage source (VCVS) or subcircuit, or constructed using transistor stages, but for a standard PySpice op-amp integrator, we can use a controlled source or a subcircuit representing the op-amp. Alternatively, a standard operational amplifier macromodel can be built using differential pairs. Let's build a fundamental op-amp using transistors (differential input stage with active load, and output stage) or model it cleanly. To ensure robustness and simplicity in PySpice without external library dependencies, we can implement a simple op-amp using a differential pair or use a behavioral VCVS model for the op-amp.
+  - Let's use a differential pair topology for the op-amp to make it a fully transistor-level integrated circuit design.
+  - **NMOS/PMOS Transistors**: M1, M2 (differential pair), M3, M4 (active load), M5 (tail current source), M6 (output stage driver).
+- **Resistors**: 
+  - **R1**: Input resistor connected between **Vin** and the inverting input of the op-amp.
+- **Capacitors**:
+  - **Cf**: Feedback capacitor connected between the output node **Vout** and the inverting input of the op-amp.
+- **Power Supply**: **Vdd** (5.0 V) and **Vss** (0 V / Ground), or dual supplies. For single supply 5V, we can bias the non-inverting terminal to `Vdd/2` (2.5 V).
+- **Input Signal Source**: **Vin** (Input voltage node).
+
+#### Circuit Topology Details
+1. **Op-Amp Core Structure**:
+   - **Differential Pair (M1, M2)**: NMOS transistors with gates connected to **Vin_inv** (inverting input) and **Vin_non_inv** (non-inverting input, biased at 2.5V).
+   - **Active Load (M3, M4)**: PMOS current mirror load for the differential pair.
+   - **Tail Current Source (M5)**: NMOS transistor providing bias current to the differential pair.
+   - **Output Stage (M6)**: Common-source amplifier stage driven by the output of the differential pair to provide high gain and drive capability.
+2. **Integrator Feedback Network**:
+   - **R1** is connected between the external **Vin** node and the inverting input node of the op-amp (**Vinv**).
+   - **Cf** is connected between **Vout** and the inverting input node (**Vinv**).
+   - The non-inverting input of the op-amp (**Vnon_inv**) is tied to a DC bias voltage of 2.5V (half of **Vdd**).
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Integrator')
+
+# Define transistor models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power Supplies and Biasing
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V power supply
+circuit.V('in', 'Vin', circuit.gnd, 2.5) # Input voltage node (DC operating point)
+circuit.V('bias_inv', 'V_non_inv', circuit.gnd, 2.5) # Non-inverting terminal biased at 2.5V
+circuit.V('tail_bias', 'V_tail', circuit.gnd, 1.0) # Tail current bias
+
+# Op-Amp Sub-components (Two-Stage Op-Amp Design)
+# Differential Input Stage (M1, M2), Active Load (M3, M4), Tail Current Source (M5)
+circuit.MOSFET('1', 'DiffOut', 'Vinv', 'TailNode', 'TailNode', model='nmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('2', 'OpAmpMid', 'V_non_inv', 'TailNode', 'TailNode', model='nmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('3', 'DiffOut', 'DiffOut', 'Vdd', 'Vdd', model='pmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('4', 'OpAmpMid', 'DiffOut', 'Vdd', 'Vdd', model='pmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('5', 'TailNode', 'V_tail', circuit.gnd, circuit.gnd, model='nmos_model', w=50e-6, l=1e-6)
+
+# Second Stage (Common-Source Output Driver: M6)
+circuit.MOSFET('6', 'Vout', 'OpAmpMid', circuit.gnd, circuit.gnd, model='nmos_model', w=100e-6, l=1e-6)
+circuit.R('load', 'Vout', 'Vdd', 10@u_kΩ)
+
+# Integrator External Components (R1 and Cf)
+circuit.R('1', 'Vin', 'Vinv', 10@u_kΩ)
+circuit.C('f', 'Vout', 'Vinv', 100@u_pF)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

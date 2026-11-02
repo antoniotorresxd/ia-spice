@@ -1,0 +1,76 @@
+### Task 1
+
+#### Design overview
+
+Use an inverting summing network driven by a two-stage CMOS op amp. The op amp’s non-inverting input is grounded, and its inverting input is the summing node `Vsum`.
+
+A negative output requires a negative supply rail. The circuit therefore uses `Vdd = +5 V` and an additional `Vss = -5 V`; with only a +5 V supply and ground, the op amp could not produce the required negative output for positive inputs.
+
+#### Summing network
+
+- `Rin1` connects `Vin1` to `Vsum`.
+- `Rin2` connects `Vin2` to `Vsum`.
+- `Rf` connects `Vout` to `Vsum`.
+- Set all three resistors to 10 kΩ. With an ideal op amp, this gives  
+  \[
+  Vout = -(Vin1 + Vin2).
+  \]
+
+#### CMOS op amp
+
+- **M1, M2 — PMOS differential input pair:** Their gates connect to `Vsum` and ground, respectively. Their sources share `Ntail`.
+- **M3 — PMOS tail-current source:** Its source and bulk connect to `Vdd`; its gate connects to `VBP`; its drain connects to `Ntail`.
+- **M4, M5 — NMOS current-mirror load:** M4 is diode-connected at `N1`; M5’s gate connects to `N1`. Their sources and bulks connect to `Vss`. The drains connect to `N1` and `N2`, respectively.
+- **M6 — NMOS second-stage common-source device:** Its gate connects to `N2`; its source and bulk connect to `Vss`; its drain connects to `Vout`.
+- **M7 — PMOS second-stage current-source load:** Its source and bulk connect to `Vdd`; its gate connects to `VBP`; its drain connects to `Vout`.
+- **Bias:** `VBP = 4.2 V` biases the PMOS current sources. The example input sources are set to 0.1 V DC each, so the intended output is approximately −0.2 V.
+
+All MOSFETs use a 2 µm channel length and nominal widths. The model is a simple Level 1 model, so practical gain, offset, and output swing will differ from an ideal op amp.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('CMOS Opamp Inverting Adder')
+
+# Simple Level 1 MOSFET models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Supplies: +5 V and -5 V are used so Vout can be negative
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ss', 'Vss', circuit.gnd, -5.0)
+
+# DC input examples and PMOS current-source bias
+circuit.V('in1', 'Vin1', circuit.gnd, 0.1)
+circuit.V('in2', 'Vin2', circuit.gnd, 0.1)
+circuit.V('bp', 'VBP', circuit.gnd, 4.2)
+
+# Inverting summing network
+circuit.R('in1', 'Vin1', 'Vsum', 10e3)
+circuit.R('in2', 'Vin2', 'Vsum', 10e3)
+circuit.R('f', 'Vout', 'Vsum', 10e3)
+
+# First stage: PMOS differential pair with NMOS current-mirror load
+# MOSFET arguments: name, drain, gate, source, bulk, model, w, l
+circuit.MOSFET('1', 'N1', 'Vsum', 'Ntail', 'Ntail',
+               model='pmos_model', w=100e-6, l=2e-6)
+circuit.MOSFET('2', 'N2', circuit.gnd, 'Ntail', 'Ntail',
+               model='pmos_model', w=100e-6, l=2e-6)
+circuit.MOSFET('3', 'Ntail', 'VBP', 'Vdd', 'Vdd',
+               model='pmos_model', w=100e-6, l=2e-6)
+
+circuit.MOSFET('4', 'N1', 'N1', 'Vss', 'Vss',
+               model='nmos_model', w=50e-6, l=2e-6)
+circuit.MOSFET('5', 'N2', 'N1', 'Vss', 'Vss',
+               model='nmos_model', w=50e-6, l=2e-6)
+
+# Second stage: NMOS common-source amplifier with PMOS current-source load
+circuit.MOSFET('6', 'Vout', 'N2', 'Vss', 'Vss',
+               model='nmos_model', w=50e-6, l=2e-6)
+circuit.MOSFET('7', 'Vout', 'VBP', 'Vdd', 'Vdd',
+               model='pmos_model', w=50e-6, l=2e-6)
+
+simulator = circuit.simulator()
+```

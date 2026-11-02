@@ -1,0 +1,39 @@
+### Task 1 — Design plan
+
+Use a unity-gain difference amplifier: an op-amp with four matched resistors. The resistor ratios make the output equal to \(V_{in2}-V_{in1}\), provided the op-amp remains in its linear operating range.
+
+**Devices and connections**
+- **A1**: ideal high-gain op-amp model. Its non-inverting input connects to `Vplus`, its inverting input to `Vminus`, and its output is `Vout`.
+- **R1 = 10 kΩ**: connects `Vin2` to `Vplus`.
+- **R2 = 10 kΩ**: connects `Vplus` to ground.
+- **R3 = 10 kΩ**: connects `Vin1` to `Vminus`.
+- **Rf = 10 kΩ**: connects `Vout` to `Vminus`.
+- **Input sources**: DC sources on `Vin1` and `Vin2` for operating-point simulation.
+
+The matched resistor pairs give \(V_{plus}=V_{in2}/2\). With negative feedback, \(V_{minus}\approx V_{plus}\), and the inverting-node resistor equation gives \(V_{out}=2V_{minus}-V_{in1}=V_{in2}-V_{in1}\).
+
+The code uses an ideal VCVS op-amp model, so it does not impose supply rails or output clipping. A physical single-supply 5 V op-amp cannot produce negative outputs; its input and output ranges must accommodate the chosen signals.
+
+### Task 2 — PySpice code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Subtractor')
+
+# DC input values for the operating-point circuit
+circuit.V('in1', 'Vin1', circuit.gnd, 1.0 @ u_V)
+circuit.V('in2', 'Vin2', circuit.gnd, 2.0 @ u_V)
+
+# Matched resistor network
+circuit.R('1', 'Vin2', 'Vplus', 10 @ u_kΩ)
+circuit.R('2', 'Vplus', circuit.gnd, 10 @ u_kΩ)
+circuit.R('3', 'Vin1', 'Vminus', 10 @ u_kΩ)
+circuit.R('f', 'Vout', 'Vminus', 10 @ u_kΩ)
+
+# High-gain ideal op-amp represented by a voltage-controlled voltage source
+circuit.VCVS('opamp', 'Vout', circuit.gnd, 'Vplus', 'Vminus', 1e6)
+
+simulator = circuit.simulator()
+```

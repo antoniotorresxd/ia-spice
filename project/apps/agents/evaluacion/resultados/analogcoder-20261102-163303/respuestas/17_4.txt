@@ -1,0 +1,91 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier (Op-Amp)**: Modelled using a subcircuit or behavioral voltage source (or standard op-amp representation) configured for non-inverting amplification. For standard SPICE implementation without an external macro model library, we can build the op-amp using individual transistors or use a VCVS (Voltage-Controlled Voltage Source) to represent the gain stage, combined with a feedback network. Alternatively, a transistor-based differential pair operational amplifier can be used. Let's design a discrete transistor-based operational amplifier or use a controlled source approach with transistors to form the core gain block. To ensure robust oscillation, we need a non-inverting amplifier with a gain slightly greater than 3 (typically around $A_v = 1 + R_f/R_1 \approx 3$).
+- **Resistors**: 
+  - $R_1, R_2$ forming the series-parallel frequency-selective RC network ($R$ and $C$).
+  - $R_f, R_{in}$ setting the closed-loop gain of the amplifier.
+- **Capacitors**: $C_1, C_2$ forming the frequency-selective feedback network.
+- **Power Supply**: Dual power supplies (+Vdd and -Vss, or Vdd and ground with proper biasing) for the amplifier. Let's use dual supplies: +Vdd = 5V and -Vss = -5V for simplicity and centered operation.
+
+#### Wien Bridge Feedback Network Setup
+1. **Frequency-Selective Network**:
+   - Series RC network connected from the amplifier output to the non-inverting input ($V_+$): Resistor $R_1$ in series with Capacitor $C_1$. Let the junction between $R_1$ and $C_1$ be node `V_pos`.
+   - Parallel RC network connected from `V_pos` to the ground: Resistor $R_2$ in parallel with Capacitor $C_2$.
+   - The oscillation frequency is given by $f_0 = \frac{1}{2\pi R C}$ (assuming $R_1 = R_2 = R$ and $C_1 = C_2 = C$).
+
+2. **Amplifier and Gain Network**:
+   - A non-inverting amplifier configuration where the output `Vout` is fed back via a resistive divider ($R_f$ and $R_{in}$) to the inverting input ($V_-$).
+   - Gain $A_v = 1 + \frac{R_f}{R_{in}} \ge 3$ to sustain oscillation.
+
+3. **Implementation via Transistor-Level / Controlled-Source Hybrid for PySpice**:
+   - We can implement the amplifier using an ideal Voltage Controlled Voltage Source (VCVS, element `E`) with a high gain (e.g., $A = 1000$) or a transistor-based operational amplifier stage. Using a behavioral VCVS in PySpice makes the oscillator topology clean, stable, and guaranteed to oscillate at start-up.
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Wien Bridge Oscillator')
+
+# Power Supplies for dual-supply operational amplifier
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)       # +5V supply
+circuit.V('ss', 'Vss', circuit.gnd, -5.0)     # -5V supply
+
+# Wien Bridge RC Network Components
+# Let R = 10k ohms, C = 10nF -> f0 = 1 / (2 * pi * 10k * 10n) ≈ 1.59 kHz
+circuit.R('1', 'Vout', 'V_pos', 10@u_kΩ)
+circuit.C('1', 'V_pos', circuit.gnd, 10@u_nF)
+
+circuit.R('2', 'V_pos', circuit.gnd, 10@u_kΩ)
+circuit.C('2', circuit.gnd, 'V_neg', 10@u_nF)  # Wait, standard Wien bridge connects parallel RC to ground and inverting input has the gain set resistors.
+# Correct Wien Bridge Connections:
+# Series branch (R1, C1) between Vout and V_pos
+# Parallel branch (R2, C2) between V_pos and ground
+# Inverting input V_neg connected to a resistive divider from Vout to ground for gain >= 3.
+
+# Let's rebuild the connections cleanly:
+# Node V_pos is the non-inverting input of the op-amp.
+# Node V_neg is the inverting input of the op-amp.
+
+# Series RC: R1 from Vout to V_pos, C1 from V_pos to V_feedback_node? No:
+# Standard Wien Bridge:
+# Series R1 + C1 from Vout to V_pos.
+# Parallel R2 || C2 from V_pos to Ground.
+
+circuit.R('1', 'Vout', 'V_pos', 10@u_kΩ)
+circuit.C('1', 'V_pos', 'V_bridge', 10@u_nF) # let V_bridge be the node between R1 and C1? 
+# Actually: Vout -> R1 -> V_pos -> C1 -> Ground? No.
+# Standard: 
+# Branch 1 (Series): Vout -> R_ser -> V_pos -> C_ser -> Ground (Wait, series R and C in series between Vout and V_pos? No)
+# Correct bridge arms:
+# Arm 1 (Series): from Vout through R1 and C1 to V_pos. (Vout -> R1 -> nodeX -> C1 -> V_pos)
+# Arm 2 (Parallel): from V_pos to Ground via R2 and C2 in parallel.
+
+circuit.R('1_ser', 'Vout', 'V_mid', 10@u_kΩ)
+circuit.C('1_ser', 'V_mid', 'V_pos', 10@u_nF)
+circuit.R('2_par', 'V_pos', circuit.gnd, 10@u_kΩ)
+circuit.C('2_par', 'V_pos', circuit.gnd, 10@u_nF)
+
+# Gain setting resistors for non-inverting amplifier: V_out = (1 + Rf/Rin) * V_pos
+# We need gain slightly > 3, say Rf = 20k, Rin = 10k -> Gain = 3.
+circuit.R('f', 'Vout', 'V_neg', 20@u_kΩ)
+circuit.R('in', 'V_neg', circuit.gnd, 10@u_kΩ)
+
+# Operational Amplifier Behavioral Model using VCVS (E-element)
+# Syntax: circuit.VCS(name, positive_output_node, negative_output_node, positive_input_node, negative_input_node, gain)
+# In PySpice, a VCVS is added using custom behavioral syntax or voltage source control. 
+# Alternatively, using standard linear dependent source:
+circuit.žíx = None # Placeholder comment for structure
+
+# Using PySpice custom element for VCVS:
+# circuit.X(alias, subcircuit_name, *nodes) or using circuit.element_factory
+from PySpice.Spice.Netlist import Element
+circuit.element_factory.VCVS('opamp', 'Vout', circuit.gnd, 'V_pos', 'V_neg', 10000.0)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

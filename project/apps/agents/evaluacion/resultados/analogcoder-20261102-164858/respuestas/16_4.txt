@@ -1,0 +1,63 @@
+## Task 1: Design Plan
+
+An RC phase-shift oscillator needs a loop with a total phase shift of 360°. An ideal inverting amplifier supplies 180°, and a three-section RC ladder supplies the other 180°. The ladder gives 180° at f₀ = 1/(2πRC√6), where its attenuation is 1/29. The amplifier gain must therefore be at least 29 for oscillation to start.
+
+**Design values**
+- R = 10 kΩ, C = 10 nF
+- f₀ = 1/(2π · 10 kΩ · 10 nF · √6) ≈ 65 Hz
+- Feedback resistor Rf = 300 kΩ, so the closed-loop gain is Rf/R = 30 (slightly above the required 29)
+
+**Node naming:** The inverting input of the amplifier is labelled "-" in the specification. A bare "-" is not a clean SPICE node identifier, so the netlist uses the node name **Vminus** for it. The output node is **Vout**.
+
+**Components and connectivity**
+
+1. **Inverting amplifier (ideal op-amp modelled by a VCVS)**
+   - Element E_amp: output node Vout, referenced to ground, with the control taken as V(0) − V(Vminus). This gives Vout = −A·V(Vminus) with A = 10⁶.
+   - The non-inverting input is grounded, so Vminus is a virtual ground.
+
+2. **Feedback resistor**
+   - Rf = 300 kΩ between Vminus and Vout.
+
+3. **Three-section RC phase-shift ladder (from Vout back to Vminus)**
+   - R1 = 10 kΩ: Vout → n1
+   - C1 = 10 nF: n1 → ground
+   - R2 = 10 kΩ: n1 → n2
+   - C2 = 10 nF: n2 → ground
+   - R3 = 10 kΩ: n2 → n3
+   - C3 = 10 nF: n3 → ground
+   - R4 = 10 kΩ: n3 → Vminus (input resistor of the inverting amplifier)
+
+**Loop operation:** The ladder provides 180° of phase shift at 65 Hz with 1/29 attenuation. The inverting amplifier provides another 180° and gain of 30, so the loop gain is about 30/29 > 1 at 65 Hz and oscillation can start.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('RC Phase-Shift Oscillator')
+
+# Ideal inverting amplifier (op-amp modelled as a high-gain VCVS)
+# Non-inverting input grounded, inverting input = Vminus (virtual ground)
+# Vout = -A * V(Vminus), A = 1e6
+circuit.VCVS('amp', 'Vout', circuit.gnd, circuit.gnd, 'Vminus', 1e6)
+
+# Feedback resistor (gain = Rf / R = 300k / 10k = 30)
+circuit.R('f', 'Vminus', 'Vout', 300@u_kΩ)
+
+# Three-section RC phase-shift ladder from Vout to Vminus
+circuit.R('1', 'Vout', 'n1', 10@u_kΩ)
+circuit.C('1', 'n1', circuit.gnd, 10@u_nF)
+
+circuit.R('2', 'n1', 'n2', 10@u_kΩ)
+circuit.C('2', 'n2', circuit.gnd, 10@u_nF)
+
+circuit.R('3', 'n2', 'n3', 10@u_kΩ)
+circuit.C('3', 'n3', circuit.gnd, 10@u_nF)
+
+# Input resistor of the inverting amplifier
+circuit.R('4', 'n3', 'Vminus', 10@u_kΩ)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

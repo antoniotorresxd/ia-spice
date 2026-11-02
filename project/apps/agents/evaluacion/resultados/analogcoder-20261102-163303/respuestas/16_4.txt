@@ -1,0 +1,72 @@
+### Task 1
+
+#### Components Needed
+- **NMOS Transistors**: M1 (used as the common-source amplifier stage)
+- **PMOS Transistors**: M2 (used as the current source load)
+- **Resistors**: R1, R2, R3 (feedback resistor network for phase shift), R_bias (gate biasing resistor)
+- **Capacitors**: C1, C2, C3 (feedback capacitor network for phase shift), C_cc (AC coupling / DC blocking capacitor)
+- **Power Supply**: Vdd for DC supply
+- **Input Signal Source**: Vbias for biasing the amplifier stage
+
+#### Stage 1: Common-Source Amplifier with Active Load
+1. **Transistor Setup**:
+   - **M1** (NMOS) as the main amplifying transistor.
+   - Gate of **M1** is biased via **Vbias** through a high-value resistor and connected to the feedback network via a coupling capacitor.
+   - Source of **M1** connected to the ground.
+   - Drain of **M1** connected to the drain of **M2** (forming the output node **Vout**).
+
+2. **Biasing**:
+   - **Vbias** sets the gate voltage of **M1** to ensure it operates in the saturation region.
+   - **M2**, a PMOS transistor, acts as a current source load. Its source is connected to **Vdd**, its gate to a fixed bias voltage (**V_pmos_bias**), and its drain to the drain of **M1**.
+
+#### Stage 2: RC Phase-Shift Network
+1. **Feedback Loop**:
+   - The output of the amplifier (**Vout**) is fed back to the input of the amplifier through a three-stage RC ladder network ($R_1-C_1$, $R_2-C_2$, $R_3-C_3$) that provides the necessary $180^\circ$ phase shift at the oscillation frequency.
+   - The final output of the RC ladder network is coupled to the gate of **M1** via **C_cc**.
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('RC Phase-Shift Oscillator')
+
+# Define the MOSFET models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power Supplies for the power and bias voltages
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V power supply
+circuit.V('bias', 'Vbias_gate', circuit.gnd, 1.0) # 1V bias for NMOS gate (= V_th + 0.5)
+circuit.V('pbias', 'V_pmos_bias', circuit.gnd, 4.0) # 4V bias for PMOS load
+
+# Biasing resistor for NMOS gate
+circuit.R('bias', 'Vin_gate', 'Vbias_gate', 100@u_kΩ)
+
+# Amplifier Stage: Common-Source with Active Load
+# Parameters: name, drain, gate, source, bulk, model, w, l
+circuit.MOSFET('1', 'Vout', 'Vin_gate', circuit.gnd, circuit.gnd, model='nmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('2', 'Vout', 'V_pmos_bias', 'Vdd', 'Vdd', model='pmos_model', w=100e-6, l=1e-6)
+
+# DC Blocking / AC Coupling Capacitor between feedback network and gate
+circuit.C('cc', 'V_fb3', 'Vin_gate', 1@u_uF)
+
+# RC Phase-Shift Network (Three stages)
+# Stage 3
+circuit.R('3', 'Vout', 'V_fb1', 10@u_kΩ)
+circuit.C('3', 'V_fb1', circuit.gnd, 10@u_nF)
+
+# Stage 2
+circuit.R('2', 'V_fb1', 'V_fb2', 10@u_kΩ)
+circuit.C('2', 'V_fb2', circuit.gnd, 10@u_nF)
+
+# Stage 1
+circuit.R('1', 'V_fb2', 'V_fb3', 10@u_kΩ)
+circuit.C('1', 'V_fb3', circuit.gnd, 10@u_nF)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

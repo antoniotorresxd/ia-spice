@@ -1,0 +1,1 @@
+error al generar: ChatGoogleGenerativeAIError: Error calling model 'flash-3.8' (NOT_FOUND): 404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/flash-3.8 is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}

@@ -1,0 +1,77 @@
+## Task 1: Design Plan
+
+**Goal:** Build an inverting summing amplifier, Vout = -(Vin1 + Vin2), from a transistor-level op-amp and a resistive summing network.
+
+**Approach:** Use a single-stage five-transistor OTA as the op-amp, with a PMOS differential pair, an NMOS current-mirror load, and a PMOS tail current source. The OTA output is taken at the drain of M2/M4, and the summing network is a feedback resistor with two equal input resistors.
+
+**Supplies:** Vdd = +5 V and Vss = -5 V (ground is the midpoint). The negative rail is needed because the output must reach -(Vin1+Vin2) = -1.5 V, which a single-supply output cannot reach.
+
+### Devices and Connectivity
+
+| Device | Type | Terminals (D, G, S, B) | Role | W / L |
+|---|---|---|---|---|
+| M1 | PMOS | D = N1, G = GND (0 V), S = Vtail, B = Vdd | Non-inverting input (V+ = 0 V) | 20 µm / 1 µm |
+| M2 | PMOS | D = Vout, G = Vminus, S = Vtail, B = Vdd | Inverting input (V- = summing node) | 20 µm / 1 µm |
+| M5 | PMOS | D = Vtail, G = Vbias, S = Vdd, B = Vdd | Tail current source (≈100 µA) | 20 µm / 1 µm |
+| M3 | NMOS | D = N1, G = N1, S = Vss, B = Vss | Diode-connected mirror reference (≈50 µA) | 10 µm / 1 µm |
+| M4 | NMOS | D = Vout, G = N1, S = Vss, B = Vss | Mirror output, sinks current from Vout | 10 µm / 1 µm |
+| R1 | Resistor | Vin1 – Vminus | Input resistor | 100 kΩ |
+| R2 | Resistor | Vin2 – Vminus | Input resistor | 100 kΩ |
+| Rf | Resistor | Vminus – Vout | Feedback resistor | 100 kΩ |
+
+**Sources:**
+- Vdd = 5.0 V, Vss = -5.0 V
+- Vbias = 4.05 V, which sets Vsg(M5) = 0.95 V (|Vth| + Vov ≈ 0.5 + 0.45) and gives I_tail ≈ 100 µA
+- Vin1 = 1.0 V, Vin2 = 0.5 V (DC operating-point test values)
+
+### Design Calculations
+- **Tail current:** I = ½·kp_p·(W/L)·Vov², with kp_p = 50 µA/V², W/L = 20, and Vov = 0.447 V, so I ≈ 100 µA.
+- **Input pair:** Each branch carries 50 µA, with Vov ≈ 0.32 V.
+- **Mirror:** M3 and M4 have identical W/L, so the mirror ratio is 1. Their Vov is 0.32 V and the gate voltage is ≈ -4.2 V.
+- **Summing network:** With the virtual ground at V- ≈ 0 V, KCL gives (Vin1 + Vin2)/R + Vout/Rf = 0. With R = Rf, Vout = -(Vin1 + Vin2). The resistors are 100 kΩ so that the feedback current (≈15 µA) stays well within the 100 µA tail limit.
+- **Saturation checks:** M2 has Vsd ≈ 2.3 V and M4 has Vds ≈ 3.5 V at Vout = -1.5 V, both above their overdrive voltages.
+
+### Signal Flow
+Vin1 and Vin2 feed the inverting node Vminus through R1 and R2. Rf closes the negative feedback from Vout to Vminus. The OTA drives Vout, and the high open-loop gain forces Vminus to virtual ground, giving Vout = -(Vin1 + Vin2).
+
+---
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Inverting Summing Amplifier')
+
+# Define the MOSFET models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power supplies (dual rail: Vdd = +5 V, Vss = -5 V)
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ss', 'Vss', circuit.gnd, -5.0)
+
+# Bias voltage for tail current source M5: Vbias = Vdd - (|Vth| + Vov) = 5 - (0.5 + 0.45) = 4.05 V
+circuit.V('bias', 'Vbias', circuit.gnd, 4.05)
+
+# Input sources (DC operating point)
+circuit.V('in1', 'Vin1', circuit.gnd, 1.0)
+circuit.V('in2', 'Vin2', circuit.gnd, 0.5)
+
+# Op-amp: five-transistor OTA (PMOS input pair, NMOS mirror load, PMOS tail)
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+circuit.MOSFET('1', 'N1', circuit.gnd, 'Vtail', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)   # M1: non-inverting input (V+ = 0 V)
+circuit.MOSFET('2', 'Vout', 'Vminus', 'Vtail', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)    # M2: inverting input (V-)
+circuit.MOSFET('5', 'Vtail', 'Vbias', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)      # M5: tail current source
+circuit.MOSFET('3', 'N1', 'N1', 'Vss', 'Vss', model='nmos_model', w=10e-6, l=1e-6)            # M3: diode-connected mirror reference
+circuit.MOSFET('4', 'Vout', 'N1', 'Vss', 'Vss', model='nmos_model', w=10e-6, l=1e-6)          # M4: mirror output
+
+# Summing network: Vout = -(Vin1 + Vin2)
+circuit.R('1', 'Vin1', 'Vminus', 100@u_kΩ)   # input resistor R1
+circuit.R('2', 'Vin2', 'Vminus', 100@u_kΩ)   # input resistor R2
+circuit.R('f', 'Vminus', 'Vout', 100@u_kΩ)   # feedback resistor Rf
+
+# Analysis Part
+simulator = circuit.simulator()
+```

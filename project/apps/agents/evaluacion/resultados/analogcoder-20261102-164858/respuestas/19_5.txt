@@ -1,0 +1,75 @@
+## Task 1: Design Plan
+
+The differentiator is built from an operational amplifier with two external elements: a capacitor **C1** from Vin to the inverting input, and a feedback resistor **Rf** from the output to the inverting input. The non-inverting input is held at mid-supply (2.5 V). The ideal transfer function is Vout/Vin = −s·Rf·C1.
+
+### Op-Amp Core (single-stage OTA, 5 transistors)
+
+**Input differential pair**
+- **M1** (NMOS): drain = Vd1, gate = Vp (non-inverting input), source = Vs, bulk = Vs. W = 20 µm, L = 1 µm.
+- **M2** (NMOS): drain = Vout, gate = Vm (inverting input), source = Vs, bulk = Vs. W = 20 µm, L = 1 µm.
+
+**Active load (PMOS current mirror)**
+- **M3** (PMOS, diode-connected): drain = gate = Vd1, source = Vdd, bulk = Vdd. W = 20 µm, L = 1 µm.
+- **M4** (PMOS mirror): drain = Vout, gate = Vd1, source = Vdd, bulk = Vdd. W = 20 µm, L = 1 µm.
+
+**Tail current source**
+- **M5** (NMOS): drain = Vs, gate = Vbias, source = GND, bulk = GND. W = 20 µm, L = 1 µm. Vbias = 0.85 V sets a tail current of about 120 µA.
+
+**Models**
+- NMOS: kp = 100 µA/V², Vth = 0.5 V, λ = 0.02 V⁻¹
+- PMOS: kp = 50 µA/V², Vth = −0.5 V, λ = 0.02 V⁻¹
+
+### Bias Sources
+- **Vdd** = 5.0 V
+- **Vbias** = 0.85 V (tail gate; 0.5 V Vth + ≈0.35 V overdrive)
+- **Vp** = 2.5 V (non-inverting input, mid-supply reference)
+- **Vin** = 2.5 V DC (signal input node; no AC source is included, as required for operating-point analysis)
+
+### Differentiator Feedback Network
+- **C1** = 1 nF between Vin and Vm (inverting input).
+- **Rf** = 100 kΩ between Vout and Vm.
+- Corner frequency 1/(2π·Rf·C1) ≈ 1.6 kHz. Differentiation is valid below this frequency, and the gain is Rf·C1 in V/V per (rad/s).
+
+### Operating Point Check
+With C1 open at DC, Vm is set by Rf and the op-amp, which drives Vout to Vp = 2.5 V. The pair is balanced, the tail current is about 120 µA (60 µA per side), M3 and M4 operate in saturation with |Vgs| ≈ 0.82 V, and M2 has |Vds| ≈ 0.8 V, which is above its overdrive. The circuit is therefore biased correctly in saturation.
+
+---
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Differentiator')
+
+# Device models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5, lambda_=0.02)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5, lambda_=0.02)
+
+# Power and bias sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0@u_V)      # 5 V supply
+circuit.V('bias', 'Vbias', circuit.gnd, 0.85@u_V)  # tail current bias
+circuit.V('p', 'Vp', circuit.gnd, 2.5@u_V)         # non-inverting input at mid-supply
+circuit.V('in', 'Vin', circuit.gnd, 2.5@u_V)       # differentiator input (DC operating point only)
+
+# Op-amp core: five-transistor OTA
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+# Input differential pair
+circuit.MOSFET('1', 'Vd1', 'Vp', 'Vs', 'Vs', model='nmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('2', 'Vout', 'Vm', 'Vs', 'Vs', model='nmos_model', w=20e-6, l=1e-6)
+
+# PMOS current mirror active load
+circuit.MOSFET('3', 'Vd1', 'Vd1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('4', 'Vout', 'Vd1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)
+
+# NMOS tail current source
+circuit.MOSFET('5', 'Vs', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+
+# Differentiator feedback network
+circuit.C('1', 'Vin', 'Vm', 1@u_nF)     # input capacitor C1
+circuit.R('f', 'Vm', 'Vout', 100@u_kΩ)  # feedback resistor Rf
+
+# Analysis Part
+simulator = circuit.simulator()
+```

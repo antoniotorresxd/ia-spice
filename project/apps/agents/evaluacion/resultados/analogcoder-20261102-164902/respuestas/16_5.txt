@@ -1,0 +1,70 @@
+## Task 1 — Design plan
+
+This RC phase-shift oscillator uses an **inverting common-source stage**, a **source-follower output buffer**, and a three-section RC feedback network. The common-source stage supplies the 180° inversion; the RC network supplies approximately another 180° at its oscillation frequency.
+
+### Devices and interconnections
+
+- **Supply and bias**
+  - `Vdd`: 5 V supply.
+  - `Vbias`: 0.6 V DC bias for the common-source transistor. There is no external signal input; the oscillator generates its own signal.
+  - Circuit ground is the reference node.
+
+- **Common-source amplifier — M1**
+  - NMOS `M1`: drain at `D1`, gate at `Gate`, source and bulk at ground.
+  - `RD` connects `D1` to `Vdd`.
+  - With the specified model and sizing, the gate is biased slightly above threshold, setting a small quiescent current and leaving drain-voltage headroom.
+
+- **Output buffer — M2**
+  - NMOS `M2` is a source follower: drain at `Vdd`, gate at `D1`, source and bulk at `Vout`.
+  - `RLOAD` connects `Vout` to ground.
+  - The follower provides a lower-impedance output to drive the RC network and external loading.
+
+- **Three-section RC feedback network**
+  - `C1` connects `Vout` to `N1`; `R1` connects `N1` to ground.
+  - `C2` connects `N1` to `N2`; `R2` connects `N2` to ground.
+  - `C3` connects `N2` to `Gate`; `R3` connects `Gate` to `Vbias`.
+  - `Vbias` is an ideal DC source, so it provides the gate’s DC bias while acting as AC ground for the feedback network.
+
+For equal section values, the nominal frequency is approximately
+\(f \approx 1/(2\pi RC\sqrt{6})\), or about **65 Hz** for 100 kΩ and 10 nF. The amplifier gain is designed to exceed the network’s nominal attenuation so oscillation can build from a startup disturbance.
+
+## Task 2 — PySpice code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('RC Phase-Shift Oscillator')
+
+# NMOS model
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+
+# DC supplies and bias
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('bias', 'Vbias', circuit.gnd, 0.6)
+
+# Common-source amplifier
+circuit.MOSFET(
+    '1', 'D1', 'Gate', circuit.gnd, circuit.gnd,
+    model='nmos_model', w=5e-6, l=1e-6
+)
+circuit.R('D', 'D1', 'Vdd', 1e6)
+
+# Source-follower output buffer
+circuit.MOSFET(
+    '2', 'Vdd', 'D1', 'Vout', 'Vout',
+    model='nmos_model', w=10e-6, l=1e-6
+)
+circuit.R('LOAD', 'Vout', circuit.gnd, 100e3)
+
+# Three-section RC feedback network
+circuit.C('1', 'Vout', 'N1', 10e-9)
+circuit.R('1', 'N1', circuit.gnd, 100e3)
+
+circuit.C('2', 'N1', 'N2', 10e-9)
+circuit.R('2', 'N2', circuit.gnd, 100e3)
+
+circuit.C('3', 'N2', 'Gate', 10e-9)
+circuit.R('3', 'Gate', 'Vbias', 100e3)
+
+simulator = circuit.simulator()
+```

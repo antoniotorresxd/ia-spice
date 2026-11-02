@@ -9,4 +9,4 @@ __pycache__/
 !.env.example
 
 # salidas de agents.evaluacion (se regeneran con un comando)
-evaluacion/resultados/
+

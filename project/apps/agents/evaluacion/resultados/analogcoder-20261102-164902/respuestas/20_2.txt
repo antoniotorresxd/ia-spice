@@ -1,0 +1,50 @@
+## Task 1: Design Plan
+
+Use the standard **inverting op-amp summing amplifier**.
+
+### Components and connections
+
+- **Op-amp:** Model the op-amp as a high-gain voltage-controlled voltage source (VCVS).
+  - Non-inverting input connects to ground.
+  - Inverting input connects to the summing node `Summing`.
+  - Output connects to `Vout`.
+- **Input resistors:** `R1` connects `Vin1` to `Summing`; `R2` connects `Vin2` to `Summing`.
+- **Feedback resistor:** `Rf` connects `Vout` to `Summing`.
+- **Supplies:** Provide `Vdd = +5 V` and `Vss = -5 V` so the output can swing negative. The ideal VCVS model does not enforce supply limits.
+- **Input sources:** Use DC values of 0.5 V on both inputs as an example operating point.
+
+With `R1 = R2 = Rf = 10 kΩ`, the summing-node current equation gives:
+
+\[
+V_{out}=-\left(V_{in1}+V_{in2}\right)
+\]
+
+Thus, the example input values produce `Vout ≈ -1 V`. The VCVS is an idealized op-amp model; a physical op-amp must have sufficient gain and output range for the intended signals.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Inverting Op-Amp Adder')
+
+# Dual supplies: the negative rail permits a negative output voltage.
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ss', 'Vss', circuit.gnd, -5.0)
+
+# DC input operating-point values.
+circuit.V('in1', 'Vin1', circuit.gnd, 0.5)
+circuit.V('in2', 'Vin2', circuit.gnd, 0.5)
+
+# Equal input and feedback resistors give Vout = -(Vin1 + Vin2).
+circuit.R('1', 'Vin1', 'Summing', 10@u_kΩ)
+circuit.R('2', 'Vin2', 'Summing', 10@u_kΩ)
+circuit.R('f', 'Vout', 'Summing', 10@u_kΩ)
+
+# High-gain ideal op-amp model:
+# output = gain * (non-inverting input - inverting input).
+circuit.VCVS('opamp', 'Vout', circuit.gnd, circuit.gnd, 'Summing', 1e6)
+
+simulator = circuit.simulator()
+```

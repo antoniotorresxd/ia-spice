@@ -1,0 +1,16 @@
+===== openai/gpt-6-luna (solo)
+error: No environment file found at: .env
+===== openai/gpt-6-luna (sistema)
+error: No environment file found at: .env
+===== anthropic/claude-haiku-5.5 (solo)
+error: No environment file found at: .env
+===== anthropic/claude-haiku-5.5 (sistema)
+error: No environment file found at: .env
+===== google/gemini-3.5-flash-lite (solo)
+error: No environment file found at: .env
+===== google/gemini-3.5-flash-lite (sistema)
+error: No environment file found at: .env
+===== google/gemini-3.8-flash (solo)
+error: No environment file found at: .env
+===== google/gemini-3.8-flash (sistema)
+error: No environment file found at: .env

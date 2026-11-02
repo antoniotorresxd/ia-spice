@@ -1,0 +1,82 @@
+### Task 1
+
+#### Design overview
+
+This is a self-sustaining Wien Bridge oscillator with a nominal oscillation frequency of approximately **1.59 kHz**. It uses a passive Wien bridge for frequency-selective positive feedback and two cascaded NMOS common-source stages for amplification. The two inversions make the amplifier non-inverting overall. Antiparallel diodes across the output provide amplitude limiting.
+
+There is no external input signal; the input node is therefore not applicable. **Vout** is the oscillator output.
+
+#### Wien Bridge feedback network
+
+Use equal values for the bridge resistors and capacitors:
+
+- **R1 = R2 = 10 kΩ**
+- **C1 = C2 = 10 nF**
+
+Connections:
+
+- A series branch runs from **Vout** through R1 and C1 to the bridge node **W**.
+- R2 and C2 connect in parallel from **W** to the 2.5 V reference node **Vref**.
+- **W** drives the gate of the first NMOS stage.
+- A 1 MΩ resistor from **W** to **Vref** establishes the gate’s DC bias without materially loading the bridge at its oscillation frequency.
+
+The nominal frequency is \( f_0 = 1/(2\pi RC) \), approximately **1.59 kHz**. At this frequency, the bridge has zero phase shift and an attenuation of approximately one third.
+
+#### Amplifier and amplitude control
+
+- **M1** and **M2** are NMOS common-source stages. Each has a 1 kΩ source resistor and a 3.3 kΩ drain resistor connected to Vdd.
+- **M1**’s gate connects to **W**. Its drain, **N1**, drives **M2**’s gate.
+- **M2**’s drain is **Vout**.
+- Both MOSFET bulks connect to their respective sources.
+- A pair of antiparallel diodes between **Vout** and **Vref** limits the output swing and helps stabilize the oscillation amplitude.
+- **Vdd** is 5 V and **Vref** is 2.5 V.
+
+The stage gain is designed to exceed the bridge’s required gain of three near the oscillation frequency. In a transient simulation, a small startup perturbation may be needed to initiate oscillation in an otherwise perfectly symmetric numerical simulation.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Wien Bridge Oscillator')
+
+# NMOS model
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+
+# Diode model for output amplitude limiting
+circuit.model('dlim', 'D', is_=1e-14, n=1)
+
+# Supplies and midpoint reference
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ref', 'Vref', circuit.gnd, 2.5)
+
+# Wien bridge: series R-C from Vout to W,
+# and parallel R-C from W to Vref
+circuit.R('bridge_series', 'Vout', 'BridgeRC', 10e3)
+circuit.C('bridge_series', 'BridgeRC', 'W', 10e-9)
+circuit.R('bridge_parallel', 'W', 'Vref', 10e3)
+circuit.C('bridge_parallel', 'W', 'Vref', 10e-9)
+circuit.R('gate_bias', 'W', 'Vref', 1e6)
+
+# First common-source stage
+circuit.MOSFET(
+    '1', 'N1', 'W', 'S1', 'S1',
+    model='nmos_model', w=100e-6, l=10e-6
+)
+circuit.R('source1', 'S1', circuit.gnd, 1e3)
+circuit.R('drain1', 'N1', 'Vdd', 3.3e3)
+
+# Second common-source stage
+circuit.MOSFET(
+    '2', 'Vout', 'N1', 'S2', 'S2',
+    model='nmos_model', w=100e-6, l=10e-6
+)
+circuit.R('source2', 'S2', circuit.gnd, 1e3)
+circuit.R('drain2', 'Vout', 'Vdd', 3.3e3)
+
+# Antiparallel output-clamping diodes for amplitude stabilization
+circuit.D('limit1', 'Vout', 'Vref', model='dlim')
+circuit.D('limit2', 'Vref', 'Vout', model='dlim')
+
+simulator = circuit.simulator()
+```

@@ -1,0 +1,58 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier**: Op-amp (modeled with a subcircuit or behavioral voltage source representing high-gain differential amplification)
+- **Resistors**: R1 and R2 to form a voltage divider that provides positive feedback and sets the threshold voltages (hysteresis).
+- **Power Supply**: Vdd for positive supply (5V), Vss for negative supply (0V or ground in single-supply configuration, let's use 0V for ground and 5V for Vdd).
+- **Input Signal Source**: Vin connected to the inverting or non-inverting terminal appropriately (typically, input goes through a resistor to the inverting terminal, and positive feedback is applied to the non-inverting terminal).
+- **Power Supplies**: Vdd and GND for the circuit.
+
+#### Non-Inverting Schmitt Trigger Configuration
+1. **Op-Amp Setup**:
+   - Let the non-inverting terminal of the op-amp be denoted as **Vplus**.
+   - Let the inverting terminal of the op-amp be connected to a reference voltage or ground. For a standard non-inverting Schmitt trigger, the input **Vin** is connected to the inverting terminal (or via a resistor network to the non-inverting terminal with positive feedback from output to non-inverting terminal).
+   - Let's use the classic configuration where:
+     - **Vin** is connected directly to the inverting input of the op-amp (or via a resistor, let's use direct connection for simplicity).
+     - The non-inverting terminal (**Vplus**) is connected to a resistive divider between **Vout** and a reference voltage (e.g., Vdd/2) or ground. Let's reference it to **Vdd/2** (2.5V) using two equal resistors, or simply connect the feedback network between **Vout**, **Vin**, and the non-inverting terminal.
+     - Specifically, for a non-inverting Schmitt trigger:
+       - Resistor **R1** is connected between **Vout** and **Vplus**.
+       - Resistor **R2** is connected between **Vplus** and a reference voltage (e.g., **Vref** = 2.5V).
+       - The input signal **Vin** is connected to the inverting terminal of the op-amp.
+
+2. **Biasing and Reference**:
+   - **Vref** = 2.5V (midpoint of Vdd = 5V).
+   - When **Vin** is low, **Vout** is high (Vdd). The threshold for high-to-low transition ($V_{UT}$) is higher than when **Vin** is high and **Vout** is low ($V_{LT}$).
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Non-Inverting Schmitt Trigger')
+
+# Power Supplies
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V power supply
+circuit.V('ref', 'Vref', circuit.gnd, 2.5) # 2.5V reference voltage
+circuit.V('in', 'Vin', circuit.gnd, 2.5) # Input signal set at 2.5V for operating point
+
+# Resistors for positive feedback network (hysteresis setting)
+circuit.R('1', 'Vout', 'Vplus', 10@u_kΩ)
+circuit.R('2', 'Vplus', 'Vref', 10@u_kΩ)
+
+# Behavioral or idealized Op-Amp implementation using a voltage-controlled voltage source (VCVS)
+# E_name positive_output negative_output positive_input negative_input gain
+# Here, input nodes are Vplus (non-inverting) and Vin (inverting). Output is Vout_int, clipped between 0 and 5V.
+# For simplicity in PySpice DC operating point, a high-gain linear amplifier model can be used:
+circuit.V('opamp_out', 'Vout_internal', circuit.gnd, 0) # Placeholder, replaced by VCVS:
+# Using a VCVS with a large gain (e.g., 100k) to emulate an op-amp:
+# E.g., E1 Vout gnd value = { 2.5 + 100000 * (V(Vplus) - V(Vin)) } with limiting
+# PySpice allows behavioral sources using expression:
+circuit.BehavioralSource('opamp', 'Vout', circuit.gnd,
+                         expression='min(5.0, max(0.0, 2.5 + 100000 * (V(Vplus) - V(Vin))))')
+
+# Analysis Part
+simulator = circuit.simulator()
+```

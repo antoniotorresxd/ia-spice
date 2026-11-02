@@ -1,0 +1,46 @@
+### Task 1
+
+#### Components and connections
+
+- **Op-amp:** Represented by a high-gain voltage-controlled voltage source (VCVS), an idealized op-amp model.
+  - Non-inverting input connects to ground.
+  - Inverting input connects to the summing node `nminus`.
+  - Output connects to `Vout`.
+- **C1:** Connects `Vin` to `nminus`.
+- **Rf:** Connects `Vout` back to `nminus`, providing negative feedback.
+- **Input source:** A 0 V DC source defines `Vin` for operating-point analysis. A time-varying input is needed to observe differentiation in transient analysis.
+- **Supply:** A 5 V `Vdd` source is included. The ideal VCVS model itself is not rail-limited.
+
+For an ideal op-amp operating in its linear range, the differentiator relationship is:
+
+\[
+V_{\text{out}}=-R_f C_1\frac{dV_{\text{in}}}{dt}
+\]
+
+Using \(R_f=100\,\text{k}\Omega\) and \(C_1=10\,\text{nF}\) gives \(R_f C_1=1\,\text{ms}\).
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Differentiator')
+
+# Supply and DC input for operating-point analysis
+circuit.V('dd', 'Vdd', circuit.gnd, 5@u_V)
+circuit.V('in', 'Vin', circuit.gnd, 0@u_V)
+
+# Non-inverting input held at ground
+circuit.V('plus', 'Vplus', circuit.gnd, 0@u_V)
+
+# Differentiator components
+circuit.C('1', 'Vin', 'nminus', 10@u_nF)
+circuit.R('f', 'Vout', 'nminus', 100@u_kΩ)
+
+# High-gain idealized op-amp model:
+# Vout = 100,000 * (Vplus - Vminus)
+circuit.VCVS('opamp', 'Vout', circuit.gnd, 'Vplus', 'nminus', 1e5)
+
+simulator = circuit.simulator()
+```

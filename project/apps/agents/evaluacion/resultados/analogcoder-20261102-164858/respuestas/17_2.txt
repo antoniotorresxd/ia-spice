@@ -1,0 +1,61 @@
+## Task 1: Design Plan
+
+**Topology:** A Wien bridge oscillator built around an ideal non-inverting amplifier. The amplifier is modeled as a high-gain VCVS (E = 1e5) with its non-inverting input at node **Pos** and its inverting input at node **-**. The output node is **Vout**.
+
+**Frequency-selective network (Wien bridge):**
+- **R1** (10 kΩ): from Vout to node X (series arm).
+- **C1** (10 nF): from node X to node Pos (series arm). R1 and C1 form the series arm, so the series impedance is R1 + 1/(sC1).
+- **R2** (10 kΩ): from Pos to ground (parallel arm).
+- **C2** (10 nF): from Pos to ground (parallel arm). R2 and C2 form the parallel arm.
+- Oscillation frequency: f0 = 1/(2π·R·C) = 1/(2π·10 kΩ·10 nF) ≈ 1.59 kHz.
+
+**Amplitude-setting network (non-inverting amplifier):**
+- **Rg** (10 kΩ): from node **-** to ground.
+- **Rf** (22 kΩ): from Vout to node **-**.
+- Closed-loop gain = 1 + Rf/Rg = 3.2. The Wien bridge requires a gain of 3 at f0, so 3.2 gives a small excess gain that guarantees start-up.
+- **D1, D2** (anti-parallel silicon diodes, 1N4148-type model): connected across Rf. At large amplitudes they conduct and reduce the effective feedback gain to 3, which limits the output swing and stabilizes the amplitude.
+
+**Node summary:**
+| Node | Connections |
+|---|---|
+| Vout | E1 output (+), R1, Rf, D1 anode, D2 cathode |
+| X | R1, C1 |
+| Pos | C1, R2, C2, E1 non-inverting input (+) |
+| - | E1 inverting input (-), Rg, Rf, D1 cathode, D2 anode |
+| gnd | E1 output (-), R2, C2, Rg |
+
+**Design choices:** Vdd is not needed because the op-amp is idealized as a VCVS. No AC source is used. The oscillation starts from noise or the initial conditions during a transient simulation.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Wien Bridge Oscillator')
+
+# Diode model (anti-parallel pair across Rf for amplitude stabilization)
+circuit.model('D1N4148', 'D', IS=2.52e-9, N=1.752)
+
+# Op-amp modeled as a high-gain voltage-controlled voltage source
+# E1: output Vout (to ground), controlled by V(Pos) - V(-), gain = 1e5
+circuit.VCVS('1', 'Vout', circuit.gnd, 'Pos', '-', 1e5)
+
+# Wien bridge frequency-selective network
+# Series arm: R1 - C1 from Vout to Pos (via node X)
+circuit.R('1', 'Vout', 'X', 10@u_kΩ)
+circuit.C('1', 'X', 'Pos', 10@u_nF)
+# Parallel arm: R2 || C2 from Pos to ground
+circuit.R('2', 'Pos', circuit.gnd, 10@u_kΩ)
+circuit.C('2', 'Pos', circuit.gnd, 10@u_nF)
+
+# Non-inverting amplifier gain-setting network (gain = 1 + Rf/Rg = 3.2)
+circuit.R('g', '-', circuit.gnd, 10@u_kΩ)
+circuit.R('f', 'Vout', '-', 22@u_kΩ)
+
+# Anti-parallel diodes across Rf for amplitude limiting
+circuit.Diode('1', 'Vout', '-', model='D1N4148')
+circuit.Diode('2', '-', 'Vout', model='D1N4148')
+
+simulator = circuit.simulator()
+```
