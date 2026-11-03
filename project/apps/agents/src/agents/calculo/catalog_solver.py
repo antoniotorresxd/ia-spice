@@ -294,6 +294,25 @@ def solve_opamp_difference_amp(params: dict[str, Any]) -> dict[str, float]:
     }
 
 
+def solve_opamp_summing_amp(params: dict[str, Any]) -> dict[str, float]:
+    v1 = _param(params, "v_in1", "vin1", default=1.0)
+    v2 = _param(params, "v_in2", "vin2", default=1.0)
+    suma = v1 + v2
+    vout = _param(params, "v_out", "vout", "target", default=-suma)
+    r = _param(params, "r", default=10000.0)
+    # |A| = Rf/R; el signo lo pone la topología inversora.
+    gain = abs(vout / suma) if suma != 0 else 1.0
+    return {"v_in1": v1, "v_in2": v2, "v_out": vout, "R": r, "Rf": round(gain * r, 2)}
+
+
+def solve_opamp_differentiator_practical(params: dict[str, Any]) -> dict[str, float]:
+    f_d = _param(params, "f_d", "fd", "target", default=1000.0)
+    c1 = _param(params, "c1", "c_1", default=1e-8)
+    a_hf = _param(params, "a_hf", "ahf", default=10.0)
+    rf = 1.0 / (2 * math.pi * f_d * c1) if (f_d > 0 and c1 > 0) else 10000.0
+    return {"Rf": round(rf, 1), "Rin": round(rf / a_hf, 1), "C1": c1, "a_hf": a_hf}
+
+
 # Para G = 1 la RG ideal es infinita; un valor finito muy grande deja la
 # ganancia en 1 + 2R/RG ≈ 1.00002, sin un elemento abierto que ngspice no
 # sabría resolver.
@@ -357,6 +376,8 @@ CATALOG_SOLVERS = {
     "sallen_key_lowpass_butterworth": solve_sallen_key,
     "opamp_inverting_amp": solve_opamp_inverting_amp,
     "opamp_difference_amp": solve_opamp_difference_amp,
+    "opamp_summing_amp": solve_opamp_summing_amp,
+    "opamp_differentiator_practical": solve_opamp_differentiator_practical,
     "opamp_instrumentation_amp": solve_opamp_instrumentation_amp,
     "rlc_series_bandpass": solve_rlc_series_bandpass,
     "rlc_parallel_tank": solve_rlc_parallel_tank,
@@ -384,6 +405,7 @@ def cotas_inferiores(circuit_id: str) -> frozenset[str]:
 CANTIDADES: dict[str, dict[str, int]] = {
     "sallen_key_lowpass_butterworth": {"R": 2},
     "opamp_difference_amp": {"Rg": 2, "Rf": 2},
+    "opamp_summing_amp": {"R": 2},
     "opamp_instrumentation_amp": {"R": 2, "Rd": 4},
 }
 
@@ -410,12 +432,23 @@ def _ajuste_instrumentacion(values: dict, target: float, actual: float) -> dict:
     return {**values, "RG": values["RG"] * (abs(actual) - 1) / (abs(target) - 1)}
 
 
+def _ajuste_integrador(values: dict, target: float, actual: float) -> dict:
+    # f_int = 1/(2*pi*Rin*Cf): inversa en Rin. Rf se escala igual para
+    # conservar la ganancia en continua Adc = Rf/Rin.
+    factor = abs(actual) / abs(target)
+    return {**values, "Rin": values["Rin"] * factor, "Rf": values["Rf"] * factor}
+
+
 # Cómo corregir cada topología que la regla genérica del curador resolvería
 # mal (adivina la variable por el nombre: en un RLC escalaría R, que no mueve
 # f0). Con una entrada aquí el curador usa esta regla y no la genérica.
 AJUSTES: dict[str, Any] = {
     "opamp_inverting_amp": _ajuste_proporcional("Rf", 1.0),
     "opamp_difference_amp": _ajuste_proporcional("Rf", 1.0),
+    "opamp_summing_amp": _ajuste_proporcional("Rf", 1.0),
+    "opamp_integrator_practical": _ajuste_integrador,
+    # f_d = 1/(2*pi*Rf*C1): inversa en Rf.
+    "opamp_differentiator_practical": _ajuste_proporcional("Rf", -1.0),
     "opamp_instrumentation_amp": _ajuste_instrumentacion,
     # f0 ∝ L^(-1/2): C suele ser el dato fijo (o el default), L es la que se calcula.
     "rlc_series_bandpass": _ajuste_proporcional("L", -0.5),

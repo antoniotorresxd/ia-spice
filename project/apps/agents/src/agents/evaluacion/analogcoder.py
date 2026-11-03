@@ -168,7 +168,7 @@ def netlist_a_pyspice(netlist: str) -> str:
     """Convierte el netlist final del sistema en código PySpice que los
     verificadores pueden manipular. Quita comentarios, el bloque .control y
     los análisis (el verificador pone los suyos); no renombra nada."""
-    lineas, subcircuitos, en_control, en_sub = [], [], False, False
+    lineas, subcircuitos, pasivos, en_control, en_sub = [], [], [], False, False
     for linea in netlist.splitlines():
         s = linea.strip()
         if not s or s.startswith("*"):
@@ -193,14 +193,25 @@ def netlist_a_pyspice(netlist: str) -> str:
             continue
         if _ANALISIS.match(s):
             continue
+        # PySpice 1.5 convierte todo C y L parseado en BehavioralCapacitor /
+        # BehavioralInductor, sin atributo `capacitance`/`inductance`: los
+        # verificadores que fijan C1 o Cf no tendrían efecto. Se construyen
+        # aparte con circuit.C / circuit.L, que sí crean el elemento normal.
+        partes = s.split()
+        if partes[0][0].upper() in "CL" and len(partes) >= 4 and "=" not in partes[3]:
+            pasivos.append((partes[0][0].upper(), partes[0][1:], partes[1], partes[2], partes[3]))
+            continue
         lineas.append(s)
     texto = ".title circuito\n" + "\n".join(lineas) + "\n.end\n"
     crudo = "\n".join(subcircuitos)
+    construir = "".join(f"circuit.{tipo}({nombre!r}, {n1!r}, {n2!r}, {valor!r})\n"
+                        for tipo, nombre, n1, n2, valor in pasivos)
     return ("from PySpice.Spice.Netlist import Circuit\n"
             "from PySpice.Unit import *\n"
             "from PySpice.Spice.Parser import SpiceParser\n"
             f"_netlist = {texto!r}\n"
             "circuit = SpiceParser(source=_netlist).build_circuit()\n"
+            + construir +
             f"circuit.raw_spice += {crudo!r}\n"
             "simulator = circuit.simulator()\n")
 

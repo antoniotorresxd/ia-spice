@@ -183,3 +183,28 @@ def test_diode_clamper_shifts_the_peak_to_twice_vm_in_ngspice(tmp_path):
     vmax, _ = _simulate_min_max(netlist, tmp_path)
 
     assert vmax == pytest.approx(2 * 10 - 0.7, rel=0.05)
+
+
+def test_las_topologias_nuevas_tienen_solver_y_ajuste():
+    from agents.calculo.catalog_solver import AJUSTES, solve_catalog_circuit
+
+    sumador = solve_catalog_circuit("opamp_summing_amp", {"v_in1": 0.5, "v_in2": 0.3, "v_out": -1.6})
+    assert sumador["Rf"] == pytest.approx(2 * sumador["R"])
+
+    dif = solve_catalog_circuit("opamp_differentiator_practical", {"f_d": 1000.0, "c1": 1e-8})
+    assert dif["Rf"] == pytest.approx(1 / (2 * 3.141592653589793 * 1000 * 1e-8), rel=1e-3)
+    assert dif["Rin"] == pytest.approx(dif["Rf"] / 10, rel=1e-3)
+
+    # f_d es inversa en Rf: medir el doble de lo pedido debe duplicar Rf
+    assert AJUSTES["opamp_differentiator_practical"]({"Rf": 1000.0}, 1000.0, 2000.0)["Rf"] == pytest.approx(2000.0)
+    # el integrador escala Rin y Rf juntos (conserva Adc)
+    ajustado = AJUSTES["opamp_integrator_practical"]({"Rin": 1000.0, "Rf": 10000.0, "Cf": 1e-8}, 1000.0, 2000.0)
+    assert ajustado["Rf"] / ajustado["Rin"] == pytest.approx(10.0)
+
+
+def test_el_integrador_mide_frecuencia_y_no_voltaje_pico():
+    """Regresión: la plantilla medía vpeak (V) y lo reportaba como f_int (Hz)."""
+    from agents.knowledge.circuit_client import FALLBACK_CIRCUITS
+
+    plantilla = next(c for c in FALLBACK_CIRCUITS if c.id == "opamp_integrator_practical").spiceTemplate
+    assert "vpeak" not in plantilla and "meas ac fint" in plantilla

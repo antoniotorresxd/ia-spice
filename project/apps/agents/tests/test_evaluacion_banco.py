@@ -3,11 +3,11 @@ import pytest
 from agents.evaluacion.banco import NIVELES, CasoInvalido, cargar_banco, validar_caso
 
 
-def test_el_banco_de_la_tesina_tiene_treinta_y_cinco_casos_bien_formados():
+def test_el_banco_de_la_tesina_tiene_treinta_y_siete_casos_bien_formados():
     casos = cargar_banco()
 
-    assert len(casos) == 35
-    assert len({c["id"] for c in casos}) == 35, "hay ids repetidos"
+    assert len(casos) == 37
+    assert len({c["id"] for c in casos}) == 37, "hay ids repetidos"
 
 
 def test_cada_caso_del_banco_declara_un_nivel_conocido():

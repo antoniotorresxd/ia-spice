@@ -636,7 +636,7 @@ echo $&vceq > output.txt
     designEquations:
       "1. Rin = 1 / (2 * pi * f_int * Cf)\n2. Rf = Adc * Rin\n3. fc = 1 / (2 * pi * Rf * Cf)\n4. vo(t) = -(1 / (Rin*Cf)) * integral(vin dt)",
     spiceTemplate: `* Practical Op-Amp Integrator
-Vin vin 0 PULSE(-1 1 0 10n 10n 0.5m 1m)
+Vin vin 0 DC 0 AC 1 PULSE(-1 1 0 10n 10n 0.5m 1m)
 Rin vin vminus {Rin}
 Rf vminus vout {Rf}
 Cf vminus vout {Cf}
@@ -651,9 +651,9 @@ Eout out 0 n2 0 1
 .ends
 
 .control
-tran 10u 4m 2m
-meas tran vpeak MAX v(vout) from=2m to=4m
-echo $&vpeak > output.txt
+ac dec 100 1 1e8
+meas ac fint WHEN vdb(vout)=0 CROSS=1
+echo $&fint > output.txt
 .endc
 .end`,
     numericalExample: {
@@ -765,7 +765,7 @@ wrdata output.txt v(vout)
     description:
       "Amplifica la diferencia entre dos entradas, Vout = (Rf/Rg)·(Vp - Vn), y rechaza el modo común si las dos parejas de resistencias están apareadas.",
     topologySummary:
-      "Vn a Rg hacia (-) con Rf de (-) a vout; Vp a Rg hacia (+) con Rf de (+) a tierra. Dos parejas idénticas Rg/Rf.",
+      "Vin1 (Vn) a Rg hacia (-) con Rf de (-) a vout; Vin2 (Vp) a Rg hacia (+) con Rf de (+) a tierra. Dos parejas idénticas Rg/Rf. Vout = (Rf/Rg)·(Vin2 - Vin1).",
     parametersSchema: {
       gain: { type: "number", description: "Ganancia diferencial deseada Rf/Rg", required: true },
       v_d: { type: "number", unit: "V", description: "Tensión diferencial de prueba Vp - Vn", default: 0.1, required: false },
@@ -777,11 +777,11 @@ wrdata output.txt v(vout)
     designEquations:
       "Rf = gain * Rg. Vout = (Rf/Rg)(Vp - Vn).",
     spiceTemplate: `* Difference Op-Amp Amplifier
-Vp vp 0 DC {Vp}
-Vn vn 0 DC {Vn}
-R1 vn vminus {Rg}
+Vp vin2 0 DC {Vp}
+Vn vin1 0 DC {Vn}
+R1 vin1 vminus {Rg}
 R2 vminus vout {Rf}
-R3 vp vplus {Rg}
+R3 vin2 vplus {Rg}
 R4 vplus 0 {Rf}
 X1 vplus vminus vout opamp
 
@@ -794,7 +794,7 @@ Eout out 0 n2 0 1
 .ends
 .control
 op
-let gain = v(vout) / (v(vp) - v(vn))
+let gain = v(vout) / (v(vin2) - v(vin1))
 echo $&gain > output.txt
 .endc
 .end`,
@@ -802,6 +802,93 @@ echo $&gain > output.txt
       specs: {gain: 4.7},
       computed: {Rg: 10000.0, Rf: 47000.0},
       expected: {gain: 4.7},
+    },
+  },
+  {
+    id: "opamp_summing_amp",
+    name: "Amplificador Sumador Inversor con Op-Amp",
+    category: "opamp",
+    description:
+      "Suma dos entradas con inversión de fase: Vout = -(Rf/R)·(Vin1 + Vin2), con resistencias de entrada iguales.",
+    topologySummary:
+      "Vin1 y Vin2, cada una por su resistencia R, al nodo de suma en la entrada inversora (-); Rf entre (-) y vout; entrada no inversora (+) a tierra.",
+    parametersSchema: {
+      v_in1: { type: "number", unit: "V", description: "Voltaje de la entrada 1", required: true },
+      v_in2: { type: "number", unit: "V", description: "Voltaje de la entrada 2", required: true },
+      v_out: { type: "number", unit: "V", description: "Voltaje de salida deseado (signo opuesto a la suma de entradas)", required: true },
+      r: { type: "number", unit: "Ohm", description: "Resistencia de cada entrada R", default: 10000, required: false },
+    },
+    operatingConstraints:
+      "Las resistencias de entrada iguales dan la misma ponderación a ambas entradas. |v_out| por debajo de la alimentación del op-amp. El nodo de suma es tierra virtual: las entradas no interactúan.",
+    designEquations:
+      "A = |v_out| / (v_in1 + v_in2). Rf = A * R. Vout = -(Rf/R)(Vin1 + Vin2).",
+    spiceTemplate: `* Inverting Summing Op-Amp Amplifier
+Vin1 vin1 0 DC {v_in1}
+Vin2 vin2 0 DC {v_in2}
+R1 vin1 vminus {R}
+R2 vin2 vminus {R}
+Rf vminus vout {Rf}
+X1 0 vminus vout opamp
+
+.subckt opamp inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 159n
+Eout out 0 n2 0 1
+.ends
+.control
+op
+wrdata output.txt v(vout)
+.endc
+.end`,
+    numericalExample: {
+      specs: {v_in1: 0.5, v_in2: 0.3, v_out: -0.8},
+      computed: {R: 10000.0, Rf: 10000.0},
+      expected: {v_out: -0.8},
+    },
+  },
+  {
+    id: "opamp_differentiator_practical",
+    name: "Diferenciador Práctico con Op-Amp (con Rin)",
+    category: "opamp",
+    description:
+      "Genera una salida proporcional a la derivada de la entrada, vout = -Rf·C1·dvin/dt; Rin en serie con C1 limita la ganancia en alta frecuencia y evita oscilaciones y ruido.",
+    topologySummary:
+      "Vin a Rin en serie con C1 hacia la entrada inversora (-); Rf entre (-) y vout; entrada no inversora (+) a tierra.",
+    parametersSchema: {
+      f_d: { type: "number", unit: "Hz", description: "Frecuencia de diferenciación (ganancia unitaria, |H| = 0 dB)", required: true },
+      c1: { type: "number", unit: "F", description: "Condensador de entrada C1", default: 1e-8, required: false },
+      a_hf: { type: "number", description: "Ganancia máxima en alta frecuencia Rf/Rin", default: 10, required: false },
+    },
+    operatingConstraints:
+      "Diferencia con precisión por debajo de f_hf = 1 / (2*pi*Rin*C1) = a_hf * f_d. Por encima, la ganancia se limita a Rf/Rin.",
+    designEquations:
+      "Rf = 1 / (2*pi*f_d*C1). Rin = Rf / a_hf. vout(t) = -Rf*C1*dvin/dt.",
+    spiceTemplate: `* Practical Op-Amp Differentiator
+Vin vin 0 DC 0 AC 1
+Rin vin vx {Rin}
+C1 vx vminus {C1}
+Rf vminus vout {Rf}
+X1 0 vminus vout opamp
+
+.subckt opamp inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 159n
+Eout out 0 n2 0 1
+.ends
+.control
+ac dec 100 1 1e8
+meas ac fd WHEN vdb(vout)=0 CROSS=1
+echo $&fd > output.txt
+.endc
+.end`,
+    numericalExample: {
+      specs: {f_d: 1000, c1: 1e-8, a_hf: 10},
+      computed: {Rf: 15915.5, Rin: 1591.5, C1: 1e-8},
+      expected: {f_d: 1000},
     },
   },
   {
