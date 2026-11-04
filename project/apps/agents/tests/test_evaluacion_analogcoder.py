@@ -137,3 +137,42 @@ def test_un_sumador_referido_a_tierra_pasa_aunque_las_entradas_tengan_otro_valor
         "simulator = circuit.simulator()\n")
 
     assert ac.calificar(codigo, TAREAS[20])["escalon"] == "pasa"
+
+
+def test_sistema_responde_una_aclaracion_con_el_texto_fijo():
+    from agents.evaluacion import analogcoder as ac
+
+    class _Grafo:
+        def __init__(self):
+            self.pedidos = []
+
+        def invoke(self, estado, config):
+            self.pedidos.append(estado["request_text"])
+            if len(self.pedidos) == 1:
+                return {"outcome": {"mode": "clarify", "question": "¿Qué f_int?"}, "netlists": {}}
+            return {"netlists": {"c": {"text": "* t\nR1 vin vout 1k\n.end\n"}}}
+
+    tarea = ac.cargar_tareas([18])[0]
+    grafo = _Grafo()
+    texto, _ = ac.generar_sistema(tarea, grafo, "u", 1)
+
+    assert len(grafo.pedidos) == 2
+    assert grafo.pedidos[1].startswith(f"Usuario: {ac.enunciado(tarea)}")
+    assert "Asistente: ¿Qué f_int?" in grafo.pedidos[1]
+    assert grafo.pedidos[1].endswith(ac.RESPUESTA_ACLARACION)
+    assert "R1 vin vout 1k" in texto
+
+
+def test_sistema_aclara_una_sola_vez():
+    from agents.evaluacion import analogcoder as ac
+
+    class _Grafo:
+        n = 0
+
+        def invoke(self, estado, config):
+            self.n += 1
+            return {"outcome": {"mode": "clarify", "question": "?"}, "netlists": {}}
+
+    grafo = _Grafo()
+    texto, codigo = ac.generar_sistema(ac.cargar_tareas([22])[0], grafo, "u", 1)
+    assert grafo.n == 2 and texto.startswith("sin netlist") and codigo == ""

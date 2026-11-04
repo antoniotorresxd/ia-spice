@@ -362,15 +362,38 @@ def _forzar_modelo(cfg) -> None:
             m.build_chat_model = lambda config, _o=original: _acotar(_o(config))
 
 
+# Respuesta fija cuando el sistema pide un dato que el enunciado de
+# AnalogCoder no trae (frecuencia, umbrales...). Es la misma para todas las
+# tareas y modelos, y equivale a lo que el LLM solo hace por su cuenta: el
+# prompt de AnalogCoder no da valores y el modelo elige los suyos.
+RESPUESTA_ACLARACION = "Elige tú valores típicos para lo que no se especifica y diseña el circuito."
+
+
+def _turno_aclaracion(enunciado_tarea: str, pregunta: str) -> str:
+    """El texto del segundo turno armado como `composeRequestText` del server."""
+    return (f"Usuario: {enunciado_tarea}\n\nAsistente: {pregunta}\n\n"
+            f"Nueva instrucción: {RESPUESTA_ACLARACION}")
+
+
 def generar_sistema(tarea: dict, graph, usuario: str, corrida: int) -> tuple[str, str]:
-    estado = {
-        "circuit_spec": {}, "request_text": enunciado(tarea), "normalized_spec": None,
-        "pending_blocks": None, "component_values": {}, "commercial_values": {}, "bom": {},
-        "precision": {}, "netlists": {}, "sim_results": {}, "iteration": 0, "history": [],
-        "verdict": None, "documentation": {}, "outcome": None,
-    }
-    final = graph.invoke(estado, config={"configurable": {
-        "thread_id": f"analogcoder-{tarea['tarea_original']}-{corrida}-{time.time_ns()}", "user_id": usuario}})
+    texto_pedido = enunciado(tarea)
+    final: dict = {}
+    for turno in range(2):  # a lo más una aclaración
+        estado = {
+            "circuit_spec": {}, "request_text": texto_pedido, "normalized_spec": None,
+            "pending_blocks": None, "component_values": {}, "commercial_values": {}, "bom": {},
+            "precision": {}, "netlists": {}, "sim_results": {}, "iteration": 0, "history": [],
+            "verdict": None, "documentation": {}, "outcome": None,
+        }
+        final = graph.invoke(estado, config={"configurable": {
+            "thread_id": f"analogcoder-{tarea['tarea_original']}-{corrida}-{turno}-{time.time_ns()}",
+            "user_id": usuario}})
+        outcome = final.get("outcome") or {}
+        if turno == 0 and isinstance(outcome, dict) and outcome.get("mode") == "clarify" \
+                and not final.get("netlists"):
+            texto_pedido = _turno_aclaracion(enunciado(tarea), outcome.get("question", ""))
+            continue
+        break
     netlists = final.get("netlists") or {}
     if not netlists:
         motivo = (final.get("verdict") or {}).get("reason") or str(final.get("outcome") or "")
