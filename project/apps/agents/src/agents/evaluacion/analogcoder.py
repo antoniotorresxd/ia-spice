@@ -121,12 +121,25 @@ def cargar_tareas(ids: list[int] | None = None) -> list[dict]:
     return [t for t in tareas if ids is None or t["tarea_original"] in ids]
 
 
+# Las indicaciones de la plantilla de AnalogCoder que no son de MOSFET ni
+# de formato PySpice. El LLM solo las recibe en su prompt; sin ellas el
+# sistema diseñaba a ±15 V con la entrada no inversora a tierra, y los
+# verificadores (Schmitt cruzando Vdd/2, osciladores polarizados a 2.5 V)
+# suponen alimentación única de 5 V.
+INDICACIONES_COMUNES = (
+    "Make sure the input and output node names appear in the circuit.",
+    "Assume the Vdd = 5.0 V.",
+)
+
+
 def enunciado(tarea: dict) -> str:
     """El enunciado tal como lo ve el LLM en AnalogCoder: la sección Question
-    de su plantilla, sin la plantilla alrededor. Es lo que recibe el sistema."""
+    de su plantilla, más las indicaciones de la plantilla que aplican a
+    cualquier circuito, para que el sistema tenga la misma información."""
     return (f"Design {tarea['circuito']}.\n\n"
             f"Input node name: {tarea['entrada_original']}.\n\n"
-            f"Output node name: {tarea['salida']}.")
+            f"Output node name: {tarea['salida']}.\n\n"
+            + "\n".join(INDICACIONES_COMUNES))
 
 
 def prompt_solo(tarea: dict) -> str:

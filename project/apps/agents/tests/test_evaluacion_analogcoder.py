@@ -23,6 +23,9 @@ def test_el_enunciado_del_sistema_es_la_pregunta_original():
 
     assert texto.startswith("Design An Opamp adder to make Vout=-(Vin1+Vin2).")
     assert "Input node name: Vin1, Vin2." in texto
+    for indicacion in ac.INDICACIONES_COMUNES:
+        assert indicacion in texto
+        assert indicacion in ac.prompt_solo(TAREAS[20])  # la misma información que el LLM solo
 
 
 def test_extraer_codigo_toma_el_primer_bloque_y_corta_tras_el_simulador():
