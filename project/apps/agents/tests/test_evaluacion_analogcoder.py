@@ -179,3 +179,52 @@ def test_sistema_aclara_una_sola_vez():
     grafo = _Grafo()
     texto, codigo = ac.generar_sistema(ac.cargar_tareas([22])[0], grafo, "u", 1)
     assert grafo.n == 2 and texto.startswith("sin netlist") and codigo == ""
+
+
+# ---------------------------------------------------------------- verificador adaptado
+
+_OPAMP = (".subckt opamp inp inn out\nRin inp inn 1e6\nEgain n1 0 inp inn 1e5\nRp n1 n2 1k\n"
+          "Cp n2 0 159n\nEout out 0 n2 0 1\n.ends\n")
+
+
+@pytest.mark.parametrize("tarea_id", [16, 17, 18, 19, 20, 21, 22])
+def test_las_referencias_pasan_con_el_verificador_adaptado(tarea_id):
+    t = ac.cargar_tareas([tarea_id])[0]
+    r = ac.calificar((ac.DIR / t["referencia"]).read_text(encoding="utf-8"), t, verificador="adaptado")
+    assert r["escalon"] == "pasa", r["detalle"]
+
+
+@pytest.mark.parametrize("tarea_id, netlist", [
+    (16, "Vin vin 0 DC 0\nRin vin vminus 10k\nRf vminus vout 100k\nX1 0 vminus vout opamp\n"),  # no oscila
+    (18, "Vin vin 0 DC 0\nR1 vin n 10k\nCf n 0 3u\nX1 n vout vout opamp\n"),  # RC pasivo + seguidor
+    (19, "Vin vin 0 DC 0\nRf n 0 10k\nC1 vin n 3u\nX1 n vout vout opamp\n"),  # CR pasivo + seguidor
+])
+def test_el_verificador_adaptado_sigue_rechazando_circuitos_incorrectos(tarea_id, netlist):
+    t = ac.cargar_tareas([tarea_id])[0]
+    r = ac.calificar_ambos(ac.netlist_a_pyspice(netlist + _OPAMP), t)
+    assert not r["paso"] and not r["paso_adaptado"]
+
+
+def test_integrador_practico_con_rf_pasa_solo_con_el_adaptado():
+    """Diseño correcto del catálogo (Rin renombrada a R1, Rf para la ganancia
+    en continua): el original lo reprueba por la descarga inicial de Rf*Cf."""
+    netlist = ("Vin vin 0 DC 0 AC 1\nR1 vin vminus 19340\nRf vminus vout 193406\n"
+               "Cf vminus vout 1.2155e-08\nX1 0 vminus vout opamp\n" + _OPAMP)
+    r = ac.calificar_ambos(ac.netlist_a_pyspice(netlist), ac.cargar_tareas([18])[0])
+    assert r["escalon"] == "no_funciona" and r["escalon_adaptado"] == "pasa"
+
+
+def test_oscilador_con_entrada_no_inversora_a_tierra_se_puede_calificar():
+    """El original truena (IndexError: 0) al leer la entrada en tierra; el
+    adaptado la omite y juzga la oscilación."""
+    t = ac.cargar_tareas([16])[0]
+    original = ac.armar_script("x", t)
+    adaptado = ac.armar_script("x", t, "adaptado")
+    assert "_tierra" not in original and "_tierra" in adaptado
+
+
+def test_el_resumen_muestra_las_dos_columnas():
+    filas = [{"tarea": 20, "tipo": "Adder", "escalon": "no_funciona", "paso": False,
+              "escalon_adaptado": "pasa", "paso_adaptado": True}]
+    texto = ac.resumir(filas, "x")
+    assert "Pass@1 adapt." in texto and "| 0/1 | 0.0 |" in texto and "| 1/1 | 100.0 |" in texto

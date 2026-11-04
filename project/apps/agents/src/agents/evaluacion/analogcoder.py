@@ -245,8 +245,20 @@ def _ejecutar(script: str, timeout: int) -> subprocess.CompletedProcess | None:
             return None
 
 
-def armar_script(codigo: str, tarea: dict) -> str:
-    verificador = (DIR / tarea["verificacion"]).read_text(encoding="utf-8")
+VERIFICADORES = ("original", "adaptado")
+
+
+def ruta_verificador(tarea: dict, verificador: str = "original") -> Path:
+    """`original`: el script de AnalogCoder sin cambios. `adaptado`: la copia
+    en verificacion_adaptada/, con cambios solo de interfaz (ADAPTACIONES.md)."""
+    if verificador not in VERIFICADORES:
+        raise ValueError(f"verificador desconocido: {verificador}")
+    ruta = DIR / tarea["verificacion"]
+    return ruta if verificador == "original" else DIR / "verificacion_adaptada" / ruta.name
+
+
+def armar_script(codigo: str, tarea: dict, verificador: str = "original") -> str:
+    verificador = ruta_verificador(tarea, verificador).read_text(encoding="utf-8")
     preludio = ""
     if tarea["tipo"] != "Oscillator":
         verificador = verificador.replace("[BIAS_VOLTAGE]", "_sesgo")
@@ -274,8 +286,8 @@ def _falta_interfaz(codigo: str, tarea: dict, timeout: int) -> str | None:
     return ", ".join(faltan) or None
 
 
-def calificar(codigo: str, tarea: dict, *, timeout: int = 120) -> dict:
-    """Califica un circuito en PySpice con el verificador original."""
+def calificar(codigo: str, tarea: dict, *, timeout: int = 120, verificador: str = "original") -> dict:
+    """Califica un circuito en PySpice con el verificador original o el adaptado."""
     if not codigo.strip():
         return {"escalon": "sin_codigo", "paso": False, "detalle": ""}
     construye = _ejecutar(codigo.rstrip() + "\n", timeout)
@@ -287,7 +299,7 @@ def calificar(codigo: str, tarea: dict, *, timeout: int = 120) -> dict:
         if op is None or op.returncode != 0:
             return {"escalon": "no_simula", "paso": False,
                     "detalle": "timeout" if op is None else op.stderr[-600:]}
-    r = _ejecutar(armar_script(codigo, tarea), timeout)
+    r = _ejecutar(armar_script(codigo, tarea, verificador), timeout)
     if r is not None and r.returncode == 0:
         return {"escalon": "pasa", "paso": True, "detalle": ""}
     faltan = _falta_interfaz(codigo, tarea, timeout)
@@ -295,6 +307,17 @@ def calificar(codigo: str, tarea: dict, *, timeout: int = 120) -> dict:
     if faltan:
         return {"escalon": "interfaz", "paso": False, "detalle": f"faltan: {faltan}. {detalle[-300:]}"}
     return {"escalon": "no_funciona", "paso": False, "detalle": detalle}
+
+
+# Escalones que se deciden antes del verificador: no cambian con él.
+_PREVIOS = ("sin_codigo", "no_ejecuta", "no_simula")
+
+
+def calificar_ambos(codigo: str, tarea: dict, *, timeout: int = 120) -> dict:
+    """Resultado con el verificador original y, aparte, con el adaptado."""
+    r = calificar(codigo, tarea, timeout=timeout)
+    ra = r if r["escalon"] in _PREVIOS else calificar(codigo, tarea, timeout=timeout, verificador="adaptado")
+    return {**r, "escalon_adaptado": ra["escalon"], "paso_adaptado": ra["paso"]}
 
 
 # --------------------------------------------------------------------- generadores
@@ -425,31 +448,58 @@ def pass_at_k(n: int, c: int, k: int) -> float:
     return 1.0 - comb(n - c, k) / comb(n, k)
 
 
+def _verdadero(v) -> bool:
+    return v is True or str(v).strip().lower() == "true"
+
+
 def resumir(filas: list[dict], etiqueta: str) -> str:
+    """Tabla por tarea. Pass@1/Pass@5 con el verificador original; si las filas
+    traen el adaptado, se agregan sus columnas (ADAPTACIONES.md)."""
     publicados = yaml.safe_load((DIR / "resultados_publicados.yaml").read_text(encoding="utf-8"))["tareas"]
+    adaptado = any(f.get("escalon_adaptado") for f in filas)
+    extra_enc = " Pasan adapt. | Pass@1 adapt. |" if adaptado else ""
+    extra_sep = "---|---|" if adaptado else ""
     lineas = [f"## {etiqueta}", "",
-              "| Tarea | Tipo | Pasan | Pass@1 | Pass@5 | Escalones | AnalogCoder P@1 | GPT-4o solo P@1 |",
-              "|---|---|---|---|---|---|---|---|"]
-    resueltas, p1s = 0, []
+              "| Tarea | Tipo | Pasan | Pass@1 | Pass@5 | Escalones |" + extra_enc
+              + " AnalogCoder P@1 | GPT-4o solo P@1 |",
+              "|---|---|---|---|---|---|" + extra_sep + "---|---|"]
+    resueltas, p1s, resueltas_a, p1s_a = 0, [], 0, []
     for t in cargar_tareas():
         de = [f for f in filas if f["tarea"] == t["tarea_original"] and f["escalon"] != "error_api"]
         if not de:
             continue
-        n, c = len(de), sum(bool(f["paso"]) for f in de)
+        n, c = len(de), sum(_verdadero(f["paso"]) for f in de)
         p1, p5 = pass_at_k(n, c, 1), pass_at_k(n, c, min(5, n))
         p1s.append(p1)
         resueltas += c > 0
         conteo: dict[str, int] = {}
         for f in de:
             conteo[f["escalon"]] = conteo.get(f["escalon"], 0) + 1
+        celdas_a = ""
+        if adaptado:
+            ca = sum(_verdadero(f.get("paso_adaptado")) for f in de)
+            p1a = pass_at_k(n, ca, 1)
+            p1s_a.append(p1a)
+            resueltas_a += ca > 0
+            celdas_a = f" {ca}/{n} | {p1a * 100:.1f} |"
         pub = publicados[t["tarea_original"]]
         lineas.append(f"| {t['tarea_original']} | {t['tipo']} | {c}/{n} | {p1 * 100:.1f} | {p5 * 100:.1f} | "
-                      + ", ".join(f"{k} {v}" for k, v in conteo.items())
-                      + f" | {pub['analogcoder']['pass1']} | {pub['gpt4o']['pass1']} |")
+                      + ", ".join(f"{k} {v}" for k, v in conteo.items()) + " |" + celdas_a
+                      + f" {pub['analogcoder']['pass1']} | {pub['gpt4o']['pass1']} |")
     if p1s:
-        lineas += ["", f"Tareas resueltas al menos una vez: {resueltas}/{len(p1s)} · "
-                       f"Pass@1 medio: {sum(p1s) / len(p1s) * 100:.1f} %"]
+        lineas += ["", f"Verificador original: tareas resueltas al menos una vez {resueltas}/{len(p1s)} · "
+                       f"Pass@1 medio {sum(p1s) / len(p1s) * 100:.1f} %"]
+    if p1s_a:
+        lineas += [f"Verificador adaptado: tareas resueltas al menos una vez {resueltas_a}/{len(p1s_a)} · "
+                   f"Pass@1 medio {sum(p1s_a) / len(p1s_a) * 100:.1f} %"]
     return "\n".join(lineas)
+
+
+
+
+
+CAMPOS = ["condicion", "tarea", "tipo", "corrida", "escalon", "paso",
+          "escalon_adaptado", "paso_adaptado", "segundos", "detalle"]
 
 
 def guardar(filas: list[dict], etiqueta: str, salida: Path | None) -> Path:
@@ -460,7 +510,7 @@ def guardar(filas: list[dict], etiqueta: str, salida: Path | None) -> Path:
         base.with_suffix(".txt").write_text(f.pop("respuesta", ""), encoding="utf-8")
         base.with_suffix(".py").write_text(f.pop("codigo", ""), encoding="utf-8")
     with (carpeta / "filas.csv").open("w", newline="", encoding="utf-8") as h:
-        w = csv.DictWriter(h, fieldnames=["condicion", "tarea", "tipo", "corrida", "escalon", "paso", "segundos", "detalle"])
+        w = csv.DictWriter(h, fieldnames=CAMPOS)
         w.writeheader()
         for f in filas:
             w.writerow({k: f.get(k) for k in w.fieldnames})
@@ -480,14 +530,15 @@ def _correr(tareas, corridas, etiqueta, generar) -> list[dict]:
                 respuesta, codigo = generar(t, k)
                 print(f"tarea {t['tarea_original']} corrida {k}: calificando "
                       f"({time.perf_counter() - inicio:.0f} s en generar)...", flush=True)
-                r = calificar(codigo, t)
+                r = calificar_ambos(codigo, t)
             except Exception as exc:
                 # Un error de la API (modelo inexistente, key inválida, cuota)
                 # no es un fallo del modelo: se registra aparte y, si ocurre en
                 # las dos primeras corridas, se detiene todo para no gastar
                 # el experimento completo en errores.
                 respuesta, codigo = f"error al generar: {type(exc).__name__}: {exc}", ""
-                r = {"escalon": "error_api", "paso": False, "detalle": respuesta[:600]}
+                r = {"escalon": "error_api", "paso": False, "detalle": respuesta[:600],
+                     "escalon_adaptado": "error_api", "paso_adaptado": False}
                 print(f"tarea {t['tarea_original']} corrida {k}: error_api -> {respuesta[:300]}", flush=True)
                 filas.append({"condicion": etiqueta, "tarea": t["tarea_original"], "tipo": t["tipo"], "corrida": k,
                               "segundos": round(time.perf_counter() - inicio, 1), "respuesta": respuesta,
@@ -501,8 +552,43 @@ def _correr(tareas, corridas, etiqueta, generar) -> list[dict]:
                           "segundos": round(time.perf_counter() - inicio, 1), "respuesta": respuesta,
                           "codigo": codigo, **r})
             print(f"tarea {t['tarea_original']} corrida {k}: {r['escalon']} "
-                  f"({time.perf_counter() - inicio:.0f} s)", flush=True)
+                  f"(adaptado: {r['escalon_adaptado']}, {time.perf_counter() - inicio:.0f} s)", flush=True)
     return filas
+
+
+def recalificar(carpeta: Path, tareas: list[dict]) -> Path:
+    """Vuelve a calificar una corrida guardada con los dos verificadores, a
+    partir de su código guardado (respuestas/<tarea>_<corrida>.py). No llama a
+    ningún modelo. Escribe filas_verificadores.csv y resumen_verificadores.md."""
+    with (carpeta / "filas.csv").open(encoding="utf-8") as h:
+        previas = list(csv.DictReader(h))
+    if not previas:
+        raise SystemExit(f"{carpeta}/filas.csv está vacío")
+    ids = {t["tarea_original"] for t in tareas}
+    por_id = {t["tarea_original"]: t for t in tareas}
+    filas = []
+    for f in previas:
+        tarea_id = int(f["tarea"])
+        if tarea_id not in ids:
+            continue
+        if f["escalon"] == "error_api":
+            filas.append({**f, "tarea": tarea_id, "escalon_adaptado": "error_api", "paso_adaptado": False})
+            continue
+        archivo = carpeta / "respuestas" / f"{tarea_id}_{f['corrida']}.py"
+        codigo = archivo.read_text(encoding="utf-8") if archivo.exists() else ""
+        r = calificar_ambos(codigo, por_id[tarea_id])
+        filas.append({**f, "tarea": tarea_id, **r})
+        print(f"tarea {tarea_id} corrida {f['corrida']}: {r['escalon']} (adaptado: {r['escalon_adaptado']})",
+              flush=True)
+    with (carpeta / "filas_verificadores.csv").open("w", newline="", encoding="utf-8") as h:
+        w = csv.DictWriter(h, fieldnames=CAMPOS)
+        w.writeheader()
+        for f in filas:
+            w.writerow({k: f.get(k) for k in CAMPOS})
+    resumen = resumir(filas, previas[0]["condicion"])
+    (carpeta / "resumen_verificadores.md").write_text(resumen + "\n", encoding="utf-8")
+    print("\n" + resumen + f"\n\nEn {carpeta}/resumen_verificadores.md")
+    return carpeta
 
 
 def _verificar_ngspice() -> None:
@@ -527,6 +613,9 @@ def main() -> None:
     sub.add_parser("referencias", help="los diseños de referencia deben pasar")
     p = sub.add_parser("prompts", help="escribe los prompts exactos en archivos")
     p.add_argument("--salida", default="prompts_analogcoder")
+    rc = sub.add_parser("recalificar", help="califica de nuevo corridas guardadas con los dos verificadores")
+    rc.add_argument("carpetas", nargs="+", help="carpetas resultados/analogcoder-<fecha>")
+    rc.add_argument("--tareas", default=None)
     for nombre in ("solo", "sistema", "respuestas"):
         s = sub.add_parser(nombre)
         s.add_argument("--tareas", default=None, help="p. ej. 16,18,20")
@@ -549,8 +638,8 @@ def main() -> None:
 
     if a.cmd == "referencias":
         for t in tareas:
-            r = calificar((DIR / t["referencia"]).read_text(encoding="utf-8"), t)
-            print(f"{t['id']:<16} {t['tipo']:<15} {r['escalon']}")
+            r = calificar_ambos((DIR / t["referencia"]).read_text(encoding="utf-8"), t)
+            print(f"{t['id']:<16} {t['tipo']:<15} original: {r['escalon']:<12} adaptado: {r['escalon_adaptado']}")
     elif a.cmd == "prompts":
         destino = Path(a.salida)
         destino.mkdir(parents=True, exist_ok=True)
@@ -576,6 +665,9 @@ def main() -> None:
         etiqueta = a.etiqueta or f"Sistema + {a.modelo or 'modelo asignado en el server'}"
         guardar(_correr(tareas, a.corridas, etiqueta, lambda t, k: generar_sistema(t, graph, a.usuario, k)),
                 etiqueta, salida)
+    elif a.cmd == "recalificar":
+        for carpeta in a.carpetas:
+            recalificar(Path(carpeta), tareas)
     elif a.cmd == "respuestas":
         carpeta = Path(a.carpeta)
         filas = []
@@ -583,7 +675,7 @@ def main() -> None:
             for archivo in sorted(carpeta.glob(f"{t['tarea_original']}_*.txt")):
                 respuesta = archivo.read_text(encoding="utf-8")
                 codigo = extraer_codigo(respuesta)
-                r = calificar(codigo, t)
+                r = calificar_ambos(codigo, t)
                 filas.append({"condicion": a.etiqueta or carpeta.name, "tarea": t["tarea_original"],
                               "tipo": t["tipo"], "corrida": archivo.stem.split("_", 1)[1], "segundos": None,
                               "respuesta": respuesta, "codigo": codigo, **r})
