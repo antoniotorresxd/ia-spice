@@ -469,6 +469,22 @@ def _correr(tareas, corridas, etiqueta, generar) -> list[dict]:
     return filas
 
 
+def _verificar_ngspice() -> None:
+    """Los verificadores de AnalogCoder simulan con PySpice, que carga la
+    biblioteca compartida de ngspice. Sin ella todas las corridas saldrían
+    `no_ejecuta` (y en modo solo/sistema se gastarían créditos en balde)."""
+    import ctypes
+
+    try:
+        ctypes.CDLL("libngspice.so")
+    except OSError:
+        raise SystemExit(
+            "No se encontró libngspice.so (la usa PySpice para calificar).\n"
+            "En Debian/Ubuntu: sudo apt install -y libngspice0-dev\n"
+            "Comprueba con: uv run python -m agents.evaluacion.analogcoder referencias"
+        ) from None
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="agents.evaluacion.analogcoder")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -492,6 +508,8 @@ def main() -> None:
     ids = [int(x) for x in a.tareas.split(",")] if getattr(a, "tareas", None) else None
     tareas = cargar_tareas(ids)
     salida = Path(a.salida) if a.cmd in ("solo", "sistema", "respuestas") and a.salida else None
+    if a.cmd != "prompts":
+        _verificar_ngspice()
 
     if a.cmd == "referencias":
         for t in tareas:

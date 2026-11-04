@@ -38,6 +38,20 @@ def test_si_el_provider_rechaza_el_schema_se_reintenta_por_tool_calling():
     assert modelo.metodos == [None, "function_calling"]
 
 
+ERROR_ANTHROPIC = (
+    "Error code: 400 - {'error': {'message': 'Provider returned error', 'code': 400, 'metadata': "
+    "{'raw': '{\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":"
+    "\"output_config.format.schema: Schema type \\'oneOf\\' is not supported\"}}'}}}"
+)
+
+
+def test_anthropic_via_openrouter_rechaza_oneof_y_se_reintenta_por_tool_calling():
+    modelo = _Modelo(Exception(ERROR_ANTHROPIC))
+
+    assert invocar_estructurado(modelo, dict, []) == "ok"
+    assert modelo.metodos == [None, "function_calling"]
+
+
 def test_otro_error_no_se_reintenta():
     modelo = _Modelo(Exception("Error code: 401 - invalid api key"))
 
