@@ -1,0 +1,23 @@
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+circuit = Circuit('Op-amp Subtractor')
+# Power Supplies
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)  # Positive power supply
+circuit.V('ss', 'Vss', circuit.gnd, -5.0) # Negative power supply
+# Input Signal Sources
+circuit.V('in1', 'Vin1', circuit.gnd, 1.0) # Vin1 = 1.0V
+circuit.V('in2', 'Vin2', circuit.gnd, 2.0) # Vin2 = 2.0V -> Vout should be 2.0 - 1.0 = 1.0V
+# Resistors for the Subtractor (R1 = R2 = R3 = R4 = 10k ohms)
+# Inverting path: Vin1 to inverting node (node 'N_inv'), and 'N_inv' to Vout
+circuit.R('1', 'Vin1', 'N_inv', 10@u_kΩ)
+circuit.R('2', 'N_inv', 'Vout', 10@u_kΩ)
+# Non-inverting path: Vin2 to non-inverting node (node 'N_noninv'), and 'N_noninv' to ground
+circuit.R('3', 'Vin2', 'N_noninv', 10@u_kΩ)
+circuit.R('4', 'N_noninv', circuit.gnd, 10@u_kΩ)
+# Ideal Op-Amp behavioral model using a voltage-controlled voltage source (VCSS)
+# Gain is very large (e.g., 100k), connected between Vout, N_inv, N_noninv, Vdd, Vss
+# Syntax for subcircuit or behavioral source in PySpice can be simplified using E-element:
+# E_name positive_output negative_output positive_input negative_input gain
+circuit.element_netlist += "E1 Vout 0 N_noninv N_inv 100000"
+# Analysis Part
+simulator = circuit.simulator()

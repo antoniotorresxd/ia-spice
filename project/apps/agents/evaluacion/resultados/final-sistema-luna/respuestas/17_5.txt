@@ -1,0 +1,37 @@
+* Oscilador de puente de Wien con alimentación simple de 5 V. La entrada inversora usa el nodo «-» y la salida es «Vout». El puente se referencia a 2.5 V; R=10 kΩ y C=10 nF establecen una frecuencia nominal de aproximadamente 1.59 kHz. Diodos antiparalelo en la realimentación estabilizan la amplitud. Se incluye un arranque transitorio inicial.
+* Valores comerciales (circuito): ideal -> comercial
+*   RBIAS1: 10kohm -> 10kohm [E24, +0.00%]
+*   RBIAS2: 10kohm -> 10kohm [E24, +0.00%]
+*   CBIAS: 100uF -> 100uF [E12, +0.00%]
+*   Cw1: 10nF -> 10nF [E12, +0.00%]
+*   Rw1: 10kohm -> 10kohm [E24, +0.00%]
+*   Rw2: 10kohm -> 10kohm [E24, +0.00%]
+*   Cw2: 10nF -> 10nF [E12, +0.00%]
+*   RF: 22kohm -> 22kohm [E24, +0.00%]
+*   RG: 10kohm -> 10kohm [E24, +0.00%]
+* Semiconductores:
+*   D1, D2: 2 x 1N4148 (diodo de conmutación de señal; modelo genérico)
+VDD vdd 0 DC 5
+RBIAS1 vdd vref 10k
+RBIAS2 vref 0 10k
+CBIAS vref 0 100u
+Cw1 Vout nseries 10n
+Rw1 nseries wp 10k
+Rw2 wp vref 10k
+Cw2 wp vref 10n
+RF Vout - 22k
+RG - vref 10k
+D1 Vout - DCLAMP
+D2 - Vout DCLAMP
+.model DCLAMP D(IS=2.52n N=1.75 RS=0.6)
+XU1 wp - Vout OPAMP5
+.subckt OPAMP5 inp inn out
+BAMP nraw 0 V=2.5+2.3*tanh(1e5*(V(inp)-V(inn))/2.3)
+ROUT nraw out 0.1
+.ends OPAMP5
+.ic V(Vout)=2.501 V(nseries)=2.5 V(wp)=2.5 V(vref)=2.5
+.control
+tran 2u 100m 0 2u uic
+wrdata output.txt time v(Vout)
+.endc
+.end

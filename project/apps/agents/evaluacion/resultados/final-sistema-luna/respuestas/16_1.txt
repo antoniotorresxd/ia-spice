@@ -1,0 +1,40 @@
+* Oscilador RC de desplazamiento de fase BJT, nominal ~650 Hz
+* Valores comerciales (circuito): ideal -> comercial
+*   RIN: 1Mohm -> 1Mohm [E24, +0.00%]
+*   RB1: 10kohm -> 10kohm [E24, +0.00%]
+*   RB2: 1Mohm -> 1Mohm [E24, +0.00%]
+*   RC: 10kohm -> 10kohm [E24, +0.00%]
+*   RE: 10kohm -> 10kohm [E24, +0.00%]
+*   CE: 100uF -> 100uF [E12, +0.00%]
+*   C1: 11nF -> 10nF || 1nF = 11nF [E12, +0.00%]
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   C2: 11nF -> 10nF || 1nF = 11nF [E12, +0.00%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   C3: 11nF -> 10nF || 1nF = 11nF [E12, +0.00%]
+*   R3: 10kohm -> 10kohm [E24, +0.00%]
+* Semiconductores:
+*   Q1: 1 x 2N3904 (BJT NPN de propósito general; modelo genérico)
+VDD Vdd 0 DC 5
+* Nodo de entrada solicitado; no se utiliza para excitar el oscilador
+RIN - 0 1meg
+* Polarización del transistor ajustada teniendo en cuenta R3
+RB1 Vdd B 10k
+RB2 B 0 1meg
+RC Vdd Vout 10k
+RE E 0 10k
+* Bypass de emisor para proporcionar la ganancia necesaria al oscilador
+CE E 0 100u
+Q1 Vout B E QN3904
+.model QN3904 NPN(IS=6.734f BF=200 VAF=74.03 CJE=4.493p CJC=3.638p TF=301.2p TR=239.5n)
+* Red de realimentación RC de tres secciones
+C1 Vout N1 11n
+R1 N1 0 10k
+C2 N1 N2 11n
+R2 N2 0 10k
+C3 N2 B 11n IC=1m
+R3 B 0 10k
+.control
+tran 2u 50m 0 2u uic
+wrdata output.txt v(Vout)
+.endc
+.end

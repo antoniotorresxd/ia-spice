@@ -1,0 +1,7 @@
+Vin1 vin1 0 DC 0
+Vin2 vin2 0 DC 0
+R1 vin1 vminus 10k
+Rf1 vminus vout 10k
+R2 vin2 vplus 10k
+Rf2 vplus 0 10k
+X1 vplus vminus vout OPAMP

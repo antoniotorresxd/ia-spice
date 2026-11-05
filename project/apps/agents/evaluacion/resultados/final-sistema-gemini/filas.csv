@@ -1,0 +1,182 @@
+condicion,tarea,tipo,corrida,escalon,paso,escalon_adaptado,paso_adaptado,segundos,detalle
+Sistema + google/gemini-3.5-flash-lite,16,Oscillator,1,no_funciona,False,no_funciona,False,15.4,"analysis failed.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44
+Warning: Model issue on line 10 :
+.model limit ddt_limit(gain=1 vout_max=5 vout_min=0) ...
+Unknown model type ddt_limit - ignored
+Error on line 8 or its substitute:
+a.x1.aclp x1.out_unclipped 0 vout vdd vee 0 0 0 limit
+MIF-ERROR - unable to find definition of model limit
+Error: circuit not parsed."
+Sistema + google/gemini-3.5-flash-lite,16,Oscillator,2,no_funciona,False,pasa,True,12.7,"occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp2oxongve/caso.py"", line 47, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: 0"
+Sistema + google/gemini-3.5-flash-lite,16,Oscillator,3,no_funciona,False,no_funciona,False,23.7,"occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp_qhd69vz/caso.py"", line 47, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: 0"
+Sistema + google/gemini-3.5-flash-lite,16,Oscillator,4,no_funciona,False,no_funciona,False,12.7,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp4lva926i/caso.py"", line 48, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+Sistema + google/gemini-3.5-flash-lite,16,Oscillator,5,no_funciona,False,no_funciona,False,13.4,"occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpb3cx3xh6/caso.py"", line 47, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: 0"
+Sistema + google/gemini-3.5-flash-lite,17,Oscillator,1,no_funciona,False,no_funciona,False,12.7,"analysis failed.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44
+doAnalyses: TRAN:  Timestep too small; time = 2.73924e-06, timestep = 0: cause unrecorded.
+run simulation(s) aborted"
+Sistema + google/gemini-3.5-flash-lite,17,Oscillator,2,no_funciona,False,no_funciona,False,15.4,"The peak amplitudes are too small. (<1uV)
+Periodicity is inconsistent, oscillation may not be an ideal periodicity.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,17,Oscillator,3,no_funciona,False,no_funciona,False,12.8,"Periodicity is inconsistent, oscillation may not be an ideal periodicity.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,17,Oscillator,4,no_funciona,False,no_funciona,False,20.5,"analysis failed.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44
+Warning: singular matrix:  check node net_out
+Warning: singular matrix:  check node net_out
+Warning: singular matrix:  check node net_out
+Warning: singular matrix:  check node net_out
+Warning: singular matrix:  check node net_out
+Warning: singular matrix:  check node net_out
+doAnalyses: TRAN:  Timestep too small; time = 1e-17, timestep = 1.25e-18: cause unrecorded.
+run simulation(s) aborted"
+Sistema + google/gemini-3.5-flash-lite,17,Oscillator,5,no_funciona,False,no_funciona,False,15.0,"Not enough peaks were detected to determine amplitude.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,18,Integrator,1,no_funciona,False,pasa,True,8.4,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 29.098234546905832 V/s
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,18,Integrator,2,no_funciona,False,pasa,True,8.6,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 29.098234546905832 V/s
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,18,Integrator,3,no_funciona,False,pasa,True,8.6,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 29.098234546905832 V/s
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,18,Integrator,4,no_funciona,False,pasa,True,8.9,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 29.098234546905832 V/s
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,18,Integrator,5,no_funciona,False,pasa,True,7.9,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 29.098234546905832 V/s
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,19,Differentiator,1,no_funciona,False,pasa,True,9.0,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,19,Differentiator,2,no_funciona,False,pasa,True,9.1,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,19,Differentiator,3,no_funciona,False,pasa,True,8.6,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,19,Differentiator,4,no_funciona,False,pasa,True,13.6,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,19,Differentiator,5,no_funciona,False,pasa,True,12.1,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,20,Adder,1,pasa,True,pasa,True,5.5,
+Sistema + google/gemini-3.5-flash-lite,20,Adder,2,pasa,True,pasa,True,8.1,
+Sistema + google/gemini-3.5-flash-lite,20,Adder,3,pasa,True,pasa,True,6.1,
+Sistema + google/gemini-3.5-flash-lite,20,Adder,4,pasa,True,pasa,True,7.9,
+Sistema + google/gemini-3.5-flash-lite,20,Adder,5,pasa,True,pasa,True,5.3,
+Sistema + google/gemini-3.5-flash-lite,21,Subtractor,1,pasa,True,pasa,True,6.2,
+Sistema + google/gemini-3.5-flash-lite,21,Subtractor,2,pasa,True,pasa,True,6.3,
+Sistema + google/gemini-3.5-flash-lite,21,Subtractor,3,pasa,True,pasa,True,5.2,
+Sistema + google/gemini-3.5-flash-lite,21,Subtractor,4,pasa,True,pasa,True,5.8,
+Sistema + google/gemini-3.5-flash-lite,21,Subtractor,5,pasa,True,pasa,True,5.6,
+Sistema + google/gemini-3.5-flash-lite,22,Schmitt,1,no_simula,False,no_simula,False,13.6,", line 1194, in operating_point
+    return self._run('operating_point', *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 118, in _run
+    self._ngspice_shared.load_circuit(str(self))
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1164, in load_circuit
+    raise NameError(""ngSpice_Circ returned {}"".format(rc))
+NameError: ngSpice_Circ returned 1
+"
+Sistema + google/gemini-3.5-flash-lite,22,Schmitt,2,no_simula,False,no_simula,False,17.8,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + google/gemini-3.5-flash-lite,22,Schmitt,3,no_simula,False,no_simula,False,20.2,", line 1194, in operating_point
+    return self._run('operating_point', *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 118, in _run
+    self._ngspice_shared.load_circuit(str(self))
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1164, in load_circuit
+    raise NameError(""ngSpice_Circ returned {}"".format(rc))
+NameError: ngSpice_Circ returned 1
+"
+Sistema + google/gemini-3.5-flash-lite,22,Schmitt,4,no_funciona,False,no_funciona,False,12.8,"The circuit does not function correctly. The output voltage does not cross the Vdd/2.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + google/gemini-3.5-flash-lite,22,Schmitt,5,no_simula,False,no_simula,False,14.1,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"

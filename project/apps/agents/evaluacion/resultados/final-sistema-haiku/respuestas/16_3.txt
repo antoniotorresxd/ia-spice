@@ -1,0 +1,42 @@
+* RC phase-shift oscillator, Vdd = 5 V, output node Vout
+* Valores comerciales (circuito): ideal -> comercial
+*   Rf: 47kohm -> 47kohm [E24, +0.00%]
+*   Rg: 1kohm -> 1kohm [E24, +0.00%]
+*   R1: 3.9kohm -> 3.9kohm [E24, +0.00%]
+*   C1: 16.7nF -> 18nF + 220nF = 16.6nF [E12, -0.13%]
+*   R2: 3.9kohm -> 3.9kohm [E24, +0.00%]
+*   C2: 16.7nF -> 18nF + 220nF = 16.6nF [E12, -0.13%]
+*   R3: 3.9kohm -> 3.9kohm [E24, +0.00%]
+*   C3: 16.7nF -> 18nF + 220nF = 16.6nF [E12, -0.13%]
+*   R4: 3.9kohm -> 3.9kohm [E24, +0.00%]
+*   Rbias: 100kohm -> 100kohm [E24, +0.00%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+Vdd vdd 0 DC 5
+X1 n_p n_m Vout OPAMP
+Rf Vout n_m 47k
+Rg n_m 0 1k
+R1 Vout n1 3.9k
+C1 n1 0 16.6387n
+R2 n1 n2 3.9k
+C2 n2 0 16.6387n
+R3 n2 n3 3.9k
+C3 n3 0 16.6387n
+R4 n3 n_m 3.9k
+Rbias n_p 0 100k
+.subckt OPAMP inp inn out
+Rin inp inn 1e9
+Egain nint 0 inp inn 1e5
+Ro nint out 100
+.ends
+.ic v(Vout)=0.01
+.tran 5u 10m uic
+.control
+run
+meas tran vmax MAX v(Vout) from=5m to=10m
+meas tran vmin MIN v(Vout) from=5m to=10m
+let vmid = (vmax + vmin)/2
+let vamp = (vmax - vmin)/2
+wrdata output.txt v(Vout)
+.endc
+.end

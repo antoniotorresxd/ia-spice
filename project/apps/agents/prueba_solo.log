@@ -1,0 +1,56 @@
+===== openai/gpt-6-luna
+tarea 18 corrida 1: generando...
+tarea 18 corrida 1: calificando (20 s en generar)...
+tarea 18 corrida 1: no_funciona (25 s)
+
+## openai/gpt-6-luna solo (API, un intento)
+
+| Tarea | Tipo | Pasan | Pass@1 | Pass@5 | Escalones | AnalogCoder P@1 | GPT-4o solo P@1 |
+|---|---|---|---|---|---|---|---|
+| 18 | Integrator | 0/1 | 0.0 | 0.0 | no_funciona 1 | 100.0 | 0.0 |
+
+Tareas resueltas al menos una vez: 0/1 · Pass@1 medio: 0.0 %
+
+Resultados en /home/antonioxd/projects/ia-spice/project/apps/agents/evaluacion/resultados/analogcoder-20261102-162201
+===== anthropic/claude-haiku-5.5
+tarea 18 corrida 1: generando...
+tarea 18 corrida 1: calificando (24 s en generar)...
+tarea 18 corrida 1: no_funciona (29 s)
+
+## anthropic/claude-haiku-5.5 solo (API, un intento)
+
+| Tarea | Tipo | Pasan | Pass@1 | Pass@5 | Escalones | AnalogCoder P@1 | GPT-4o solo P@1 |
+|---|---|---|---|---|---|---|---|
+| 18 | Integrator | 0/1 | 0.0 | 0.0 | no_funciona 1 | 100.0 | 0.0 |
+
+Tareas resueltas al menos una vez: 0/1 · Pass@1 medio: 0.0 %
+
+Resultados en /home/antonioxd/projects/ia-spice/project/apps/agents/evaluacion/resultados/analogcoder-20261102-162233
+===== google/gemini-3.5-flash-lite
+tarea 18 corrida 1: generando...
+tarea 18 corrida 1: calificando (4 s en generar)...
+tarea 18 corrida 1: no_ejecuta (4 s)
+
+## google/gemini-3.5-flash-lite solo (API, un intento)
+
+| Tarea | Tipo | Pasan | Pass@1 | Pass@5 | Escalones | AnalogCoder P@1 | GPT-4o solo P@1 |
+|---|---|---|---|---|---|---|---|
+| 18 | Integrator | 0/1 | 0.0 | 0.0 | no_ejecuta 1 | 100.0 | 0.0 |
+
+Tareas resueltas al menos una vez: 0/1 · Pass@1 medio: 0.0 %
+
+Resultados en /home/antonioxd/projects/ia-spice/project/apps/agents/evaluacion/resultados/analogcoder-20261102-162241
+===== google/gemini-3.8-flash
+tarea 18 corrida 1: generando...
+tarea 18 corrida 1: calificando (20 s en generar)...
+tarea 18 corrida 1: no_funciona (25 s)
+
+## google/gemini-3.8-flash solo (API, un intento)
+
+| Tarea | Tipo | Pasan | Pass@1 | Pass@5 | Escalones | AnalogCoder P@1 | GPT-4o solo P@1 |
+|---|---|---|---|---|---|---|---|
+| 18 | Integrator | 0/1 | 0.0 | 0.0 | no_funciona 1 | 100.0 | 0.0 |
+
+Tareas resueltas al menos una vez: 0/1 · Pass@1 medio: 0.0 %
+
+Resultados en /home/antonioxd/projects/ia-spice/project/apps/agents/evaluacion/resultados/analogcoder-20261102-162309

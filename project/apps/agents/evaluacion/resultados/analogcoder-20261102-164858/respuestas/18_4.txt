@@ -1,0 +1,62 @@
+## Task 1: Design Plan
+
+The integrator is an inverting integrator built around a two-stage-free, single-stage op-amp. The op-amp is a 5-transistor OTA (differential pair with PMOS current-mirror load and NMOS tail). The integrator network is R1 from Vin to the inverting input, and Cf from the inverting input to Vout. A large resistor Rf is placed in parallel with Cf so the DC operating point is defined. Without it, the open-loop op-amp would saturate at DC.
+
+**Supply and bias sources**
+- Vdd = 5.0 V
+- Vin = 2.5 V (DC input at mid-supply, so there is no DC current through R1)
+- Vplus = 2.5 V (non-inverting reference, which sets the virtual-ground level)
+- Vbn = 1.0 V (NMOS tail bias, V_th + 0.5 V = 0.5 + 0.5)
+
+**Op-amp (5T OTA)**
+- **M1** (NMOS, W = 10 µm, L = 1 µm): gate = Vplus (non-inverting input), drain = node Vd1 (diode side), source = Vtail, bulk = GND.
+- **M2** (NMOS, W = 10 µm, L = 1 µm): gate = Vn (inverting input), drain = Vout (output), source = Vtail, bulk = GND.
+- **M3** (PMOS, W = 20 µm, L = 1 µm): diode-connected active load, gate = drain = Vd1, source = Vdd, bulk = Vdd.
+- **M4** (PMOS, W = 20 µm, L = 1 µm): current-mirror load, gate = Vd1, drain = Vout, source = Vdd, bulk = Vdd.
+- **M5** (NMOS, W = 10 µm, L = 1 µm): tail current source, gate = Vbn, drain = Vtail, source = GND, bulk = GND. The tail current is about 125 µA, so each input device carries about 62.5 µA.
+
+**Integrator network**
+- **R1** = 10 kΩ: between Vin and Vn (input resistor).
+- **Cf** = 10 pF: between Vn and Vout (feedback capacitor).
+- **Rf** = 10 MΩ: between Vn and Vout, in parallel with Cf, for DC bias only.
+
+**Expected behavior**
+- Ideal integrator transfer function: Vout/Vin = −1/(s·R1·Cf). The unity-gain frequency is 1/(2π·R1·Cf) ≈ 1.6 MHz.
+- At the DC operating point, Vn ≈ Vplus = 2.5 V and Vout ≈ 2.5 V.
+
+**Node list:** Vdd, Vin, Vplus, Vbn, Vd1, Vtail, Vn, Vout.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Integrator')
+
+# Model definitions
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5, lambda_=0.02)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5, lambda_=0.02)
+
+# Power supply and bias sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)      # 5 V supply
+circuit.V('in', 'Vin', circuit.gnd, 2.5)      # DC input at mid-supply
+circuit.V('ref', 'Vplus', circuit.gnd, 2.5)   # Non-inverting reference (virtual ground level)
+circuit.V('bn', 'Vbn', circuit.gnd, 1.0)      # Tail bias = V_th + 0.5 V
+
+# Op-amp: 5-transistor OTA
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+circuit.MOSFET('1', 'Vd1', 'Vplus', 'Vtail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)
+circuit.MOSFET('2', 'Vout', 'Vn', 'Vtail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)
+circuit.MOSFET('3', 'Vd1', 'Vd1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('4', 'Vout', 'Vd1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('5', 'Vtail', 'Vbn', circuit.gnd, circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)
+
+# Integrator network
+circuit.R('1', 'Vin', 'Vn', 10@u_kΩ)     # Input resistor R1
+circuit.C('f', 'Vn', 'Vout', 10@u_pF)    # Feedback capacitor Cf
+circuit.R('f', 'Vn', 'Vout', 10e6)       # Large DC feedback resistor (bias only)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

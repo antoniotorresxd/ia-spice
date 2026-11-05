@@ -1,0 +1,60 @@
+## Task 1: Design Plan
+
+An RC phase-shift oscillator needs an inverting gain stage of magnitude at least 29 and a three-section RC ladder that provides 180° phase shift at the oscillation frequency. The loop closes through the amplifier's inverting input, so the total loop phase is 360°.
+
+The inverting gain stage is modeled as an ideal high-gain inverting op-amp (VCVS). Its non-inverting input is grounded and its inverting input is the node **Vminus**, which is the "-" input node from the specification. I used the name `Vminus` because a bare "-" is ambiguous as a SPICE node name. The amplifier output is **Vout**.
+
+**Design values**
+- Each RC section: R = 10 kΩ, C = 10 nF.
+- Oscillation frequency: f₀ = 1 / (2π·√6·R·C) ≈ 650 Hz.
+- At f₀, each section attenuates by 1/√(1+6)... for the three-section ladder with equal R and C, the feedback factor is β = −1/29 and the phase shift is 180°.
+- Required amplifier gain: |A| ≥ 29. The ideal inverting stage uses A = −1×10⁵, which exceeds this requirement with margin.
+
+**Devices and connectivity**
+1. **Inverting amplifier (VCVS, "amp")**
+   - Output (+) terminal: Vout
+   - Output (−) terminal: ground
+   - Control (+) terminal: Vminus
+   - Control (−) terminal: ground
+   - Gain: −1×10⁵ (so Vout = −A·V(Vminus))
+2. **RC ladder feedback network** (Vout → Vminus)
+   - C1 (10 nF): Vout to n1
+   - R1 (10 kΩ): n1 to ground
+   - C2 (10 nF): n1 to n2
+   - R2 (10 kΩ): n2 to ground
+   - C3 (10 nF): n2 to Vminus
+   - R3 (10 kΩ): Vminus to ground
+
+The loop is Vout → C1 → R1 → C2 → R2 → C3 → R3 → amplifier input → Vout, which is a three-section RC phase-shift network with an inverting amplifier.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('RC Phase-Shift Oscillator')
+
+# Component values
+R_val = 10@u_kΩ
+C_val = 10@u_nF
+
+# Ideal inverting amplifier (high-gain VCVS):
+# Vout = -A * (V(Vminus) - 0), with non-inverting input grounded
+# VCVS parameters: name, out_plus, out_minus, ctrl_plus, ctrl_minus, gain
+circuit.VCVS('amp', 'Vout', circuit.gnd, 'Vminus', circuit.gnd, -1e5)
+
+# Three-section RC phase-shift feedback network (Vout -> Vminus)
+# Section 1
+circuit.C('1', 'Vout', 'n1', C_val)
+circuit.R('1', 'n1', circuit.gnd, R_val)
+# Section 2
+circuit.C('2', 'n1', 'n2', C_val)
+circuit.R('2', 'n2', circuit.gnd, R_val)
+# Section 3
+circuit.C('3', 'n2', 'Vminus', C_val)
+circuit.R('3', 'Vminus', circuit.gnd, R_val)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

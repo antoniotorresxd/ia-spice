@@ -1,0 +1,55 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier**: An ideal or behavioral Op-Amp (implemented using a subcircuit or voltage-controlled voltage source in PySpice, or standard op-amp equivalent).
+- **Resistors**: Four equal-value resistors ($R_1, R_2, R_3, R_4$) to set the gain to 1 for a standard subtractor configuration.
+- **Power Supply**: $V_{dd}$ (5.0V) and negative supply $V_{ss}$ (-5.0V) for the op-amp, along with input voltage sources.
+- **Input Signal Sources**: $Vin_1$ and $Vin_2$.
+
+#### Op-Amp Subtractor Topology
+1. **Resistor Network (Inverting Path)**:
+   - Resistor **R1** is connected between **Vin1** and the inverting input node of the op-amp ($V_{inv}$).
+   - Resistor **R2** is connected between the inverting input node ($V_{inv}$) and the output node **Vout** (serving as the feedback resistor).
+
+2. **Resistor Network (Non-Inverting Path)**:
+   - Resistor **R3** is connected between **Vin2** and the non-inverting input node of the op-amp ($V_{non}$).
+   - Resistor **R4** is connected between the non-inverting input node ($V_{non}$) and the ground ($GND$).
+
+3. **Op-Amp Connections**:
+   - Non-inverting input connected to node $V_{non}$.
+   - Inverting input connected to node $V_{inv}$.
+   - Output connected to node **Vout**.
+   - With $R_1 = R_2 = R_3 = R_4$, the output follows the ideal subtractor equation: $V_{out} = Vin_2 - Vin_1$.
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Subtractor')
+
+# Power Supplies for the op-amp
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)  # Positive power supply
+circuit.V('ss', 'Vss', circuit.gnd, -5.0) # Negative power supply
+
+# Input Signal Sources
+circuit.V('in1', 'Vin1', circuit.gnd, 1.0) # Vin1 = 1.0V
+circuit.V('in2', 'Vin2', circuit.gnd, 3.0) # Vin2 = 3.0V (Expected Vout = 3.0 - 1.0 = 2.0V)
+
+# Resistors for the Subtractor (All set to 10 kOhms for unity gain difference)
+circuit.R('1', 'Vin1', 'V_inv', 10@u_kΩ)
+circuit.R('2', 'V_inv', 'Vout', 10@u_kΩ)
+circuit.R('3', 'Vin2', 'V_non', 10@u_kΩ)
+circuit.R('4', 'V_non', circuit.gnd, 10@u_kΩ)
+
+# Behavioral Op-Amp implementation using a VCVS (Voltage Controlled Voltage Source)
+# Syntax: E(name, positive_output, negative_output, positive_control, negative_control, gain)
+# Using a high gain (e.g., 100k) to model an ideal operational amplifier
+circuit.element_factory.E('OpAmp', 'Vout', circuit.gnd, 'V_non', 'V_inv', 100e3)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

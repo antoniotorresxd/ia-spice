@@ -1,0 +1,54 @@
+### Task 1 — Design plan
+
+Use a single-transistor common-emitter amplifier and a three-section RC feedback network. The common-emitter stage inverts the signal by approximately 180°, and the RC network supplies the additional 180° phase shift needed for oscillation.
+
+- **Supply:** `Vdd = 5 V`; ground is the circuit reference.
+- **Amplifier transistor:** NPN transistor `Q1`.
+  - Collector connects to `Vout`.
+  - Base connects to node `B`.
+  - Emitter connects to node `E`.
+  - A `10 kΩ` collector resistor connects `Vdd` to `Vout`.
+  - A `1 kΩ` emitter resistor connects `E` to ground.
+  - A `100 µF` capacitor bypasses the emitter resistor for AC gain.
+- **Base bias:** A `470 kΩ` resistor connects `Vdd` to `B`, and a `100 kΩ` resistor connects `B` to ground. This biases the base near 0.9 V, allowing for the transistor’s base-emitter voltage and a small emitter voltage.
+- **RC feedback network:** Three `10 nF` capacitors are connected in series from `Vout` to `B`. Each intermediate node (`N1`, `N2`) and the base node `B` connects to ground through a `10 kΩ` resistor. The base bias resistor also loads the final section slightly.
+- **Nominal frequency:** For equal RC sections, the ideal estimate is \(f \approx 1/(2\pi RC\sqrt{6})\), or about **6.5 kHz** for `R = 10 kΩ` and `C = 10 nF`. Actual frequency depends on transistor and network loading.
+
+The input node is `-`; no input source is needed for this autonomous oscillator. `Vout` is the collector output.
+
+### Task 2 — PySpice code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('RC Phase-Shift Oscillator')
+
+# NPN transistor model
+circuit.model('npn_model', 'npn', IS=1e-14, BF=120, VAF=100)
+
+# Supply
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+
+# Common-emitter amplifier bias and load
+circuit.R('C', 'Vdd', 'Vout', 10@u_kΩ)
+circuit.R('E', 'E', circuit.gnd, 1@u_kΩ)
+circuit.C('E_bypass', 'E', circuit.gnd, 100@u_uF)
+
+circuit.R('bias_top', 'Vdd', 'B', 470@u_kΩ)
+circuit.R('bias_bottom', 'B', circuit.gnd, 100@u_kΩ)
+
+# NPN common-emitter stage: collector, base, emitter
+circuit.BJT('1', 'Vout', 'B', 'E', model='npn_model')
+
+# Three-section RC phase-shift feedback network
+circuit.C('1', 'Vout', 'N1', 10@u_nF)
+circuit.C('2', 'N1', 'N2', 10@u_nF)
+circuit.C('3', 'N2', 'B', 10@u_nF)
+
+circuit.R('1', 'N1', circuit.gnd, 10@u_kΩ)
+circuit.R('2', 'N2', circuit.gnd, 10@u_kΩ)
+circuit.R('3', 'B', circuit.gnd, 10@u_kΩ)
+
+simulator = circuit.simulator()
+```

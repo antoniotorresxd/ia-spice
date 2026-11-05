@@ -1,0 +1,37 @@
+### Task 1: Design Plan
+
+Use the standard **inverting op-amp integrator** topology.
+
+- **Op-amp:** Model the op-amp as a high-gain voltage-controlled voltage source (VCVS), with gain \(10^5\). Its non-inverting input is grounded, its inverting input is node `Ninv`, and its output is `Vout`. This idealized macromodel has no explicit supply pins or output-voltage limits.
+- **R1:** Connect a 10 kΩ resistor from `Vin` to `Ninv`.
+- **Cf:** Connect a 10 nF capacitor from `Vout` back to `Ninv`.
+- **Input source:** Set `Vin` to 0 V DC for the operating-point condition. No AC source is used.
+- **Ground:** Use circuit ground as the reference for the non-inverting input and the input source.
+
+For an ideal op-amp and zero initial capacitor voltage, the integrator transfer function is approximately
+\[
+\frac{V_{\text{out}}}{V_{\text{in}}}=-\frac{1}{sR_1C_f}.
+\]
+With the selected values, \(R_1C_f=100\,\mu\text{s}\).
+
+### Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Integrator')
+
+# DC input value for operating-point analysis
+circuit.V('in', 'Vin', circuit.gnd, 0 @ u_V)
+
+# Inverting integrator network
+circuit.R('1', 'Vin', 'Ninv', 10 @ u_kΩ)
+circuit.C('f', 'Ninv', 'Vout', 10 @ u_nF)
+
+# High-gain op-amp macromodel:
+# Vout = gain * (Vnoninverting - Vinverting)
+circuit.VCVS('opamp', 'Vout', circuit.gnd, circuit.gnd, 'Ninv', 1e5)
+
+simulator = circuit.simulator()
+```

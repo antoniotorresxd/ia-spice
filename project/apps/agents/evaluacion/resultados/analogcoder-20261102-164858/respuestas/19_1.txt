@@ -1,0 +1,86 @@
+## Task 1: Design Plan
+
+The differentiator is built from an operating-point-accurate two-stage CMOS op-amp with a feedback network. The op-amp's non-inverting input is biased at a common-mode voltage, and the input signal is applied through C1 to the inverting node. The ideal transfer function is
+
+**Vout = −Rf · C1 · dVin/dt**
+
+with Rf = 10 kΩ and C1 = 1 nF (time constant 10 µs).
+
+### Supply and bias
+- **Vdd** = 5.0 V.
+- **Vcm** = 2.5 V, a DC source on the non-inverting input (mid-supply common-mode level).
+- **Vbias** = 1.0 V, a DC source for the NMOS current sources. Its value is V_th + 0.5 V = 0.5 + 0.5 = 1.0 V.
+- **Vin** = 2.5 V DC. The input node is the source of the differentiator input. No AC is applied, per the design rules.
+
+### Op-amp (two-stage, transistor level)
+
+**Stage 1: NMOS differential pair with PMOS mirror load**
+- **M1** (NMOS, W = 10 µm, L = 1 µm): gate = Vcm (non-inverting input), drain = Node1, source = Tail.
+- **M2** (NMOS, W = 10 µm, L = 1 µm): gate = Vminus (inverting input), drain = Node2 (first-stage output), source = Tail.
+- **M3** (PMOS, W = 20 µm, L = 1 µm): diode-connected mirror load. Source = Vdd, gate = drain = Node1.
+- **M4** (PMOS, W = 20 µm, L = 1 µm): mirror load. Source = Vdd, gate = Node1, drain = Node2.
+- **M5** (NMOS, W = 20 µm, L = 1 µm): tail current source. Gate = Vbias, drain = Tail, source = ground. Tail current is about 0.25 mA, so each branch carries about 0.125 mA.
+
+**Stage 2: PMOS common-source with NMOS current-source load**
+- **M6** (PMOS, W = 40 µm, L = 1 µm): gate = Node2, source = Vdd, drain = Vout.
+- **M7** (NMOS, W = 20 µm, L = 1 µm): current-source load. Gate = Vbias, drain = Vout, source = ground. Current is about 0.25 mA.
+
+Bulk terminals are tied to their sources: NMOS bulks to ground, PMOS bulks to Vdd.
+
+### Differentiator network
+- **C1** (1 nF): connects Vin to the inverting node Vminus.
+- **Rf** (10 kΩ): feedback resistor connecting Vout to Vminus.
+- The op-amp output is Vout, which closes the feedback loop through Rf. The non-inverting input is at Vcm.
+
+### Node summary
+| Node | Connections |
+|---|---|
+| Vdd | Sources of M3, M4, M6 |
+| Vcm | Gate of M1 |
+| Vbias | Gate of M5, gate of M7 |
+| Vin | C1 (input side) |
+| Vminus | C1 (output side), gate of M2, Rf |
+| Tail | Sources of M1, M2; drain of M5 |
+| Node1 | Drains of M1 and M3; gates of M3 and M4 |
+| Node2 | Drains of M2 and M4; gate of M6 |
+| Vout | Drains of M6 and M7; Rf |
+
+---
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Differentiator')
+
+# Device models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5, lambda_=0.05)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5, lambda_=0.05)
+
+# Power supply and bias sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)      # 5 V supply
+circuit.V('cm', 'Vcm', circuit.gnd, 2.5)      # common-mode bias for non-inverting input
+circuit.V('bias', 'Vbias', circuit.gnd, 1.0)  # NMOS bias: V_th + 0.5 V
+circuit.V('in', 'Vin', circuit.gnd, 2.5)      # DC input level (no AC source)
+
+# Op-amp stage 1: NMOS differential pair with PMOS mirror load
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+circuit.MOSFET('1', 'Node1', 'Vcm', 'Tail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)
+circuit.MOSFET('2', 'Node2', 'Vminus', 'Tail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)
+circuit.MOSFET('3', 'Node1', 'Node1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('4', 'Node2', 'Node1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('5', 'Tail', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+
+# Op-amp stage 2: PMOS common-source with NMOS current-source load
+circuit.MOSFET('6', 'Vout', 'Node2', 'Vdd', 'Vdd', model='pmos_model', w=40e-6, l=1e-6)
+circuit.MOSFET('7', 'Vout', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+
+# Differentiator network
+circuit.C('1', 'Vin', 'Vminus', 1@u_nF)     # input capacitor C1
+circuit.R('f', 'Vout', 'Vminus', 10@u_kΩ)   # feedback resistor Rf
+
+# Analysis Part
+simulator = circuit.simulator()
+```

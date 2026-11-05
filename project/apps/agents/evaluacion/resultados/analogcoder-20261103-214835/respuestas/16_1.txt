@@ -1,0 +1,35 @@
+* RC Phase-Shift Oscillator
+* Valores comerciales (circuito): ideal -> comercial
+*   Rf: 330kohm -> 330kohm [E24, +0.00%]
+*   Rin: 10kohm -> 10kohm [E24, +0.00%]
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 15.9nF -> 12nF || 3.9nF = 15.9nF [E12, +0.00%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   C2: 15.9nF -> 12nF || 3.9nF = 15.9nF [E12, +0.00%]
+*   R3: 10kohm -> 10kohm [E24, +0.00%]
+*   C3: 15.9nF -> 12nF || 3.9nF = 15.9nF [E12, +0.00%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+X1 0 vminus vout opamp
+Rf vminus vout 330k
+Rin 0 vminus 10k
+R1 vout n1 10k
+C1 n1 0 15.9n
+R2 n1 n2 10k
+C2 n2 0 15.9n
+R3 n2 vminus 10k
+C3 vminus 0 15.9n
+.subckt opamp inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 159n
+Eout out 0 n2 0 1
+.ends
+.control
+tran 10u 20m 0
+meas tran period TRIG v(vout) VAL=0 RISE=2 TARG v(vout) VAL=0 RISE=3
+let f_osc = 1 / period
+echo "frequency_hz = $&f_osc" > output.txt
+.endc
+.end

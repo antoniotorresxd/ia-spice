@@ -1,0 +1,77 @@
+## Task 1: Design Plan
+
+The integrator is built from an op-amp with negative feedback. The op-amp is a two-stage Miller-compensated design, and the integrator network is R1 at the input and Cf in the feedback path. A large resistor Rf is placed across Cf to define the DC operating point, since an ideal capacitor is open at DC and would leave the output floating.
+
+**Integrator network**
+- **R1** (10 kΩ): between **Vin** and the inverting node **Vinv**.
+- **Cf** (1 pF): between **Vinv** and **Vout**, the integrating element.
+- **Rf** (10 MΩ): in parallel with Cf, providing a DC feedback path only. It has negligible effect on the integration above about 16 kHz.
+- The non-inverting input is tied to **Vcm** (2.5 V). The integrator's ideal transfer function is Vout/Vin = −1/(sR1Cf).
+
+**Op-amp stage 1: NMOS differential pair with PMOS current-mirror load**
+- **M1** (NMOS, W/L = 10 µm/1 µm): gate = **Vinv** (inverting input), drain = **Dm1**, source = **Ntail**.
+- **M2** (NMOS, W/L = 10 µm/1 µm): gate = **Vcm** (non-inverting input), drain = **Vst1**, source = **Ntail**.
+- **M5** (NMOS tail current source, W/L = 10 µm/1 µm): gate = **Vbias** (1.0 V), drain = **Ntail**, source = ground. Its drain current is about 125 µA, so each input device carries about 62.5 µA.
+- **M3** (PMOS, W/L = 10 µm/1 µm): diode-connected, with source = **Vdd**, gate = drain = **Dm1**.
+- **M4** (PMOS, W/L = 10 µm/1 µm): gate = **Dm1**, source = **Vdd**, drain = **Vst1**. It mirrors M3's current (about 62.5 µA) as the active load.
+- The first-stage output is taken at **Vst1**, which is the drain of M2 and the drain of M4. M1 is the inverting-input device, so the first stage is non-inverting with respect to Vinv.
+
+**Op-amp stage 2: PMOS common-source with NMOS current-source load**
+- **M6** (PMOS, W/L = 20 µm/1 µm): gate = **Vst1**, source = **Vdd**, drain = **Vout**. Its bias current is about 125 µA.
+- **M7** (NMOS, W/L = 10 µm/1 µm): gate = **Vbias** (1.0 V), drain = **Vout**, source = ground, acting as the current-source load.
+- Bulk of every MOSFET is tied to its source.
+
+**Frequency compensation**
+- **Cc** (1 pF): Miller capacitor between **Vst1** and **Vout**, which stabilizes the two-stage op-amp in the feedback loop.
+
+**Bias and supplies**
+- **Vdd** = 5.0 V.
+- **Vbias** = 1.0 V, which sets the tail current (M5) and the second-stage load current (M7).
+- **Vcm** = 2.5 V, the non-inverting input and the common-mode level.
+- **Vin** = 2.5 V DC, the input node, so the DC operating point is centred. Any signal would be applied on top of this.
+
+**Expected operating point**
+- Diode voltage Dm1 ≈ 4.0 V, Vst1 ≈ 4.0 V, Ntail ≈ 1.6 V, Vout ≈ 2.5 V (set by negative feedback), Vinv ≈ 2.5 V.
+- All transistors operate in saturation.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Integrator')
+
+# Device models (level 1)
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5, lambda_=0.02)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5, lambda_=0.02)
+
+# Power supplies and bias sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0@u_V)      # 5 V supply
+circuit.V('in', 'Vin', circuit.gnd, 2.5@u_V)      # Input node, DC level at common mode
+circuit.V('cm', 'Vcm', circuit.gnd, 2.5@u_V)      # Non-inverting input reference (Vcm)
+circuit.V('bias', 'Vbias', circuit.gnd, 1.0@u_V)  # NMOS bias: Vth + 0.5 V overdrive
+
+# ---------------- Op-amp: Stage 1 (NMOS diff pair + PMOS mirror load) ----------------
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+circuit.MOSFET('1', 'Dm1', 'Vinv', 'Ntail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)   # M1 (inverting input)
+circuit.MOSFET('2', 'Vst1', 'Vcm', 'Ntail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)   # M2 (non-inverting input)
+circuit.MOSFET('5', 'Ntail', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)  # M5 tail source
+circuit.MOSFET('3', 'Dm1', 'Dm1', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)           # M3 diode-connected load
+circuit.MOSFET('4', 'Vst1', 'Dm1', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)          # M4 mirror load
+
+# ---------------- Op-amp: Stage 2 (PMOS common source + NMOS current source) ----------------
+circuit.MOSFET('6', 'Vout', 'Vst1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)         # M6 gain device
+circuit.MOSFET('7', 'Vout', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)  # M7 current source
+
+# Miller compensation capacitor
+circuit.C('c', 'Vst1', 'Vout', 1@u_pF)
+
+# ---------------- Integrator network ----------------
+circuit.R('1', 'Vin', 'Vinv', 10@u_kΩ)     # R1 input resistor
+circuit.C('f', 'Vinv', 'Vout', 1@u_pF)     # Cf feedback capacitor
+circuit.R('f', 'Vinv', 'Vout', 10@u_MΩ)    # Large resistor for DC bias definition
+
+# Analysis Part
+simulator = circuit.simulator()
+```

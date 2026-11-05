@@ -1,0 +1,46 @@
+## Task 1 — Design Plan
+
+Use the standard **inverting op-amp integrator** topology:
+
+- **Op-amp:** Model the op-amp as a high-gain voltage-controlled voltage source (VCVS).
+  - Non-inverting input connects to ground (`Vp`).
+  - Inverting input is node `Vn`.
+  - Output connects to `Vout`.
+- **Input resistor R1:** Connect between input node `Vin` and inverting node `Vn`.
+- **Feedback capacitor Cf:** Connect between `Vout` and `Vn`.
+- **DC stabilization resistor Rf:** Connect in parallel with `Cf`. An ideal integrator has no DC feedback path, which can make its operating point undefined in SPICE. This large resistor provides a DC path while leaving the circuit approximately integrative above its low-frequency corner.
+- **Input source:** Set `Vin` to 0 V DC for the operating-point setup. A time-varying input can be applied at `Vin` when performing transient analysis.
+- **Supply:** Include a 5 V `Vdd` source. The VCVS op-amp model is an idealized behavioral model, so it does not use the supply or enforce output swing limits.
+
+For frequencies well above \(1/(2\pi R_f C_f)\), the circuit behaves approximately as an integrator:
+
+\[
+\frac{V_{out}}{V_{in}} \approx -\frac{1}{sR_1C_f}
+\]
+
+## Task 2 — PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Opamp Integrator')
+
+# Supply and DC input for operating-point setup
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('in', 'Vin', circuit.gnd, 0.0)
+
+# Op-amp: high-gain VCVS, output = A * (Vp - Vn)
+circuit.VCVS('Aop', 'Vout', circuit.gnd, 'Vp', 'Vn', 1e5)
+
+# Non-inverting input reference
+circuit.R('ref', 'Vp', circuit.gnd, 1e6)
+
+# Inverting integrator network
+circuit.R('1', 'Vin', 'Vn', 100e3)
+circuit.C('f', 'Vout', 'Vn', 10e-9)
+
+# Large resistor in parallel with Cf to define the DC operating point
+circuit.R('leak', 'Vout', 'Vn', 100e6)
+
+simulator = circuit.simulator()
+```

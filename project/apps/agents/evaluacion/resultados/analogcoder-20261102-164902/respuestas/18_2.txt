@@ -1,0 +1,43 @@
+## Task 1
+
+### Components
+- **R1 = 10 kΩ**: Input resistor from `Vin` to the inverting summing node `Nsum`.
+- **Cf = 1 µF**: Feedback capacitor from `Vout` to `Nsum`.
+- **Op amp**: Modeled as a high-gain voltage-controlled voltage source (VCVS), with its non-inverting input grounded.
+- **Vin source**: Set to 0 V DC for the operating point; no AC source is applied.
+- **Vdd = 5 V**: Declared as the supply rail. The ideal VCVS op-amp abstraction does not have power pins or model supply limits.
+
+### Connections
+1. Connect `R1` between `Vin` and `Nsum`.
+2. Connect `Cf` between `Vout` and `Nsum`.
+3. Connect the op-amp’s non-inverting input to ground and its inverting input to `Nsum`.
+4. Connect the op-amp output to `Vout`.
+
+This is an inverting integrator. Its ideal transfer function is
+\[
+\frac{V_{\text{out}}(s)}{V_{\text{in}}(s)}=-\frac{1}{sR_1C_f}.
+\]
+
+## Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Opamp Integrator')
+
+# Supply rail; the ideal VCVS op-amp model below has no power pins.
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+
+# DC operating-point input; no AC signal is applied.
+circuit.V('in', 'Vin', circuit.gnd, 0.0)
+
+# Inverting integrator network
+circuit.R('1', 'Vin', 'Nsum', 10e3)
+circuit.C('f', 'Vout', 'Nsum', 1e-6)
+
+# High-gain op-amp abstraction:
+# output = gain * (non-inverting input - inverting input)
+circuit.VCVS('Aop', 'Vout', circuit.gnd, circuit.gnd, 'Nsum', 1e6)
+
+simulator = circuit.simulator()
+```

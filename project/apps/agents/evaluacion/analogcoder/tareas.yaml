@@ -1,0 +1,85 @@
+# Subconjunto del benchmark público de AnalogCoder (Lai et al., AAAI 2025),
+# https://github.com/laiyao1/AnalogCoder, licencia MIT (ver LICENSE; commit en COMMIT).
+# Se toman TODAS las tareas compatibles con el alcance a nivel tarjeta
+# (op-amps y pasivos): 16-22 de 24. Las 1-15 son a nivel transistor (MOSFET)
+# y 23-24 (VCO, PLL) quedan fuera del alcance declarado.
+# `circuito`, `entrada_original` y `salida` se copian sin cambios de problem_set.tsv;
+# `verificacion` y `referencia` son sus scripts originales, sin modificar.
+tareas:
+- id: analogcoder-16
+  tarea_original: 16
+  nivel_original: Hard
+  tipo: Oscillator
+  entradas: []
+  salida: Vout
+  verificacion: verificacion/Oscillator.py
+  referencia: referencia/p16.py
+  circuito: An RC phase-shift oscillator
+  entrada_original: '-'
+- id: analogcoder-17
+  tarea_original: 17
+  nivel_original: Hard
+  tipo: Oscillator
+  entradas: []
+  salida: Vout
+  verificacion: verificacion/Oscillator.py
+  referencia: referencia/p17.py
+  circuito: A Wien Bridge oscillator
+  entrada_original: '-'
+- id: analogcoder-18
+  tarea_original: 18
+  nivel_original: Hard
+  tipo: Integrator
+  entradas:
+  - Vin
+  salida: Vout
+  verificacion: verificacion/Integrator.py
+  referencia: referencia/p18.py
+  circuito: An Opamp integrator with resistor R1 and capacitor Cf
+  entrada_original: Vin
+- id: analogcoder-19
+  tarea_original: 19
+  nivel_original: Hard
+  tipo: Differentiator
+  entradas:
+  - Vin
+  salida: Vout
+  verificacion: verificacion/Differentiator.py
+  referencia: referencia/p19.py
+  circuito: An Opamp differentiator with resistor Rf and capacitor C1
+  entrada_original: Vin
+- id: analogcoder-20
+  tarea_original: 20
+  nivel_original: Hard
+  tipo: Adder
+  entradas:
+  - Vin1
+  - Vin2
+  salida: Vout
+  verificacion: verificacion/Adder.py
+  referencia: referencia/p20.py
+  circuito: An Opamp adder to make Vout=-(Vin1+Vin2)
+  entrada_original: Vin1, Vin2
+- id: analogcoder-21
+  tarea_original: 21
+  nivel_original: Hard
+  tipo: Subtractor
+  entradas:
+  - Vin1
+  - Vin2
+  salida: Vout
+  verificacion: verificacion/Subtractor.py
+  referencia: referencia/p21.py
+  circuito: An Op-amp subtractor to make Vout=Vin2-Vin1
+  entrada_original: Vin1, Vin2
+- id: analogcoder-22
+  tarea_original: 22
+  nivel_original: Hard
+  tipo: Schmitt
+  entradas:
+  - Vin
+  salida: Vout
+  verificacion: verificacion/Schmitt.py
+  referencia: referencia/p22.py
+  circuito: A non-inverting Schmitt trigger with positive feedback op-map
+  entrada_original: Vin

@@ -1,0 +1,47 @@
+### Task 1
+
+#### Design overview
+Use an op-amp as a comparator, with the input applied to its **non-inverting (+) input** and positive feedback from the output to that same input. A resistor from **Vin** to the non-inverting input limits the input-source loading and lets the feedback shift the switching thresholds. The inverting (−) input is held at a fixed 2.5 V reference.
+
+#### Devices and connections
+- **Vdd supply:** 5 V from `Vdd` to ground.
+- **Vin source:** DC input from `Vin` to ground. The example operating point uses 2.0 V, below the hysteresis band.
+- **Reference divider:** Two 10 kΩ resistors in series from `Vdd` to ground. Their midpoint, `Vref`, is connected to the op-amp’s inverting input.
+- **Input resistor Rin:** 10 kΩ from `Vin` to the non-inverting input node `Vplus`.
+- **Positive-feedback resistor Rf:** 100 kΩ from `Vout` to `Vplus`.
+- **Op-amp model:** A high-gain voltage-controlled voltage source senses `Vplus` relative to `Vref`. A small series output resistor and diode clamps provide a practical, finite output swing in the simulation.
+- **Output:** `Vout`, with clamp diodes to the supply rails.
+
+With the stated resistor values, the feedback produces a hysteresis band. The exact switching thresholds depend on the output clamp voltages and diode model.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Non-Inverting Schmitt Trigger')
+
+# Supply and DC input for the operating-point setup
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('in', 'Vin', circuit.gnd, 2.0)
+
+# Reference divider: Vref = 2.5 V
+circuit.R('ref_top', 'Vdd', 'Vref', 10e3)
+circuit.R('ref_bottom', 'Vref', circuit.gnd, 10e3)
+
+# Non-inverting input and positive-feedback network
+circuit.R('in', 'Vin', 'Vplus', 10e3)
+circuit.R('feedback', 'Vout', 'Vplus', 100e3)
+
+# High-gain op-amp approximation: Eraw = gain * (Vplus - Vref)
+circuit.VCVS('opamp', 'Eraw', circuit.gnd, 'Vplus', 'Vref', 1e5)
+circuit.R('out', 'Eraw', 'Vout', 100)
+
+# Output clamps. The diodes conduct when Vout goes beyond the rails
+# by approximately one forward diode drop.
+circuit.model('DCLAMP', 'D', IS=1e-14, N=1)
+circuit.D('high', 'Vout', 'Vdd', model='DCLAMP')
+circuit.D('low', circuit.gnd, 'Vout', model='DCLAMP')
+
+simulator = circuit.simulator()
+```

@@ -1,0 +1,222 @@
+condicion,tarea,tipo,corrida,escalon,paso,escalon_adaptado,paso_adaptado,segundos,detalle
+"openai/gpt-6-luna solo (API, un intento)",16,Oscillator,1,no_funciona,False,no_funciona,False,38.8,"e above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpbz3jlzdj/caso.py"", line 63, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"openai/gpt-6-luna solo (API, un intento)",16,Oscillator,2,no_funciona,False,no_funciona,False,39.2,"e above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpofzplbqx/caso.py"", line 60, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"openai/gpt-6-luna solo (API, un intento)",16,Oscillator,3,no_funciona,False,no_funciona,False,36.9,"e above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmppjo5h2hh/caso.py"", line 60, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"openai/gpt-6-luna solo (API, un intento)",16,Oscillator,4,no_funciona,False,no_funciona,False,40.0,"e above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmprezq4f07/caso.py"", line 63, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"openai/gpt-6-luna solo (API, un intento)",16,Oscillator,5,no_funciona,False,no_funciona,False,59.6,"e above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpuicjyj5w/caso.py"", line 65, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"openai/gpt-6-luna solo (API, un intento)",17,Oscillator,1,no_funciona,False,no_funciona,False,44.4,"e above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpyud707et/caso.py"", line 64, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"openai/gpt-6-luna solo (API, un intento)",17,Oscillator,2,no_funciona,False,no_funciona,False,43.5,"e above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmppz_qq5i5/caso.py"", line 62, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"openai/gpt-6-luna solo (API, un intento)",17,Oscillator,3,no_funciona,False,no_funciona,False,45.1,"e above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpn96uew72/caso.py"", line 72, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"openai/gpt-6-luna solo (API, un intento)",17,Oscillator,4,no_funciona,False,no_funciona,False,32.5,"e above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp47i86dn2/caso.py"", line 62, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"openai/gpt-6-luna solo (API, un intento)",17,Oscillator,5,no_funciona,False,no_funciona,False,41.5,"e above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp2hkjmm3v/caso.py"", line 61, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+"openai/gpt-6-luna solo (API, un intento)",18,Integrator,1,no_funciona,False,no_funciona,False,40.4,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 33.32260866934211 V/s
+
+Unsupported Ngspice version 42"
+"openai/gpt-6-luna solo (API, un intento)",18,Integrator,2,no_funciona,False,no_funciona,False,40.4,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 33.33314893220778 V/s
+
+Unsupported Ngspice version 42"
+"openai/gpt-6-luna solo (API, un intento)",18,Integrator,3,no_funciona,False,no_funciona,False,33.0,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 0.001994185168469376 V/s
+
+Unsupported Ngspice version 42"
+"openai/gpt-6-luna solo (API, un intento)",18,Integrator,4,no_ejecuta,False,no_ejecuta,False,22.0,"/PySpice/Spice/Netlist.py"", line 909, in __getitem__
+    raise IndexError(attribute_name)   # KeyError
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndexError: E
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp5qgf2c5o/caso.py"", line 11, in <module>
+    circuit.E('opamp', 'Vout', circuit.gnd, circuit.gnd, 'Nsum', voltage_gain=1e5)
+    ^^^^^^^^^
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/Netlist.py"", line 917, in __getattr__
+    raise AttributeError(attribute_name)
+AttributeError: E
+"
+"openai/gpt-6-luna solo (API, un intento)",18,Integrator,5,no_funciona,False,no_funciona,False,30.4,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 33.3320313657596 V/s
+
+Unsupported Ngspice version 42"
+"openai/gpt-6-luna solo (API, un intento)",19,Differentiator,1,no_funciona,False,no_funciona,False,29.3,"Unsupported Ngspice version 42
+Traceback (most recent call last):
+  File ""/tmp/tmpls1m26b6/caso.py"", line 170, in <module>
+    circuit.element(x_name).detach()
+                    ^^^^^^
+NameError: name 'x_name' is not defined. Did you mean: 'r_name'?"
+"openai/gpt-6-luna solo (API, un intento)",19,Differentiator,2,no_funciona,False,no_funciona,False,27.2,"Unsupported Ngspice version 42
+Traceback (most recent call last):
+  File ""/tmp/tmpexf_37xi/caso.py"", line 170, in <module>
+    circuit.element(x_name).detach()
+                    ^^^^^^
+NameError: name 'x_name' is not defined. Did you mean: 'r_name'?"
+"openai/gpt-6-luna solo (API, un intento)",19,Differentiator,3,no_funciona,False,no_funciona,False,28.4,"Unsupported Ngspice version 42
+Traceback (most recent call last):
+  File ""/tmp/tmpvs77zgs_/caso.py"", line 170, in <module>
+    circuit.element(x_name).detach()
+                    ^^^^^^
+NameError: name 'x_name' is not defined. Did you mean: 'r_name'?"
+"openai/gpt-6-luna solo (API, un intento)",19,Differentiator,4,no_funciona,False,no_funciona,False,26.0,"Unsupported Ngspice version 42
+Traceback (most recent call last):
+  File ""/tmp/tmp9qxn7rwj/caso.py"", line 170, in <module>
+    circuit.element(x_name).detach()
+                    ^^^^^^
+NameError: name 'x_name' is not defined. Did you mean: 'r_name'?"
+"openai/gpt-6-luna solo (API, un intento)",19,Differentiator,5,no_funciona,False,no_funciona,False,25.0,"Unsupported Ngspice version 42
+Traceback (most recent call last):
+  File ""/tmp/tmpoar1itt5/caso.py"", line 169, in <module>
+    circuit.element(x_name).detach()
+                    ^^^^^^
+NameError: name 'x_name' is not defined. Did you mean: 'r_name'?"
+"openai/gpt-6-luna solo (API, un intento)",20,Adder,1,pasa,True,pasa,True,28.8,
+"openai/gpt-6-luna solo (API, un intento)",20,Adder,2,pasa,True,pasa,True,32.3,
+"openai/gpt-6-luna solo (API, un intento)",20,Adder,3,pasa,True,pasa,True,63.8,
+"openai/gpt-6-luna solo (API, un intento)",20,Adder,4,pasa,True,pasa,True,33.9,
+"openai/gpt-6-luna solo (API, un intento)",20,Adder,5,pasa,True,pasa,True,31.2,
+"openai/gpt-6-luna solo (API, un intento)",21,Subtractor,1,pasa,True,pasa,True,33.0,
+"openai/gpt-6-luna solo (API, un intento)",21,Subtractor,2,pasa,True,pasa,True,33.7,
+"openai/gpt-6-luna solo (API, un intento)",21,Subtractor,3,pasa,True,pasa,True,41.5,
+"openai/gpt-6-luna solo (API, un intento)",21,Subtractor,4,pasa,True,pasa,True,31.9,
+"openai/gpt-6-luna solo (API, un intento)",21,Subtractor,5,pasa,True,pasa,True,95.7,
+"openai/gpt-6-luna solo (API, un intento)",22,Schmitt,1,no_funciona,False,no_funciona,False,35.3,"The circuit does not function correctly. Trigger points are too close.
+Trigger points: 0.00000V and 0.00000V are not sufficiently different. Please use the positive feedback which the Rf should connect to the non-inverting input of the op-amp.
+Unsupported Ngspice version 42"
+"openai/gpt-6-luna solo (API, un intento)",22,Schmitt,2,pasa,True,pasa,True,45.8,
+"openai/gpt-6-luna solo (API, un intento)",22,Schmitt,3,no_simula,False,no_simula,False,40.5," File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+"openai/gpt-6-luna solo (API, un intento)",22,Schmitt,4,no_funciona,False,no_funciona,False,43.1,"DC analysis failed.
+Unsupported Ngspice version 42
+Warning: Dynamic gmin stepping failed
+Warning: True gmin stepping failed
+Warning: source stepping failed
+Error: Transient op failed, timestep too small
+Error: The operating point could not be simulated successfully.
+Any of the following steps may fail.!
+doAnalyses: DC:  Timestep too small;  vin = 2.9: trouble with dclamp-instance dhigh
+run simulation(s) aborted"
+"openai/gpt-6-luna solo (API, un intento)",22,Schmitt,5,no_simula,False,no_simula,False,41.7," File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/tmp/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"

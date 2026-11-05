@@ -1,0 +1,19 @@
+* Disparador Schmitt no inversor con alimentación simple de 0 a 5 V. Se eligen umbrales de conmutación típicos: umbral inferior 2.25 V y superior 2.75 V, con 0.5 V de histéresis. Vin se conecta al circuito mediante Rin y Vout proporciona realimentación positiva mediante Rfb. El comparador comportamental representa un op-amp ideal limitado a los rieles de alimentación.
+* Valores comerciales (circuito): ideal -> comercial
+*   Rin: 10kohm -> 10kohm [E24, +0.00%]
+*   Rfb: 47kohm -> 47kohm [E24, +0.00%]
+*   Rref1: 10kohm -> 10kohm [E24, +0.00%]
+*   Rref2: 10kohm -> 10kohm [E24, +0.00%]
+Vdd VDD 0 DC 5
+Vin Vin 0 PWL(0 0 10m 5 20m 0)
+Rin Vin vp 10k
+Rfb Vout vref 47k
+Rref1 VDD vref 10k
+Rref2 vref 0 10k
+Bop Vout 0 V=if(V(vp)>V(vref),5,0)
+.control
+tran 10u 20m
+set wr_singlescale
+wrdata output.txt v(Vin) v(Vout)
+.endc
+.end

@@ -1,0 +1,31 @@
+# Condiciones del diseño experimental del capítulo de Pruebas y Resultados.
+#
+#     uv run python -m agents.evaluacion.experimentos
+#
+# Cada condición corre el banco completo (banco.yaml) por la ruta
+# estructurada, sin LLM: es determinista, por eso basta una repetición para
+# medir y se hacen `repeticiones_repetibilidad` extra de la configuración
+# final para comprobarlo (RNF-02.1).
+#
+# P2 — aporte del lazo de retroalimentación. Se barre tolerancia ×
+# presupuesto de iteraciones: con la tolerancia por defecto (5 %) el cálculo
+# inicial ya acierta y el lazo casi no trabaja; el aporte aparece cuando la
+# meta es más estricta que el error que deja redondear a valores comerciales.
+barrido:
+  tolerancias: [0.05, 0.01, 0.005, 0.001]
+  max_iteraciones: [1, 3, 5, 10]
+
+# P4 — costo de restringirse a componentes comerciales. Las mismas
+# tolerancias con 10 iteraciones y `comerciales.habilitado: false`: el
+# circuito se simula con los valores teóricos exactos.
+ideal:
+  max_iteraciones: 10
+
+# La configuración que se reporta como "el sistema" en P1 y P6: la del
+# objetivo específico 4 (10 iteraciones) con la tolerancia por defecto.
+final:
+  tolerancia: 0.05
+  max_iteraciones: 10
+
+# P8 — repetibilidad: cuántas veces EXTRA se corre la configuración final.
+repeticiones_repetibilidad: 2

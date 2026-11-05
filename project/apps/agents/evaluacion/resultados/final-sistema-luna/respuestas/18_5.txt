@@ -1,0 +1,19 @@
+* Integrador practico con alimentacion unica de 5 V
+* Valores comerciales (circuito): ideal -> comercial
+*   R1: 100kohm -> 100kohm [E24, +0.00%]
+*   Rf: 1Mohm -> 1Mohm [E24, +0.00%]
+*   Cf: 100nF -> 100nF [E12, +0.00%]
+VDD Vdd 0 DC 5
+VREF1 Vdd Vref 10k
+VREF2 Vref 0 10k
+Vsig Vin 0 DC 2.5 AC 1 SIN(2.5 10m 100)
+R1 Vin Nminus 100k
+Rf Vout Nminus 1meg
+Cf Vout Nminus 100n
+* Op-amp idealizado: ganancia elevada y salida limitada entre 0 y 5 V
+BOP Vout 0 V=2.5+2.5*tanh(40000*(V(Vref)-V(Nminus)))
+.control
+ac dec 100 0.1 100k
+wrdata output.txt v(Vout)
+.endc
+.end

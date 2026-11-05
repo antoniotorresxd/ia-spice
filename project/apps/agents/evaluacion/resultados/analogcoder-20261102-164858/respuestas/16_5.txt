@@ -1,0 +1,57 @@
+## Task 1: Design Plan
+
+**Topology:** The circuit is a closed loop with an inverting amplifier and a three-section RC ladder (phase-shift network) in the feedback path. Each RC section contributes about 60° of phase shift, so the loop has 180° from the ladder plus 180° from the inverting amplifier, which gives 360° at the oscillation frequency.
+
+**Node convention:** The inverting input of the amplifier, labelled "-" in the specification, is implemented as the SPICE node `Vminus`. The feedback network drives this node, and the output node is `Vout`.
+
+**Devices and connectivity:**
+
+1. **Inverting amplifier (VCVS, E-element):**
+   - Output terminals: `Vout` (+) and `gnd` (−).
+   - Control inputs: `Vminus` (+) and `gnd` (−).
+   - Gain = −50, so Vout = −50·V(Vminus). The gain exceeds the required minimum of 29 (for three equal RC sections, the ladder attenuates by 1/29 at f₀ and inverts the phase).
+
+2. **Feedback RC ladder (series R, shunt C):**
+   - R1 = 10 kΩ between `Vout` and node `N1`.
+   - C1 = 10 nF from `N1` to ground.
+   - R2 = 10 kΩ between `N1` and `N2`.
+   - C2 = 10 nF from `N2` to ground.
+   - R3 = 10 kΩ between `N2` and `Vminus`.
+   - C3 = 10 nF from `Vminus` to ground.
+
+3. **DC bias path:**
+   - Rbias = 1 MΩ from `Vminus` to ground. Capacitors are open at DC, so this resistor gives the high-impedance amplifier input a defined DC operating point. It has negligible effect on the AC network.
+
+**Oscillation frequency:**
+
+f₀ = 1 / (2π·√6·R·C) = 1 / (2π·√6·10 kΩ·10 nF) ≈ 650 Hz
+
+**Start-up condition:** The loop gain at f₀ is (gain of the amplifier) × (ladder attenuation) = 50 × (1/29) ≈ 1.7 > 1, so the loop can start oscillating. No AC source is used, and the circuit is defined only for operating-point and transient analysis.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('RC Phase-Shift Oscillator')
+
+# Ideal inverting amplifier (VCVS) with gain -50
+# Vout = -50 * (V(Vminus) - V(gnd)), Vminus is the "-" (inverting) input node
+circuit.VCVS('amp', 'Vout', circuit.gnd, 'Vminus', circuit.gnd, gain=-50)
+
+# Three-section RC phase-shift feedback network (Vout -> Vminus)
+circuit.R('1', 'Vout', 'N1', 10@u_kΩ)
+circuit.C('1', 'N1', circuit.gnd, 10@u_nF)
+
+circuit.R('2', 'N1', 'N2', 10@u_kΩ)
+circuit.C('2', 'N2', circuit.gnd, 10@u_nF)
+
+circuit.R('3', 'N2', 'Vminus', 10@u_kΩ)
+circuit.C('3', 'Vminus', circuit.gnd, 10@u_nF)
+
+# DC bias path for the high-impedance inverting input node
+circuit.R('bias', 'Vminus', circuit.gnd, 1000@u_kΩ)
+
+simulator = circuit.simulator()
+```

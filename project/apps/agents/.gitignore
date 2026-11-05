@@ -7,3 +7,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# salidas de agents.evaluacion (se regeneran con un comando)
+

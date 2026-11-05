@@ -1,0 +1,8 @@
+Design A non-inverting Schmitt trigger with positive feedback op-map.
+
+Input node name: Vin.
+
+Output node name: Vout.
+
+Make sure the input and output node names appear in the circuit.
+Assume the Vdd = 5.0 V.

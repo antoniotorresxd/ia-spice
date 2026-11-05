@@ -1,0 +1,64 @@
+## Task 1: Design Plan
+
+**Topology:** An RC phase-shift oscillator built from one inverting common-source NMOS gain stage and a three-section RC ladder that feeds the output back to the gate. The ladder provides 180° of phase shift, and the common-source stage provides the other 180° (inversion), so the loop has positive feedback at the oscillation frequency.
+
+**Node naming:** The inverting input of the amplifier (the gate of M1) is the "−" node. SPICE node names cannot be a bare "−" reliably, so it is named **Vminus** in the netlist. The output is **Vout**.
+
+**Design targets:**
+- Oscillation frequency: f₀ = 1/(2π·√6·R·C) ≈ 1 kHz
+- Loop gain at f₀ must exceed 29 (the attenuation of the 3-section ladder is 1/29)
+- Drain bias current ≈ 0.1 mA, with Vdd = 5 V
+
+**Components and connections**
+
+| Device | Type | Connections | Value / Size |
+|---|---|---|---|
+| M1 | NMOS (common-source amplifier) | Drain = Vout, Gate = Vminus, Source = GND, Bulk = GND | W = 200 µm, L = 1 µm (kp = 100 µA/V², Vth = 0.5 V) |
+| RD | Drain resistor | Vdd – Vout | 30 kΩ |
+| Vdd | DC supply | Vdd – GND | 5.0 V |
+| Vbias | DC gate bias | Vbias – GND | 0.6 V (Vth + Vov ≈ 0.5 + 0.1) |
+| C1 | Ladder capacitor | Vout – n1 | 680 pF |
+| R1 | Ladder shunt resistor | n1 – GND | 100 kΩ |
+| C2 | Ladder capacitor | n1 – n2 | 680 pF |
+| R2 | Ladder shunt resistor | n2 – GND | 100 kΩ |
+| C3 | Ladder capacitor | n2 – Vminus | 680 pF |
+| R3 | Gate bias / ladder termination | Vminus – Vbias | 100 kΩ |
+
+**Checks:**
+- **Bias:** With I_D = ½·kp·(W/L)·Vov² = ½·100µ·200·(0.1)² = 0.1 mA, the drain drops 3 V across RD, so V_out(DC) = 2 V. This keeps M1 in saturation (V_DS = 2 V > Vov = 0.1 V).
+- **Gain:** gm = 2I_D/Vov = 2 mS, so |A| ≈ gm·RD ≈ 60 (about 54 after the ladder loads the drain). This exceeds the required 29.
+- **Frequency:** RC = 100 kΩ × 680 pF = 68 µs, so f₀ = 1/(2π·2.449·68 µs) ≈ 957 Hz ≈ 1 kHz.
+- The capacitors block DC, so the ladder does not disturb the DC operating point. R3 sets the gate DC level to Vbias and acts as the AC termination of the ladder.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('RC Phase-Shift Oscillator')
+
+# Model definitions
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+
+# Power supply and DC bias sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)      # 5 V supply
+circuit.V('bias', 'Vbias', circuit.gnd, 0.6)  # Gate bias = Vth + Vov = 0.5 + 0.1 V
+
+# Common-source amplifier (inverting stage)
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+circuit.MOSFET('1', 'Vout', 'Vminus', circuit.gnd, circuit.gnd,
+               model='nmos_model', w=200e-6, l=1e-6)
+circuit.R('D', 'Vdd', 'Vout', 30@u_kΩ)
+
+# Three-section RC phase-shift feedback network (Vout -> Vminus)
+circuit.C('1', 'Vout', 'n1', 680@u_pF)
+circuit.R('1', 'n1', circuit.gnd, 100@u_kΩ)
+circuit.C('2', 'n1', 'n2', 680@u_pF)
+circuit.R('2', 'n2', circuit.gnd, 100@u_kΩ)
+circuit.C('3', 'n2', 'Vminus', 680@u_pF)
+circuit.R('3', 'Vminus', 'Vbias', 100@u_kΩ)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

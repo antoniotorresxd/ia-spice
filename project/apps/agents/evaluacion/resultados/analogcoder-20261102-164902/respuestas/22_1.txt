@@ -1,0 +1,52 @@
+### Task 1
+
+#### Components
+- **U1**: High-gain op-amp/comparator model, implemented as a voltage-controlled voltage source (VCVS).
+- **Rin**: Connects **Vin** to the non-inverting input node **Vp**.
+- **Rf**: Positive-feedback resistor from **Vout** to **Vp**.
+- **R1, R2**: Create a 2.5 V reference at the inverting input node **Vref**.
+- **Rout**: Models finite output resistance between the op-amp model and **Vout**.
+- **Dhi, Dlo**: Clamp the output approximately to the supply rails.
+- **Vdd**: 5.0 V supply.
+- **Vin**: DC input source; its value is set below the lower switching threshold for the initial operating point.
+
+#### Interconnections
+1. Connect **Rin** between **Vin** and **Vp**.
+2. Connect **Rf** between **Vout** and **Vp**. This is the positive-feedback path.
+3. Connect the VCVS non-inverting control input to **Vp** and its inverting control input to **Vref**. Its output is **Vraw**.
+4. Connect **Vraw** to **Vout** through **Rout**.
+5. Connect **R1** from **Vdd** to **Vref**, and **R2** from **Vref** to ground. Equal resistor values set **Vref** to 2.5 V.
+6. Connect **Dhi** with its anode at **Vout** and cathode at **Vdd**. Connect **Dlo** with its anode at ground and cathode at **Vout**.
+
+With equal values for **Rin** and **Rf**, the non-inverting input voltage is approximately the average of **Vin** and **Vout**. The output switches high when a rising **Vin** crosses the upper threshold, and switches low when a falling **Vin** crosses the lower threshold. With the output clamp model, the thresholds are approximately 4.8 V and 0.7 V, respectively. The clamp diodes make the output levels approximate rather than exactly equal to the supply rails.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Non-Inverting Schmitt Trigger')
+
+# 5 V supply and DC input for the initial operating point
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('in', 'Vin', circuit.gnd, 0.5)
+
+# Reference voltage: 2.5 V from a 5 V divider
+circuit.R('1', 'Vdd', 'Vref', 10e3)
+circuit.R('2', 'Vref', circuit.gnd, 10e3)
+
+# Input and positive-feedback resistors
+circuit.R('in', 'Vin', 'Vp', 100e3)
+circuit.R('fb', 'Vout', 'Vp', 100e3)
+
+# High-gain op-amp approximation: output is proportional to Vp - Vref
+circuit.VCVS('A1', 'Vraw', circuit.gnd, 'Vp', 'Vref', 100)
+
+# Output resistance and rail-clamp diodes
+circuit.R('out', 'Vraw', 'Vout', 10e3)
+circuit.model('clamp_diode', 'D', Is=1e-14, N=1)
+circuit.D('hi', 'Vout', 'Vdd', model='clamp_diode')
+circuit.D('lo', circuit.gnd, 'Vout', model='clamp_diode')
+
+simulator = circuit.simulator()
+```

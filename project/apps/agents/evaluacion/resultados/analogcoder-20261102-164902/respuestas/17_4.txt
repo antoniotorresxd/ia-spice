@@ -1,0 +1,58 @@
+### Task 1 — Design Plan
+
+This Wien Bridge oscillator uses a high-gain voltage-controlled voltage source (VCVS) as an idealized op-amp, with a single 5 V supply and a 2.5 V reference. The output oscillates around **Vref = 2.5 V**; there is no external input signal.
+
+#### Devices and interconnections
+
+- **Vdd supply:** 5 V from `Vdd` to ground.
+- **Reference source:** 2.5 V from `Vref` to ground. This biases the oscillator’s signal path to mid-supply.
+- **A1, op-amp model:** A finite-gain VCVS with output terminals `Vout` and `Vref`, and control inputs `Wp` and `Wm`. The non-inverting input is `Wp`; the inverting input is `Wm`.
+- **Wien bridge network:**
+  - `Cw1` connects `Vout` to `Nw`.
+  - `Rw1` connects `Nw` to `Wp`.
+  - `Rw2` and `Cw2` are in parallel between `Wp` and `Vref`.
+  - With both resistors at 10 kΩ and both capacitors at 10 nF, the nominal oscillation frequency is approximately **1.59 kHz**.
+- **Gain and amplitude stabilization:**
+  - `Rfb1` and `Rfb2` form the feedback path from `Vout` to `Wm`.
+  - `Rg` connects `Wm` to `Vref`.
+  - At small signal, the feedback resistor total is 22 kΩ and `Rg` is 10 kΩ, giving a non-inverting gain of 3.2—slightly above the Wien bridge’s oscillation requirement of 3 to encourage startup.
+  - Antiparallel diodes across `Rfb2` conduct as the output grows, reducing the effective feedback resistance and limiting the amplitude.
+
+The VCVS is a compact behavioral op-amp model, rather than a transistor-level op-amp. In a transient simulation, a small initial disturbance or circuit noise is needed to start oscillation from an exactly balanced state.
+
+### Task 2 — PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Wien Bridge Oscillator')
+
+# Supply and mid-supply reference
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ref', 'Vref', circuit.gnd, 2.5)
+
+# Diode model for amplitude stabilization
+circuit.model('dlim', 'D', is_=1e-14, n=1.0)
+
+# Wien bridge: series RC from output to non-inverting input,
+# parallel RC from non-inverting input to the reference
+circuit.C('w1', 'Vout', 'Nw', 10e-9)
+circuit.R('w1', 'Nw', 'Wp', 10e3)
+circuit.R('w2', 'Wp', 'Vref', 10e3)
+circuit.C('w2', 'Wp', 'Vref', 10e-9)
+
+# Op-amp represented by a high-gain VCVS.
+# Its output is referenced to Vref, centering the signal at mid-supply.
+circuit.VCVS('A1', 'Vout', 'Vref', 'Wp', 'Wm', voltage_gain=1e5)
+
+# Non-inverting amplifier feedback network
+circuit.R('fb1', 'Vout', 'Nfb', 10e3)
+circuit.R('fb2', 'Nfb', 'Wm', 12e3)
+circuit.R('g', 'Wm', 'Vref', 10e3)
+
+# Antiparallel limiter diodes across Rfb2
+circuit.D('lim1', 'Nfb', 'Wm', model='dlim')
+circuit.D('lim2', 'Wm', 'Nfb', model='dlim')
+
+simulator = circuit.simulator()
+```

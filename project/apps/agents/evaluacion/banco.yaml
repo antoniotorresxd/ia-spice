@@ -25,9 +25,17 @@
 # 10 kΩ, y el filtro pasa de fijar R y resolver C a fijar C=10 nF y resolver
 # R, así que los números viejos ya no aplicaban de todas formas).
 
+# `nivel` (basico | intermedio | avanzado | limite | negativo) estratifica el
+# banco por dificultad, como separa AnalogCoder tareas básicas de compuestas;
+# los resúmenes se reportan por nivel. `esperado` es el veredicto que el
+# sistema DEBE dar: `accepted` por omisión, `rejected` en los casos negativos
+# (metas físicamente imposibles), que se excluyen del solve rate y se reportan
+# como tasa de rechazo correcto.
+
 casos:
   # --- Divisores de voltaje: R1 = 10 kΩ fijo, R2 = R1·v_out/(v_in − v_out) ---
   - id: divisor-12-5
+    nivel: basico
     descripcion: "un divisor de voltaje que baje 12 V a 5 V"
     spec:
       blocks:
@@ -41,6 +49,7 @@ casos:
       - {requisito: div1, metrica: v_out, objetivo: 5.0, componentes: {r1: 10000.0, r2: 7142.86}}
 
   - id: divisor-5-3v3
+    nivel: basico
     descripcion: "un divisor de voltaje de 5 V a 3.3 V"
     spec:
       blocks:
@@ -54,6 +63,7 @@ casos:
       - {requisito: div1, metrica: v_out, objetivo: 3.3, componentes: {r1: 10000.0, r2: 19411.76}}
 
   - id: divisor-9-5
+    nivel: basico
     descripcion: "un divisor de voltaje de 9 V a 5 V"
     spec:
       blocks:
@@ -67,6 +77,7 @@ casos:
       - {requisito: div1, metrica: v_out, objetivo: 5.0, componentes: {r1: 10000.0, r2: 12500.0}}
 
   - id: divisor-24-12
+    nivel: basico
     descripcion: "un divisor de voltaje que reduzca 24 V a la mitad"
     spec:
       blocks:
@@ -80,6 +91,7 @@ casos:
       - {requisito: div1, metrica: v_out, objetivo: 12.0, componentes: {r1: 10000.0, r2: 10000.0}}
 
   - id: divisor-3v3-1v8
+    nivel: basico
     descripcion: "un divisor de voltaje de 3.3 V a 1.8 V"
     spec:
       blocks:
@@ -94,6 +106,7 @@ casos:
 
   # --- Filtros RC pasa-bajas: C = 10 nF fijo, R = 1/(2π·f_c·C) ---
   - id: rc-100hz
+    nivel: basico
     descripcion: "un filtro RC pasa-bajas con frecuencia de corte de 100 Hz"
     spec:
       blocks:
@@ -107,6 +120,7 @@ casos:
       - {requisito: rc1, metrica: f_c, objetivo: 100.0, componentes: {r: 159154.94, c: 1.0e-08}}
 
   - id: rc-1khz
+    nivel: basico
     descripcion: "un filtro RC pasa-bajas de 1 kHz de corte"
     spec:
       blocks:
@@ -120,6 +134,7 @@ casos:
       - {requisito: rc1, metrica: f_c, objetivo: 1000.0, componentes: {r: 15915.49, c: 1.0e-08}}
 
   - id: rc-10khz
+    nivel: basico
     descripcion: "un filtro RC pasa-bajas de 10 kHz"
     spec:
       blocks:
@@ -133,6 +148,7 @@ casos:
       - {requisito: rc1, metrica: f_c, objetivo: 10000.0, componentes: {r: 1591.55, c: 1.0e-08}}
 
   - id: rc-50khz
+    nivel: basico
     descripcion: "un filtro RC pasa-bajas con corte en 50 kHz"
     spec:
       blocks:
@@ -146,6 +162,7 @@ casos:
       - {requisito: rc1, metrica: f_c, objetivo: 50000.0, componentes: {r: 318.31, c: 1.0e-08}}
 
   - id: rc-1mhz
+    nivel: limite
     descripcion: "un filtro RC pasa-bajas de 1 MHz"
     spec:
       blocks:
@@ -162,6 +179,7 @@ casos:
   # Las ganancias altas sufren la ganancia finita en lazo abierto del
   # macromodelo: con Av = 1000 la ecuación ideal se desvía casi un 1 %.
   - id: amp-ganancia-2
+    nivel: intermedio
     descripcion: "un amplificador no inversor de ganancia 2 para una señal de 1 V"
     spec:
       blocks:
@@ -175,6 +193,7 @@ casos:
       - {requisito: amp1, metrica: v_out, objetivo: 2.0, componentes: {rg: 1000.0, rf: 1000.0}}
 
   - id: amp-ganancia-3
+    nivel: intermedio
     descripcion: "un amplificador no inversor que lleve 1 V a 3 V"
     spec:
       blocks:
@@ -188,6 +207,7 @@ casos:
       - {requisito: amp1, metrica: v_out, objetivo: 3.0, componentes: {rg: 1000.0, rf: 2000.0}}
 
   - id: amp-ganancia-10
+    nivel: intermedio
     descripcion: "un amplificador no inversor de ganancia 10 para 0.5 V de entrada"
     spec:
       blocks:
@@ -201,6 +221,7 @@ casos:
       - {requisito: amp1, metrica: v_out, objetivo: 5.0, componentes: {rg: 1000.0, rf: 9000.0}}
 
   - id: amp-ganancia-100
+    nivel: intermedio
     descripcion: "un amplificador no inversor de ganancia 100 para 0.1 V"
     spec:
       blocks:
@@ -214,6 +235,7 @@ casos:
       - {requisito: amp1, metrica: v_out, objetivo: 10.0, componentes: {rg: 1000.0, rf: 99000.0}}
 
   - id: amp-ganancia-1000
+    nivel: limite
     descripcion: "un amplificador no inversor de ganancia 1000 para una señal de 10 mV"
     spec:
       blocks:
@@ -239,6 +261,7 @@ casos:
   # ensamblador de composición. Extenderlo a un bloque suelto es trabajo
   # futuro, no de este slice — ver la nota en el plan.
   - id: cascada-pasaaltas-ganancia-4
+    nivel: avanzado
     descripcion: >-
       un circuito que reciba una señal senoidal de 1 V a 100 Hz, elimine
       componentes inferiores a 500 Hz mediante un filtro pasa-altas de primer
@@ -266,6 +289,7 @@ casos:
   # --- Topologías agregadas con el paso a valores comerciales (2026-10) ---
 
   - id: inversor-ganancia-10
+    nivel: intermedio
     descripcion: "un amplificador inversor que convierta 0.5 V en -5 V"
     spec:
       blocks:
@@ -279,6 +303,7 @@ casos:
       - {requisito: b1, metrica: v_out, objetivo: -5.0, componentes: {rin: 10000.0, rf: 100000.0}}
 
   - id: inversor-ganancia-22
+    nivel: intermedio
     descripcion: "un amplificador inversor de ganancia -22 para 0.2 V de entrada"
     spec:
       blocks:
@@ -292,6 +317,7 @@ casos:
       - {requisito: b1, metrica: v_out, objetivo: -4.4, componentes: {rin: 10000.0, rf: 220000.0}}
 
   - id: diferencial-4v7
+    nivel: intermedio
     descripcion: "un amplificador diferencial (restador) de ganancia 4.7"
     spec:
       blocks:
@@ -305,6 +331,7 @@ casos:
       - {requisito: b1, metrica: gain, objetivo: 4.7, componentes: {rg: 10000.0, rf: 47000.0}}
 
   - id: instrumentacion-100
+    nivel: avanzado
     descripcion: "un amplificador de instrumentación de tres op-amps con ganancia 100"
     spec:
       blocks:
@@ -318,6 +345,7 @@ casos:
       - {requisito: b1, metrica: gain, objetivo: 100.0, componentes: {r: 10000.0, rg: 202.02, rd: 10000.0}}
 
   - id: instrumentacion-3v3
+    nivel: avanzado
     descripcion: "un amplificador de instrumentación con ganancia 3.3"
     spec:
       blocks:
@@ -331,6 +359,7 @@ casos:
       - {requisito: b1, metrica: gain, objetivo: 3.3, componentes: {r: 10000.0, rg: 8695.65, rd: 10000.0}}
 
   - id: rlc-serie-10khz
+    nivel: intermedio
     descripcion: "un circuito RLC serie que resuene en 10 kHz con Q de 10"
     spec:
       blocks:
@@ -344,6 +373,7 @@ casos:
       - {requisito: b1, metrica: f0, objetivo: 10000.0, componentes: {l: 0.0253303, c: 1e-08, r: 159.155}}
 
   - id: rlc-paralelo-455khz
+    nivel: intermedio
     descripcion: "un tanque LC paralelo de 455 kHz (FI de AM) con Q de 20"
     spec:
       blocks:
@@ -355,3 +385,382 @@ casos:
             requirements: [{measure: f0, value: 455000.0}]
     referencia:
       - {requisito: b1, metrica: f0, objetivo: 455000.0, componentes: {l: 1.22354e-05, c: 1e-08, rs: 699.582}}
+
+  # --- Sumador y diferenciador, agregados al catálogo (2026-11-03) ---
+
+  - id: sumador-0v5-0v3
+    nivel: intermedio
+    descripcion: un amplificador sumador inversor que sume 0.5 V y 0.3 V con ganancia unitaria
+    spec:
+      blocks:
+      - id: b1
+        type: catalog
+        params:
+          circuit_id: opamp_summing_amp
+          params:
+            v_in1: 0.5
+            v_in2: 0.3
+            v_out: -0.8
+          requirements:
+          - measure: v_out
+            value: -0.8
+    referencia:
+    - requisito: b1
+      metrica: v_out
+      objetivo: -0.8
+      componentes:
+        v_in1: 0.5
+        v_in2: 0.3
+        v_out: -0.8
+        R: 10000.0
+        Rf: 10000.0
+  - id: diferenciador-1khz
+    nivel: intermedio
+    descripcion: un diferenciador práctico con op-amp de frecuencia de diferenciación 1 kHz
+    spec:
+      blocks:
+      - id: b1
+        type: catalog
+        params:
+          circuit_id: opamp_differentiator_practical
+          params:
+            f_d: 1000.0
+          requirements:
+          - measure: f_d
+            value: 1000.0
+    referencia:
+    - requisito: b1
+      metrica: f_d
+      objetivo: 1000.0
+      componentes:
+        Rf: 15915.5
+        Rin: 1591.5
+        C1: 1.0e-08
+        a_hf: 10.0
+
+  # --- Topologías del catálogo sin cobertura y casos negativos (2026-10-27) ---
+
+  - id: integrador-1khz
+    nivel: intermedio
+    descripcion: un integrador práctico con op-amp de frecuencia de integración 1 kHz
+    spec:
+      blocks:
+      - id: b1
+        type: catalog
+        params:
+          circuit_id: opamp_integrator_practical
+          params:
+            f_int: 1000.0
+          requirements:
+          - measure: f_int
+            value: 1000.0
+    referencia:
+    - requisito: b1
+      metrica: f_int
+      objetivo: 1000.0
+      componentes:
+        Rin: 15915.5
+        Rf: 159155.0
+        Cf: 1.0e-08
+        a_dc: 10.0
+  - id: bjt-divisor-vceq-6
+    nivel: intermedio
+    descripcion: polarización por divisor de voltaje de un BJT con VCC de 12 V, ICQ de 1 mA y VCEQ de 6 V
+    spec:
+      blocks:
+      - id: b1
+        type: catalog
+        params:
+          circuit_id: bjt_voltage_divider
+          params:
+            v_cc: 12.0
+            i_cq: 0.001
+            v_ceq: 6.0
+          requirements:
+          - measure: v_ceq
+            value: 6.0
+    referencia:
+    - requisito: b1
+      metrica: v_ceq
+      objetivo: 6.0
+      componentes:
+        VCC: 12.0
+        RB1: 81762.4
+        RB2: 18370.2
+        RC: 4500.0
+        RE: 1500.0
+        beta: 100.0
+  - id: recortador-2v
+    nivel: intermedio
+    descripcion: un recortador con diodo que limite a 2 V una senoidal de 5 V pico
+    spec:
+      blocks:
+      - id: b1
+        type: catalog
+        params:
+          circuit_id: diode_clipper
+          params:
+            v_m: 5.0
+            v_recorte: 2.0
+          requirements:
+          - measure: v_out_max
+            value: 2.0
+    referencia:
+    - requisito: b1
+      metrica: v_out_max
+      objetivo: 2.0
+      componentes:
+        Vm: 5.0
+        R: 1000.0
+        Vbias: 1.3
+        RL: 100000.0
+        freq: 1000.0
+        tstep: 1.0e-06
+        tstop: 0.005
+        tstart: 0.003
+  - id: sujetador-5v
+    nivel: intermedio
+    descripcion: un sujetador con diodo para una senoidal de 5 V pico a 1 kHz
+    spec:
+      blocks:
+      - id: b1
+        type: catalog
+        params:
+          circuit_id: diode_clamper
+          params:
+            v_m: 5.0
+            freq: 1000.0
+          requirements:
+          - measure: v_out_max
+            value: 9.3
+    referencia:
+    - requisito: b1
+      metrica: v_out_max
+      objetivo: 9.3
+      componentes:
+        Vm: 5.0
+        C: 1.0e-07
+        Vbias: 0.0
+        RL: 100000.0
+        freq: 1000.0
+        tstep: 1.0e-06
+        tstop: 0.005
+        tstart: 0.003
+  - id: sallen-key-1khz
+    nivel: avanzado
+    descripcion: un filtro Sallen-Key Butterworth pasa-bajas de segundo orden con corte en 1 kHz
+    spec:
+      blocks:
+      - id: b1
+        type: catalog
+        params:
+          circuit_id: sallen_key_lowpass_butterworth
+          params:
+            f_o: 1000.0
+          requirements:
+          - measure: f_o
+            value: 1000.0
+    referencia:
+    - requisito: b1
+      metrica: f_o
+      objetivo: 1000.0
+      componentes:
+        R: 22507.9
+        C1: 1.0e-08
+        C2: 5.0e-09
+  - id: sallen-key-20khz
+    nivel: avanzado
+    descripcion: un filtro Sallen-Key Butterworth pasa-bajas de 20 kHz
+    spec:
+      blocks:
+      - id: b1
+        type: catalog
+        params:
+          circuit_id: sallen_key_lowpass_butterworth
+          params:
+            f_o: 20000.0
+          requirements:
+          - measure: f_o
+            value: 20000.0
+    referencia:
+    - requisito: b1
+      metrica: f_o
+      objetivo: 20000.0
+      componentes:
+        R: 1125.4
+        C1: 1.0e-08
+        C2: 5.0e-09
+  - id: bjt-emisor-comun-1ma
+    nivel: avanzado
+    descripcion: un amplificador BJT en emisor común con VCC de 12 V, ICQ de 1 mA y VCEQ de 6 V
+    spec:
+      blocks:
+      - id: b1
+        type: catalog
+        params:
+          circuit_id: bjt_common_emitter_amp
+          params:
+            v_cc: 12.0
+            i_cq: 0.001
+            v_ceq: 6.0
+          requirements:
+          - measure: v_ceq
+            value: 6.0
+    referencia:
+    - requisito: b1
+      metrica: v_ceq
+      objetivo: 6.0
+      componentes:
+        VCC: 12.0
+        RB1: 75789.5
+        RB2: 14257.4
+        RC: 4800.0
+        RE: 1200.0
+        CE: 0.000313
+        RL: 10000.0
+        beta: 100.0
+        v_ceq: 6.0
+        i_cq: 0.001
+  - id: zener-5v1
+    nivel: avanzado
+    descripcion: una fuente regulada con zéner de 5.1 V para 50 mA de carga desde un secundario de 12 V rms
+    spec:
+      blocks:
+      - id: b1
+        type: catalog
+        params:
+          circuit_id: zener_regulated_power_supply
+          params:
+            v_z: 5.1
+            i_l_max: 0.05
+            v_sec_rms: 12.0
+          requirements:
+          - measure: v_out
+            value: 5.1
+    referencia:
+    - requisito: b1
+      metrica: v_out
+      objetivo: 5.1
+      componentes:
+        Vin_min: 14.07
+        RZ: 163.09
+        RL: 102.0
+        VZ: 5.1
+        C: 0.000278
+        Vm: 15.57
+  - id: cascada-rc-ganancia-5
+    nivel: avanzado
+    descripcion: un filtro RC pasa-bajas de 1 kHz seguido de un amplificador no inversor de ganancia 5
+    spec:
+      blocks:
+      - id: rc
+        type: catalog
+        params:
+          circuit_id: rc_lowpass_passive
+          params:
+            f_c: 1000.0
+          requirements:
+          - measure: f_c
+            value: 1000.0
+      - id: amp
+        type: catalog
+        params:
+          circuit_id: opamp_noninverting_amp
+          params:
+            v_in: 1.0
+            v_out: 5.0
+          requirements:
+          - measure: gain_at_freq
+            value: 5.0
+            frequency_hz: 100
+      connections:
+      - - rc.vout
+        - amp.vin
+    referencia:
+    - requisito: rc
+      metrica: f_c
+      objetivo: 1000.0
+      componentes:
+        R: 15915.5
+        C: 1.0e-08
+        f_c: 1000.0
+    - requisito: amp
+      metrica: gain_at_freq
+      objetivo: 5.0
+      componentes:
+        v_in: 1.0
+        v_out: 5.0
+        Rg: 1000.0
+        Rf: 4000.0
+  - id: negativo-divisor-elevador
+    nivel: negativo
+    descripcion: un divisor de voltaje que suba 5 V a 12 V
+    spec:
+      blocks:
+      - id: div1
+        type: catalog
+        params:
+          circuit_id: voltage_divider
+          params:
+            v_in: 5.0
+            v_out: 12.0
+          requirements:
+          - measure: v_out
+            value: 12.0
+    referencia:
+    - requisito: div1
+      metrica: v_out
+      objetivo: 12.0
+      componentes:
+        Vin: 5.0
+        R1: 10000.0
+        R2: 100.0
+    esperado: rejected
+  - id: negativo-no-inversor-atenuador
+    nivel: negativo
+    descripcion: un amplificador no inversor que convierta 2 V en 1 V
+    spec:
+      blocks:
+      - id: amp1
+        type: catalog
+        params:
+          circuit_id: opamp_noninverting_amp
+          params:
+            v_in: 2.0
+            v_out: 1.0
+          requirements:
+          - measure: v_out
+            value: 1.0
+    referencia:
+    - requisito: amp1
+      metrica: v_out
+      objetivo: 1.0
+      componentes:
+        v_in: 2.0
+        v_out: 1.0
+        Rg: 1000.0
+        Rf: 0.0
+    esperado: rejected
+  - id: negativo-rc-10ghz
+    nivel: negativo
+    descripcion: un filtro RC pasa-bajas de 10 GHz con componentes comerciales
+    spec:
+      blocks:
+      - id: rc1
+        type: catalog
+        params:
+          circuit_id: rc_lowpass_passive
+          params:
+            f_c: 10000000000.0
+          requirements:
+          - measure: f_c
+            value: 10000000000.0
+    referencia:
+    - requisito: rc1
+      metrica: f_c
+      objetivo: 10000000000.0
+      componentes:
+        R: 0.0
+        C: 1.0e-08
+        f_c: 10000000000.0
+    esperado: rejected

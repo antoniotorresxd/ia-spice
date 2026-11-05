@@ -1,0 +1,52 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier (Opamp)**: Implemented as a high-gain voltage-controlled voltage source (VCVS) or a CMOS differential opamp stage. Here, a high-gain VCVS macromodel is used to represent the ideal/linear behavior of the operational amplifier.
+- **Resistor ($R_1$)**: Input resistor that converts the input voltage into a current flowing toward the virtual ground (inverting terminal).
+- **Capacitor ($C_f$)**: Feedback capacitor connected between the inverting terminal and the output terminal to integrate the current over time.
+- **Power Supply & Biasing**: 
+  - $V_{dd} = 5.0\text{ V}$ power supply.
+  - Reference voltage $V_{ref} = 2.5\text{ V}$ ($V_{dd} / 2$) applied to the non-inverting terminal to provide a mid-rail common-mode reference in a single-supply configuration.
+- **Input Signal Source ($V_{in}$)**: DC input voltage source for operating point analysis.
+
+#### Circuit Topology and Interconnectivity
+1. **Opamp Connections**:
+   - **Non-Inverting Input ($V_{p}$)**: Connected to the common-mode reference voltage source $V_{ref} = 2.5\text{ V}$.
+   - **Inverting Input ($V_{n}$)**: Serves as the virtual ground node (summing junction). Connected to one terminal of $R_1$ and one terminal of $C_f$.
+   - **Output ($V_{out}$)**: Connected to the output terminal of the opamp and the other terminal of $C_f$.
+
+2. **Feedback and Input Network**:
+   - **Input Resistor ($R_1$)**: Connected between the input node `Vin` and the inverting input `Vn`.
+   - **Feedback Capacitor ($C_f$)**: Connected between the inverting input `Vn` and the output node `Vout`.
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Integrator')
+
+# Power Supply and Reference Biasing (Mid-rail reference for single 5V supply)
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0@u_V)
+circuit.V('ref', 'Vref', circuit.gnd, 2.5@u_V)
+
+# Input Voltage Source (DC Operating Point)
+circuit.V('in', 'Vin', circuit.gnd, 2.5@u_V)
+
+# Passive Components
+# R1 connects between Vin and the inverting node Vn
+circuit.R('1', 'Vin', 'Vn', 10@u_kΩ)
+
+# Cf connects between the inverting node Vn and the output node Vout
+circuit.C('f', 'Vn', 'Vout', 10@u_nF)
+
+# High-gain Voltage-Controlled Voltage Source (VCVS) modeling the Operational Amplifier
+# Parameters: name, output_pos, output_neg, input_pos, input_neg, gain
+circuit.VCVS('OPAMP', 'Vout', 'Vref', 'Vref', 'Vn', 1e5)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

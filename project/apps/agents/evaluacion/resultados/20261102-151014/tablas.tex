@@ -1,0 +1,53 @@
+% Tabla A. Solve rate (sin casos negativos) por tolerancia y presupuesto de iteraciones
+\begin{tabular}{lr}
+\toprule
+\textbf{Tolerancia} & \textbf{$\leq$10 iter.} \\
+\midrule
+5\,\% & 97.1\,\% \\
+\bottomrule
+\end{tabular}
+
+% Tabla B. MAPE (%) por tolerancia y presupuesto de iteraciones
+\begin{tabular}{lr}
+\toprule
+\textbf{Tolerancia} & \textbf{$\leq$10 iter.} \\
+\midrule
+5\,\% & 0.571 \\
+\bottomrule
+\end{tabular}
+
+% Tabla C. Iteraciones medias consumidas
+\begin{tabular}{lr}
+\toprule
+\textbf{Tolerancia} & \textbf{$\leq$10 iter.} \\
+\midrule
+5\,\% & 1.06 \\
+\bottomrule
+\end{tabular}
+
+% Tabla D. Resultados por nivel en la configuración final (t5-i10)
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Nivel} & \textbf{Req.} & \textbf{Solve rate} & \textbf{MAPE (\%)} & \textbf{Iter.} & \textbf{Tiempo (s)} \\
+\midrule
+Básico & 9 & 100.0\,\% & 0.184 & 1.00 & 0.11 \\
+Intermedio & 13 & 92.3\,\% & 0.725 & 1.15 & 0.09 \\
+Avanzado & 10 & 100.0\,\% & 0.692 & 1.00 & 0.08 \\
+Límite & 2 & 100.0\,\% & 0.711 & 1.00 & 0.07 \\
+Negativo & 3 & rechazo 100.0\,\% & -- & 10.00 & 0.46 \\
+Total (sin negativos) & 34 & 97.1\,\% & 0.571 & 1.06 & 0.09 \\
+\bottomrule
+\end{tabular}
+
+% Tabla F. Modos de falla en la configuración final (t5-i10)
+\begin{tabular}{lr}
+\toprule
+\textbf{Modo} & \textbf{Requisitos} \\
+\midrule
+Ninguna & 33 \\
+Rechazo correcto & 3 \\
+Aceptado fuera de tolerancia & 1 \\
+\bottomrule
+\end{tabular}
+
+% Repetibilidad (RNF-02.1): 0 diferencias en 0 requisitos comparados entre 1 corridas de t5-i10.

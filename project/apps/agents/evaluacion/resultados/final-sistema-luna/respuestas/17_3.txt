@@ -1,0 +1,45 @@
+* Wien bridge oscillator, 5 V single supply, approximately 1 kHz
+* Valores comerciales (circuito): ideal -> comercial
+*   RBIAS1: 10kohm -> 10kohm [E24, +0.00%]
+*   RBIAS2: 10kohm -> 10kohm [E24, +0.00%]
+*   CREF: 100uF -> 100uF [E12, +0.00%]
+*   C1: 10nF -> 10nF [E12, +0.00%]
+*   R1: 16kohm -> 16kohm [E24, +0.00%]
+*   R2: 16kohm -> 16kohm [E24, +0.00%]
+*   C2: 10nF -> 10nF [E12, +0.00%]
+*   RG: 10kohm -> 10kohm [E24, +0.00%]
+*   RF: 22kohm -> 22kohm [E24, +0.00%]
+*   Rkick: 1Mohm -> 1Mohm [E24, +0.00%]
+* Semiconductores:
+*   D1, D2: 2 x 1N4148 (diodo de conmutación de señal; modelo genérico)
+VDD vdd 0 DC 5
+RBIAS1 vdd vref 10k
+RBIAS2 vref 0 10k
+CREF vref 0 100u
+* Wien bridge: series RC from output to node wien, parallel RC from wien to midpoint
+C1 Vout nw 10n
+R1 nw wien 16k
+R2 wien vref 16k
+C2 wien vref 10n
+* Non-inverting amplifier: nominal small-signal gain 1 + 22k/10k = 3.2
+RG ninv vref 10k
+RF Vout ninv 22k
+* Antiparallel diodes across RF reduce gain as oscillation amplitude rises
+D1 Vout ninv DCLAMP
+D2 ninv Vout DCLAMP
+XU1 wien ninv Vout vdd 0 OP5
+* Small startup perturbation through a high resistance
+VKICK kick 0 PULSE(0 10m 1m 1u 1u 1m 1)
+Rkick kick wien 1meg
+.model DCLAMP D(IS=2.52n N=1.752 RS=0.568)
+.subckt OP5 inp inn out vdd vss
+BAMP out 0 V=limit(0.5*(V(vdd)+V(vss))+1e5*(V(inp)-V(inn)),V(vss)+0.2,V(vdd)-0.2)
+.ends OP5
+.control
+tran 10u 50m 0 10u
+meas tran t10 WHEN v(Vout)=2.5 RISE=10
+meas tran t11 WHEN v(Vout)=2.5 RISE=11
+let fosc = 1/(t11-t10)
+echo $&fosc > output.txt
+.endc
+.end

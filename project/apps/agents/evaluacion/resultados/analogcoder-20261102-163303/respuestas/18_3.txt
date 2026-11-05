@@ -1,0 +1,51 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier**: An ideal or behavioral op-amp for the integration function.
+- **Resistors**: Resistor **R1** connected between the input node **Vin** and the inverting input of the op-amp.
+- **Capacitors**: Capacitor **Cf** connected in the feedback path between the output node **Vout** and the inverting input of the op-amp.
+- **Power Supply**: **Vdd** for the positive supply and **Vss** (or ground) for the negative supply of the op-amp.
+- **Input Signal Source**: **Vin** to provide the input voltage to be integrated.
+- **Ground**: **gnd** for the non-inverting input and reference.
+
+#### Opamp Integrator Circuit Topology
+1. **Op-Amp Setup**:
+   - The non-inverting input terminal of the op-amp is connected to the ground (**gnd**).
+   - The inverting input terminal (let's call it node **Vinv**) is connected to one terminal of **R1** and one terminal of **Cf**.
+   - The output terminal of the op-amp is connected to the output node **Vout**.
+
+2. **Input Resistor (R1)**:
+   - Connected between the input node **Vin** and the inverting input node (**Vinv**) of the op-amp.
+
+3. **Feedback Capacitor (Cf)**:
+   - Connected between the output node **Vout** and the inverting input node (**Vinv**) of the op-amp, forming the negative feedback integration network.
+
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Integrator')
+
+# Power Supplies and Input Signal Source
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # Positive power supply 5V
+circuit.V('ss', 'Vss', circuit.gnd, 0.0) # Negative power supply (Ground)
+circuit.V('in', 'Vin', circuit.gnd, 1.0) # DC input voltage to be integrated
+
+# Passive Components for the Integrator
+circuit.R('1', 'Vin', 'Vinv', 10@u_kΩ)
+circuit.C('f', 'Vout', 'Vinv', 1@u_nF)
+
+# Ideal Op-Amp Subcircuit Connection
+# Opamp terminals: non-inverting (+), inverting (-), output (out)
+# Non-inverting input is connected to gnd, inverting to 'Vinv', output to 'Vout'
+circuit.subcircuit('ideal_opamp', 'plus', 'minus', 'out')
+# Implementing a simple behavioral voltage-controlled voltage source for the op-amp
+# E_opamp out gnd value = { A * (plus - minus) }
+circuit.X('opamp', 'ideal_opamp', circuit.gnd, 'Vinv', 'Vout')
+
+# Analysis Part
+simulator = circuit.simulator()
+```

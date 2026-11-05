@@ -1,0 +1,38 @@
+### Task 1
+
+#### Components
+- **R1**: Input resistor from **Vin** to the inverting-input summing node **Nsum**.
+- **Cf**: Feedback capacitor from **Vout** to **Nsum**.
+- **Op-amp**: Modeled as a high-gain voltage-controlled voltage source (VCVS).
+- **Vdd**: 5 V supply reference.
+- **Vin source**: Set to 0 V for a well-defined DC operating point. The ideal integrator’s output can drift under a nonzero DC input; apply a time-varying input for transient integration.
+
+#### Interconnections
+1. Connect **R1** between **Vin** and **Nsum**.
+2. Connect **Cf** between **Vout** and **Nsum**.
+3. Connect the op-amp non-inverting input to ground and its inverting input to **Nsum**.
+4. Use the op-amp output as **Vout**.
+
+This is an inverting integrator with ideal transfer function \(V_{out}/V_{in}=-1/(R_1 C_f s)\). The VCVS is an idealized op-amp model: it does not model supply-current draw or limit its output to the 5 V supply rails.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Integrator')
+
+# Supply and DC input for a defined operating point
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0 @ u_V)
+circuit.V('in', 'Vin', circuit.gnd, 0.0 @ u_V)
+
+# Inverting integrator network
+circuit.R('1', 'Vin', 'Nsum', 10 @ u_kΩ)
+circuit.C('f', 'Vout', 'Nsum', 10 @ u_nF)
+
+# Idealized op-amp: Vout = A * (V+ - V-)
+circuit.E('opamp', 'Vout', circuit.gnd, circuit.gnd, 'Nsum', voltage_gain=1e5)
+
+simulator = circuit.simulator()
+```

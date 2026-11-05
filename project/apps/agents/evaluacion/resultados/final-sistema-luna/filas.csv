@@ -1,0 +1,212 @@
+condicion,tarea,tipo,corrida,escalon,paso,escalon_adaptado,paso_adaptado,segundos,detalle
+Sistema + openai/gpt-6-luna,16,Oscillator,1,no_funciona,False,no_funciona,False,221.2,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpx6mx9kf3/caso.py"", line 48, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+Sistema + openai/gpt-6-luna,16,Oscillator,2,no_funciona,False,no_funciona,False,81.4,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpxqv9rblf/caso.py"", line 48, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+Sistema + openai/gpt-6-luna,16,Oscillator,3,no_funciona,False,no_funciona,False,109.0,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpplyc4ex9/caso.py"", line 48, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+Sistema + openai/gpt-6-luna,16,Oscillator,4,no_funciona,False,no_funciona,False,104.4,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpn687clcr/caso.py"", line 47, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+Sistema + openai/gpt-6-luna,16,Oscillator,5,no_funciona,False,no_funciona,False,204.0,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpeosh_s92/caso.py"", line 49, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+Sistema + openai/gpt-6-luna,17,Oscillator,1,no_funciona,False,no_funciona,False,116.2,"analysis failed.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44
+doAnalyses: TRAN:  Timestep too small; time = 1e-17, timestep = 1.25e-18: trouble with node ""vref""
+run simulation(s) aborted"
+Sistema + openai/gpt-6-luna,17,Oscillator,2,no_funciona,False,no_funciona,False,139.2,"analysis failed.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44
+doAnalyses: TRAN:  Timestep too small; time = 1e-17, timestep = 1.25e-18: trouble with node ""n1""
+run simulation(s) aborted"
+Sistema + openai/gpt-6-luna,17,Oscillator,3,no_funciona,False,no_funciona,False,111.2,"Not enough peaks were detected to determine amplitude.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,17,Oscillator,4,sin_codigo,False,sin_codigo,False,56.1,
+Sistema + openai/gpt-6-luna,17,Oscillator,5,no_funciona,False,no_funciona,False,159.8,"analysis failed.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44
+doAnalyses: TRAN:  Timestep too small; time = 1e-17, timestep = 1.25e-18: trouble with dclamp-instance d1
+run simulation(s) aborted"
+Sistema + openai/gpt-6-luna,18,Integrator,1,no_funciona,False,pasa,True,38.1,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 32.85079794819756 V/s
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,18,Integrator,2,no_funciona,False,no_funciona,False,90.2,"No peaks or troughs found in output voltage. Please check the netlist.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,18,Integrator,3,no_funciona,False,no_funciona,False,110.4,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 0.5709026519193664 V/s
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,18,Integrator,4,no_funciona,False,no_funciona,False,142.3,"No peaks or troughs found in output voltage. Please check the netlist.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,18,Integrator,5,no_simula,False,no_simula,False,169.2,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + openai/gpt-6-luna,19,Differentiator,1,no_funciona,False,pasa,True,32.5,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,19,Differentiator,2,no_funciona,False,pasa,True,36.6,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,19,Differentiator,3,no_funciona,False,no_funciona,False,124.6,"The op-amp differentiator functions correctly.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,19,Differentiator,4,no_funciona,False,pasa,True,37.2,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,19,Differentiator,5,no_funciona,False,pasa,True,36.4,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,20,Adder,1,pasa,True,pasa,True,96.4,
+Sistema + openai/gpt-6-luna,20,Adder,2,no_simula,False,no_simula,False,27.6,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + openai/gpt-6-luna,20,Adder,3,no_simula,False,no_simula,False,28.0,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + openai/gpt-6-luna,20,Adder,4,no_simula,False,no_simula,False,24.9,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + openai/gpt-6-luna,20,Adder,5,no_simula,False,no_simula,False,26.0,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + openai/gpt-6-luna,21,Subtractor,1,no_simula,False,no_simula,False,36.5,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + openai/gpt-6-luna,21,Subtractor,2,no_simula,False,no_simula,False,29.2,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + openai/gpt-6-luna,21,Subtractor,3,sin_codigo,False,sin_codigo,False,34.3,
+Sistema + openai/gpt-6-luna,21,Subtractor,4,no_simula,False,no_simula,False,36.1,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + openai/gpt-6-luna,21,Subtractor,5,sin_codigo,False,sin_codigo,False,27.6,
+Sistema + openai/gpt-6-luna,22,Schmitt,1,no_simula,False,no_simula,False,80.7,", line 1194, in operating_point
+    return self._run('operating_point', *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 118, in _run
+    self._ngspice_shared.load_circuit(str(self))
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1164, in load_circuit
+    raise NameError(""ngSpice_Circ returned {}"".format(rc))
+NameError: ngSpice_Circ returned 1
+"
+Sistema + openai/gpt-6-luna,22,Schmitt,2,no_funciona,False,no_funciona,False,81.5,"The circuit does not function correctly. Trigger points are too close.
+Trigger points: 0.00000V and 0.00000V are not sufficiently different. Please use the positive feedback which the Rf should connect to the non-inverting input of the op-amp.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,22,Schmitt,3,no_funciona,False,no_funciona,False,71.6,"The circuit does not function correctly. Trigger points are too close.
+Trigger points: 0.00001V and 0.00003V are not sufficiently different. Please use the positive feedback which the Rf should connect to the non-inverting input of the op-amp.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,22,Schmitt,4,no_funciona,False,no_funciona,False,75.8,"The circuit does not function correctly. Trigger points are too close.
+Trigger points: 27.77778V and 27.77778V are not sufficiently different. Please use the positive feedback which the Rf should connect to the non-inverting input of the op-amp.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + openai/gpt-6-luna,22,Schmitt,5,no_funciona,False,no_funciona,False,141.1,"The circuit does not function correctly. Trigger points are too close.
+Trigger points: 0.00001V and 0.00002V are not sufficiently different. Please use the positive feedback which the Rf should connect to the non-inverting input of the op-amp.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"

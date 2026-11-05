@@ -1,0 +1,55 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier**: An ideal or behavioral op-amp configured for the integrator.
+- **Resistors**: Resistor **R1** connected between the input node **Vin** and the inverting input of the op-amp.
+- **Capacitors**: Integrating capacitor **Cf** connected between the output node **Vout** and the inverting input of the op-amp.
+- **Power Supply**: Vdd and Vss (or ground reference) for the op-amp.
+- **Input Signal Source**: **Vin** for providing the input voltage signal.
+- **Ground**: Used for the non-inverting terminal of the op-amp and as reference.
+
+#### Integrator Circuit Configuration
+1. **Op-Amp Setup**:
+   - **Non-inverting input (+)** connected to **Ground** (or a common-mode bias voltage, typically ground for single/dual supply integration).
+   - **Inverting input (-)** connected to the feedback network formed by **R1** and **Cf**.
+   - **Output** connected to the output node **Vout**.
+
+2. **Resistor R1 (Input Resistor)**:
+   - Connected between the input node **Vin** and the inverting input terminal of the op-amp. It converts the input voltage into an input current.
+
+3. **Capacitor Cf (Feedback Capacitor)**:
+   - Connected in parallel with the feedback path, between the inverting input terminal and the output node **Vout**. It integrates the current flowing from **R1** over time.
+
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Integrator')
+
+# Power Supplies for the circuit
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V positive power supply
+circuit.V('ss', 'Vss', circuit.gnd, -5.0) # -5V negative power supply
+
+# Input Signal Source
+circuit.V('in', 'Vin', circuit.gnd, 1.0) # 1V DC input signal source for operating point analysis
+
+# Resistor and Capacitor for Integrator
+# R1 connected between Vin and the inverting input (node 'V_inv')
+circuit.R('1', 'Vin', 'V_inv', 10@u_kΩ)
+
+# Cf (Feedback Capacitor) connected between Vout and the inverting input ('V_inv')
+circuit.C('f', 'Vout', 'V_inv', 1@u_uF)
+
+# Non-inverting input is connected to ground
+# Using a subcircuit or behavioral model representation for an Op-Amp:
+# We can model an ideal op-amp using a voltage-controlled voltage source (VCVS) or subcircuit,
+# or use standard components for a simple simulation setup.
+# Here we connect the non-inverting input to ground.
+circuit.X('opamp', 'ideal_opamp', 'V_inv', circuit.gnd, 'Vout', 'Vdd', 'Vss')
+
+# Analysis Part
+simulator = circuit.simulator()
+```

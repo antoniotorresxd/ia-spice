@@ -68,6 +68,7 @@ def resultado_desde_estado(caso: dict, estado: dict) -> list[dict]:
             {
                 "id": f"{caso['id']}/{requisito['requisito']}" if len(caso["referencia"]) > 1 else caso["id"],
                 "tipo": tipo,
+                "metrica": metrica,
                 "estado": verdict.get("status", "error"),
                 "medido": medido,
                 "objetivo": objetivo,
@@ -75,16 +76,34 @@ def resultado_desde_estado(caso: dict, estado: dict) -> list[dict]:
                 "en_tolerancia": en_tolerancia,
                 "iteraciones": iteraciones,
                 "razon": verdict.get("reason", ""),
+                "nivel": caso.get("nivel", "sin_nivel"),
+                "esperado": caso.get("esperado", "accepted"),
+                "sim_error": sim.get("sim_error"),
             }
         )
     return resultados
 
 
-def correr_caso(caso: dict) -> list[dict]:
-    graph = build_graph()
+def correr_caso(
+    caso: dict,
+    *,
+    tolerancia: float | None = None,
+    max_iteraciones: int | None = None,
+    graph=None,
+    thread_id: str | None = None,
+) -> list[dict]:
+    """Corre un caso. `tolerancia` y `max_iteraciones` sobrescriben las del
+    spec para la ablación sin editar el banco: se aplican a una copia, el caso
+    original no cambia."""
+    spec = dict(caso["spec"])
+    if tolerancia is not None:
+        spec["tolerance"] = tolerancia
+    if max_iteraciones is not None:
+        spec["max_iterations"] = max_iteraciones
+    graph = graph or build_graph()
     estado = graph.invoke(
-        _estado_inicial(caso["spec"]),
-        config={"configurable": {"thread_id": f"eval-{caso['id']}"}},
+        _estado_inicial(spec),
+        config={"configurable": {"thread_id": thread_id or f"eval-{caso['id']}"}},
     )
     return resultado_desde_estado(caso, estado)
 

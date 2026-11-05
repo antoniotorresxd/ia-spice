@@ -1,0 +1,46 @@
+### Task 1
+
+#### Circuit topology
+
+Use an **inverting summing amplifier**. The op amp’s non-inverting input is grounded, and the two input signals are fed through equal resistors to its inverting input. A feedback resistor connects the output to that same summing node.
+
+- **Op amp**: Non-inverting input to `GND`; inverting input to `Vsum`; output to `Vout`.
+- **R1**: Connect `Vin1` to `Vsum`.
+- **R2**: Connect `Vin2` to `Vsum`.
+- **Rf**: Connect `Vout` to `Vsum`.
+- **Supplies**: Use ±5 V rails so the output can go negative. The netlist uses an ideal high-gain op-amp model; its output is not rail-limited.
+
+With `R1 = R2 = Rf = 10 kΩ`, the ideal op-amp holds `Vsum` near ground, giving:
+
+\[
+Vout = -\left(Vin1 + Vin2\right)
+\]
+
+The example DC input values in the code are operating-point test values, not required signal amplitudes.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Inverting Op-Amp Adder')
+
+# Dual supplies: the negative rail allows Vout to go below ground.
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ee', 'Vee', circuit.gnd, -5.0)
+
+# DC operating-point test inputs
+circuit.V('in1', 'Vin1', circuit.gnd, 0.1)
+circuit.V('in2', 'Vin2', circuit.gnd, 0.1)
+
+# Equal input and feedback resistors give Vout = -(Vin1 + Vin2).
+circuit.R('1', 'Vin1', 'Vsum', 10e3)
+circuit.R('2', 'Vin2', 'Vsum', 10e3)
+circuit.R('f', 'Vout', 'Vsum', 10e3)
+
+# Ideal high-gain op-amp macromodel:
+# Vout = A * (Vplus - Vminus), with Vplus grounded.
+circuit.VCVS('opamp', 'Vout', circuit.gnd, circuit.gnd, 'Vsum', 1e6)
+
+simulator = circuit.simulator()
+```

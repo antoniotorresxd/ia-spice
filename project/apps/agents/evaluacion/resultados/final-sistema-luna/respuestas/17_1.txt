@@ -1,0 +1,30 @@
+* Oscilador de puente de Wien con frecuencia nominal aproximada de 1,01 kHz. Alimentación única de 5 V y referencia interna de 2,5 V. El nodo «-» es la entrada inversora; Vout es la salida. Rf/Rg = 2,1 proporciona ganancia de arranque superior a 3 y el modelo del operacional limita la excursión a los rieles de alimentación.
+* Valores comerciales (circuito): ideal -> comercial
+*   RREF1: 10kohm -> 10kohm [E24, +0.00%]
+*   RREF2: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 5nF -> 10nF + 10nF = 5nF [E12, +0.00%]
+*   R1: 31.6kohm -> 30kohm + 1.6kohm = 31.6kohm [E24, +0.00%]
+*   R2: 31.6kohm -> 30kohm + 1.6kohm = 31.6kohm [E24, +0.00%]
+*   C2: 5nF -> 10nF + 10nF = 5nF [E12, +0.00%]
+*   RF: 21kohm -> 11kohm + 10kohm = 21kohm [E24, +0.00%]
+*   RG: 10kohm -> 10kohm [E24, +0.00%]
+VDD VDD 0 DC 5
+RREF1 VDD Vref 10k
+RREF2 Vref 0 10k
+C1 Vout nw 5n IC=1m
+R1 nw plus 31.6k
+R2 plus Vref 31.6k
+C2 plus Vref 5n
+RF Vout - 21k
+RG - Vref 10k
+X1 plus - Vout VDD 0 OPAMP5
+.subckt OPAMP5 inp inn out vdd vss
+BOUT out 0 V = (V(vdd)+V(vss))/2 + ((V(vdd)-V(vss))/2 - 0.1)*tanh(1e5*V(inp,inn))
+.ends OPAMP5
+.control
+tran 10u 50m 20m uic
+meas tran period TRIG v(Vout) VAL=2.5 RISE=1 TARG v(Vout) VAL=2.5 RISE=2
+let frequency_hz = 1/period
+echo $&frequency_hz > output.txt
+.endc
+.end

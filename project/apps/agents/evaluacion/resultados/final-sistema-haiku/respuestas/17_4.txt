@@ -1,0 +1,26 @@
+* Oscilador puente de Wien (Vdd = 5 V)
+.param Cw=9.9472n
+.param Rw=16k
+.param R1=10k
+.param Rf=20k
+Vdd vdd 0 DC 5
+Vss vss 0 DC -5
+Eop Vout 0 n_plus n_minus 1e5
+Rs1 Vout n_a {Rw}
+Cs1 n_a n_plus {Cw}
+Rp1 n_plus 0 {Rw}
+Cp1 n_plus 0 {Cw}
+R1 n_minus 0 {R1}
+Rf Vout n_minus {Rf}
+.ic v(Vout)=0.01
+.tran 10u 20m uic
+.control
+run
+meas tran vmax MAX v(Vout) from=10m to=20m
+meas tran vmin MIN v(Vout) from=10m to=20m
+meas tran tper TRIG v(Vout) VAL=0 RISE=10 TARG v(Vout) VAL=0 RISE=11
+let fmeas = 1/tper
+echo $&fmeas > output.txt
+wrdata wave.txt v(Vout)
+.endc
+.end

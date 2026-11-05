@@ -1,0 +1,35 @@
+* Wien bridge oscillator, f0 = 1 kHz, Vdd = 5 V
+* Valores comerciales (circuito): ideal -> comercial
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 15.9nF -> 12nF || 3.9nF = 15.9nF [E12, -0.09%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   C2: 15.9nF -> 12nF || 3.9nF = 15.9nF [E12, -0.09%]
+*   Rf: 22kohm -> 22kohm [E24, +0.00%]
+*   Rg: 10kohm -> 10kohm [E24, +0.00%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+Vdd vdd 0 DC 5
+Vss vss 0 DC -5
+R1 vplus 0 10k
+C1 vout vf 15.9n
+R2 vf vplus 10k
+C2 vplus 0 15.9n
+Rf vout vminus 22k
+Rg vminus 0 10k
+X1 vplus vminus vout vdd vss opamp
+.subckt opamp inp inn out vp vn
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 1n
+Eout out 0 n2 0 1
+.ends
+.ic v(vout)=0.1
+.control
+tran 10u 20m uic
+meas tran tmax MAX v(vout) from=10m to=20m
+meas tran tmin MIN v(vout) from=10m to=20m
+set hcopydevtype=ascii
+wrdata output.txt v(vout)
+.endc
+.end

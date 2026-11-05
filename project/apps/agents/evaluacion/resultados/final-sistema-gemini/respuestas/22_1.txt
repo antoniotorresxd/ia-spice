@@ -1,0 +1,26 @@
+* Non-inverting Schmitt Trigger
+* Valores comerciales (circuito): ideal -> comercial
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   R2: 91kohm -> 91kohm [E24, +0.00%]
+*   R_ref: 10kohm -> 10kohm [E24, +0.00%]
+Vin Vin 0 DC 0 PULSE(-2 2 0 10m 10m 20m 40m)
+Vdd vcc 0 DC 5.0
+Vee vee 0 DC 0.0
+
+R1 Vin vplus 10k
+R2 vplus Vout 91k
+R_ref vminus 0 10k
+
+X1 vplus vminus Vout vcc vee opamp_schmitt
+
+.subckt opamp_schmitt inp inn out vcc vee
+Eout out_ideal 0 inp inn 1e5
+Eclamp out 0 VALUE { if(V(out_ideal)>V(vcc), V(vcc), if(V(out_ideal)<V(vee), V(vee), V(out_ideal)) ) }
+.ends
+
+.control
+tran 0.1m 40m 0
+meas tran v_out MAX v(Vout)
+print v_out > output.txt
+.endc
+.end

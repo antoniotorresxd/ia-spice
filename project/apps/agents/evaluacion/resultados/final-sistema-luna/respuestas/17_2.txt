@@ -1,0 +1,29 @@
+* Oscilador de puente de Wien con frecuencia nominal cercana a 1 kHz, alimentación simple de 5 V y referencia de polarización de 2.5 V. R1=R2=16 kΩ y C1=C2=10 nF en la red de Wien; Rf=21 kΩ y Rg=10 kΩ fijan una ganancia ligeramente superior a 3 para iniciar la oscilación. El amplificador operacional está representado por un modelo conductual saturado. El nodo inversor es «-» y la salida es «Vout».
+* Valores comerciales (circuito): ideal -> comercial
+*   C1: 9.89nF -> 12nF + 56nF = 9.88nF [E12, -0.08%]
+*   R1: 16kohm -> 16kohm [E24, +0.00%]
+*   R2: 16kohm -> 16kohm [E24, +0.00%]
+*   C2: 10nF -> 10nF [E12, +0.00%]
+*   Rf: 22kohm -> 22kohm [E24, +0.00%]
+*   Rg: 10kohm -> 10kohm [E24, +0.00%]
+* Semiconductores:
+*   XU: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+VDD Vdd 0 DC 5
+VREF Vref 0 DC 2.5
+C1 Vout n1 9.88235n IC=300m
+R1 n1 p 16k
+R2 p Vref 16k
+C2 p Vref 10n
+Rf Vout nminus 22k
+Rg nminus Vref 10k
+XU p nminus Vout Vref OPAMP
+.SUBCKT OPAMP inp inn out vref
+BOUT out vref V=2.4*tanh(10000*V(inp,inn))
+.ENDS OPAMP
+.control
+tran 10u 150m uic
+meas tran periodo TRIG v(Vout) VAL=2.5 RISE=80 TARG v(Vout) VAL=2.5 RISE=81
+let fosc=1/periodo
+echo $&fosc > output.txt
+.endc
+.end

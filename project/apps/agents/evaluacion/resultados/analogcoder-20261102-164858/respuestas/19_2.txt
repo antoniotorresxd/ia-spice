@@ -1,0 +1,62 @@
+## Task 1: Design Plan
+
+The differentiator is built from a single-stage op-amp (an OTA with a differential pair, a current-mirror load, and a tail current source) plus the external components C1 and Rf.
+
+**Op-amp (OTA) stage**
+
+- **M1 (NMOS, input):** gate at Vcm (non-inverting input, 2.5 V), drain at node d1, source at the tail node, bulk at tail. W = 10 µm, L = 1 µm.
+- **M2 (NMOS, input):** gate at Vinv (inverting input), drain at Vout, source at the tail node, bulk at tail. W = 10 µm, L = 1 µm.
+- **M5 (NMOS, tail current source):** gate at Vb (1.0 V), drain at the tail node, source and bulk at ground. W = 10 µm, L = 1 µm. Tail current ≈ 125 µA.
+- **M3 (PMOS, diode-connected load):** gate and drain tied to d1, source and bulk at Vdd. W = 20 µm, L = 1 µm.
+- **M4 (PMOS, mirror load):** gate at d1, source and bulk at Vdd, drain at Vout. W = 20 µm, L = 1 µm. M3 and M4 form a current mirror that sinks the M1 branch current to the output.
+
+**Differentiator network**
+
+- **C1 = 1 nF:** connected between Vin and the inverting node Vinv.
+- **Rf = 10 kΩ:** connected between Vinv and Vout (negative feedback).
+- The non-inverting input Vcm is held at 2.5 V (mid-supply).
+
+**DC bias check**
+
+- M1 and M2 each carry about 62.5 µA, with Vov ≈ 0.35 V, so the tail node sits near 1.65 V.
+- M3 and M4 each carry 62.5 µA with Vsg ≈ 0.85 V, so d1 ≈ 4.15 V.
+- At the balance point Vout = Vinv = 2.5 V. All devices are in saturation.
+- At DC, C1 is open, so no current flows through Rf and Vinv = Vout = 2.5 V. This keeps the op-amp in its linear region.
+
+**Expected behavior**
+
+Vout(t) ≈ −Rf·C1·dVin/dt = −10 kΩ × 1 nF × dVin/dt. The circuit is a differentiator with time constant 10 µs and a DC output of 2.5 V.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Differentiator')
+
+# Device models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power supply and bias/input sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)     # 5 V supply
+circuit.V('cm', 'Vcm', circuit.gnd, 2.5)     # Non-inverting input bias (mid-supply)
+circuit.V('b', 'Vb', circuit.gnd, 1.0)       # Tail current source bias (V_th + 0.5 V)
+circuit.V('in', 'Vin', circuit.gnd, 2.5)     # Differentiator input (DC operating point)
+
+# Op-amp (5-transistor OTA)
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+circuit.MOSFET('1', 'd1', 'Vcm', 'tail', 'tail', model='nmos_model', w=10e-6, l=1e-6)   # M1 input
+circuit.MOSFET('2', 'Vout', 'Vinv', 'tail', 'tail', model='nmos_model', w=10e-6, l=1e-6) # M2 input
+circuit.MOSFET('5', 'tail', 'Vb', circuit.gnd, circuit.gnd, model='nmos_model', w=10e-6, l=1e-6) # M5 tail
+circuit.MOSFET('3', 'd1', 'd1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)   # M3 diode load
+circuit.MOSFET('4', 'Vout', 'd1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6) # M4 mirror load
+
+# Differentiator network
+circuit.C('1', 'Vin', 'Vinv', 1@u_nF)       # C1 = 1 nF
+circuit.R('f', 'Vinv', 'Vout', 10@u_kΩ)     # Rf = 10 kΩ
+
+# Analysis Part
+simulator = circuit.simulator()
+```

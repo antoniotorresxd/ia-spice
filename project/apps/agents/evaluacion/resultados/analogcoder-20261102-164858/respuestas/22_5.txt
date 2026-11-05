@@ -1,0 +1,93 @@
+## Task 1: Design Plan
+
+The circuit is a non-inverting Schmitt trigger built from a two-stage CMOS op-amp with positive feedback. Vin drives the summing node Vp through Rin, and Vout feeds back to Vp through Rf. The op-amp's inverting input is held at a fixed reference Vref = 2.5 V, which centers the hysteresis window.
+
+### Op-amp (transistor level)
+
+**Stage 1: 5-transistor OTA (differential pair with current mirror load)**
+- **M1** (NMOS, W = 10 µm, L = 1 µm): gate = Vref, drain = OA_d1, source = Tail, bulk = GND.
+- **M2** (NMOS, W = 10 µm, L = 1 µm): gate = Vp, drain = Out1, source = Tail, bulk = GND.
+- **M3** (PMOS, W = 20 µm, L = 1 µm): diode-connected mirror reference. Gate and drain = OA_d1, source = Vdd, bulk = Vdd.
+- **M4** (PMOS, W = 20 µm, L = 1 µm): mirror output. Gate = OA_d1, drain = Out1, source = Vdd, bulk = Vdd.
+- **M5** (NMOS, W = 10 µm, L = 1 µm): tail current source. Gate = Vbias1 (1.2 V), drain = Tail, source = GND, bulk = GND. The tail current is about 245 µA.
+
+**Stage 2: common-source inverter with current-source load**
+- **M6** (PMOS, W = 20 µm, L = 1 µm): gate = Out1, source = Vdd, drain = Vout, bulk = Vdd.
+- **M7** (NMOS, W = 5 µm, L = 1 µm): current sink. Gate = Vbias2 (0.9 V), drain = Vout, source = GND, bulk = GND. The sink current is about 40 µA.
+
+Because M1 is driven by Vref and M2 by Vp, the op-amp output (Vout) is high when Vp > Vref. The two inverting stages give the non-inverting polarity that the Schmitt trigger requires.
+
+### Positive-feedback network
+- **Rin** = 10 kΩ between Vin and Vp (input resistor).
+- **Rf** = 100 kΩ between Vout and Vp (positive feedback resistor).
+
+### Bias and supply sources
+- **Vdd** = 5 V.
+- **Vref** = 2.5 V, connected to the gate of M1.
+- **Vbias1** = 1.2 V, for the tail transistor M5.
+- **Vbias2** = 0.9 V, for the output sink M7.
+- **Vin** = 0 V DC operating point (initial state: Vout low).
+
+### Hysteresis analysis
+At node Vp, KCL gives Vp = (10·Vin + Vout)/11 V (with Rin = 10 kΩ and Rf = 100 kΩ). The comparator switches when Vp = Vref = 2.5 V:
+
+- **Rising threshold** (Vout low, 0 V): V_TH,rise = Vref·(1 + Rin/Rf) = 2.5 × 1.1 = **2.75 V**
+- **Falling threshold** (Vout high, 5 V): V_TH,fall = V_TH,rise − Vdd·Rin/Rf = 2.75 − 0.5 = **2.25 V**
+- **Hysteresis width**: 0.5 V, centered at 2.5 V.
+
+### Interconnection summary
+
+| Node | Connections |
+|---|---|
+| Vin | Vin source (+), Rin |
+| Vp | Rin, Rf, M2 gate |
+| Vref | Vref source (+), M1 gate |
+| OA_d1 | M1 drain, M3 drain/gate, M4 gate |
+| Tail | M1 source, M2 source, M5 drain |
+| Out1 | M2 drain, M4 drain, M6 gate |
+| Vout | M6 drain, M7 drain, Rf |
+| Vbias1 | M5 gate |
+| Vbias2 | M7 gate |
+| Vdd | M3/M4/M6 sources, bulks, Vdd source |
+| GND | M1/M2/M5/M7 sources and bulks, all source negatives |
+
+---
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Non-inverting Schmitt Trigger')
+
+# Device models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power supply and bias sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)          # 5 V supply
+circuit.V('in', 'Vin', circuit.gnd, 0.0)          # Input voltage (DC operating point)
+circuit.V('ref', 'Vref', circuit.gnd, 2.5)        # Reference at inverting input (mid-supply)
+circuit.V('bias1', 'Vbias1', circuit.gnd, 1.2)    # Tail current source bias
+circuit.V('bias2', 'Vbias2', circuit.gnd, 0.9)    # Output sink bias
+
+# ---------------- Op-amp: Stage 1 (5T OTA) ----------------
+# parameters: name, drain, gate, source, bulk, model, w, l
+circuit.MOSFET('1', 'OA_d1', 'Vref', 'Tail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)  # M1
+circuit.MOSFET('2', 'Out1', 'Vp', 'Tail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)     # M2
+circuit.MOSFET('3', 'OA_d1', 'OA_d1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)         # M3 (diode mirror)
+circuit.MOSFET('4', 'Out1', 'OA_d1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)          # M4 (mirror output)
+circuit.MOSFET('5', 'Tail', 'Vbias1', circuit.gnd, circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)  # M5 (tail)
+
+# ---------------- Op-amp: Stage 2 (common-source with current sink) ----------------
+circuit.MOSFET('6', 'Vout', 'Out1', 'Vdd', 'Vdd', model='pmos_model', w=20e-6, l=1e-6)           # M6
+circuit.MOSFET('7', 'Vout', 'Vbias2', circuit.gnd, circuit.gnd, model='nmos_model', w=5e-6, l=1e-6)  # M7
+
+# ---------------- Positive feedback network ----------------
+circuit.R('in', 'Vin', 'Vp', 10@u_kΩ)      # Rin = 10 kΩ
+circuit.R('f', 'Vout', 'Vp', 100@u_kΩ)    # Rf = 100 kΩ
+
+# Analysis Part
+simulator = circuit.simulator()
+```

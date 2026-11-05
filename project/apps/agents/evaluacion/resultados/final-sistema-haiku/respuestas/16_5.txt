@@ -1,0 +1,41 @@
+* RC phase-shift oscillator, input node '-', output node Vout
+* Valores comerciales (circuito): ideal -> comercial
+*   C1: 18.1nF -> 18nF [E12, -0.28%]
+*   R1: 3.6kohm -> 3.6kohm [E24, +0.00%]
+*   C2: 18.1nF -> 18nF [E12, -0.28%]
+*   R2: 3.6kohm -> 3.6kohm [E24, +0.00%]
+*   C3: 18.1nF -> 18nF [E12, -0.28%]
+*   R3: 3.6kohm -> 3.6kohm [E24, +0.00%]
+*   Rf: 110kohm -> 110kohm [E24, +0.00%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+Vdd vdd 0 DC 5.0
+Vss vss 0 DC -5.0
+C1 Vout n1 18n
+R1 n1 0 3.6k
+C2 n1 n2 18n
+R2 n2 0 3.6k
+C3 n2 - 18n
+R3 - 0 3.6k
+Rf Vout - 110k
+X1 0 - Vout OPAMP
+
+.subckt OPAMP inp inn out
+Rin inp inn 1e9
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 1p
+Eout out 0 n2 0 1
+.ends
+
+.ic v(Vout)=0.01
+.control
+tran 10u 50m uic
+wrdata output.txt v(Vout)
+meas tran vpp MAX v(Vout) FROM=30m TO=50m
+meas tran tstart WHEN v(Vout)=0 RISE=5
+meas tran tend WHEN v(Vout)=0 RISE=15
+let f_est = 10/(tend-tstart)
+echo $&f_est > output.txt
+.endc
+.end

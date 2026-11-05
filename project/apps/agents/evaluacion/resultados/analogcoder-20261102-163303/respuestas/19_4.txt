@@ -1,0 +1,64 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier**: An ideal or behavioral Opamp (implemented here using a VCVS or subcircuit/macro model approach in PySpice, or a standard subcircuit for an opamp).
+- **Resistors**: Resistor $R_f$ connected in the feedback path.
+- **Capacitors**: Capacitor $C_1$ connected at the input node.
+- **Power Supply**: $V_{dd}$ for DC supply.
+- **Input Signal Source**: $V_{in}$.
+
+#### Topology Description: Opamp Differentiator
+1. **Input Network**:
+   - The input signal **Vin** is connected to one terminal of capacitor **C1**.
+   - The other terminal of **C1** is connected to the inverting input node of the operational amplifier (let's call it node `Vinv`).
+
+2. **Feedback Network**:
+   - Resistor **Rf** is connected between the output node **Vout** and the inverting input node (`Vinv`).
+   - The non-inverting input of the opamp is connected to the ground (`gnd`) to establish a virtual ground reference.
+
+3. **Operational Amplifier Connections**:
+   - Non-inverting input connected to `gnd`.
+   - Inverting input connected to the node between **C1** and **Rf** (`Vinv`).
+   - Output connected to **Vout**.
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Differentiator')
+
+# Power Supplies and Input Signal
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V power supply
+circuit.V('ss', circuit.gnd, 'Vss', 5.0) # -5V equivalent or dual supply reference
+circuit.V('in', 'Vin', circuit.gnd, 1.0) # 1V DC operating point input
+
+# Passive Components for Differentiator
+# C1 connected between Vin and the inverting input (Vinv)
+circuit.C('1', 'Vin', 'Vinv', 1@u_uF)
+
+# Rf connected between Vout and the inverting input (Vinv)
+circuit.R('f', 'Vout', 'Vinv', 100@u_kΩ)
+
+# Resistor to ground for non-inverting terminal to balance bias currents
+circuit.R('bias', 'Vinv_pos', circuit.gnd, 1@u_kΩ)
+circuit.controller.match_node('Vinv_pos', circuit.gnd)
+
+# Define a simple behavioral Opamp using a Voltage-Controlled Voltage Source (E element)
+# Gain is set high (e.g., 100k) to emulate an ideal op-amp
+# E(name, positive_output, negative_output, positive_input, negative_input, gain)
+# Non-inverting input is connected to gnd, inverting input is connected to 'Vinv'
+circuit.X('opamp', 'opamp_sub', 'Vout', 'gnd', 'Vinv')
+
+# Since PySpice needs a subcircuit definition for complex blocks like opamps, 
+# we can define a simple subcircuit for an opamp using a VCVS:
+circuit.subcircuit('opamp_sub', 'out', 'plus', 'minus')
+circuit.E('opamp_vcvs', 'out', circuit.gnd, 'plus', 'minus', 100000)
+circuit.ends()
+
+# Analysis Part
+simulator = circuit.simulator()
+```

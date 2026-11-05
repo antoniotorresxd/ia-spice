@@ -1,0 +1,59 @@
+## Task 1: Design Plan
+
+**Circuit:** A unity-gain difference (subtractor) amplifier built around an op-amp. The op-amp is modeled as a high-gain voltage-controlled voltage source (VCVS), which is a standard macro-model for an ideal op-amp. This keeps the DC operating point simulation robust and focuses on the subtractor topology.
+
+**Target:** Vout = Vin2 − Vin1
+
+**Components and connectivity:**
+
+1. **Op-amp (E1, VCVS, gain A = 1e6)**
+   - Non-inverting input (+): node `Vp`
+   - Inverting input (−): node `Vn`
+   - Output: node `Vout`
+
+2. **Input resistor R1 (10 kΩ):** between `Vin1` and the inverting node `Vn`.
+
+3. **Feedback resistor R4 (10 kΩ):** between `Vout` and the inverting node `Vn`. This sets the negative feedback path.
+
+4. **Input resistor R2 (10 kΩ):** between `Vin2` and the non-inverting node `Vp`.
+
+5. **Ground resistor R3 (10 kΩ):** between `Vp` and ground. This forms a divider on Vin2.
+
+6. **Sources**
+   - Vin1 = 1.0 V DC (node `Vin1` to ground)
+   - Vin2 = 2.5 V DC (node `Vin2` to ground)
+   - No AC excitation, since only the operating point is considered.
+
+**Design equations:**
+- Because R1 = R2 = R3 = R4 and the op-amp is ideal, V+ = V− gives V_p = Vin2/2 and V_n = (Vin1 + Vout)/2.
+- Setting V_p = V_n gives Vout = Vin2 − Vin1.
+- Expected result: Vout = 2.5 − 1.0 = 1.5 V.
+
+**Supply:** Vdd = 5.0 V is not required by this ideal op-amp macro-model, so no supply is connected.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Subtractor')
+
+# Input sources (DC operating point only)
+circuit.V('in1', 'Vin1', circuit.gnd, 1.0)   # Vin1 = 1.0 V
+circuit.V('in2', 'Vin2', circuit.gnd, 2.5)   # Vin2 = 2.5 V
+
+# Ideal op-amp macro-model (VCVS with high open-loop gain)
+# VCVS(name, out+, out-, in+, in-, gain)
+# Non-inverting input: Vp, inverting input: Vn, output: Vout
+circuit.VCVS('op', 'Vout', circuit.gnd, 'Vp', 'Vn', 1e6)
+
+# Difference amplifier resistor network (all 10 kOhm)
+circuit.R('1', 'Vin1', 'Vn', 10@u_kΩ)     # R1: Vin1 -> inverting node
+circuit.R('4', 'Vn', 'Vout', 10@u_kΩ)     # R4: feedback Vout -> inverting node
+circuit.R('2', 'Vin2', 'Vp', 10@u_kΩ)     # R2: Vin2 -> non-inverting node
+circuit.R('3', 'Vp', circuit.gnd, 10@u_kΩ) # R3: non-inverting node -> ground
+
+# Analysis Part
+simulator = circuit.simulator()
+```

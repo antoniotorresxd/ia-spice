@@ -1,0 +1,51 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier**: An ideal or behavioral op-amp (modeled using a voltage-controlled voltage source or subcircuit, or standard subcircuit representations in PySpice). For a basic op-amp implementation in PySpice, we can use a high-gain VCVS or standard components to represent the op-amp.
+- **Resistor**: **Rf** (feedback resistor connected between Vout and the inverting input).
+- **Capacitor**: **C1** (input capacitor connected between Vin and the inverting input).
+- **Power Supply**: **Vdd** for DC supply (and negative supply if needed, but a single-supply or dual-supply setup can be used; here we use Vdd and Ground for reference).
+- **Input Signal Source**: **Vin** (input signal node).
+
+#### Circuit Topology: Op-Amp Differentiator
+1. **Op-Amp Setup**:
+   - Non-inverting input ($V_+$) is connected to ground (or a bias voltage, here connected to **circuit.gnd** for a standard inverting differentiator).
+   - Inverting input ($V_-$) is connected to the node between capacitor **C1** and resistor **Rf** (let's call this node **V_inv**).
+   - Output of the op-amp is connected to the output node **Vout**.
+
+2. **Capacitor C1 (Input Path)**:
+   - Connected between the input node **Vin** and the inverting input node **V_inv**.
+
+3. **Resistor Rf (Feedback Path)**:
+   - Connected between the inverting input node **V_inv** and the output node **Vout**.
+
+4. **Biasing and Power Supplies**:
+   - **Vdd** connected to the positive supply of the op-amp (e.g., 5.0 V).
+   - Non-inverting terminal tied to ground (or a mid-supply reference if single-supply, but ground is standard for ideal idealizations).
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Differentiator')
+
+# Power Supplies and Input Signal
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V power supply
+circuit.V('in', 'Vin', circuit.gnd, 1.0) # 1V DC input voltage for operating point analysis
+
+# Define the op-amp using a VCVS (Voltage-Controlled Voltage Source) with high gain (A = 1e5)
+# Syntax: E(name, positive_output, negative_output, positive_input, negative_input, gain)
+# Non-inverting input is connected to gnd, inverting input is connected to 'V_inv'
+circuit.VCVS('opamp', 'Vout', circuit.gnd, circuit.gnd, 'V_inv', 1e5)
+
+# Differentiator Components: Capacitor C1 at input, Resistor Rf in feedback
+circuit.C('1', 'Vin', 'V_inv', 1@u_uF)
+circuit.R('f', 'V_inv', 'Vout', 100@u_kΩ)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

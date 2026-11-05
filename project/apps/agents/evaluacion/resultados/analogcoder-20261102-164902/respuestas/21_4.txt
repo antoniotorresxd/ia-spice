@@ -1,0 +1,47 @@
+### Task 1
+
+#### Components and topology
+
+Use a unity-gain difference amplifier made from an op-amp and four matched resistors:
+
+- **A1**: op-amp represented in the simulation by a high-gain voltage-controlled voltage source (VCVS).
+- **R1 = R2 = R3 = R4 = 10 kΩ**:
+  - R1 connects **Vin1** to the inverting input node **Nminus**.
+  - R2 connects **Vout** back to **Nminus**.
+  - R3 connects **Vin2** to the non-inverting input node **Nplus**.
+  - R4 connects **Nplus** to ground.
+- **Vdd**: 5 V supply node.
+- **Vin1** and **Vin2**: DC input sources for operating-point simulation.
+
+With all four resistors equal, the non-inverting input is at half of Vin2. Feedback makes the inverting input approximately equal to it, so the output is:
+
+\[
+Vout = Vin2 - Vin1
+\]
+
+The VCVS models the op-amp’s high open-loop gain; it is not a transistor-level or rail-limited op-amp model. A real single-supply implementation can only produce differences within its input common-mode and output-voltage ranges. In particular, a negative difference requires a suitable negative supply or a level-shifted output.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Unity-Gain Op-Amp Subtractor')
+
+# Supply and DC input values for operating-point simulation
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('in1', 'Vin1', circuit.gnd, 2.5)
+circuit.V('in2', 'Vin2', circuit.gnd, 2.6)
+
+# Matched resistor network: unity-gain difference amplifier
+circuit.R('1', 'Vin1', 'Nminus', 10e3)
+circuit.R('2', 'Vout', 'Nminus', 10e3)
+circuit.R('3', 'Vin2', 'Nplus', 10e3)
+circuit.R('4', 'Nplus', circuit.gnd, 10e3)
+
+# High-gain op-amp macro-model:
+# output terminals, non-inverting control node, inverting control node, gain
+circuit.VCVS('A1', 'Vout', circuit.gnd, 'Nplus', 'Nminus', 1e6)
+
+simulator = circuit.simulator()
+```

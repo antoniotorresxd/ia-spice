@@ -1,0 +1,60 @@
+## Task 1: Design Plan
+
+**Topology:** The Wien bridge oscillator uses a non-inverting amplifier with a frequency-selective RC bridge. The op-amp is modeled as an ideal voltage-controlled voltage source (VCVS) with high gain, so the design focuses on the passive network and the gain-setting resistors.
+
+**Node naming:** The inverting input is the "-" node required by the spec. Because a bare "-" can be misparsed as a SPICE token, it is implemented as the net **Vminus**. The non-inverting input is **Vplus**, and the output is **Vout**.
+
+**Components and connections:**
+
+1. **Op-amp (ideal VCVS, gain 1e5):** output = Vout (referenced to ground), non-inverting input = Vplus, inverting input = Vminus.
+
+2. **Wien bridge frequency-selective network (feedback to the non-inverting input):**
+   - **R1 = 10 kΩ:** Vout → Vs (series arm)
+   - **C1 = 10 nF:** Vs → Vplus (series arm)
+   - **R2 = 10 kΩ:** Vplus → GND (parallel arm)
+   - **C2 = 10 nF:** Vplus → GND (parallel arm)
+   - Oscillation frequency: f₀ = 1/(2π·R·C) ≈ 1.59 kHz. The series and parallel arms are matched, so the required feedback ratio at f₀ is 1/3.
+
+3. **Amplitude-setting negative feedback network:**
+   - **Rf = 22 kΩ:** Vout → Vminus
+   - **Rg = 10 kΩ:** Vminus → GND
+   - Non-inverting gain = 1 + Rf/Rg = 3.2. This is slightly above the required 3, so oscillation starts and grows.
+
+4. **Amplitude stabilization:** Two anti-parallel diodes (D1, D2, model DMOD) are placed across Rf. Their conduction at about 0.6 V reduces the effective feedback resistance as the amplitude grows, which limits the output to a stable sinusoid at about 1 V.
+
+5. **Supply:** The ideal op-amp model needs no explicit Vdd. Node Vout swings freely, limited by the diodes.
+
+**Startup:** The gain of 3.2 exceeds 3, so any small noise at the start of a transient simulation grows into a sustained oscillation at ≈1.59 kHz.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Wien Bridge Oscillator')
+
+# Diode model for amplitude stabilization
+circuit.model('DMOD', 'D', IS=1e-14)
+
+# Ideal op-amp modeled as a high-gain VCVS
+# E: output+ (Vout), output- (gnd), input+ (Vplus), input- (Vminus), gain
+circuit.VCVS('1', 'Vout', circuit.gnd, 'Vplus', 'Vminus', 1e5)
+
+# Wien bridge frequency-selective network (f0 = 1/(2*pi*R*C) ~ 1.59 kHz)
+circuit.R('1', 'Vout', 'Vs', 10e3)        # R1 series arm
+circuit.C('1', 'Vs', 'Vplus', 10e-9)      # C1 series arm
+circuit.R('2', 'Vplus', circuit.gnd, 10e3)    # R2 parallel arm
+circuit.C('2', 'Vplus', circuit.gnd, 10e-9)   # C2 parallel arm
+
+# Amplitude-setting negative feedback network (gain = 1 + Rf/Rg = 3.2)
+circuit.R('f', 'Vout', 'Vminus', 22e3)   # Rf
+circuit.R('g', 'Vminus', circuit.gnd, 10e3)  # Rg
+
+# Anti-parallel diodes across Rf for amplitude limiting
+circuit.D('1', 'Vminus', 'Vout', model='DMOD')
+circuit.D('2', 'Vout', 'Vminus', model='DMOD')
+
+# Analysis Part
+simulator = circuit.simulator()
+```

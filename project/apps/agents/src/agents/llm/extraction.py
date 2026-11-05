@@ -90,9 +90,18 @@ def ejemplos_parecidos(request_text: str) -> str:
     ejemplos = recuperar(request_text)
     if not ejemplos:
         return ""
+    # La biblioteca solo tiene problemas de análisis (circuito dado, valores
+    # por calcular). Se recuperan por palabras en común, así que un pedido de
+    # diseño ("Design an op-amp adder") también recibe ejemplos, y todos
+    # dicen mode='analysis': con eso el modelo tomaba el diseño como análisis.
+    # El encabezado dice a qué tipo de pedido corresponden.
     return (
-        "\n\n## EJEMPLOS RESUELTOS PARECIDOS (la forma de un buen planteamiento; los "
-        "valores son de otro problema)\n\n" + "\n\n".join(como_ejemplo(e) for e in ejemplos)
+        "\n\n## EJEMPLOS RESUELTOS PARECIDOS DE MODO ANÁLISIS (la forma de un buen "
+        "planteamiento; los valores son de otro problema)\n"
+        "Corresponden a pedidos que traen un circuito ya armado para analizar o "
+        "calcular. Un pedido de diseñar un circuito (\"Design...\", \"Diseña...\") "
+        "se resuelve con el catálogo en mode='design', aunque comparta palabras con "
+        "estos ejemplos.\n\n" + "\n\n".join(como_ejemplo(e) for e in ejemplos)
     )
 
 

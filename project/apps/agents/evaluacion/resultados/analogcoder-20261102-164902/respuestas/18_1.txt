@@ -1,0 +1,57 @@
+## Task 1 — Design Plan
+
+Use an inverting op-amp integrator referenced to a mid-supply voltage. The reference allows the circuit to operate from a single 5 V supply: signals are integrated relative to **Vref = 2.5 V**, rather than ground.
+
+### Components and connections
+
+- **Vdd**: 5 V supply.
+- **Vref**: 2.5 V reference.
+- **Vin**: Input node, set to 2.5 V DC for the operating-point setup. An input signal should vary around this reference.
+- **R1 = 10 kΩ**: Connects **Vin** to the inverting input node **Nminus**.
+- **Cf = 10 nF**: Connects **Vout** to **Nminus**, forming the integration feedback path.
+- **Rf = 100 MΩ**: Connected in parallel with **Cf**. This provides a DC feedback path so the operating point is defined; the circuit behaves as an integrator above its low-frequency corner.
+- **Non-inverting input**: Connect to **Vref**.
+- **Op-amp model**: Represented by a high-gain voltage-controlled voltage source. A 50 Ω series resistor models finite output resistance.
+
+The op-amp model is an idealized, unsaturated macromodel; it is suitable for demonstrating the integrator topology near its 2.5 V operating point, but it does not enforce the 0–5 V output swing limits of a physical amplifier.
+
+With the reference-relative signals, the transfer function is approximately
+
+\[
+\frac{V_{\text{out}}-V_{\text{ref}}}{V_{\text{in}}-V_{\text{ref}}}
+=
+-\frac{R_f/R_1}{1+sR_fC_f}.
+\]
+
+Above the low-frequency corner \(1/(2\pi R_fC_f)\), this approaches the inverting-integrator response \(-1/(sR_1C_f)\).
+
+## Task 2 — PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Opamp Integrator')
+
+# 5 V supply and 2.5 V single-supply reference
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ref', 'Vref', circuit.gnd, 2.5)
+
+# DC operating-point input; the signal is referenced around 2.5 V
+circuit.V('in', 'Vin', circuit.gnd, 2.5)
+
+# Inverting integrator input resistor
+circuit.R('1', 'Vin', 'Nminus', 10e3)
+
+# Feedback capacitor and large resistor in parallel
+circuit.C('f', 'Nminus', 'Vout', 10e-9)
+circuit.R('f', 'Nminus', 'Vout', 100e6)
+
+# High-gain op-amp macromodel:
+# output is referenced to Vref, with the non-inverting input at Vref
+circuit.VCVS('opamp', 'Aout', 'Vref', 'Vref', 'Nminus', 1e5)
+
+# Finite op-amp output resistance
+circuit.R('out', 'Aout', 'Vout', 50)
+
+simulator = circuit.simulator()
+```

@@ -1,0 +1,8 @@
+Design An Opamp adder to make Vout=-(Vin1+Vin2).
+
+Input node name: Vin1, Vin2.
+
+Output node name: Vout.
+
+Make sure the input and output node names appear in the circuit.
+Assume the Vdd = 5.0 V.

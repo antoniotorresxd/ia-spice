@@ -1,0 +1,51 @@
+### Task 1 — Design plan
+
+Use an **inverting op-amp summing amplifier**. The two input currents meet at the inverting input, and the feedback resistor converts their sum into the output voltage.
+
+**Important supply constraint:** For positive `Vin1` and `Vin2`, the requested negative output cannot be produced using only a 0–5 V supply. This design therefore uses `Vdd = +5 V` and an additional `Vee = −5 V` rail. The output must remain within the op-amp’s supply range.
+
+- **Op-amp model:** A high-gain voltage-controlled voltage source (VCVS), used as an idealized op-amp macromodel.
+  - Non-inverting input connected to ground.
+  - Inverting input connected to the summing node `Vsum`.
+  - Output connected to `Vout`.
+- **Input resistors:** `R1 = R2 = 10 kΩ`.
+  - `R1` connects `Vin1` to `Vsum`.
+  - `R2` connects `Vin2` to `Vsum`.
+- **Feedback resistor:** `Rf = 10 kΩ`, connected from `Vout` to `Vsum`.
+
+With matched resistors, the ideal closed-loop relationship is:
+
+\[
+Vout = -\left(Vin1 + Vin2\right)
+\]
+
+The example DC input values in the code are 0.5 V each, giving an expected output of approximately −1 V. The finite VCVS gain makes the result very slightly different from the ideal equation.
+
+### Task 2 — PySpice code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Inverting Op-Amp Adder')
+
+# Supplies: +5 V and -5 V rails are needed for negative output voltage.
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ee', 'Vee', circuit.gnd, -5.0)
+
+# DC input operating-point values
+circuit.V('in1', 'Vin1', circuit.gnd, 0.5)
+circuit.V('in2', 'Vin2', circuit.gnd, 0.5)
+
+# Matched input and feedback resistors
+circuit.R('1', 'Vin1', 'Vsum', 10@u_kΩ)
+circuit.R('2', 'Vin2', 'Vsum', 10@u_kΩ)
+circuit.R('f', 'Vout', 'Vsum', 10@u_kΩ)
+
+# High-gain op-amp macromodel:
+# Vout = A * (Vnoninverting - Vinverting)
+# Non-inverting input is grounded; inverting input is Vsum.
+circuit.VCVS('Aop', 'Vout', circuit.gnd, circuit.gnd, 'Vsum', 1e6)
+
+simulator = circuit.simulator()
+```

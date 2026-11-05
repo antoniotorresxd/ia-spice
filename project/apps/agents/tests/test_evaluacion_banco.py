@@ -1,13 +1,67 @@
 import pytest
 
-from agents.evaluacion.banco import CasoInvalido, cargar_banco, validar_caso
+from agents.evaluacion.banco import NIVELES, CasoInvalido, cargar_banco, validar_caso
 
 
-def test_el_banco_de_la_tesina_tiene_veintitres_casos_bien_formados():
+def test_el_banco_de_la_tesina_tiene_treinta_y_siete_casos_bien_formados():
     casos = cargar_banco()
 
-    assert len(casos) == 23
-    assert len({c["id"] for c in casos}) == 23, "hay ids repetidos"
+    assert len(casos) == 37
+    assert len({c["id"] for c in casos}) == 37, "hay ids repetidos"
+
+
+def test_cada_caso_del_banco_declara_un_nivel_conocido():
+    """Los resúmenes se parten por nivel: un caso sin nivel desaparecería de
+    todas las tablas sin avisar."""
+    for caso in cargar_banco():
+        assert caso["nivel"] in NIVELES, caso["id"]
+
+
+def test_el_banco_tiene_casos_en_cada_nivel():
+    niveles = {c["nivel"] for c in cargar_banco()}
+
+    assert niveles == set(NIVELES)
+
+
+def test_los_casos_negativos_esperan_rechazo_y_los_demas_aceptacion():
+    for caso in cargar_banco():
+        esperado = "rejected" if caso["nivel"] == "negativo" else "accepted"
+        assert caso["esperado"] == esperado, caso["id"]
+
+
+def test_el_banco_cubre_todas_las_topologias_del_catalogo_con_solver():
+    from agents.calculo.catalog_solver import CATALOG_SOLVERS
+
+    cubiertas = {b["params"]["circuit_id"] for c in cargar_banco() for b in c["spec"]["blocks"]}
+    # alias y variantes del catálogo que comparten solver con otra topología
+    sin_caso_propio = {"linear_zener_regulator", "double_ended_clipper"}
+
+    assert set(CATALOG_SOLVERS) - sin_caso_propio <= cubiertas
+
+
+def test_validar_caso_rechaza_un_nivel_desconocido():
+    caso = {
+        "id": "x",
+        "descripcion": "x",
+        "nivel": "basic",
+        "spec": {"blocks": [{"id": "b"}]},
+        "referencia": [{"requisito": "b", "metrica": "v", "objetivo": 1.0, "componentes": {"r": 1.0}}],
+    }
+
+    with pytest.raises(CasoInvalido, match="nivel"):
+        validar_caso(caso)
+
+
+def test_un_caso_sin_nivel_carga_con_valores_por_omision():
+    caso = validar_caso({
+        "id": "x",
+        "descripcion": "x",
+        "spec": {"blocks": [{"id": "b"}]},
+        "referencia": [{"requisito": "b", "metrica": "v", "objetivo": 1.0, "componentes": {"r": 1.0}}],
+    })
+
+    assert caso["nivel"] == "sin_nivel"
+    assert caso["esperado"] == "accepted"
 
 
 def test_el_banco_cubre_los_tipos_curados_vigentes():

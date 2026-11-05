@@ -1,0 +1,69 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier**: An ideal or behavioral op-amp (modeled using a voltage-controlled voltage source or subcircuit, or using fundamental transistors to build an op-amp. For simplicity and standard PySpice implementation, we can use a subcircuit or behavioral model for the op-amp, or build a standard two-stage op-amp). Let's design the op-amp using a standard differential input stage followed by an output stage, or use a high-gain differential amplifier to implement the op-amp functionality.
+- **Resistors**: Resistor $R_f$ for the feedback network.
+- **Capacitors**: Capacitor $C_1$ connected to the input node.
+- **Power Supply**: $V_{dd}$ and ground (or dual supplies, let's use a single 5V supply with a common-mode bias, or standard virtual ground biasing. For a pure differentiator configuration: $C_1$ is connected between $V_{in}$ and the inverting input $V_{-}$, $R_f$ is connected between $V_{-}$ and $V_{out}$, the non-inverting input $V_{+}$ is tied to a reference voltage, e.g., $V_{dd}/2 = 2.5\text{V}$).
+- **Input Signal Source**: $V_{in}$ for the input voltage.
+
+#### Differentiator Circuit Configuration
+1. **Op-Amp Setup**:
+   - Non-inverting input ($V_+$) connected to a DC bias voltage $V_{ref} = 2.5\text{V}$.
+   - Inverting input ($V_-$) connected to the feedback node (let's name it node `Vinv`).
+   - Output connected to node **Vout**.
+
+2. **Passive Components (Differentiator Network)**:
+   - **Capacitor $C_1$**: Connected between input node **Vin** and the inverting input node `Vinv`.
+   - **Resistor $R_f$**: Connected between the inverting input node `Vinv` and output node **Vout**.
+
+3. **Op-Amp Internal Topology (Implemented using Transistors)**:
+   - To make it a complete transistor-level circuit, the op-amp can be realized as a differential pair with current-mirror load and a common-source second stage.
+   - **Differential Pair (Input Stage)**: NMOS transistors $M_1$ and $M_2$. Gate of $M_1$ is $V_+$ (inverting/non-inverting configuration), Gate of $M_2$ is $V_-$ (`Vinv`).
+   - **Active Load**: PMOS transistors $M_3$ and $M_4$ configured as a current mirror.
+   - **Second Stage**: NMOS common-source amplifier $M_5$ with a PMOS current source load $M_6$, driving **Vout**.
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Differentiator')
+
+# Define MOSFET models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power Supplies
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V power supply
+circuit.V('in', 'Vin', circuit.gnd, 2.5) # 2.5V DC input voltage
+circuit.V('ref', 'Vref', circuit.gnd, 2.5) # 2.5V reference voltage for non-inverting terminal
+
+# Bias current source reference
+circuit.V('bias', 'Vbias', circuit.gnd, 1.5)
+
+# Op-Amp Sub-circuit Implementation (Two-Stage Op-Amp)
+# Differential Input Stage
+circuit.MOSFET('1', 'DiffOut', 'Vref', 'Tail', 'Tail', model='nmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('2', 'Vinv', 'Vinv', 'Tail', 'Tail', model='nmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('tail', 'Tail', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=50e-6, l=1e-6)
+
+# Active Load for Differential Pair
+circuit.MOSFET('3', 'DiffOut', 'DiffOut', 'Vdd', 'Vdd', model='pmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('4', 'Vinv', 'DiffOut', 'Vdd', 'Vdd', model='pmos_model', w=50e-6, l=1e-6)
+
+# Second Stage (Common-Source Amplifier)
+circuit.MOSFET('5', 'Vout', 'Vinv', circuit.gnd, circuit.gnd, model='nmos_model', w=100e-6, l=1e-6)
+circuit.MOSFET('6', 'Vout', 'Vbias2', 'Vdd', 'Vdd', model='pmos_model', w=200e-6, l=1e-6)
+circuit.V('bias2', 'Vbias2', circuit.gnd, 3.5)
+
+# External Differentiator Components (Capacitor C1 and Resistor Rf)
+circuit.C('1', 'Vin', 'Vinv', 1@u_uF)
+circuit.R('f', 'Vinv', 'Vout', 10@u_kΩ)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

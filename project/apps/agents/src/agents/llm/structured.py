@@ -22,6 +22,10 @@ _RECHAZOS_DE_SCHEMA = (
     "json schema",
     "response_format",
     "additionalproperties",
+    # Anthropic (directo o vía OpenRouter): "output_config.format.schema:
+    # Schema type 'oneOf' is not supported".
+    "output_config",
+    "schema type",
 )
 
 # Fragmentos de los errores de una respuesta que llegó pero no valida.

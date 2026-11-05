@@ -120,6 +120,17 @@ class CatalogParams(BaseModel):
     params: dict[str, float] = Field(default_factory=dict)
     requirements: list[Requirement] = Field(min_length=1)
     description: str = Field(default="")
+    nombres: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Cuando el enunciado nombra componentes, el nombre de cada uno en la plantilla "
+            "SPICE de la topología y el nombre que pide el enunciado, para que el netlist "
+            "entregado los use: «integrator with resistor R1 and capacitor Cf» con la "
+            "plantilla del integrador (Rin, Rf, Cf) → {\"Rin\": \"R1\"}. Incluye solo los "
+            "componentes que el enunciado nombra y cuyo nombre difiere del de la plantilla; "
+            "si no nombra ninguno, déjalo vacío."
+        ),
+    )
 
 
 class CatalogBlock(BaseModel):

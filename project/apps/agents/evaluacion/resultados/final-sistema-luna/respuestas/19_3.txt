@@ -1,0 +1,36 @@
+* Diferenciador practico, alimentacion simple de 5 V
+* Valores comerciales (circuito): ideal -> comercial
+*   RBIAS1: 10kohm -> 10kohm [E24, +0.00%]
+*   RBIAS2: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 10nF -> 10nF [E12, +0.00%]
+*   Rin: 1.6kohm -> 1.6kohm [E24, +0.00%]
+*   Rf: 16kohm -> 16kohm [E24, +0.00%]
+*   Rout: 75ohm -> 75ohm [E24, +0.00%]
+* Semiconductores:
+*   DHI, DLO: 2 x 1N4148 (diodo de conmutación de señal; modelo genérico)
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+VDD Vdd 0 DC 5
+RBIAS1 Vdd Vref 10k
+RBIAS2 Vref 0 10k
+Vin Vin 0 DC 2.5 AC 1 SIN(2.5 0.1 1k)
+C1 Vin ncap 10n
+Rin ncap nminus 1.6k
+Rf Vout nminus 16k
+X1 Vref nminus ndrv OPAMP
+Rout ndrv Vout 75
+DHI Vout Vdd DCLAMP
+DLO 0 Vout DCLAMP
+.model DCLAMP D(IS=1e-14 N=1)
+.subckt OPAMP inp inn out
+Rinop inp inn 1meg
+GGAIN 0 n2 inp inn 1
+RGAIN n2 0 100k
+CGAIN n2 0 15.9n
+EOUT out 0 n2 0 1
+.ends OPAMP
+.control
+tran 1u 5m
+meas tran vout_pp PP v(Vout) from=3m to=5m
+echo $&vout_pp > output.txt
+.endc
+.end

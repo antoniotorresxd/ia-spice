@@ -1,0 +1,40 @@
+* RC phase-shift oscillator, nominal f approximately 650 Hz
+* Valores comerciales (circuito): ideal -> comercial
+*   RIN: 1e+03Mohm -> 1e+03Mohm [E24, +0.00%]
+*   RB1: 33kohm -> 33kohm [E24, +0.00%]
+*   RB2: 15kohm -> 15kohm [E24, +0.00%]
+*   RC: 3.3kohm -> 3.3kohm [E24, +0.00%]
+*   RE: 680ohm -> 680ohm [E24, +0.00%]
+*   CE: 100uF -> 100uF [E12, +0.00%]
+*   C1: 100nF -> 100nF [E12, +0.00%]
+*   R1: 1kohm -> 1kohm [E24, +0.00%]
+*   C2: 100nF -> 100nF [E12, +0.00%]
+*   R2: 1kohm -> 1kohm [E24, +0.00%]
+*   C3: 100nF -> 100nF [E12, +0.00%]
+*   R3: 1kohm -> 1kohm [E24, +0.00%]
+* Semiconductores:
+*   Q1: 1 x 2N3904 (BJT NPN de propósito general; modelo genérico)
+VDD Vdd 0 DC 5
+* Unused input terminal requested by the user
+RIN - 0 1000meg
+* Q1 common-emitter amplifier bias and collector load
+RB1 Vdd B 33k
+RB2 B 0 15k
+RC Vdd Vout 3.3k
+RE E 0 680
+CE E 0 100u
+Q1 Vout B E QN
+* Three-section RC feedback network
+C1 Vout N1 100n
+R1 N1 0 1k
+C2 N1 N2 100n
+R2 N2 0 1k
+C3 N2 B 100n
+R3 B 0 1k
+.model QN NPN(IS=1e-14 BF=100 VAF=100)
+.ic V(N1)=1m
+.control
+tran 10u 200m 0 10u uic
+wrdata output.txt v(Vout)
+.endc
+.end

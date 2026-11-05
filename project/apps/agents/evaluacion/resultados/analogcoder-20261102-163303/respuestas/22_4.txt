@@ -1,0 +1,79 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier**: 1 op-amp (modeled using voltage-controlled sources or behavioral components, or built with transistors, but here we can implement it using a subcircuit or standard behavioral representation suitable for PySpice, or construct a differential amplifier-based op-amp. To keep it robust, we'll build a simple differential op-amp topology or use an ideal op-amp representation supported in PySpice). Let's use a standard two-stage differential-input operational amplifier topology to make a complete transistor-level or behavioral circuit. For simplicity and robust PySpice simulation of an op-amp, we can define a subcircuit or use basic transistor blocks. Alternatively, since an op-amp can be modeled as a high-gain differential amplifier, let's design a differential pair input stage with a current mirror load and a common-source second stage.
+- **Resistors**: R1, R2 forming the positive feedback resistive divider from **Vout** to the non-inverting input.
+- **Power Supplies**: Vdd (5V), Vss (-5V or ground, let's use Vdd = 5V and ground = 0V with a mid-supply reference, or dual supply +5V/-5V for symmetrical thresholds). Let's use dual supply: `Vdd` (+5V) and `Vss` (-5V) for clean non-inverting Schmitt trigger operation around 0V.
+- **Input Signal Source**: **Vin** connected to the inverting input of the op-amp through a resistor or directly.
+- **Output Node**: **Vout**.
+
+#### Non-Inverting Schmitt Trigger Topology
+1. **Op-Amp Configuration**:
+   - The non-inverting terminal ($V_+$) is connected to the tap point of the positive feedback resistor network (between $R_1$ and $R_2$).
+   - The inverting terminal ($V_-$) is connected to the input signal **Vin**.
+   - The output of the op-amp is **Vout**.
+
+2. **Positive Feedback Network**:
+   - Resistor **R1** is connected between **Vout** and the non-inverting input ($V_+$).
+   - Resistor **R2** is connected between the non-inverting input ($V_+$) and ground (or a reference voltage, let's use ground).
+   - This creates the hysteresis loop with upper and lower threshold voltages determined by the resistor ratio $R_1 / R_2$ and the saturation voltages of the op-amp.
+
+3. **Op-Amp Internal Structure (Differential Amplifier based)**:
+   - **Stage 1 (Differential Pair)**: NMOS differential pair with a PMOS current mirror load.
+   - **Stage 2 (Common-Source Gain Stage)**: NMOS driver with a active or resistor load.
+   - For standard PySpice compatibility, we can define an op-amp subcircuit or behavioral macro, or construct the transistors directly. Let's construct a reliable high-gain differential op-amp circuit topology using MOSFETs.
+
+---
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Non-Inverting Schmitt Trigger')
+
+# Define MOSFET models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power Supplies (+5V and -5V dual supply for the op-amp)
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ss', 'Vss', circuit.gnd, -5.0)
+
+# Input Signal Source (Vin = 0V DC operating point)
+circuit.V('in', 'Vin', circuit.gnd, 0.0)
+
+# --- Op-Amp Subcircuit Definition (High-Gain Two-Stage Op-Amp) ---
+# Nodes: Vp (non-inverting), Vn (inverting), Vout_op, Vdd, Vss, gnd
+# Input stage: Differential pair M1, M2 with current source tail and PMOS active load
+# M1 gate = Vn (Vin), M2 gate = Vp (feedback node)
+
+# Tail current source biasing
+circuit.I('tail', 'TailNode', 'Vss', 100@u_A)
+circuit.MOSFET('tail_trans', 'TailNode', 'Vbias_tail', 'Vss', 'Vss', model='nmos_model', w=20e-6, l=1e-6)
+# Simple fixed bias for tail
+circuit.V('bias_tail_src', 'Vbias_tail', 'Vss', 1.2)
+
+# Differential pair
+circuit.MOSFET('1', 'Drain1', 'Vin', 'TailNode', 'TailNode', model='nmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('2', 'Vop_int', 'V_feedback', 'TailNode', 'TailNode', model='nmos_model', w=50e-6, l=1e-6)
+
+# PMOS active load for differential pair
+circuit.MOSFET('3', 'Drain1', 'Drain1', 'Vdd', 'Vdd', model='pmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('4', 'Vop_int', 'Drain1', 'Vdd', 'Vdd', model='pmos_model', w=50e-6, l=1e-6)
+
+# Second stage (Common-source amplifier)
+circuit.MOSFET('5', 'Vout', 'Vop_int', 'Vss', 'Vss', model='nmos_model', w=200e-6, l=1e-6)
+circuit.R('load', 'Vout', 'Vdd', 10@u_kΩ)
+
+
+# --- Schmitt Trigger Feedback Network ---
+# Resistor R1 between Vout and V_feedback (non-inverting input)
+circuit.R('1', 'Vout', 'V_feedback', 10@u_kΩ)
+# Resistor R2 between V_feedback and ground
+circuit.R('2', 'V_feedback', circuit.gnd, 10@u_kΩ)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

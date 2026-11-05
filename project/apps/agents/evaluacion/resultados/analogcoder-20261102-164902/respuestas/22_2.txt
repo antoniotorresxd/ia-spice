@@ -1,0 +1,42 @@
+### Task 1 — Design plan
+
+Use a single-supply, non-inverting Schmitt trigger. The op-amp’s non-inverting input receives **Vin through Rin** and positive feedback from **Vout through Rf**. Its inverting input is held at a 2.5 V reference. The feedback makes the switching threshold depend on the current output state, creating hysteresis.
+
+- **Supply:** Vdd = 5 V; ground = 0 V.
+- **Reference:** Vref = 2.5 V, connected to the op-amp’s inverting input.
+- **Input:** Vin connected to the non-inverting input through **Rin = 100 kΩ**.
+- **Positive feedback:** **Rf = 1 MΩ** from Vout to the non-inverting input.
+- **Op-amp model:** A high-gain voltage-controlled voltage source, with a series output resistance and diode clamps to approximate single-supply output limits.
+- **Output:** The clamped op-amp output is **Vout**.
+
+With the diode clamps, the output swing is approximately −0.7 V to 5.7 V. The corresponding input thresholds are approximately **2.8 V rising** and **2.2 V falling**. The output state at the operating point depends on the applied Vin; the code sets Vin to 3.0 V.
+
+### Task 2 — PySpice code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Non-Inverting Schmitt Trigger')
+
+# Supply and DC input/reference sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ref', 'Vref', circuit.gnd, 2.5)
+circuit.V('in', 'Vin', circuit.gnd, 3.0)
+
+# Non-inverting input summing node:
+# Vin is coupled through Rin and Vout provides positive feedback through Rf.
+circuit.R('in', 'Vin', 'Vp', 100e3)
+circuit.R('fb', 'Vout', 'Vp', 1e6)
+
+# The inverting input is held at the switching reference.
+# High-gain op-amp approximation: V(OA_RAW) = 1000 * (V(Vp) - V(Vref)).
+circuit.VCVS('oa', 'OA_RAW', circuit.gnd, 'Vp', 'Vref', 1000)
+
+# Output resistance and diode clamps model a single-supply op-amp output.
+circuit.R('out', 'OA_RAW', 'Vout', 100e3)
+circuit.model('DCLAMP', 'D', IS=1e-14, N=1)
+circuit.D('low', circuit.gnd, 'Vout', model='DCLAMP')
+circuit.D('high', 'Vout', 'Vdd', model='DCLAMP')
+
+simulator = circuit.simulator()
+```

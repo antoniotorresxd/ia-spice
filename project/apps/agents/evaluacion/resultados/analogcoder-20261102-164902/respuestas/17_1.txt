@@ -1,0 +1,70 @@
+### Task 1 — Design plan
+
+Use a non-inverting op-amp Wien-bridge oscillator. The bridge provides frequency-selective positive feedback; a diode-stabilized negative-feedback network makes the amplifier gain greater than 3 at small amplitudes for startup, then reduces it toward 3 as the oscillation grows.
+
+#### Components and connections
+
+- **Wien bridge**
+  - Connect `C1` in series with `R1` from `Vout` to `WienMid`.
+  - Connect `R2` and `C2` in parallel from `WienMid` to `Vref`.
+  - Use equal values for both resistors and both capacitors: `R1 = R2 = 10 kΩ`, `C1 = C2 = 10 nF`.
+  - `WienMid` connects to the non-inverting input of the op-amp model.
+  - `Vref = 2.5 V` sets the oscillator’s DC operating point. The nominal oscillation frequency is approximately **1.59 kHz**.
+
+- **Amplifier**
+  - Model the op-amp as a high-gain voltage-controlled voltage source with gain `100,000`.
+  - Its non-inverting control node is `WienMid`; its inverting control node is `Nminus`.
+  - Connect the amplifier output through a small series resistance to `Vout`.
+
+- **Gain setting and amplitude stabilization**
+  - Connect `Rg = 10 kΩ` from `Nminus` to `Vref`.
+  - Connect `Rbase = 19.6 kΩ` in series with a branch between `Nminus` and `Nlim`.
+  - That branch contains `Rlim = 10 kΩ` in parallel with two antiparallel diodes.
+  - At low amplitude, the diodes are off and the amplifier gain is approximately 4, supporting startup. At higher amplitude, the diodes bypass part of the feedback resistance and lower the gain toward 3, stabilizing the oscillation.
+
+- **Supply and output clamps**
+  - Set `Vdd` to `5 V`.
+  - Connect clamp diodes from `Vout` to `Vdd` and from ground to `Vout`.
+  - The op-amp is an idealized high-gain model; the clamps provide approximate output-rail limiting.
+
+The circuit has no external signal input. In a transient simulation, practical noise or a small initial disturbance is needed to start oscillation; an idealized circuit at its exact zero-amplitude equilibrium may otherwise remain there.
+
+### Task 2 — PySpice code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Wien Bridge Oscillator')
+
+# Supply and mid-supply reference
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('ref', 'Vref', circuit.gnd, 2.5)
+
+# Diode model used for gain stabilization and output clamping
+circuit.model('limiter_diode', 'D', IS=1e-14, N=1)
+
+# Wien bridge: equal R and C values set the oscillation frequency
+circuit.C('1', 'Vout', 'WienSeries', 10e-9)
+circuit.R('1', 'WienSeries', 'WienMid', 10e3)
+circuit.R('2', 'WienMid', 'Vref', 10e3)
+circuit.C('2', 'WienMid', 'Vref', 10e-9)
+
+# Op-amp model: high-gain VCVS, followed by a small output resistance
+circuit.VCVS('amp', 'AmpOut', circuit.gnd, 'WienMid', 'Nminus', 1e5)
+circuit.R('out', 'AmpOut', 'Vout', 100)
+
+# Inverting-input gain network
+circuit.R('g', 'Nminus', 'Vref', 10e3)
+circuit.R('base', 'Vout', 'Nbase', 19.6e3)
+circuit.R('lim', 'Nbase', 'Nminus', 10e3)
+
+# Antiparallel diodes across Rlim reduce gain at larger amplitudes
+circuit.D('lim1', 'Nbase', 'Nminus', model='limiter_diode')
+circuit.D('lim2', 'Nminus', 'Nbase', model='limiter_diode')
+
+# Approximate output clamps to the supply rails
+circuit.D('clamp_hi', 'Vout', 'Vdd', model='limiter_diode')
+circuit.D('clamp_lo', circuit.gnd, 'Vout', model='limiter_diode')
+
+simulator = circuit.simulator()
+```

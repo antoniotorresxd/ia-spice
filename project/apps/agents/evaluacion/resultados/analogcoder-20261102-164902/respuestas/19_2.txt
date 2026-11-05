@@ -1,0 +1,49 @@
+### Task 1
+
+#### Circuit topology
+
+Use the standard **inverting op-amp differentiator**, biased at mid-supply for a 5 V single-supply circuit.
+
+- **A1**: Idealized op-amp macro-model, represented by a voltage-controlled voltage source with gain \(10^5\).
+  - Non-inverting input connects to **Vref**.
+  - Inverting input connects to **Vminus**.
+  - Output connects to **Vout**.
+- **C1**: Connects **Vin** to **Vminus**. It is the differentiating input element.
+- **Rf**: Connects **Vout** back to **Vminus**, providing negative feedback.
+- **Rref1** and **Rref2**: Equal-value resistors forming a divider from **Vdd** to ground. Their midpoint, **Vref**, is approximately 2.5 V.
+- **Vdd**: 5.0 V supply.
+- **Vin**: DC input source for the operating-point setup. The differentiator’s response to a changing input is described by:
+  \[
+  V_{\text{out}}-V_{\text{ref}}
+  =-R_f C_1\frac{d(V_{\text{in}}-V_{\text{ref}})}{dt}
+  \]
+
+With the values below, \(R_fC_1=1\text{ ms}\). At DC, C1 blocks current and the output settles near Vref.
+
+The op-amp is modeled as an idealized, finite-gain VCVS; this model does not enforce real output-voltage limits or bandwidth. A practical implementation must use an op-amp model suitable for the intended supply and signal range.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+
+circuit = Circuit('Op-Amp Differentiator')
+
+# 5 V supply and DC input for operating-point analysis
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+circuit.V('in', 'Vin', circuit.gnd, 2.5)
+
+# Mid-supply reference: Vref = 2.5 V
+circuit.R('ref1', 'Vdd', 'Vref', 100e3)
+circuit.R('ref2', 'Vref', circuit.gnd, 100e3)
+
+# Differentiating input capacitor and feedback resistor
+circuit.C('1', 'Vin', 'Vminus', 10e-9)
+circuit.R('f', 'Vout', 'Vminus', 100e3)
+
+# Idealized op-amp macro-model:
+# Vout = 1e5 * (Vref - Vminus)
+circuit.VCVS('A1', 'Vout', circuit.gnd, 'Vref', 'Vminus', 1e5)
+
+simulator = circuit.simulator()
+```

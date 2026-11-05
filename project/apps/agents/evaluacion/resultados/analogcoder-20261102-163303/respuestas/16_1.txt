@@ -1,0 +1,80 @@
+### Task 1
+
+#### Components Needed
+- **NMOS Transistors**: M1 (used as the common-source amplifier stage)
+- **PMOS Transistors**: M2 (used as a current-source load for the amplifier)
+- **Resistors**: R1, R2, R3 (part of the feedback phase-shift network), R_bias (biasing resistor)
+- **Capacitors**: C1, C2, C3 (part of the feedback phase-shift network)
+- **Power Supply**: Vdd for DC supply (5.0 V)
+- **Input Signal Source**: Vbias for biasing the gates
+- **Output Node**: Vout (taken from the drain of M1 / output of the oscillator)
+
+#### Amplifier Stage (Common-Source with Active Load)
+1. **Transistor Setup**:
+   - **M1** (NMOS) as the main amplifying transistor.
+   - Gate of **M1** is connected to the biasing node and the feedback network.
+   - Source of **M1** connected to the ground.
+   - Drain of **M1** connected to the drain of **M2** and forms the output node **Vout**.
+
+2. **Current Source Load (M2)**:
+   - **M2** (PMOS) configured as an active current source.
+   - Source of **M2** connected to **Vdd**, and its gate is connected to **Vbias**.
+   - Drain of **M2** connected to the drain of **M1** (**Vout**).
+
+#### RC Phase-Shift Feedback Network
+1. **Feedback Loop**:
+   - The output **Vout** is fed back to the input of the amplifier through a three-stage RC ladder network providing a 180-degree phase shift at the oscillation frequency.
+   - **C1** is connected between **Vout** and node **N1**.
+   - **R1** is connected between node **N1** and the gate of **M1**.
+   - **C2** is connected between node **N1** and ground. (Alternatively, structured as series capacitors and parallel resistors; here we use the standard ladder: C1 from Vout to N1, R1 in series; C2 from N1 to ground, R2 in series; C3 from N2 to ground, etc. Let's use a standard 3-stage CR-RC or RC-RC ladder).
+   - Let's define the ladder precisely:
+     - **C1** between **Vout** and **N1**.
+     - **R1** between **N1** and the gate of **M1**.
+     - **C2** between gate of **M1** and ground (forming part of the phase shift).
+     - To ensure proper DC isolation and phase shift, a classic RC phase-shift network uses three identical RC sections:
+       - Section 1: **R_fb1** from **Vout** to **N1**, **C_fb1** from **N1** to ground.
+       - Section 2: **R_fb2** from **N1** to **N2**, **C_fb2** from **N2** to ground.
+       - Section 3: **R_fb3** from **N2** to gate of **M1**, **C_fb3** from gate of **M1** to ground.
+       - A biasing resistor **R_gate** connects the gate of **M1** to a DC bias voltage source.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('RC Phase-Shift Oscillator')
+
+# Define the MOSFET models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power Supplies for DC operating point
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V power supply
+circuit.V('bias', 'Vbias', circuit.gnd, 4.0) # 4V bias for PMOS current source
+circuit.V('gate_bias', 'Vgbias', circuit.gnd, 1.0) # 1V bias for NMOS gate
+
+# Amplifier Stage: Common-Source with Active Load
+# parameters: name, drain, gate, source, bulk, model, w, l
+circuit.MOSFET('1', 'Vout', 'GateNode', circuit.gnd, circuit.gnd, model='nmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('2', 'Vout', 'Vbias', 'Vdd', 'Vdd', model='pmos_model', w=100e-6, l=1e-6)
+
+# Biasing resistor to set DC operating point at the gate of M1
+circuit.R('bias', 'GateNode', 'Vgbias', 100@u_kΩ)
+
+# RC Phase-Shift Feedback Network (3 stages)
+# Stage 1
+circuit.R('fb1', 'Vout', 'N1', 10@u_kΩ)
+circuit.C('fb1', 'N1', circuit.gnd, 10@u_nF)
+
+# Stage 2
+circuit.R('fb2', 'N1', 'N2', 10@u_kΩ)
+circuit.C('fb2', 'N2', circuit.gnd, 10@u_nF)
+
+# Stage 3
+circuit.R('fb3', 'N2', 'GateNode', 10@u_kΩ)
+circuit.C('fb3', 'GateNode', circuit.gnd, 10@u_nF)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

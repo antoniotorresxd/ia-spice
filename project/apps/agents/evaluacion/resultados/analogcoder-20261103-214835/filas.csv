@@ -1,0 +1,50 @@
+condicion,tarea,tipo,corrida,escalon,paso,segundos,detalle
+Sistema + google/gemini-3.5-flash-lite,16,Oscillator,1,no_ejecuta,False,17.7,"ct/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 827, in _make_ffi_library
+    backendlib = _load_backend_lib(backend, libname, flags)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 822, in _load_backend_lib
+    raise OSError(msg)
+OSError: cannot load library 'libngspice.so': libngspice.so: cannot open shared object file: No such file or directory.  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libngspice.so'
+"
+Sistema + google/gemini-3.5-flash-lite,17,Oscillator,1,no_ejecuta,False,14.4,"ct/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 827, in _make_ffi_library
+    backendlib = _load_backend_lib(backend, libname, flags)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 822, in _load_backend_lib
+    raise OSError(msg)
+OSError: cannot load library 'libngspice.so': libngspice.so: cannot open shared object file: No such file or directory.  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libngspice.so'
+"
+Sistema + google/gemini-3.5-flash-lite,18,Integrator,1,no_ejecuta,False,7.1,"ct/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 827, in _make_ffi_library
+    backendlib = _load_backend_lib(backend, libname, flags)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 822, in _load_backend_lib
+    raise OSError(msg)
+OSError: cannot load library 'libngspice.so': libngspice.so: cannot open shared object file: No such file or directory.  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libngspice.so'
+"
+Sistema + google/gemini-3.5-flash-lite,19,Differentiator,1,no_ejecuta,False,5.2,"ct/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 827, in _make_ffi_library
+    backendlib = _load_backend_lib(backend, libname, flags)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 822, in _load_backend_lib
+    raise OSError(msg)
+OSError: cannot load library 'libngspice.so': libngspice.so: cannot open shared object file: No such file or directory.  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libngspice.so'
+"
+Sistema + google/gemini-3.5-flash-lite,20,Adder,1,no_ejecuta,False,4.9,"ct/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 827, in _make_ffi_library
+    backendlib = _load_backend_lib(backend, libname, flags)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 822, in _load_backend_lib
+    raise OSError(msg)
+OSError: cannot load library 'libngspice.so': libngspice.so: cannot open shared object file: No such file or directory.  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libngspice.so'
+"
+Sistema + google/gemini-3.5-flash-lite,21,Subtractor,1,no_ejecuta,False,5.2,"ct/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 827, in _make_ffi_library
+    backendlib = _load_backend_lib(backend, libname, flags)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 822, in _load_backend_lib
+    raise OSError(msg)
+OSError: cannot load library 'libngspice.so': libngspice.so: cannot open shared object file: No such file or directory.  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libngspice.so'
+"
+Sistema + google/gemini-3.5-flash-lite,22,Schmitt,1,no_ejecuta,False,48.5,"ct/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 827, in _make_ffi_library
+    backendlib = _load_backend_lib(backend, libname, flags)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/cffi/api.py"", line 822, in _load_backend_lib
+    raise OSError(msg)
+OSError: cannot load library 'libngspice.so': libngspice.so: cannot open shared object file: No such file or directory.  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libngspice.so'
+"

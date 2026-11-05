@@ -1,0 +1,67 @@
+### Task 1
+
+#### Components Needed
+- **NMOS Transistors**: M1 (used as the active amplifying device)
+- **Resistors**: R1 (drain load resistor), plus a 3-stage RC feedback network consisting of resistors R_fb1, R_fb2, R_fb3 and capacitors C1, C2, C3.
+- **Capacitors**: C1, C2, C3 (phase-shift capacitors)
+- **Power Supply**: Vdd for DC supply
+- **Input Signal Source**: Vbias for biasing the gate of M1
+- **Output Node**: Vout (taken at the drain of M1)
+
+#### Stage 1: Common-Source Amplifier with Resistor Load
+1. **Transistor Setup**:
+   - **M1** (NMOS) as the main amplifying transistor.
+   - Gate of **M1** is connected to the bias node **Vbias**.
+   - Source of **M1** connected to the ground.
+   - Drain of **M1** connected to **Vout** and the drain load resistor **R1**.
+
+2. **Biasing**:
+   - **Vbias** provides the appropriate DC gate voltage to ensure M1 operates in the saturation region ($V_{bias} = V_{th} + 0.5 = 1.0\text{ V}$).
+
+3. **Resistor Load (R1)**:
+   - **R1** connects the drain of **M1** to **Vdd** to convert the drain current variations into voltage variations.
+
+#### RC Phase-Shift Network
+1. **Feedback Loop**:
+   - The output voltage **Vout** is fed back to the gate of M1 through a 3-stage RC ladder network providing the necessary $180^\circ$ phase shift at the oscillation frequency.
+   - Stage 1: Resistor **R_fb1** between **Vout** and node **N1**, Capacitor **C1** between node **N1** and ground.
+   - Stage 2: Resistor **R_fb2** between node **N1** and node **N2**, Capacitor **C2** between node **N2** and ground.
+   - Stage 3: Resistor **R_fb3** between node **N2** and the gate of **M1**, Capacitor **C3** between the gate of **M1** and ground.
+   - A DC blocking capacitor **C_block** connects the gate of M1 to the output of the RC network, while **Vbias** sets the DC operating point at the gate.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('RC Phase-Shift Oscillator')
+
+# Define the MOSFET model
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+
+# Power Supplies and Bias
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0) # 5V power supply
+circuit.V('bias', 'Vbias', circuit.gnd, 1.0) # 1V bias voltage for M1 gate (= V_th + 0.5 = 0.5 + 0.5)
+
+# Common-Source Amplifier Stage
+# parameters: name, drain, gate, source, bulk, model, w, l
+circuit.MOSFET('1', 'Vout', 'Gate_Node', circuit.gnd, circuit.gnd, model='nmos_model', w=100e-6, l=1e-6)
+circuit.R('1', 'Vout', 'Vdd', 5.0@u_kΩ)
+
+# Biasing Resistor for Gate
+circuit.R('bias_res', 'Gate_Node', 'Vbias', 100.0@u_kΩ)
+
+# 3-Stage RC Phase-Shift Network (Feedback Loop from Vout to Gate_Node)
+circuit.R('fb1', 'Vout', 'N1', 1.0@u_kΩ)
+circuit.C('1', 'N1', circuit.gnd, 100.0@u_nF)
+
+circuit.R('fb2', 'N1', 'N2', 1.0@u_kΩ)
+circuit.C('2', 'N2', circuit.gnd, 100.0@u_nF)
+
+circuit.R('fb3', 'N2', 'Gate_Node', 1.0@u_kΩ)
+circuit.C('3', 'Gate_Node', circuit.gnd, 100.0@u_nF)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

@@ -1,0 +1,78 @@
+## Task 1: Design Plan
+
+The subtractor is a difference amplifier built around a CMOS two-input op-amp (a 5-transistor OTA). The op-amp is used in a closed-loop configuration with four equal 10 kΩ resistors, which gives Vout = Vin2 − Vin1.
+
+### Op-amp (5-transistor OTA, NMOS differential pair with PMOS current-mirror load)
+
+| Device | Type | Function | Drain | Gate | Source | Bulk | W / L |
+|---|---|---|---|---|---|---|---|
+| M1 | NMOS | Inverting input device | D1 | Vn (inverting node) | Tail | GND | 10 µm / 1 µm |
+| M2 | NMOS | Non-inverting input device | Vout | Vp (non-inverting node) | Tail | GND | 10 µm / 1 µm |
+| M3 | PMOS | Diode-connected mirror load | D1 | D1 | Vdd | Vdd | 10 µm / 1 µm |
+| M4 | PMOS | Mirror output load | Vout | D1 | Vdd | Vdd | 10 µm / 1 µm |
+| M5 | NMOS | Tail current source | Tail | Vbias | GND | GND | 10 µm / 1 µm |
+
+- **Tail current:** about 80 µA (40 µA per branch), set by Vbias = 0.9 V. This gives Vov ≈ 0.4 V.
+- **Output:** taken from the M2/M4 drain node (Vout). The op-amp is non-inverting with respect to Vp and inverting with respect to Vn.
+- **Models:** NMOS kp = 100 µA/V², Vth = 0.5 V, λ = 0.02 V⁻¹. PMOS kp = 50 µA/V², Vth = −0.5 V, λ = 0.02 V⁻¹.
+
+### Resistor network (subtractor)
+
+| Resistor | Connection | Value |
+|---|---|---|
+| R1 | Vin2 → Vp | 10 kΩ |
+| R2 | Vp → GND | 10 kΩ |
+| R3 | Vin1 → Vn | 10 kΩ |
+| R4 | Vn → Vout (feedback) | 10 kΩ |
+
+Vp = Vin2·R2/(R1+R2) = Vin2/2. With negative feedback, Vn = Vp. Solving the inverting node gives Vout = Vin2 − Vin1 because (R4/R3) = (R2/R1) = 1.
+
+### Operating-point check
+
+- Vdd = 5 V, Vbias = 0.9 V.
+- Input DC levels: Vin1 = 1.0 V, Vin2 = 4.0 V.
+- Expected: Vp = Vn = 2.0 V, Vout = 3.0 V.
+- Tail node ≈ 1.2 V, so M5 is saturated (Vds > Vov).
+- The M2 drain (Vout = 3.0 V) is well above its overdrive, so M2 stays saturated.
+- The input common-mode level (2.0 V) keeps M1 and M2 in saturation.
+
+### Node summary
+- **Inputs:** Vin1, Vin2
+- **Output:** Vout
+- **Internal nodes:** Vp, Vn, D1, Tail, Vbias, Vdd
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Subtractor')
+
+# Device models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5, **{'lambda': 0.02})
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5, **{'lambda': 0.02})
+
+# Power supply and DC input sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)      # 5 V supply
+circuit.V('bias', 'Vbias', circuit.gnd, 0.9)  # tail current bias (Vov ~ 0.4 V)
+circuit.V('in1', 'Vin1', circuit.gnd, 1.0)    # subtrahend
+circuit.V('in2', 'Vin2', circuit.gnd, 4.0)    # minuend (expected Vout = 3.0 V)
+
+# Two-stage-free 5T OTA (op-amp core)
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+circuit.MOSFET('1', 'D1', 'Vn', 'Tail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)   # M1 inverting input
+circuit.MOSFET('2', 'Vout', 'Vp', 'Tail', circuit.gnd, model='nmos_model', w=10e-6, l=1e-6) # M2 non-inverting input
+circuit.MOSFET('3', 'D1', 'D1', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)          # M3 diode-connected load
+circuit.MOSFET('4', 'Vout', 'D1', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)        # M4 mirror output load
+circuit.MOSFET('5', 'Tail', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)  # M5 tail source
+
+# Subtractor resistor network (all 10 kOhm)
+circuit.R('1', 'Vin2', 'Vp', 10@u_kΩ)        # R1
+circuit.R('2', 'Vp', circuit.gnd, 10@u_kΩ)   # R2
+circuit.R('3', 'Vin1', 'Vn', 10@u_kΩ)        # R3
+circuit.R('4', 'Vn', 'Vout', 10@u_kΩ)        # R4 feedback
+
+# Analysis Part
+simulator = circuit.simulator()
+```

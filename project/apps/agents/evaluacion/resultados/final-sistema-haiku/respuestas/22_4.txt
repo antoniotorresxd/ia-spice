@@ -1,0 +1,8 @@
+Vdd vdd 0 5
+VEE vee 0 0
+Vin Vin 0 0
+R1 Vin vp 10k
+R2 vp Vout 10k
+Rf Vout vp 10k
+X1 vp vn Vout OPAMP
+Rn vn 0 10k

@@ -1,0 +1,30 @@
+* Wien Bridge Oscillator
+* Valores comerciales (circuito): ideal -> comercial
+*   Rf: 20kohm -> 20kohm [E24, +0.00%]
+*   Rg: 10kohm -> 10kohm [E24, +0.00%]
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 15.9nF -> 12nF || 3.9nF = 15.9nF [E12, +0.00%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   C2: 15.9nF -> 12nF || 3.9nF = 15.9nF [E12, +0.00%]
+VCC vcc 0 DC 5.0
+VEE 0 vee DC 5.0
+Rf vout vminus 20k
+Rg vminus 0 10k
+R1 vplus vx 10k
+C1 vx 0 15.9n
+R2 vout vx 10k
+C2 vout vx 15.9n
+X1 vplus vminus vout vcc vee opamp_model
+.subckt opamp_model inp inn out vcc vee
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 159n
+Eout out 0 n2 0 1
+.ends
+.control
+tran 10u 40m 0
+meas tran vpp PP v(vout) from=20m to=40m
+echo $&vpp > output.txt
+.endc
+.end

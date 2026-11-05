@@ -1,0 +1,8 @@
+Design An Opamp differentiator with resistor Rf and capacitor C1.
+
+Input node name: Vin.
+
+Output node name: Vout.
+
+Make sure the input and output node names appear in the circuit.
+Assume the Vdd = 5.0 V.

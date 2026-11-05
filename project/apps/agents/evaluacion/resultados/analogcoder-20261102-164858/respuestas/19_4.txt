@@ -1,0 +1,75 @@
+## Task 1: Design Plan
+
+The differentiator is built from a two-stage CMOS op-amp with the classic RC feedback network. The op-amp's inverting input is the summing node, C1 couples the input signal into that node, and Rf provides the feedback from Vout. The output is Vout = -Rf·C1·dVin/dt.
+
+### Op-amp (two-stage Miller-compensated)
+
+**Stage 1: NMOS differential pair with PMOS current-mirror load**
+- **M1** (NMOS, W = 20 µm, L = 1 µm): gate = **Vinn** (inverting input), drain = **n1**, source = **tail**, bulk = ground.
+- **M2** (NMOS, W = 20 µm, L = 1 µm): gate = **Vinp** (non-inverting input, held at 2.5 V), drain = **n2** (first-stage output), source = **tail**, bulk = ground.
+- **M3** (PMOS, W = 10 µm, L = 1 µm): diode-connected, source = Vdd, gate = drain = **n1**.
+- **M4** (PMOS, W = 10 µm, L = 1 µm): source = Vdd, gate = **n1**, drain = **n2**.
+- **M5** (NMOS, W = 10 µm, L = 1 µm): tail current source, drain = **tail**, gate = **Vbias** (1.0 V), source and bulk = ground. Tail current is about 125 µA.
+
+**Stage 2: PMOS common-source with NMOS current-source load**
+- **M6** (PMOS, W = 50 µm, L = 1 µm): gate = **n2**, source = Vdd, drain = **Vout**, bulk = Vdd.
+- **M7** (NMOS, W = 20 µm, L = 1 µm): drain = **Vout**, gate = **Vbias**, source and bulk = ground. Sink current is about 250 µA.
+- **Cc** (1 pF): Miller compensation between **n2** and **Vout** for stability.
+
+Polarity check: a rise on Vinn raises n1, which raises the mirror output at n2, which pulls M6's gate up and drives Vout down. So Vinn is the inverting input, and feedback from Vout to Vinn is negative.
+
+### Differentiator network
+- **C1** (1 nF): between **Vin** and **Vinn**.
+- **Rf** (10 kΩ): between **Vinn** and **Vout**.
+- **Vinp** is held at 2.5 V (common-mode reference) by a DC source.
+
+### Supplies and bias
+- **Vdd** = 5.0 V.
+- **Vbias** = 1.0 V (NMOS bias gate voltage, giving V_ov = 0.5 V in M5 and M7).
+- **Vin** = 2.5 V DC for the operating point. No AC source is used.
+
+### Expected operating point
+- Vinn ≈ Vinp ≈ 2.5 V (virtual short through negative feedback).
+- Vout ≈ 2.5 V (no DC current through Rf).
+- Vn1 ≈ 4.0 V, Vn2 ≈ 4.0 V.
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Opamp Differentiator')
+
+# Device models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power supply and bias sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0@u_V)       # 5 V supply
+circuit.V('bias', 'Vbias', circuit.gnd, 1.0@u_V)   # NMOS bias voltage
+circuit.V('cm', 'Vinp', circuit.gnd, 2.5@u_V)      # Non-inverting input reference (mid-supply)
+circuit.V('in', 'Vin', circuit.gnd, 2.5@u_V)       # Differentiator input (DC operating point)
+
+# ---------------- Op-amp: Stage 1 (differential pair + mirror load) ----------------
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+circuit.MOSFET('1', 'n1', 'Vinn', 'tail', circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('2', 'n2', 'Vinp', 'tail', circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+circuit.MOSFET('3', 'n1', 'n1', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)
+circuit.MOSFET('4', 'n2', 'n1', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)
+circuit.MOSFET('5', 'tail', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=10e-6, l=1e-6)
+
+# ---------------- Op-amp: Stage 2 (common-source + current-source load) ----------------
+circuit.MOSFET('6', 'Vout', 'n2', 'Vdd', 'Vdd', model='pmos_model', w=50e-6, l=1e-6)
+circuit.MOSFET('7', 'Vout', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)
+
+# Miller compensation capacitor
+circuit.C('c', 'n2', 'Vout', 1@u_pF)
+
+# ---------------- Differentiator network ----------------
+circuit.C('1', 'Vin', 'Vinn', 1@u_nF)    # C1: input capacitor
+circuit.R('f', 'Vinn', 'Vout', 10@u_kΩ)  # Rf: feedback resistor
+
+# Analysis Part
+simulator = circuit.simulator()
+```

@@ -1,0 +1,84 @@
+## Task 1: Design Plan
+
+The integrator is built from a 5-transistor OTA used as the op-amp, with an input resistor R1 and feedback capacitor Cf. Because Cf is open at DC, a large resistor Rf is placed in parallel with it to set a well-defined DC operating point. Rf does not change the integration behavior above roughly 1 kHz.
+
+### Op-amp (5T OTA)
+
+**Differential pair (NMOS)**
+- **M1**: gate = inverting input node **Vn**, drain = **Vx** (diode side of the mirror), source = **Vt** (tail node), bulk = Vt. W = 10 µm, L = 1 µm.
+- **M2**: gate = non-inverting input node **Vcm** (2.5 V reference), drain = **Vout** (single-ended output), source = **Vt**, bulk = Vt. W = 10 µm, L = 1 µm.
+
+**Active load (PMOS current mirror)**
+- **M3**: diode-connected PMOS. Drain and gate = **Vx**, source and bulk = **Vdd**. W = 10 µm, L = 1 µm.
+- **M4**: PMOS mirror. Gate = **Vx**, source and bulk = **Vdd**, drain = **Vout**. W = 10 µm, L = 1 µm.
+
+**Tail current source**
+- **M5**: NMOS. Gate = **Vbias** (1.0 V), drain = **Vt**, source and bulk = ground. W = 20 µm, L = 1 µm.
+- Sizing check: I_tail ≈ ½·100 µA/V²·20·(1.0 − 0.5)² ≈ 250 µA, so each diff-pair branch carries about 125 µA. The PMOS mirror at W/L = 10 also carries about 125 µA, which requires |Vov| ≈ 0.7 V. The output DC level sits near 2.5 V, so M2 and M4 stay in saturation.
+
+### Integrator network
+- **R1** (10 kΩ): between **Vin** and the inverting input **Vn**.
+- **Cf** (10 pF): between **Vn** and **Vout**. This is the integrating element.
+- **Rf** (10 MΩ): between **Vn** and **Vout**. It provides DC feedback so the output does not drift to a rail.
+
+Ideal transfer function: Vout/Vin = −1/(s·R1·Cf). With R1 = 10 kΩ and Cf = 10 pF, the unity-gain frequency is about 1.6 MHz.
+
+### Supplies and sources
+- **Vdd** = 5.0 V.
+- **Vcm** = 2.5 V, the non-inverting input reference.
+- **Vbias** = 1.0 V (V_th + 0.5 V), the tail bias.
+- **Vin** = 2.5 V DC for the operating point. No AC sources are used.
+
+### Node summary
+| Node | Connections |
+|---|---|
+| Vdd | M3/M4 sources and bulks, Vdd source |
+| Vin | R1 input, Vin source |
+| Vn | M1 gate, R1, Cf, Rf |
+| Vcm | M2 gate, reference source |
+| Vbias | M5 gate, bias source |
+| Vx | M1 drain, M3 drain/gate, M4 gate |
+| Vt | M1/M2 sources, M5 drain |
+| Vout | M2 drain, M4 drain, Cf, Rf |
+
+---
+
+## Task 2: PySpice Code
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Integrator')
+
+# Device models
+circuit.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
+circuit.model('pmos_model', 'pmos', level=1, kp=50e-6, vto=-0.5)
+
+# Power supply and sources
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)      # 5 V supply
+circuit.V('cm', 'Vcm', circuit.gnd, 2.5)      # Non-inverting input reference (mid-supply)
+circuit.V('bias', 'Vbias', circuit.gnd, 1.0)  # Tail bias = V_th + 0.5 V
+circuit.V('in', 'Vin', circuit.gnd, 2.5)      # Input DC operating point
+
+# Op-amp: 5-transistor OTA
+# MOSFET(name, drain, gate, source, bulk, model, w, l)
+# Differential pair
+circuit.MOSFET('1', 'Vx', 'Vn', 'Vt', 'Vt', model='nmos_model', w=10e-6, l=1e-6)    # M1 (inverting)
+circuit.MOSFET('2', 'Vout', 'Vcm', 'Vt', 'Vt', model='nmos_model', w=10e-6, l=1e-6) # M2 (non-inverting)
+
+# PMOS current mirror load
+circuit.MOSFET('3', 'Vx', 'Vx', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6)   # M3 (diode-connected)
+circuit.MOSFET('4', 'Vout', 'Vx', 'Vdd', 'Vdd', model='pmos_model', w=10e-6, l=1e-6) # M4 (mirror)
+
+# NMOS tail current source
+circuit.MOSFET('5', 'Vt', 'Vbias', circuit.gnd, circuit.gnd, model='nmos_model', w=20e-6, l=1e-6)  # M5
+
+# Integrator network
+circuit.R('1', 'Vin', 'Vn', 10e3)      # R1 = 10 kOhm input resistor
+circuit.C('f', 'Vout', 'Vn', 10e-12)   # Cf = 10 pF feedback capacitor
+circuit.R('f', 'Vout', 'Vn', 10e6)     # Rf = 10 MOhm DC feedback (sets DC operating point)
+
+# Analysis Part
+simulator = circuit.simulator()
+```

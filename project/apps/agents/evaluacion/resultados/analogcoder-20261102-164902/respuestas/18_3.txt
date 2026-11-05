@@ -1,0 +1,45 @@
+### Task 1
+
+#### Components and connections
+
+- **Op-amp A1**: Modeled as a finite-gain voltage-controlled voltage source with open-loop gain \(10^6\). Its non-inverting input is connected to **Vref**, its inverting input to **Vminus**, and its output is **Vout**.
+- **R1 = 10 kΩ**: Connects **Vin** to the inverting summing node **Vminus**.
+- **Cf = 100 nF**: Connects **Vout** back to **Vminus**, providing the integrator’s feedback.
+- **Rref1 and Rref2 = 100 kΩ**: Form a divider from **Vdd** to ground, generating **Vref = 2.5 V** for single-supply operation. The op-amp’s output is modeled relative to this reference.
+- **Supply**: **Vdd = 5.0 V**.
+- **Input source**: Set **Vin = 2.5 V** for the operating-point setup. This biases the integrator at its reference level; no AC or transient signal is applied.
+
+The inverting node is held near **Vref** by the op-amp. For input changes around Vref, the idealized integrator relationship is approximately
+\[
+V_{out}(t)-V_{ref}=-\frac{1}{R_1C_f}\int\bigl(V_{in}(t)-V_{ref}\bigr)\,dt.
+\]
+The op-amp model is an idealized behavioral model: it does not enforce output rail limits.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Op-Amp Integrator')
+
+# Single-supply rail
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0 @ u_V)
+
+# Mid-supply reference: Vref = 2.5 V
+circuit.R('ref1', 'Vdd', 'Vref', 100 @ u_kΩ)
+circuit.R('ref2', 'Vref', circuit.gnd, 100 @ u_kΩ)
+
+# DC input bias for operating-point analysis
+circuit.V('in', 'Vin', circuit.gnd, 2.5 @ u_V)
+
+# Integrator input resistor and feedback capacitor
+circuit.R('1', 'Vin', 'Vminus', 10 @ u_kΩ)
+circuit.C('f', 'Vout', 'Vminus', 100 @ u_nF)
+
+# Finite-gain op-amp model.
+# Its output is referenced to Vref; the control voltage is Vref - Vminus.
+circuit.VCVS('A1', 'Vout', 'Vref', 'Vref', 'Vminus', 1e6)
+
+simulator = circuit.simulator()
+```

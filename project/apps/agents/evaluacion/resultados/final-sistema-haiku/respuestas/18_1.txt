@@ -1,0 +1,15 @@
+* Integrador inversor con op-amp (ideal, VCVS)
+* Valores comerciales (circuito): ideal -> comercial
+*   R1: 1.6kohm -> 1.6kohm [E24, +0.00%]
+*   Cf: 10nF -> 10nF [E12, +0.00%]
+*   Rf: 1Mohm -> 1Mohm [E24, +0.00%]
+Vin Vin 0 DC 0 AC 1 SIN(0 0.1 1k)
+R1 Vin vminus 1.6k
+Cf vminus Vout 10n
+Rf vminus Vout 1meg
+EOP Vout 0 0 vminus 1e5
+.control
+tran 10u 20m
+wrdata output.txt v(Vout)
+.endc
+.end

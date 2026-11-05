@@ -1,0 +1,36 @@
+* Oscilador RC de desfase autónomo con una etapa BJT en emisor común y tres secciones RC. Alimentación Vdd=5 V. Se eligieron valores típicos R=10 kΩ, C=100 nF y resistencias de polarización para una oscilación nominal del orden de decenas de Hz; la frecuencia real depende de la carga de la red RC y del transistor. El nodo «-» es la entrada de realimentación del amplificador, no una entrada de señal externa; Vout es la salida.
+* Valores comerciales (circuito): ideal -> comercial
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 100nF -> 100nF [E12, +0.00%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   C2: 100nF -> 100nF [E12, +0.00%]
+*   R3: 10kohm -> 10kohm [E24, +0.00%]
+*   C3: 100nF -> 100nF [E12, +0.00%]
+*   RB1: 470kohm -> 470kohm [E24, +0.00%]
+*   RB2: 180kohm -> 180kohm [E24, +0.00%]
+*   RC: 6.8kohm -> 6.8kohm [E24, +0.00%]
+*   RE: 2.2kohm -> 2.2kohm [E24, +0.00%]
+*   CE: 470uF -> 470uF [E12, +0.00%]
+* Semiconductores:
+*   Q1: 1 x 2N3904 (BJT NPN de propósito general; modelo genérico)
+VDD Vdd 0 DC 5
+R1 Vout n1 10k
+C1 n1 0 100n
+R2 n1 n2 10k
+C2 n2 0 100n
+R3 n2 - 10k
+C3 - 0 100n
+RB1 Vdd - 470k
+RB2 - 0 180k
+RC Vdd Vout 6.8k
+RE emitter 0 2.2k
+CE emitter 0 470u
+Q1 Vout - emitter QNPN
+.model QNPN NPN(BF=300 VAF=100 IS=1e-14)
+.ic V(Vout)=2.5
+.control
+set filetype=ascii
+tran 100u 1 0 uic
+wrdata output.txt v(Vout)
+.endc
+.end

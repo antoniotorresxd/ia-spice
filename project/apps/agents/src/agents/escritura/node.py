@@ -24,6 +24,7 @@ from agents.comerciales.piezas import (
 from agents.config import get_config
 from agents.escritura.composition import assemble_composed_netlist
 from agents.escritura.netlist import NETLIST_BUILDERS
+from agents.escritura.nombres import renombrar_componentes
 from agents.knowledge.circuit_client import fetch_circuit_detail
 from agents.llm.factory import build_chat_model
 from agents.llm.settings_client import LlmSettingsError, fetch_agent_llm
@@ -114,6 +115,8 @@ def _armar_bloque(
     netlist_text = insertar_comentarios(
         netlist_text, comentarios_materiales(materiales) + comentarios_piezas(piezas)
     )
+    if block["type"] == "catalog":
+        netlist_text = renombrar_componentes(netlist_text, block["params"].get("nombres"))
     return netlist_text, values, materiales
 
 

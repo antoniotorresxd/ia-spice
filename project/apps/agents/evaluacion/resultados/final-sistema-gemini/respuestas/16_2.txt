@@ -1,0 +1,34 @@
+* RC Phase-Shift Oscillator
+* Valores comerciales (circuito): ideal -> comercial
+*   Rf: 470kohm -> 470kohm [E24, +0.00%]
+*   Rin: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 10nF -> 10nF [E12, +0.00%]
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   C2: 10nF -> 10nF [E12, +0.00%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   C3: 10nF -> 10nF [E12, +0.00%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+VCC vdd 0 DC 5.0
+VEE 0 vee DC 5.0
+X1 0 vminus vout OPAMP
+Rf vout vminus 470k
+Rin vminus v1 10k
+C1 v1 v2 10n
+R1 v2 0 10k
+C2 v2 v3 10n
+R2 v3 0 10k
+C3 v3 vout 10n
+.subckt OPAMP inp inn out
+Rin_op inp inn 1meg
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 159n
+Eout out 0 n2 0 1
+.ends
+.control
+tran 1u 50m 0
+meas tran vpp PP v(vout)
+echo $&vpp > output.txt
+.endc
+.end

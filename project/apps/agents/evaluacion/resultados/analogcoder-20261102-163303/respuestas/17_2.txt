@@ -1,0 +1,53 @@
+### Task 1
+
+#### Components Needed
+- **Operational Amplifier (Op-Amp)**: To provide the necessary gain (using an ideal voltage-controlled voltage source or behavioral model, or subcircuit, configured here with a high-gain controlled source or standard subcircuit representation). For simplicity and standard PySpice compatibility, we will use a controlled voltage source or ideal op-amp representation, or a transistor-based differential pair amplifier acting as the gain stage. Let's design a discrete transistor-based or behavioral operational amplifier, or use a standard voltage-controlled voltage source (E-source) to implement the gain stage ($A_v \ge 3$) required for the Wien Bridge oscillator.
+- **Resistors**: $R_1$, $R_2$, $R_3$, $R_4$ for the Wien bridge feedback network and gain setting.
+- **Capacitors**: $C_1$, $C_2$ for the frequency-determining selective RC network.
+- **Power Supply**: $V_{dd}$ (5.0V) and $V_{ss}$ (Ground).
+
+#### Stage 1: Wien Bridge Feedback Network and Gain Amplifier
+1. **Frequency-Determining Network (Wien Network)**:
+   - A parallel RC network ($R_1$, $C_1$) connected between the output node **Vout** and the non-inverting input node **V_plus**.
+   - A series RC network ($R_2$, $C_2$) connected between the non-inverting input node **V_plus** and ground.
+   - At the oscillation frequency, the phase shift is zero and the attenuation is $1/3$.
+
+2. **Gain and Feedback Network**:
+   - The inverting input node **V_minus** is connected to a resistive divider ($R_3$ and $R_4$) between **Vout** and ground to set the closed-loop gain to a value slightly greater than 3 (e.g., $1 + R_4/R_3 \ge 3$).
+   - An active amplifier stage ensures the loop gain condition (Barkhausen criterion) is met.
+
+### Task 2
+
+```python
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Wien Bridge Oscillator')
+
+# Power Supplies
+circuit.V('dd', 'Vdd', circuit.gnd, 5.0)
+
+# Wien Bridge RC Network
+# Parallel RC: R1, C1 between Vout and Vplus
+circuit.R('1', 'Vout', 'Vplus', 10@u_kΩ)
+circuit.C('1', 'Vout', 'Vplus', 10@u_nF)
+
+# Series RC: R2, C2 between Vplus and ground
+circuit.R('2', 'Vplus', circuit.gnd, 10@u_kΩ)
+circuit.C('2', 'Vplus', circuit.gnd, 10@u_nF)
+
+# Amplifier Gain Stage using a Voltage-Controlled Voltage Source (E-element)
+# To achieve oscillation, gain Av >= 3 (we set Av = 3.1)
+# Vout = Av * (Vplus - Vminus)
+# We use a resistive divider for the negative feedback: R3 (Vminus to gnd), R4 (Vout to Vminus)
+circuit.R('3', 'Vminus', circuit.gnd, 10@u_kΩ)
+circuit.R('4', 'Vout', 'Vminus', 21@u_kΩ)
+
+# Op-amp modeling using behavioral voltage source with high gain
+# E_amp output between Vout and gnd, controlled by Vplus and Vminus
+circuit.V('dummy', 'Vctrl', circuit.gnd, 0@u_V) # Dummy source for reference if needed, or use E element directly
+circuit.element_table['E1'] = 'E_amp Vout 0 Vplus Vminus 100000.0'
+
+# Analysis Part
+simulator = circuit.simulator()
+```

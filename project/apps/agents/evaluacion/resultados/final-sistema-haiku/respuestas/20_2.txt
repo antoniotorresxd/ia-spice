@@ -1,0 +1,8 @@
+VIN1 Vin1 0 1
+VIN2 Vin2 0 1
+R1 Vin1 vminus 10k
+R2 Vin2 vminus 10k
+RF vminus Vout 10k
+X1 0 vminus Vout OPAMP a=1e5 rd=1meg ro=75
+VDD vdd 0 5
+VSS vss 0 -5

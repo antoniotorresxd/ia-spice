@@ -1,0 +1,19 @@
+* Schmitt trigger no inversor, alimentacion 0-5 V
+* Valores comerciales (circuito): ideal -> comercial
+*   RREF1: 10kohm -> 10kohm [E24, +0.00%]
+*   RREF2: 10kohm -> 10kohm [E24, +0.00%]
+*   RIN: 40kohm -> 20kohm + 20kohm = 40kohm [E24, +0.00%]
+*   RFB: 100kohm -> 100kohm [E24, +0.00%]
+VDD vdd 0 DC 5
+RREF1 vdd VREF 10k
+RREF2 VREF 0 10k
+VSIG Vin 0 PWL(0 0 1m 0 6m 5 12m 5 18m 0 20m 0)
+RIN Vin VP 40k
+RFB Vout VP 100k
+* Modelo comportamental de op-amp: alta ganancia y salida limitada a 0-5 V
+BOP Vout 0 V=2.5+2.5*tanh(1e4*(V(VP)-V(VREF)))
+.control
+tran 10u 20m
+wrdata output.txt v(Vin) v(Vout)
+.endc
+.end
