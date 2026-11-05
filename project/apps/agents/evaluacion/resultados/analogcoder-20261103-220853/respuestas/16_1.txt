@@ -1,0 +1,35 @@
+* RC phase-shift oscillator
+* Valores comerciales (circuito): ideal -> comercial
+*   Rf: 300kohm -> 300kohm [E24, +0.00%]
+*   Rin: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 9.55nF -> 12nF + 47nF = 9.56nF [E12, +0.10%]
+*   R1: 6.8kohm -> 6.8kohm [E24, +0.00%]
+*   C2: 9.55nF -> 12nF + 47nF = 9.56nF [E12, +0.10%]
+*   R2: 6.8kohm -> 6.8kohm [E24, +0.00%]
+*   C3: 9.55nF -> 12nF + 47nF = 9.56nF [E12, +0.10%]
+*   R3: 6.8kohm -> 6.8kohm [E24, +0.00%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+Rf Vout nfb 300k
+Rin nfb 0 10k
+X1 0 nfb Vout OPAMP
+C1 Vout n1 9.55932n
+R1 n1 0 6.8k
+C2 n1 n2 9.55932n
+R2 n2 0 6.8k
+C3 n2 nfb 9.55932n
+R3 nfb 0 6.8k
+.subckt OPAMP inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 1n
+Eout out 0 n2 0 1
+.ends
+.ic v(Vout)=0.1
+.control
+tran 5u 50m
+meas tran fosc TRIG v(Vout) VAL=0 RISE=10 TARG v(Vout) VAL=0 RISE=11
+echo $&fosc > output.txt
+.endc
+.end

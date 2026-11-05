@@ -1,0 +1,26 @@
+* Wien Bridge Oscillator
+* Valores comerciales (circuito): ideal -> comercial
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 10nF -> 10nF [E12, +0.00%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   C2: 10nF -> 10nF [E12, +0.00%]
+*   Rf: 20kohm -> 20kohm [E24, +0.00%]
+*   Rg: 10kohm -> 10kohm [E24, +0.00%]
+VCC vdd 0 5.0
+VEE 0 vee 5.0
+X1 net_in net_out Vout opamp_ideal
+R1 net_in vx 10k
+C1 vx 0 10n
+R2 0 vx 10k
+C2 Vout vx 10n
+Rf Vout net_in 20k
+Rg net_in 0 10k
+.subckt opamp_ideal inp inn out
+E1 out 0 value={1e5*(v(inp)-v(inn))}
+.ends
+.control
+tran 1u 50m 0
+meas tran freq FREQ v(Vout) VAL=2.5 RISE=2
+shell echo $&freq > output.txt
+.endc
+.end

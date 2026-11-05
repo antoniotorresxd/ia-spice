@@ -1,0 +1,34 @@
+* RC Phase Shift Oscillator
+* Valores comerciales (circuito): ideal -> comercial
+*   Rf: 470kohm -> 470kohm [E24, +0.00%]
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 10nF -> 10nF [E12, +0.00%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   C2: 10nF -> 10nF [E12, +0.00%]
+*   R3: 10kohm -> 10kohm [E24, +0.00%]
+*   C3: 10nF -> 10nF [E12, +0.00%]
+VDD vdd 0 DC 5.0
+VEE 0 vee DC 5.0
+X1 0 vminus Vout opamp_ideal
+Rf Vout vminus 470k
+R1 vminus vn1 10k
+C1 vn1 0 10n
+R2 vn1 vn2 10k
+C2 vn2 0 10n
+R3 vn2 Vout 10k
+C3 Vout 0 10n
+.subckt opamp_ideal inp inn out
+Rin inp inn 1e9
+Egain n1 0 inp inn 1e6
+Rp n1 n2 100
+Cp n2 0 1e-9
+Eout out 0 n2 0 1
+.ends
+.control
+tran 1u 50m 0
+meas tran vmin MIN v(Vout)
+meas tran vmax MAX v(Vout)
+let peak_to_peak = vmax - vmin
+echo $&peak_to_peak > output.txt
+.endc
+.end

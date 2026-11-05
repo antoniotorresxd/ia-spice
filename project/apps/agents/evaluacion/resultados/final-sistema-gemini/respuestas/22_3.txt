@@ -1,0 +1,26 @@
+* Non-inverting Schmitt Trigger
+* Valores comerciales (circuito): ideal -> comercial
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   R2: 100kohm -> 100kohm [E24, +0.00%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+Vin Vin 0 PULSE(-3 3 0 10m 10m 10m 20m)
+R1 Vin vplus 10k
+R2 vplus Vout 100k
+X1 vplus 0 Vout VCC VEE OPAMP
+V1 VCC 0 5.0
+V2 VEE 0 -5.0
+.subckt OPAMP inp inn out vcc vee
+Rin inp inn 1e9
+Egain n1 0 inp inn 1e5
+Rp n1 n2 100
+Cp n2 0 1u
+Eout out_unlimited 0 n2 0 1
+Eclamp out 0 VALUE { if(V(out_unlimited) > V(vcc), V(vcc), if(V(out_unlimited) < V(vee), V(vee), V(out_unlimited))) }
+.ends
+.control
+tran 0.1m 40m 0
+meas tran vmax MAX v(Vout)
+echo "meas_result = $&vmax" > output.txt
+.endc
+.end

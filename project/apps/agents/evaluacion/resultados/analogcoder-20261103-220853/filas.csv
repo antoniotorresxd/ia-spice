@@ -1,0 +1,48 @@
+condicion,tarea,tipo,corrida,escalon,paso,segundos,detalle
+Sistema + anthropic/claude-haiku-5.5,16,Oscillator,1,no_funciona,False,89.4,"occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp6vu8462c/caso.py"", line 47, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: 0"
+Sistema + anthropic/claude-haiku-5.5,17,Oscillator,1,no_funciona,False,100.0,"analysis failed.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44
+Warning: Dynamic gmin stepping failed
+Warning: True gmin stepping failed
+Warning: source stepping failed
+Error: Transient op failed, timestep too small
+Error: The operating point could not be simulated successfully.
+Any of the following steps may fail.!
+doAnalyses: TRAN:  Timestep too small; initial timepoint: trouble with node ""vm""
+run simulation(s) aborted"
+Sistema + anthropic/claude-haiku-5.5,18,Integrator,1,interfaz,False,28.6,"faltan: R1/RR1. Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44
+Traceback (most recent call last):
+  File ""/tmp/tmpnkbhfp97/caso.py"", line 53, in <module>
+    circuit.element(r_name).resistance = ""10k""
+                    ^^^^^^
+NameError: name 'r_name' is not defined"
+Sistema + anthropic/claude-haiku-5.5,19,Differentiator,1,no_funciona,False,21.3,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,20,Adder,1,sin_codigo,False,6.5,
+Sistema + anthropic/claude-haiku-5.5,21,Subtractor,1,no_simula,False,11.7,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + anthropic/claude-haiku-5.5,22,Schmitt,1,no_funciona,False,116.2,"The circuit does not function correctly. The output voltage does not cross the Vdd/2.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"

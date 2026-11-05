@@ -1,0 +1,182 @@
+condicion,tarea,tipo,corrida,escalon,paso,escalon_adaptado,paso_adaptado,segundos,detalle
+Sistema + anthropic/claude-haiku-5.5,16,Oscillator,1,pasa,True,pasa,True,122.4,
+Sistema + anthropic/claude-haiku-5.5,16,Oscillator,2,no_funciona,False,pasa,True,71.6,"occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpmqmzutmp/caso.py"", line 47, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: 0"
+Sistema + anthropic/claude-haiku-5.5,16,Oscillator,3,no_funciona,False,no_funciona,False,137.6,"The peak amplitudes are too small. (<1uV)
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,16,Oscillator,4,no_funciona,False,pasa,True,81.8,"occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmplm4kc5mk/caso.py"", line 47, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: 0"
+Sistema + anthropic/claude-haiku-5.5,16,Oscillator,5,no_funciona,False,pasa,True,119.5,"occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmp66q99n6m/caso.py"", line 47, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: 0"
+Sistema + anthropic/claude-haiku-5.5,17,Oscillator,1,pasa,True,pasa,True,68.5,
+Sistema + anthropic/claude-haiku-5.5,17,Oscillator,2,pasa,True,pasa,True,56.5,
+Sistema + anthropic/claude-haiku-5.5,17,Oscillator,3,no_funciona,False,no_funciona,False,84.1,"Periodicity is inconsistent, oscillation may not be an ideal periodicity.
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,17,Oscillator,4,no_funciona,False,no_funciona,False,81.7,"urred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmpjiu4az2x/caso.py"", line 46, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: vinp"
+Sistema + anthropic/claude-haiku-5.5,17,Oscillator,5,pasa,True,pasa,True,73.4,
+Sistema + anthropic/claude-haiku-5.5,18,Integrator,1,no_funciona,False,no_funciona,False,81.8,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 32.413821642255314 V/s
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,18,Integrator,2,no_funciona,False,pasa,True,38.7,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 29.098234546905832 V/s
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,18,Integrator,3,interfaz,False,interfaz,False,23.9,"faltan: R1/RR1. Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44
+Traceback (most recent call last):
+  File ""/tmp/tmpzysmqb22/caso.py"", line 53, in <module>
+    circuit.element(r_name).resistance = ""10k""
+                    ^^^^^^
+NameError: name 'r_name' is not defined"
+Sistema + anthropic/claude-haiku-5.5,18,Integrator,4,no_funciona,False,pasa,True,30.5,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 29.098234546905832 V/s
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,18,Integrator,5,no_funciona,False,pasa,True,24.7,"The circuit does not function correctly as an integrator.
+Expected slope: 16.666666666666668 V/s | Actual slope: 29.098234546905832 V/s
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,19,Differentiator,1,no_funciona,False,pasa,True,36.3,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,19,Differentiator,2,no_funciona,False,no_funciona,False,120.3,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,19,Differentiator,3,no_funciona,False,pasa,True,40.3,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,19,Differentiator,4,no_funciona,False,pasa,True,43.2,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,19,Differentiator,5,no_funciona,False,pasa,True,46.9,"The circuit does not function correctly as a differentiator.
+When the input is a triangle wave and the output is not a square wave.
+
+Warning: can't find the initialization file spinit.
+Unsupported Ngspice version 44"
+Sistema + anthropic/claude-haiku-5.5,20,Adder,1,no_simula,False,no_simula,False,8.8,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + anthropic/claude-haiku-5.5,20,Adder,2,no_simula,False,no_simula,False,8.2,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + anthropic/claude-haiku-5.5,20,Adder,3,no_simula,False,no_simula,False,7.9,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + anthropic/claude-haiku-5.5,20,Adder,4,no_simula,False,no_simula,False,8.1,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + anthropic/claude-haiku-5.5,20,Adder,5,no_simula,False,no_simula,False,7.2,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + anthropic/claude-haiku-5.5,21,Subtractor,1,pasa,True,pasa,True,30.3,
+Sistema + anthropic/claude-haiku-5.5,21,Subtractor,2,pasa,True,pasa,True,31.0,
+Sistema + anthropic/claude-haiku-5.5,21,Subtractor,3,no_simula,False,no_simula,False,11.9,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + anthropic/claude-haiku-5.5,21,Subtractor,4,pasa,True,pasa,True,20.4,
+Sistema + anthropic/claude-haiku-5.5,21,Subtractor,5,pasa,True,pasa,True,25.0,
+Sistema + anthropic/claude-haiku-5.5,22,Schmitt,1,sin_codigo,False,sin_codigo,False,13.5,
+Sistema + anthropic/claude-haiku-5.5,22,Schmitt,2,no_simula,False,no_simula,False,12.1,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + anthropic/claude-haiku-5.5,22,Schmitt,3,sin_codigo,False,sin_codigo,False,10.0,
+Sistema + anthropic/claude-haiku-5.5,22,Schmitt,4,no_simula,False,no_simula,False,11.9,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + anthropic/claude-haiku-5.5,22,Schmitt,5,sin_codigo,False,sin_codigo,False,11.1,

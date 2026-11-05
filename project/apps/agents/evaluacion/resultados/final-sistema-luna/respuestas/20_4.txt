@@ -1,0 +1,6 @@
+V1 Vin1 0 1
+V2 Vin2 0 0
+R1 Vin1 nsum 10k
+R2 Vin2 nsum 10k
+Rf nsum Vout 10k
+X1 0 nsum Vout OPAMP vcc=5

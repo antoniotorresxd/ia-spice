@@ -1,0 +1,35 @@
+* RC Phase-Shift Oscillator
+* Valores comerciales (circuito): ideal -> comercial
+*   RC: 1.2kohm -> 1.2kohm [E24, +0.00%]
+*   RB1: 56kohm -> 56kohm [E24, +0.00%]
+*   RB2: 18kohm -> 18kohm [E24, +0.00%]
+*   RE: 100ohm -> 100ohm [E24, +0.00%]
+*   CE: 47uF -> 47uF [E12, +0.00%]
+*   C1: 15nF -> 15nF [E12, +0.00%]
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   C2: 15nF -> 15nF [E12, +0.00%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   C3: 15nF -> 15nF [E12, +0.00%]
+* Semiconductores:
+*   Q1: 1 x 2N3904 (BJT NPN de propósito general; modelo genérico)
+VCC vdd 0 DC 5.0
+RC vdd vout 1.2k
+Q1 vout base emit NPN_MODEL
+.model NPN_MODEL NPN(BF=400 VAF=100)
+RB1 vdd base 56k
+RB2 base 0 18k
+RE emit 0 100
+CE emit 0 47u
+C1 vout n1 15n
+R1 n1 base 10k
+C2 n1 n2 15n
+R2 n2 0 10k
+C3 base n2 15n
+.control
+tran 0.5u 50m 0m
+meas tran vomax MAX v(vout) from=25m to=50m
+meas tran vomin MIN v(vout) from=25m to=50m
+let vpp = vomax - vomin
+echo $&vpp > output.txt
+.endc
+.end

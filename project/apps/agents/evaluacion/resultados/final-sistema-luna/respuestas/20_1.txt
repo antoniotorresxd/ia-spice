@@ -1,0 +1,18 @@
+* Sumador inversor con Rin1 = Rin2 = Rf = 10 kΩ, por lo que Vout = -(Vin1 + Vin2). Alimentación asumida: Vdd = +5 V y Vee = -5 V, necesaria para obtener salida negativa respecto de tierra. Las fuentes de 1 V son valores de prueba; reemplazarlas por las señales de entrada deseadas.
+* Valores comerciales (circuito): ideal -> comercial
+*   Rin1: 10kohm -> 10kohm [E24, +0.00%]
+*   Rin2: 10kohm -> 10kohm [E24, +0.00%]
+*   Rf: 10kohm -> 10kohm [E24, +0.00%]
+V1 Vin1 0 DC 1
+V2 Vin2 0 DC 1
+VDD Vdd 0 DC 5
+VEE Vee 0 DC -5
+Rin1 Vin1 nsum 10k
+Rin2 Vin2 nsum 10k
+Rf Vout nsum 10k
+EOP Vout 0 nsum 0 1e5
+.control
+op
+wrdata output.txt v(Vout)
+.endc
+.end

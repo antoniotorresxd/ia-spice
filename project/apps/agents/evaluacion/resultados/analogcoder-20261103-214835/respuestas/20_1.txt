@@ -1,0 +1,24 @@
+* Inverting Summing Op-Amp Amplifier
+* Valores comerciales (circuito): ideal -> comercial
+*   Rf: 12.2kohm -> 12kohm + 160ohm = 12.2kohm [E24, +0.04%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+Vin1 vin1 0 DC 1.2155
+Vin2 vin2 0 DC 2.431
+R1 vin1 vminus 12155.0625
+R2 vin2 vminus 12155.0625
+Rf vminus vout 12160
+X1 0 vminus vout opamp
+
+.subckt opamp inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 159n
+Eout out 0 n2 0 1
+.ends
+.control
+op
+wrdata output.txt v(vout)
+.endc
+.end

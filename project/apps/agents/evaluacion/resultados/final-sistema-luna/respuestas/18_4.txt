@@ -1,0 +1,25 @@
+* Integrador practico inversor
+* Valores comerciales (circuito): ideal -> comercial
+*   RUP: 10kohm -> 10kohm [E24, +0.00%]
+*   RDN: 10kohm -> 10kohm [E24, +0.00%]
+*   R1: 100kohm -> 100kohm [E24, +0.00%]
+*   Cf: 10nF -> 10nF [E12, +0.00%]
+*   Rf: 1Mohm -> 1Mohm [E24, +0.00%]
+VDD VDD 0 DC 5
+RUP VDD Vref 10k
+RDN Vref 0 10k
+VSIG Vin 0 DC 2.5 AC 1
+R1 Vin Vminus 100k
+Cf Vminus Vout 10n
+Rf Vminus Vout 1meg
+XU1 Vref Vminus Vout VDD OP5
+.subckt OP5 INP INM OUT VPOS
+BAMP OUT 0 V=limit(2.5+1e5*(V(INP)-V(INM)),0.05,V(VPOS)-0.05)
+.ends OP5
+.control
+ac dec 1000 0.1 10k
+let vmag = mag(v(Vout))
+meas ac fc when vmag=7.0710678118654755 fall=1
+echo $&fc > output.txt
+.endc
+.end

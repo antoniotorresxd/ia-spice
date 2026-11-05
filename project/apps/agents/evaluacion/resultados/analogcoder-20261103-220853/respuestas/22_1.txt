@@ -1,0 +1,31 @@
+* Non-inverting Schmitt trigger with positive feedback
+* Valores comerciales (circuito): ideal -> comercial
+*   Rin: 1Mohm -> 1Mohm [E24, +0.00%]
+*   R1: 9.1kohm -> 9.1kohm [E24, +0.00%]
+*   Rf: 100kohm -> 100kohm [E24, +0.00%]
+*   Rm: 1kohm -> 1kohm [E24, +0.00%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+Vin Vin 0 DC 0 PULSE(-3 3 0 1m 1m 5m 10m)
+Rin Vin Vp 1meg
+R1 Vp 0 9.1k
+Rf Vout Vp 100k
+X1 Vp Vm Vout OPAMP
+Rm Vm 0 1k
+
+.subckt opamp inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 159n
+Eout out 0 VALUE={MAX(-12,MIN(12,V(n2)))}
+.ends
+
+.control
+tran 10u 20m
+meas tran vutp MAX v(Vp) from=0 to=20m
+meas tran vltp MIN v(Vp) from=0 to=20m
+echo $&vutp > output.txt
+echo $&vltp >> output.txt
+.endc
+.end

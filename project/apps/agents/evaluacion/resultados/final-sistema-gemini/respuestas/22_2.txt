@@ -1,0 +1,22 @@
+* Non-inverting Schmitt Trigger
+* Valores comerciales (circuito): ideal -> comercial
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   R2: 100kohm -> 100kohm [E24, +0.00%]
+*   R3: 10kohm -> 10kohm [E24, +0.00%]
+Vin vin 0 DC 2.5
+VCC vdd 0 DC 5.0
+VEE vee 0 DC 0
+R1 vin vplus 10k
+R2 vplus vout 100k
+R3 vplus 0 10k
+X1 0 vplus vout vdd vee opamp_model
+.subckt opamp_model inp inn out vcc vee
+Eout out 0 TABLE {v(inp,inn)} (-0.0001, 0.0) (0.0001, 5.0)
+.ends
+.control
+op
+let v_out = v(vout)
+print v_out
+wrdata output.txt v_out
+.endc
+.end

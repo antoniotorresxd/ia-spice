@@ -1,0 +1,26 @@
+condicion,tarea,tipo,corrida,escalon,paso,segundos,detalle
+Sistema + anthropic/claude-haiku-5.5,16,Oscillator,1,no_funciona,False,110.0,"occurred:
+
+Traceback (most recent call last):
+  File ""/tmp/tmplajj3elf/caso.py"", line 47, in <module>
+    vinp = np.array(analysis[pin_name])
+                    ~~~~~~~~^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 303, in __getitem__
+    return self._get_item(name.lower())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Probe/WaveForm.py"", line 295, in _get_item
+    raise IndexError(name)
+IndexError: 0"
+Sistema + anthropic/claude-haiku-5.5,17,Oscillator,1,pasa,True,69.9,
+Sistema + anthropic/claude-haiku-5.5,18,Integrator,1,sin_codigo,False,3.5,
+Sistema + anthropic/claude-haiku-5.5,19,Differentiator,1,sin_codigo,False,3.1,
+Sistema + anthropic/claude-haiku-5.5,20,Adder,1,no_simula,False,6.6,"/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Simulation.py"", line 119, in _run
+    self._ngspice_shared.run()
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 1192, in run
+    self.exec_command(command)
+  File ""/home/antonioxd/projects/ia-spice/project/apps/agents/.venv/lib/python3.12/site-packages/PySpice/Spice/NgSpice/Shared.py"", line 851, in exec_command
+    raise NgSpiceCommandError(""Command '{}' failed"".format(command))
+PySpice.Spice.NgSpice.Shared.NgSpiceCommandError: Command 'run' failed
+"
+Sistema + anthropic/claude-haiku-5.5,21,Subtractor,1,pasa,True,19.2,
+Sistema + anthropic/claude-haiku-5.5,22,Schmitt,1,sin_codigo,False,3.1,

@@ -1,0 +1,18 @@
+* Disparador Schmitt no inversor alimentado con 5 V. Vin se conecta a la entrada no inversora mediante 40 kΩ y Vout retorna a esa entrada mediante 100 kΩ. La entrada inversora recibe 2.5 V de un divisor de 10 kΩ/10 kΩ. Umbrales nominales ideales: 1.5 V al conmutar de alto a bajo y 3.5 V al conmutar de bajo a alto. Se usa un modelo conductual de op-amp ideal con salida limitada a los rieles; un dispositivo real debe ser compatible con alimentación de 5 V y sus rangos de entrada/salida.
+* Valores comerciales (circuito): ideal -> comercial
+*   RIN: 33kohm -> 33kohm [E24, +0.00%]
+*   RF: 82kohm -> 82kohm [E24, +0.00%]
+*   RREF1: 10kohm -> 10kohm [E24, +0.00%]
+*   RREF2: 10kohm -> 10kohm [E24, +0.00%]
+VDD Vdd 0 5.0
+VIN Vin 0 PULSE(0 5 0 5m 5m 10m 30m)
+RIN Vin Vplus 33k
+RF Vout Vplus 82k
+RREF1 Vdd Vref 10k
+RREF2 Vref 0 10k
+BOP Vout 0 V=limit(1e6*(V(Vplus)-V(Vref))+2.5,0,5)
+.control
+tran 10u 60m
+wrdata output.txt v(Vin) v(Vout)
+.endc
+.end

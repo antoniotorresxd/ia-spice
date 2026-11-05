@@ -1,0 +1,37 @@
+* Wien Bridge Oscillator
+* Valores comerciales (circuito): ideal -> comercial
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 10nF -> 10nF [E12, +0.00%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   C2: 10nF -> 10nF [E12, +0.00%]
+*   Rf: 10kohm -> 10kohm [E24, +0.00%]
+*   R4: 4.7kohm -> 4.7kohm [E24, +0.00%]
+* Semiconductores:
+*   D1, D2: 2 x 1N4148 (diodo de conmutación de señal; modelo genérico)
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+X1 vp vm vout OPAMP
+.subckt OPAMP inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 100
+Cp n2 0 1.5n
+Eout out 0 n2 0 1
+.ends
+R1 vout vs 10k
+C1 vs vp 10n
+R2 vp 0 10k
+C2 vp 0 10n
+Rf vout vm 10k
+R4 vm 0 4.7k
+D1 vout vm DMOD
+D2 vm vout DMOD
+.model DMOD D(IS=1e-16)
+.ic v(vout)=0.01
+.tran 10u 20m uic
+.control
+run
+let vmax = maximum(v(vout))
+wrdata output.txt v(vout)
+echo $&vmax > output.txt
+.endc
+.end

@@ -1,0 +1,27 @@
+* Practical Op-Amp Integrator
+* Valores comerciales (circuito): ideal -> comercial
+*   R1: 19.3kohm -> 22kohm || 160kohm = 19.3kohm [E24, -0.02%]
+*   Rf: 193kohm -> 220kohm || 1.6Mohm = 193kohm [E24, -0.02%]
+*   Cf: 12.2nF -> 12nF || 150pF = 12.1nF [E12, -0.04%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+Vin vin 0 DC 0 AC 1 PULSE(-1 1 0 10n 10n 0.5m 1m)
+R1 vin vminus 19340.6593
+Rf vminus vout 193406.5934
+Cf vminus vout 1.2150e-08
+X1 0 vminus vout opamp
+
+.subckt opamp inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 159n
+Eout out 0 n2 0 1
+.ends
+
+.control
+ac dec 100 1 1e8
+meas ac fint WHEN vdb(vout)=0 CROSS=1
+echo $&fint > output.txt
+.endc
+.end

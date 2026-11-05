@@ -1,0 +1,22 @@
+* Disparador de Schmitt no inversor
+* Valores comerciales (circuito): ideal -> comercial
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   R3: 10kohm -> 10kohm [E24, +0.00%]
+*   R4: 100kohm -> 100kohm [E24, +0.00%]
+Vin Vin 0 DC 0 PULSE(-2 2 0 10m 10m 20m 40m)
+R1 Vin vminus 10k
+R2 vout vminus 10k
+R3 vplus 0 10k
+R4 vplus vout 100k
+Vcc vcc 0 DC 5.0
+Vee vee 0 DC 0
+X1 vplus vminus vout vcc vee opamp_lim
+.subckt opamp_lim inp inn out vcc vee
+Eout out 0 TABLE {(v(inp)-v(inn))*1e5} = (-0.001, 0) (0.001, 5.0)
+.ends
+.control
+tran 0.1m 40m 0
+wrdata output.txt v(vout)
+.endc
+.end

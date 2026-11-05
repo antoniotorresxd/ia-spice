@@ -1,0 +1,35 @@
+* Oscilador RC de desplazamiento de fase con transistor NPN, alimentación de 5 V y frecuencia nominal aproximada de 650 Hz. La entrada solicitada se identifica como «-» y queda aislada mediante una resistencia de 1 GΩ; la salida es Vout.
+* Valores comerciales (circuito): ideal -> comercial
+*   RIN: 1e+03Mohm -> 1e+03Mohm [E24, +0.00%]
+*   RC: 4.7kohm -> 4.7kohm [E24, +0.00%]
+*   RB1: 39kohm -> 39kohm [E24, +0.00%]
+*   RB2: 15kohm -> 15kohm [E24, +0.00%]
+*   RE: 1kohm -> 1kohm [E24, +0.00%]
+*   C1: 10nF -> 10nF [E12, +0.00%]
+*   C2: 10nF -> 10nF [E12, +0.00%]
+*   C3: 10nF -> 10nF [E12, +0.00%]
+*   R1: 10kohm -> 10kohm [E24, +0.00%]
+*   R2: 10kohm -> 10kohm [E24, +0.00%]
+*   R3: 1e+03Mohm -> 1e+03Mohm [E24, +0.00%]
+* Semiconductores:
+*   Q1: 1 x 2N3904 (BJT NPN de propósito general; modelo genérico)
+VDD vdd 0 DC 5
+RIN - 0 1000meg
+RC vdd Vout 4.7k
+RB1 vdd b 39k
+RB2 b 0 15k
+RE e 0 1k
+C1 Vout n1 10n
+C2 n1 n2 10n
+C3 n2 b 10n
+R1 n1 0 10k
+R2 n2 0 10k
+R3 b 0 1000meg
+Q1 Vout b e QN
+.model QN NPN(BF=100 IS=1e-14 VAF=100)
+.ic V(n1)=1m
+.control
+tran 10u 40m uic
+wrdata output.txt v(Vout)
+.endc
+.end

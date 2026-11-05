@@ -1,0 +1,33 @@
+* Wien Bridge Oscillator
+* Valores comerciales (circuito): ideal -> comercial
+*   RA: 10kohm -> 10kohm [E24, +0.00%]
+*   RB: 4.7kohm -> 4.7kohm [E24, +0.00%]
+*   C1: 159nF -> 120nF || 39nF = 159nF [E12, +0.00%]
+*   R1: 1kohm -> 1kohm [E24, +0.00%]
+*   R2: 1kohm -> 1kohm [E24, +0.00%]
+*   C2: 159nF -> 120nF || 39nF = 159nF [E12, +0.00%]
+* Semiconductores:
+*   DX1, DX2: 2 x 1N4148 (diodo de conmutación de señal; modelo real)
+Vdd vcc 0 DC 2.5
+Vee 0 vee DC 2.5
+RA vout fb 10k
+RB fb 0 4.7k
+C1 vout n1 159n
+R1 n1 0 1k
+R2 fb n2 1k
+C2 n2 0 159n
+DX1 fb vout DIODE_1N4148
+DX2 0 fb DIODE_1N4148
+X1 n2 fb vout vcc vee opamp_ideal
+.subckt opamp_ideal inp inn out vcc vee
+Rin inp inn 1e9
+Egain n_int 0 inp inn 1e5
+Eout out 0 n_int 0 1
+.ends
+.model DIODE_1N4148 D(IS=2.52n RS=0.568 N=1.752)
+.control
+tran 10u 20m 0
+meas tran vpp PP v(vout) from=10m to=20m
+echo $&vpp > output.txt
+.endc
+.end

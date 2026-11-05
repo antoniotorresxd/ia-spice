@@ -1,0 +1,6 @@
+VIN1 vin1 0 1
+VIN2 vin2 0 1
+R1 vin1 vm 10k
+R2 vin2 vm 10k
+Rf vm vout 10k
+X1 0 vm vout OPAMP

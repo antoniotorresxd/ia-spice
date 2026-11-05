@@ -1,0 +1,47 @@
+* RC phase-shift oscillator with buffered feedback, nominal frequency about 1 kHz
+* Valores comerciales (circuito): ideal -> comercial
+*   RC: 22kohm -> 22kohm [E24, +0.00%]
+*   RE: 1kohm -> 1kohm [E24, +0.00%]
+*   CE: 100uF -> 100uF [E12, +0.00%]
+*   C1: 10.5nF -> 10nF || 470pF = 10.5nF [E12, +0.00%]
+*   R1: 6.8kohm -> 6.8kohm [E24, +0.00%]
+*   C2: 10.5nF -> 10nF || 470pF = 10.5nF [E12, +0.00%]
+*   R2: 6.8kohm -> 6.8kohm [E24, +0.00%]
+*   C3: 10.5nF -> 10nF || 470pF = 10.5nF [E12, +0.00%]
+*   R3: 6.8kohm -> 6.8kohm [E24, +0.00%]
+*   RB3: 16kohm -> 16kohm [E24, +0.00%]
+*   RB4: 100kohm -> 100kohm [E24, +0.00%]
+*   RE2: 33kohm -> 33kohm [E24, +0.00%]
+*   COUT: 10uF -> 10uF [E12, +0.00%]
+*   RLOAD: 100kohm -> 100kohm [E24, +0.00%]
+* Semiconductores:
+*   Q1, Q2: 2 x 2N3904 (BJT NPN de propósito general; modelo genérico)
+VDD vdd 0 DC 5.0
+* Requested input node name; unused by this autonomous oscillator
+VINPUT - 0 DC 0
+* Common-emitter amplifier and bias
+RC vdd vc 22k
+RE ve 0 1k
+CE ve 0 100u
+Q1 vc vb ve QNPN
+.model QNPN NPN(BF=100 VAF=100 IS=6.7f)
+* Three-section RC phase-shift network; Q2 buffers its output
+C1 vc n1 10.47n IC=10m
+R1 n1 0 6.8k
+C2 n1 n2 10.47n
+R2 n2 0 6.8k
+C3 n2 nb 10.47n
+R3 nb 0 6.8k
+* Emitter-follower buffer; divider corrected to bias Q2 despite R3 loading
+RB3 vdd nb 16k
+RB4 nb 0 100k
+Q2 vdd nb vb QNPN
+RE2 vb 0 33k
+* AC-coupled output
+COUT vc Vout 10u
+RLOAD Vout 0 100k
+.control
+tran 10u 100m 0 uic
+wrdata output.txt v(Vout)
+.endc
+.end

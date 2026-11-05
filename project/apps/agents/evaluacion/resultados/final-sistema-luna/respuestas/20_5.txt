@@ -1,0 +1,7 @@
+VDD vdd 0 5
+V1 Vin1 0 0
+V2 Vin2 0 0
+R1 Vin1 n 10k
+R2 Vin2 n 10k
+RF n Vout 10k
+X1 0 n Vout OPAMP vcc=5 vee=0

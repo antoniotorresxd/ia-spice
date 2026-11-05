@@ -1,0 +1,28 @@
+* Integrador practico, alimentacion simple 0-5 V
+* Valores comerciales (circuito): ideal -> comercial
+*   Rref1: 100kohm -> 100kohm [E24, +0.00%]
+*   Rref2: 100kohm -> 100kohm [E24, +0.00%]
+*   Cref: 10uF -> 10uF [E12, +0.00%]
+*   R1: 16kohm -> 16kohm [E24, +0.00%]
+*   Rf: 160kohm -> 160kohm [E24, +0.00%]
+*   Cf: 100nF -> 100nF [E12, +0.00%]
+VDD Vdd 0 DC 5.0
+Vsig Vin 0 DC 2.5 AC 1
+Rref1 Vdd Vref 100k
+Rref2 Vref 0 100k
+Cref Vref 0 10u
+R1 Vin Nminus 16k
+Rf Vout Nminus 160k
+Cf Vout Nminus 100n
+XU1 Vref Nminus Vdd 0 Vout opamp5
+
+.subckt opamp5 inp inn vdd vee out
+Bdrv Ndrv 0 V=limit(1e5*(V(inp)-V(inn))+2.5,V(vee)+0.1,V(vdd)-0.1)
+Rout Ndrv out 50
+.ends opamp5
+
+.control
+ac dec 100 1 100k
+wrdata output.txt v(Vout)
+.endc
+.end

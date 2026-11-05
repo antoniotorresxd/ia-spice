@@ -1,0 +1,27 @@
+* Practical Op-Amp Differentiator
+* Valores comerciales (circuito): ideal -> comercial
+*   Rin: 1.6kohm -> 1.6kohm [E24, +0.00%]
+*   C1: 10nF -> 10nF [E12, +0.02%]
+*   Rf: 16kohm -> 16kohm [E24, +0.00%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+Vin Vin 0 DC 0 AC 1 SIN(0 1 1k)
+Rin Vin vx 1.6k
+C1 vx vminus 10n
+Rf vminus Vout 16k
+X1 0 vminus Vout opamp
+
+.subckt opamp inp inn out
+Rin1 inp inn 1e6
+Egain n1 0 inp inn 1e5
+Rp n1 n2 1k
+Cp n2 0 1.59n
+Eout out 0 n2 0 1
+.ends
+
+.control
+ac dec 100 1 1e8
+meas ac fd WHEN vdb(Vout)=0 CROSS=1
+echo $&fd > output.txt
+.endc
+.end

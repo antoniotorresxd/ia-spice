@@ -1,0 +1,16 @@
+* Schmitt trigger no inversor con realimentacion positiva
+* Valores comerciales (circuito): ideal -> comercial
+*   Rin: 39kohm -> 39kohm [E24, +0.00%]
+*   Rf: 100kohm -> 100kohm [E24, +0.00%]
+VDD VDD 0 DC 5
+VREF VREF 0 DC 2.5
+Vstim Vin 0 PULSE(0 5 1m 1m 1m 10m 20m)
+Rin Vin vp 39k
+Rf Vout vp 100k
+Bcmp Vout 0 V=V(VDD)*(1+tanh(1e4*(V(vp)-V(VREF))))/2
+.control
+tran 1u 40m
+meas tran v_high_threshold FIND v(Vin) WHEN v(Vout)=2.5 RISE=1
+echo $&v_high_threshold > output.txt
+.endc
+.end

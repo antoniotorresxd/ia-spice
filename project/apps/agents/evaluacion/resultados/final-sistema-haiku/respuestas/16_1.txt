@@ -1,0 +1,34 @@
+* RC phase-shift oscillator, Vdd = 5 V
+* Valores comerciales (circuito): ideal -> comercial
+*   Rp: 10kohm -> 10kohm [E24, +0.00%]
+*   C1: 9.55nF -> 12nF + 47nF = 9.56nF [E12, +0.06%]
+*   R1: 6.8kohm -> 6.8kohm [E24, +0.00%]
+*   C2: 9.55nF -> 12nF + 47nF = 9.56nF [E12, +0.06%]
+*   R2: 6.8kohm -> 6.8kohm [E24, +0.00%]
+*   C3: 9.55nF -> 12nF + 47nF = 9.56nF [E12, +0.06%]
+*   R3: 6.8kohm -> 6.8kohm [E24, +0.00%]
+*   Rf: 200kohm -> 200kohm [E24, +0.00%]
+* Semiconductores:
+*   X1: 1 x TL081 (1 op-amp(s) en 1 x TL081 (JFET, ±15 V); simulado con macromodelo ideal (ganancia 1e5, un polo); modelo genérico)
+Vdd vdd 0 DC 5
+Vss vss 0 DC -5
+X1 vp vminus vout OPAMP
+Rp vp 0 10k
+C1 vout n1 9.55932n
+R1 n1 0 6.8k
+C2 n1 n2 9.55932n
+R2 n2 0 6.8k
+C3 n2 vminus 9.55932n
+R3 vminus 0 6.8k
+Rf vminus vout 200k
+.subckt OPAMP inp inn out
+Rin inp inn 1e6
+Egain n1 0 inp inn 1e5
+Eout out 0 n1 0 1
+.ends
+.ic v(vout)=0.1
+.control
+tran 10u 20m
+wrdata output.txt v(vout)
+.endc
+.end

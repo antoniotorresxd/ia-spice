@@ -1,0 +1,18 @@
+* Disparador Schmitt no inversor con realimentación positiva. Alimentación simple de 0–5 V; umbral ascendente nominal 3.75 V y umbral descendente nominal 1.25 V. El nodo de entrada se llama Vin y el de salida Vout. El op-amp se aproxima mediante una fuente comportamental de alta ganancia limitada entre los rieles.
+* Valores comerciales (circuito): ideal -> comercial
+*   RIN: 1.2kohm -> 1.2kohm [E24, +0.00%]
+*   RF: 2.4kohm -> 2.4kohm [E24, +0.00%]
+*   RREF1: 1.2kohm -> 1.2kohm [E24, +0.00%]
+*   RREF2: 1.2kohm -> 1.2kohm [E24, +0.00%]
+VDD vdd 0 DC 5.0
+VINPUT Vin 0 PWL(0 0 1m 5 2m 0 3m 5)
+RIN Vin vp 1.2k
+RF Vout vp 2.4k
+RREF1 vdd vref 1.2k
+RREF2 vref 0 1.2k
+BOP Vout 0 V=limit(1e5*(V(vp)-V(vref)),0,5)
+.control
+tran 1u 3.1m
+wrdata output.txt time v(Vin) v(Vout)
+.endc
+.end

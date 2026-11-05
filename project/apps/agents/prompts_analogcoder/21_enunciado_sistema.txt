@@ -1,0 +1,8 @@
+Design An Op-amp subtractor to make Vout=Vin2-Vin1.
+
+Input node name: Vin1, Vin2.
+
+Output node name: Vout.
+
+Make sure the input and output node names appear in the circuit.
+Assume the Vdd = 5.0 V.
